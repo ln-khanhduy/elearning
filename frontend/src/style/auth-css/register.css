@@ -1,0 +1,153 @@
+.register-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+}
+.register-main {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 56px 20px;
+}
+
+.register-card {
+  width: 100%;
+  max-width: 420px;
+  background: var(--card);
+  padding: 28px;
+  border-radius: 12px;
+  box-shadow: 0 8px 30px rgba(15, 61, 117, 0.06);
+}
+.register-title {
+  color: var(--primary);
+  font-size: 20px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.register-subtitle {
+  color: #7b8794;
+  font-size: 13px;
+  text-align: center;
+  margin-bottom: 18px;
+}
+
+.form-control {
+  height: 44px;
+  border-radius: 6px;
+  background: var(--input-bg);
+  border: 1px solid #e6e9ee;
+}
+.input-group-text {
+  background: transparent;
+  border: 1px solid #e6e9ee;
+  border-right: 0;
+}
+.input-group .form-control {
+  border-left: 0;
+}
+
+.input-group button {
+  border-left: none;
+}
+
+.input-group button:focus {
+  box-shadow: none;
+}
+
+.form-check-label { color: #5f6b76; }
+
+.login-title {
+  color: var(--primary);
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.login-subtitle {
+  color: #7b8794;
+  font-size: 14px;
+  margin-top: 4px;
+}
+
+.forgot-link {
+  color: #7b8794;
+  text-decoration: none;
+}
+.forgot-link:hover,
+.forgot-link:focus {
+  color: var(--primary);
+}
+
+.login-divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: #94a3b8;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.login-divider span {
+  white-space: nowrap;
+}
+
+.login-divider::before,
+.login-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: #e6e9ee;
+}
+
+.btn-google {
+  border-color: #d1d5db;
+  color: #111827;
+  font-weight: 600;
+}
+.btn-google:hover,
+.btn-google:focus {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+.login-footer-text {
+  color: #64748b;
+}
+
+.btn-register {
+  width: 100%;
+  height: 44px;
+  border: none;
+  border-radius: 8px;
+  background: var(--primary);
+  color: white;
+  font-weight: 600;
+}
+.btn-register:hover { opacity: 0.95; }
+
+@media (max-width: 768px) {
+  .header-container {
+    padding: 0 15px;
+  }
+  .nav-menu {
+    gap: 12px !important;
+  }
+  .nav-menu a {
+    display: none;
+  }
+  .register-card {
+    padding: 25px;
+  }
+  .footer-container {
+    flex-direction: column;
+    gap: 12px;
+    text-align: center;
+  }
+  .footer-left {
+    flex-direction: column;
+  }
+}

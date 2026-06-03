@@ -1,0 +1,173 @@
+.verify-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+
+  background: #f5f7fb;
+}
+
+.verify-main {
+  flex: 1;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  padding: 40px 20px;
+}
+
+.verify-card {
+  width: 100%;
+  max-width: 460px;
+
+  background: white;
+
+  border-radius: 14px;
+
+  padding: 35px;
+
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.verify-icon {
+  width: 72px;
+  height: 72px;
+
+  margin: 0 auto 20px;
+
+  border-radius: 50%;
+
+  background: #eaf2ff;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.verify-icon i {
+  font-size: 28px;
+  color: #0f3d75;
+}
+
+.verify-title {
+  color: #0f3d75;
+
+  font-size: 32px;
+  font-weight: 700;
+
+  margin-bottom: 12px;
+}
+
+.verify-subtitle {
+  color: #777;
+
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.otp-wrapper {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+
+  margin-bottom: 24px;
+}
+
+.otp-input {
+  width: 52px;
+  height: 58px;
+
+  border: 1px solid #dcdcdc;
+  border-radius: 10px;
+
+  text-align: center;
+
+  font-size: 22px;
+  font-weight: 600;
+
+  outline: none;
+
+  transition: 0.3s;
+}
+
+.otp-input:focus {
+  border-color: #0f3d75;
+
+  box-shadow: 0 0 0 3px rgba(15, 61, 117, 0.1);
+}
+
+.resend-code {
+  text-align: center;
+
+  margin-bottom: 24px;
+}
+
+.resend-code button {
+  border: none;
+  background: transparent;
+
+  color: #0f3d75;
+
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.btn-verify {
+  width: 100%;
+  height: 48px;
+
+  border: none;
+  border-radius: 10px;
+
+  background: #0f3d75;
+  color: white;
+
+  font-weight: 600;
+
+  transition: 0.3s;
+}
+
+.btn-verify:hover {
+  background: #0b2f59;
+}
+
+.verify-divider {
+  height: 1px;
+
+  background: #ececec;
+
+  margin: 28px 0;
+}
+
+.verify-support {
+  text-align: center;
+
+  color: #888;
+
+  font-size: 13px;
+}
+
+.verify-support span {
+  color: #0f3d75;
+
+  font-weight: 600;
+
+  margin-left: 4px;
+}
+
+@media (max-width: 768px) {
+
+  .verify-card {
+    padding: 25px;
+  }
+  .verify-title {
+    font-size: 26px;
+  }
+  .otp-wrapper {
+    gap: 8px;
+  }
+  .otp-input {
+    width: 45px;
+    height: 52px;
+  }
+}

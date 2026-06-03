@@ -1,11 +1,38 @@
 from django.conf import settings
 from django.db import models
-from django.contrib.auth.models import AbstractUser, Group
+from django.contrib.auth.models import AbstractUser
 from uuid6 import uuid7
+
+
+
+class Role(models.Model):
+    # Mã định danh duy nhất cho vai trò (VD: "Supper Admin", "Admin", "Instructor", "Student")
+    code = models.CharField(max_length=50, unique=True)
+    # Tên hiển thị cho vai trò
+    name = models.CharField(max_length=100)
+
+
+    class Meta:
+        db_table = "role"
+
+    def __str__(self):
+        return self.name
+    
+class RolePermission(models.Model):
+    role = models.ForeignKey(Role,on_delete=models.CASCADE,related_name="permissions", null=True,blank=True)
+    # Mã định danh duy nhất cho quyền 
+    code = models.CharField(max_length=100, unique=True)
+    # Tên hiển thị cho quyền
+    name = models.CharField(max_length=150)
+    class Meta:
+        db_table = "role_permission"
+
+    def __str__(self):
+        return self.name
+
 class User(AbstractUser):
     """
     Tài khoản người dùng mở rộng từ AbstractUser của Django.
-    Hệ thống phân quyền bằng Django Group và Permission (RBAC).
     """
     ACCOUNT_STATUS_CHOICES = (
         ('ACTIVE', 'Active'),              # Hoạt động bình thường
@@ -15,6 +42,8 @@ class User(AbstractUser):
     id = models.UUIDField(primary_key=True, default=uuid7, editable=False)  # ID tự tăng cho mỗi user
     # Ảnh đại diện, lưu vào thư mục avatars/
     avatar = models.ImageField(upload_to='avatars/', null=True, blank=True)
+    # URL ảnh đại diện từ Google (nếu đăng nhập bằng Google OAuth)
+    google_avatar_url = models.URLField(null=True, blank=True)
     # Số điện thoại liên hệ (tuỳ chọn)
     phone = models.CharField(max_length=15, null=True, blank=True)
     # Trạng thái tài khoản (ACTIVE / SUSPENDED / LOCKED)
@@ -33,11 +62,17 @@ class User(AbstractUser):
     )
     #  M2M groups để đặt tên bảng nối rõ ràng
     role = models.ForeignKey(
-        Group,
-        on_delete=models.PROTECT,
-        blank=True,
-        related_name='role_users'
+    Role,
+    on_delete=models.PROTECT,
+    related_name="users"
     )
+    @property
+    def avatar_url(self):
+        if self.avatar:
+            return self.avatar.url
+        if self.google_avatar_url:
+            return self.google_avatar_url
+        return None
 
     class Meta:
         db_table = 'user_account'
@@ -96,7 +131,7 @@ class InstructorProfile(models.Model):
     applied_at = models.DateTimeField(auto_now_add=True)
     status = models.CharField(
         max_length=10,
-        choices=(('PENDING', 'Chờ duyệt'), ('APPROVED', 'Đã duyệt'), ('REJECTED', 'Từ chối')),
+        choices=(('PENDING', 'pending'), ('APPROVED', 'approved'), ('REJECTED', 'rejected')),
         default='PENDING'
     )
     # Lý do từ chối - bắt buộc điền khi status = REJECTED
@@ -122,3 +157,5 @@ class InstructorProfile(models.Model):
         indexes = [
             models.Index(fields=['status', 'applied_at']),              # Admin lọc hồ sơ mới chờ duyệt
         ]
+
+

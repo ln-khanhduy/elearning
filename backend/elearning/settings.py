@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+from datetime import timedelta
 from pathlib import Path
 import os
 from dotenv import load_dotenv
@@ -31,20 +32,19 @@ DEBUG = os.getenv('DEBUG') == 'True'
 ALLOWED_HOSTS = []
 
 # Application definition
-
 INSTALLED_APPS = [
-    'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
     'django.contrib.staticfiles',
     # Libs
     'corsheaders',
     'rest_framework',
     'rest_framework_simplejwt',
+    'rest_framework_simplejwt.token_blacklist',
     'drf_spectacular',
     'django_filters',
+    'cloudinary',
+    'cloudinary_storage',
     # apps
     'apps.common',
     'apps.courses',
@@ -56,11 +56,12 @@ INSTALLED_APPS = [
     'apps.reviews',
     'apps.system',
     'apps.users',
+    'apps.certificates',
     
 ]
-
 AUTH_USER_MODEL = 'users.User'
 
+# Middleware configuration
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
@@ -74,6 +75,7 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'elearning.urls'
 
+# Template configuration
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -88,13 +90,10 @@ TEMPLATES = [
         },
     },
 ]
-
 WSGI_APPLICATION = 'elearning.wsgi.application'
-
-
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
-
+# DATABASES configuration
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
@@ -109,11 +108,9 @@ DATABASES = {
     }
     
 }
-
-
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
-
+# Password validation configuration
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -128,8 +125,6 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
-
-
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
@@ -152,4 +147,55 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-CORS_ALLOW_ALL_ORIGINS = True
+# Email configuration
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = os.getenv('EMAIL_HOST')
+EMAIL_PORT = int(os.getenv('EMAIL_PORT', 587))
+EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True') == 'True'
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
+# OTP configuration
+GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
+GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
+GOOGLE_REDIRECT_URI = os.getenv("GOOGLE_REDIRECT_URI")
+
+# Django REST Framework configuration
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.AllowAny',
+    ],
+}
+
+# Simple JWT configuration
+SIMPLE_JWT = {
+    'SIGNING_KEY': os.getenv('JWT_SECRET') or SECRET_KEY,
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True,
+    'ALGORITHM': 'HS256',
+}
+
+# Cloudinary configuration
+STORAGES = {
+    "default": {
+        "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+}
+
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+
+# CORS and CSRF configuration
+FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:3000')
+CORS_ALLOWED_ORIGINS = [FRONTEND_URL]
+CORS_ALLOW_CREDENTIALS = True
+CSRF_COOKIE_SECURE = not DEBUG
+CSRF_TRUSTED_ORIGINS = [FRONTEND_URL]
