@@ -31,24 +31,24 @@ class Lesson(models.Model):
     )
 
     STATUS_CHOICES = (
+        ('DRAFT', 'Draft'),           # Bản nháp, chưa publish
         ('HIDDEN', 'Hidden'),         # Không publish
         ('PUBLISHED', 'Published'),   # Đã publish, học viên thấy
-        ('HIDDEN', 'Hidden'),         # Ẩn tạm thời
     )
 
     #id phần chứa bài học này
     section = models.ForeignKey(Section,on_delete=models.CASCADE,related_name='lessons')
     # URL dùng trong đường dẫn (VD: /courses/python-co-ban/bai-1-gioi-thieu)
-    slug = models.SlugField(unique=True)
+    slug = models.SlugField(max_length=100)
     # Tên bài học
     title = models.CharField(max_length=50)
     # Mô tả ngắn hiển thị trước khi vào bài           
     description = models.TextField(null=True, blank=True) 
     content_type = models.CharField(max_length=20, choices=CONTENT_TYPE_CHOICES, default='VIDEO')
     # URL video
-    video_url = models.URLField(null=True, blank=True)
+    video_file = models.FileField(upload_to="lessons/videos/", null=True, blank=True)
     # URL tài liệu đính kèm (PDF/Word), nếu có
-    material_url = models.URLField(null=True, blank=True)  
+    material_file = models.FileField(upload_to="lessons/materials/", null=True, blank=True)
     # Thứ tự trình bày (số nhỏ hơn hiển thị trước)
     order = models.PositiveIntegerField(default=0)
     # Thời lượng bài học (s)
@@ -66,3 +66,7 @@ class Lesson(models.Model):
         indexes = [
             models.Index(fields=['section', 'order']),  # Load nhanh
         ]
+        constraints = [
+            models.UniqueConstraint(fields=["section", "slug"],name="unique_section_lesson_slug"),            # Mỗi bài học trong cùng một phần phải có slug duy nhất
+            models.UniqueConstraint(fields=["section", "order"],name="unique_lesson_order_in_section")       # Mỗi bài học trong cùng một phần phải có thứ tự duy nhất
+        ]    

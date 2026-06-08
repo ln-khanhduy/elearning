@@ -5,7 +5,7 @@ from django.core.mail import send_mail
 from jsonschema import ValidationError
 
 from apps.users.services.otp_service import OTPService, OTP_EXPIRE_SECONDS
-from backend.apps.users.repositories.auth_repository import AuthRepository
+from apps.users.repositories.auth_repository import AuthRepository
 
 
 RESET_TOKEN_EXPIRE_SECONDS = 60 * 30
