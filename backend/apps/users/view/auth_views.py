@@ -9,6 +9,8 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.exceptions import APIException
+from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 from rest_framework_simplejwt.views import TokenRefreshView
 
@@ -69,7 +71,7 @@ class AuthLoginView(APIView):
 
 
 class AuthLogoutView(APIView):
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
 
     def post(self, request):
         AuthService.blacklist_refresh_token(request.COOKIES.get(REFRESH_COOKIE_NAME))
@@ -153,7 +155,7 @@ class GoogleCallbackView(APIView):
             response = HttpResponseRedirect(urllib.parse.urljoin(settings.FRONTEND_URL, "/oauth-success"))
             set_refresh_cookie(response, tokens["refresh"])
             return response
-        except Exception as exc:
+        except APIException as exc:
             fallback_url = urllib.parse.urljoin(settings.FRONTEND_URL, f"/login?error={urllib.parse.quote(str(exc))}")
             return HttpResponseRedirect(fallback_url)
 
