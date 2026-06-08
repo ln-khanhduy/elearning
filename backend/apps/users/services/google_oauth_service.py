@@ -92,3 +92,19 @@ class GoogleOAuthService:
         user.save(update_fields=["google_avatar_url"])
 
         return user
+
+    """
+    Chức năng: Xử lý đăng nhập bằng tài khoản Google
+    Đầu vào: - code: Mã code nhận được từ Google sau khi người dùng đăng nhập thành công
+    Đầu ra: - user: Đối tượng người dùng đã được xác thực hoặc tạo mới dựa trên thông tin từ Google
+    """
+    @staticmethod
+    def login_with_google_code(code):
+        token_data = GoogleOAuthService.exchange_google_code(code)
+        id_token = token_data.get("id_token")
+
+        if not id_token:
+            raise ValidationError("Không nhận được id_token từ Google.")
+
+        google_info = GoogleOAuthService.verify_google_id_token(id_token)
+        return GoogleOAuthService.get_or_create_google_user(google_info)
