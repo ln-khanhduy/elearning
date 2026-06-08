@@ -2,8 +2,10 @@ from django.conf import settings
 from django.core import signing
 from django.core.cache import cache
 from django.core.mail import send_mail
+from jsonschema import ValidationError
 
 from apps.users.services.otp_service import OTPService, OTP_EXPIRE_SECONDS
+from backend.apps.users.repositories.auth_repository import AuthRepository
 
 
 RESET_TOKEN_EXPIRE_SECONDS = 60 * 30
@@ -139,3 +141,78 @@ class PasswordResetService:
             [email],
             fail_silently=False,
         )
+
+    """ 
+    Chức năng: Xử lý yêu cầu gửi mã OTP đặt lại mật khẩu mới cho email đã đăng ký trước đó.
+    Đầu vào: email (địa chỉ email của người dùng)
+    Đầu ra: Hệ thống sẽ gửi mã OTP mới đến email người dùng nếu thông tin hợp lệ và không bị khóa.
+    Nếu email bị khóa hoặc không tồn tại tài khoản liên quan, sẽ trả về lỗi tương ứng.
+    """
+    @staticmethod
+    def send_reset_otp(email):
+        email = email.lower()
+
+        if PasswordResetService.check_otp_locked(email):
+            raise ValidationError("Email này đã bị khóa tạm thời do nhập sai OTP quá 5 lần. Vui lòng thử lại trong 30 phút.")
+
+        otp_code = OTPService.generate_otp_code()
+        PasswordResetService.set_otp_code(email, otp_code)
+        PasswordResetService.send_password_reset_email(email, otp_code)
+
+
+    """
+    Chức năng: Xử lý yêu cầu xác thực mã OTP đặt lại mật khẩu và tạo token đặt lại nếu OTP hợp lệ.
+    Đầu vào: email (địa chỉ email của người dùng), otp (mã OTP do người dùng nhập để xác thực)
+    Đầu ra: Nếu OTP hợp lệ, hệ thống sẽ trả về token đặt lại mật khẩu. Nếu OTP không hợp lệ hoặc có lỗi khác, sẽ trả về lỗi tương ứng.
+    """
+    @staticmethod
+    def verify_otp_and_create_token(email, otp):
+        email = email.lower()
+
+        if PasswordResetService.check_otp_locked(email):
+            raise ValidationError("Bạn đã nhập sai OTP quá 5 lần. Vui lòng thử lại trong 30 phút.")
+
+        stored_otp = PasswordResetService.get_otp_code(email)
+
+        if not stored_otp or stored_otp != otp:
+            attempts = PasswordResetService.increment_otp_attempts(email)
+            if attempts >= 5:
+                PasswordResetService.lock_otp_for_email(email)
+                raise ValidationError(f"Mã OTP sai. Bạn đã nhập sai {attempts} lần. Tài khoản sẽ bị khóa 30 phút.")
+            raise ValidationError(f"Mã OTP không đúng. Bạn còn {5 - attempts} lần thử.")
+
+        PasswordResetService.delete_otp_code(email)
+        PasswordResetService.reset_otp_attempts(email)
+        return PasswordResetService.get_password_reset_token(email)
+
+        
+    """ 
+    Chức năng: Xử lý yêu cầu đặt lại mật khẩu mới bằng token đặt lại mật khẩu.
+    Đầu vào: token (token đặt lại mật khẩu), password (mật khẩu mới)
+    Đầu ra: Nếu token hợp lệ và chưa được sử dụng, hệ thống sẽ cập nhật mật khẩu mới cho tài khoản liên quan và trả về đối tượng User.
+    Nếu token không hợp lệ, đã được sử dụng, hoặc có lỗi khác, sẽ trả về lỗi tương ứng.
+    """
+    @staticmethod
+    def reset_password(token, password):
+        if not token or not token.strip():
+            raise ValidationError("Token không hợp lệ.")
+
+        try:
+            email = PasswordResetService.verify_password_reset_token(token)
+        except signing.BadSignature:
+            raise ValidationError("Yêu cầu đặt lại mật khẩu không hợp lệ.")
+        except signing.SignatureExpired:
+            raise ValidationError("Yêu cầu đặt lại mật khẩu đã hết hạn.")
+
+        if PasswordResetService.is_reset_token_used(token):
+            raise ValidationError("Yêu cầu đặt lại mật khẩu đã được sử dụng.")
+
+        user = AuthRepository.get_user_by_email(email)
+
+        if not user:
+            raise ValidationError("Không tìm thấy tài khoản liên quan đến yêu cầu này.")
+
+        user.set_password(password)
+        user.save(update_fields=["password"])
+        PasswordResetService.mark_reset_token_used(token)
+        return user

@@ -1,12 +1,4 @@
-import {
-  forgotPasswordApi,
-  loginApi,
-  resetPasswordApi,
-  sendRegisterOtpApi,
-  verifyOtpApi,
-  verifyRegisterOtpApi,
-  resendRegisterOtpApi,
-} from "../api/authAPI";
+import {forgotPasswordApi, loginApi, resetPasswordApi, sendRegisterOtpApi, verifyOtpApi, verifyRegisterOtpApi, resendRegisterOtpApi, } from "../api/authAPI";
 import { clearAuthSessionData, setAccessToken } from '../utils/authToken';
 import { refreshTokenApi } from "../api/authAPI";
 
@@ -31,35 +23,23 @@ export const validateLogin = ({ login, password }) => {
   }
 };
 
-export const validateRegister = ({
-  fullName,
-  email,
-  password,
-  confirmPassword,
-  acceptedTerms,
-}) => {
+export const validateRegister = ({fullName, email, password, confirmPassword, acceptedTerms,}) => {
   if (!fullName || !fullName.trim()) {
     throw new Error("Họ và tên không được để trống.");
   }
-
   validateEmail(email);
-
   if (!password || !password.trim()) {
     throw new Error("Mật khẩu không được để trống.");
   }
-
   if (password.length < MIN_PASSWORD_LENGTH) {
     throw new Error("Mật khẩu phải lớn hơn 6 ký tự.");
   }
-
   if (!confirmPassword || !confirmPassword.trim()) {
     throw new Error("Nhập lại mật khẩu không được để trống.");
   }
-
   if (password !== confirmPassword) {
     throw new Error("Mật khẩu xác nhận không khớp.");
   }
-
   if (!acceptedTerms) {
     throw new Error("Bạn phải đồng ý với Điều khoản và Chính sách bảo mật.");
   }
@@ -86,6 +66,7 @@ export const validateResetPassword = ({ password, confirmPassword }) => {
   }
 };
 
+
 export const login = async ({ login, password }) => {
   validateLogin({ login, password });
   clearAuthSessionData();
@@ -94,20 +75,8 @@ export const login = async ({ login, password }) => {
   return response;
 };
 
-export const sendRegisterOtp = async ({
-  fullName,
-  email,
-  password,
-  confirmPassword,
-  acceptedTerms,
-}) => {
-  validateRegister({
-    fullName,
-    email,
-    password,
-    confirmPassword,
-    acceptedTerms,
-  });
+export const sendRegisterOtp = async ({fullName, email,password, confirmPassword,acceptedTerms,}) => {
+  validateRegister({fullName, email,password, confirmPassword,acceptedTerms,});
 
   await sendRegisterOtpApi({
     full_name: fullName.trim(),
@@ -116,7 +85,6 @@ export const sendRegisterOtp = async ({
     confirm_password: confirmPassword,
     accepted_terms: acceptedTerms,
   });
-
   sessionStorage.setItem("register_email", email.toLowerCase().trim());
 };
 
@@ -131,7 +99,6 @@ export const verifyRegisterOtp = async (email, otp) => {
 
   setAccessToken(response.access);
   sessionStorage.removeItem("register_email");
-
   return response;
 };
 
@@ -141,17 +108,11 @@ export const forgotPassword = async (email) => {
   sessionStorage.setItem('reset_email', email);
 };
 
-export const verifyOtp = async (
-  email,
-  otp
-) => {
+export const verifyOtp = async (email,otp) => {
   validateEmail(email);
   validateOtpCode(otp);
 
-  return await verifyOtpApi({
-    email,
-    otp,
-  });
+  return await verifyOtpApi({email,otp,});
 };
 
 export const resendOtp = async (email) => {

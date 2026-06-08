@@ -21,11 +21,12 @@ class Role(models.Model):
 class RolePermission(models.Model):
     role = models.ForeignKey(Role,on_delete=models.CASCADE,related_name="permissions", null=True,blank=True)
     # Mã định danh duy nhất cho quyền 
-    code = models.CharField(max_length=100, unique=True)
+    code = models.CharField(max_length=100)
     # Tên hiển thị cho quyền
     name = models.CharField(max_length=150)
     class Meta:
         db_table = "role_permission"
+        constraints = [models.UniqueConstraint(fields=["role","code"],name="unique_role_permission")]
 
     def __str__(self):
         return self.name

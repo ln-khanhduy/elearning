@@ -15,7 +15,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenRefreshView
 
 from apps.users.repositories.auth_repository import AuthRepository
-from apps.users.serializers.auth import (
+from apps.users.serializers.auth_serializer import (
     ForgotPasswordSerializer,
     LoginSerializer,
     RegisterResendOTPSerializer,

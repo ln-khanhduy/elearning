@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.core.cache import cache
 from django.core.mail import send_mail
+from jsonschema import ValidationError
 
 from apps.users.repositories.auth_repository import AuthRepository
 from apps.users.services.otp_service import OTPService, OTP_EXPIRE_SECONDS
@@ -134,3 +135,78 @@ class RegisterService:
         first_name, _, last_name = full_name.partition(" ")
         role = AuthRepository.get_or_create_role("STUDENT", "Student")
         return AuthRepository.create_user(username=email, email=email,password=password,first_name=first_name,last_name=last_name,role=role,)
+    
+    """ 
+    Chức năng: Xử lý yêu cầu gửi mã OTP đăng ký mới.
+    Đầu vào:
+        - full_name: Họ và tên người dùng.
+        - email: Địa chỉ email đăng ký.
+        - password: Mật khẩu tài khoản.
+    Đầu ra: Hệ thống sẽ gửi mã OTP đến email người dùng nếu thông tin hợp lệ.
+    """
+    @staticmethod
+    def send_register_otp(full_name, email, password):
+        email = email.lower()
+        otp_code = OTPService.generate_otp_code()
+        RegisterService.set_register_data(email, {"full_name": full_name, "email": email, "password": password})
+        RegisterService.set_register_otp(email, otp_code)
+        RegisterService.send_register_otp_email(email, otp_code)
+
+    """ 
+    Chức năng: Xử lý yêu cầu xác thực mã OTP đăng ký và tạo tài khoản nếu OTP hợp lệ.
+    Đầu vào:
+        - email: Địa chỉ email đăng ký.
+        - otp: Mã OTP do người dùng nhập để xác thực.
+    Đầu ra: Nếu OTP hợp lệ, hệ thống sẽ tạo tài khoản mới và trả về đối tượng User. Nếu OTP không hợp lệ hoặc có lỗi khác, sẽ trả về lỗi tương ứng.
+    """
+    @staticmethod
+    def verify_register_otp(email, otp):
+        email = email.lower()
+
+        if RegisterService.check_register_otp_locked(email):
+            raise ValidationError("Bạn đã nhập sai OTP quá 5 lần. Vui lòng thử lại sau 30 phút.")
+
+        stored_otp = RegisterService.get_register_otp(email)
+
+        if not stored_otp or stored_otp != otp:
+            attempts = RegisterService.increment_register_otp_attempts(email)
+            if attempts >= 5:
+                RegisterService.lock_register_otp_for_email(email)
+                raise ValidationError(f"OTP sai {attempts} lần. Tài khoản tạm khóa 30 phút.")
+            raise ValidationError(f"OTP không đúng. Bạn còn {5 - attempts} lần thử.")
+
+        RegisterService.reset_register_otp_attempts(email)
+        register_data = RegisterService.get_register_data(email)
+
+        if not register_data:
+            raise ValidationError("Thông tin đăng ký đã hết hạn.")
+        if AuthRepository.get_user_by_email(email):
+            raise ValidationError("Email đã được sử dụng.")
+
+        user = RegisterService.create_student_user(register_data["full_name"], register_data["email"], register_data["password"])
+        RegisterService.delete_register_otp(email)
+        RegisterService.delete_register_data(email)
+        return user
+
+    """
+    Chức năng: Xử lý yêu cầu gửi lại mã OTP đăng ký mới cho email đã đăng ký trước đó.
+    Đầu vào:
+        - email: Địa chỉ email đăng ký.
+    Đầu ra: Hệ thống sẽ gửi mã OTP mới đến email người dùng nếu thông tin hợp lệ và không bị khóa.
+    Nếu email bị khóa hoặc không tồn tại thông tin đăng ký, sẽ trả về lỗi tương ứng.
+    """
+    @staticmethod
+    def resend_register_otp(email):
+        email = email.lower()
+
+        if RegisterService.check_register_otp_locked(email):
+            raise ValidationError("Bạn đã nhập sai OTP quá nhiều lần. Vui lòng thử lại sau.")
+
+        register_data = RegisterService.get_register_data(email)
+
+        if not register_data:
+            raise ValidationError("Thông tin đăng ký đã hết hạn. Vui lòng đăng ký lại.")
+
+        otp = OTPService.generate_otp_code()
+        RegisterService.set_register_otp(email, otp)
+        RegisterService.send_register_otp_email(email, otp)
