@@ -10,7 +10,7 @@ class UserSerializer(serializers.ModelSerializer):
     avatar_url = serializers.SerializerMethodField()
     class Meta:
         model = User
-        fields = [ 'id', 'username', 'email', 'first_name', 'last_name', 'full_name','role', 'avatar_url',]
+        fields = [ 'id', 'username', 'email', 'first_name', 'last_name', 'full_name', 'phone', 'role', 'avatar_url', 'account_status', 'date_joined', 'last_login',]
     def get_full_name(self, obj):
         return obj.get_full_name() or obj.first_name
     # Lấy URL ảnh đại diện, ưu tiên ảnh upload nếu có, nếu không thì dùng URL từ Google OAuth

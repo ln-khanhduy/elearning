@@ -41,7 +41,7 @@ function LoginPage() {
       }else{
         await reloadUser();
       }
-      navigate("/home", { replace: true });
+      navigate("/profile", { replace: true });
     } catch (err) {
       setError(err.message || "Đăng nhập thất bại.");
     } finally {
@@ -68,7 +68,7 @@ function LoginPage() {
       setAccessToken(data.access);
       setUser(data.user);
 
-      navigate("/home", { replace: true });
+      navigate("/profile", { replace: true });
     } catch (error) {
       console.error("Google login error:", error);
       setError("Đăng nhập Google thất bại.");

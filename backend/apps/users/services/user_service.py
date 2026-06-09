@@ -4,6 +4,17 @@ from rest_framework.exceptions import ValidationError
 from apps.users.repositories.user_repository import UserRepository, InstructorRepository
 
 
+ROLE_HIERARCHY = {
+    "SUPERADMIN": 0,
+    "COURSE_ADMIN": 1,
+    "INSTRUCTOR_MANAGER": 1,
+    "USER_MANAGER": 1,
+    "FINANCE_ADMIN": 1,
+    "INSTRUCTOR": 2,
+    "STUDENT": 3,
+}
+
+
 class UserService:
     @staticmethod
     def change_role(user_id, role_id):
@@ -22,6 +33,15 @@ class UserService:
 
         if user.role and user.role.code == "SUPERADMIN":
             raise ValidationError({"detail": "Không thể khóa tài khoản Super Admin."})
+
+        # Kiểm tra phân cấp: admin không thể khóa người có cấp bậc cao hơn hoặc ngang hàng
+        admin_role_code = admin_user.role.code if admin_user.role else "STUDENT"
+        target_role_code = user.role.code if user.role else "STUDENT"
+        admin_level = ROLE_HIERARCHY.get(admin_role_code, 99)
+        target_level = ROLE_HIERARCHY.get(target_role_code, 99)
+
+        if admin_level >= target_level:
+            raise ValidationError({"detail": "Bạn không có quyền khóa tài khoản này."})
 
         user.account_status = "LOCKED"
         user.account_status_reason = reason

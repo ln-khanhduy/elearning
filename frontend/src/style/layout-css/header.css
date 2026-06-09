@@ -1,48 +1,58 @@
 .header-container {
   height: 72px;
-
   background: white;
-
   border-bottom: 1px solid #eef2f6;
-
   display: flex;
   align-items: center;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
 }
 
 .header-wrapper {
   display: flex;
-
   justify-content: space-between;
   align-items: center;
-
-  padding-left: 28px;
-  padding-right: 28px;
+  padding-left: 16px;
+  padding-right: 16px;
 }
 
 /* LEFT */
 .header-left {
   display: flex;
   align-items: center;
+  gap: 12px;
+}
 
-  gap: 40px;
+/* Nút toggle sidebar cho mobile */
+.sidebar-toggle {
+  border: none;
+  background: transparent;
+  color: var(--primary, #0f3d75);
+  font-size: 24px;
+  padding: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* LOGO */
 .logo-box {
   display: flex;
   align-items: center;
-
   gap: 10px;
 }
 
 .logo-img {
-  height: 42px;
+  height: 36px;
 }
 
 .logo {
   color: var(--primary);
-
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 700;
 }
 
@@ -50,18 +60,14 @@
 .nav-menu {
   display: flex;
   align-items: center;
-
   gap: 28px;
 }
 
 .nav-menu a {
   color: #4b5563;
-
   font-size: 14px;
   font-weight: 500;
-
   text-decoration: none;
-
   transition: 0.2s;
 }
 
@@ -73,25 +79,19 @@
 .header-right {
   display: flex;
   align-items: center;
-
-  gap: 14px;
+  gap: 8px;
 }
 
 /* SEARCH */
 .search-box {
-  width: 250px;
+  width: 200px;
   height: 40px;
-
   display: flex;
   align-items: center;
-
   gap: 10px;
-
   padding: 0 14px;
-
   border: 1px solid #dce3ea;
   border-radius: 10px;
-
   background: #f8fafc;
 }
 
@@ -101,12 +101,9 @@
 
 .search-box input {
   width: 100%;
-
   border: none;
   outline: none;
-
   background: transparent;
-
   font-size: 14px;
 }
 
@@ -116,16 +113,14 @@
 
 /* BUTTON */
 .header-right .btn {
-  height: 40px;
-
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
-
   border-radius: 10px;
-
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
+  white-space: nowrap;
 }
 
 .header-right .btn-outline-primary {
@@ -148,36 +143,7 @@
   border-color: #0b2f59;
 }
 
-/* RESPONSIVE */
-@media (max-width: 992px) {
-
-  .nav-menu {
-    display: none;
-  }
-
-  .search-box {
-    width: 180px;
-  }
-
-}
-
-@media (max-width: 768px) {
-
-  .search-box {
-    display: none;
-  }
-
-  .header-wrapper {
-    padding-left: 16px;
-    padding-right: 16px;
-  }
-
-  .header-right {
-    gap: 8px;
-  }
-
-}
-
+/* ===== USER ===== */
 .user-menu {
   position: relative;
 }
@@ -190,8 +156,8 @@
 }
 
 .avatar-circle {
-  width: 42px;
-  height: 42px;
+  width: 38px;
+  height: 38px;
   border-radius: 50%;
   background-color: #0b3b75;
   color: #fff;
@@ -199,11 +165,19 @@
   align-items: center;
   justify-content: center;
   font-weight: 700;
+  font-size: 14px;
+}
+
+.avatar-img {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  object-fit: cover;
 }
 
 .user-dropdown {
   position: absolute;
-  top: 52px;
+  top: 48px;
   right: 0;
   width: 160px;
   background: #fff;
@@ -225,6 +199,7 @@
   text-decoration: none;
   border-radius: 8px;
   cursor: pointer;
+  font-size: 14px;
 }
 
 .user-dropdown-item:hover {
@@ -238,31 +213,82 @@
 .user-actions {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
 }
 
-.user-fullname {
-  font-size: 14px;
+.user-email {
+  font-size: 13px;
   font-weight: 500;
   color: #334155;
-  max-width: 180px;
+  max-width: 140px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.user-menu {
-  position: relative;
-}
-
-.avatar-img {
-  width: 42px;
-  height: 42px;
-  border-radius: 50%;
-  object-fit: cover;
-}
-
 .header-auth-loading {
-  width: 220px;
-  height: 40px;
+  width: 120px;
+  height: 38px;
+}
+
+/* ===== RESPONSIVE: Mobile-first ===== */
+
+/* Tablet (≥ 576px) */
+@media (min-width: 576px) {
+  .header-wrapper {
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+
+  .header-left {
+    gap: 24px;
+  }
+
+  .logo-img {
+    height: 42px;
+  }
+
+  .logo {
+    font-size: 18px;
+  }
+
+  .header-right {
+    gap: 12px;
+  }
+
+  .header-right .btn {
+    height: 40px;
+    font-size: 14px;
+  }
+
+  .avatar-circle,
+  .avatar-img {
+    width: 42px;
+    height: 42px;
+  }
+
+  .user-email {
+    font-size: 14px;
+    max-width: 180px;
+  }
+}
+
+/* Desktop (≥ 992px) */
+@media (min-width: 992px) {
+  .header-wrapper {
+    padding-left: 28px;
+    padding-right: 28px;
+  }
+
+  .header-left {
+    gap: 40px;
+  }
+
+  .search-box {
+    width: 250px;
+  }
+
+  .header-right {
+    gap: 14px;
+  }
 }

@@ -1,6 +1,7 @@
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.core.cache import cache
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import ensure_csrf_cookie
 from rest_framework import status
@@ -24,6 +25,20 @@ from apps.users.services.google_oauth_service import GoogleOAuthService
 from apps.users.services.password_reset_service import PasswordResetService
 from apps.users.services.register_service import RegisterService
 from apps.users.utils.cookies import REFRESH_COOKIE_NAME, delete_refresh_cookie, set_refresh_cookie
+
+
+RATE_LIMIT_CACHE_PREFIX = "rate_limit"
+RATE_LIMIT_MAX_ATTEMPTS = 5
+RATE_LIMIT_WINDOW_SECONDS = 300  # 5 phút
+
+
+def _check_rate_limit(key: str) -> None:
+    """Kiểm tra rate limit dùng cache. Nếu vượt quá số lần cho phép thì raise ValidationError."""
+    cache_key = f"{RATE_LIMIT_CACHE_PREFIX}:{key}"
+    attempts = cache.get(cache_key, 0)
+    if attempts >= RATE_LIMIT_MAX_ATTEMPTS:
+        raise ValidationError("Bạn đã thực hiện quá nhiều yêu cầu. Vui lòng thử lại sau 5 phút.")
+    cache.set(cache_key, attempts + 1, RATE_LIMIT_WINDOW_SECONDS)
 
 
 @method_decorator(ensure_csrf_cookie, name="dispatch")
@@ -59,6 +74,8 @@ class AuthLoginView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
+        _check_rate_limit(f"login:{request.META.get('REMOTE_ADDR', 'unknown')}")
+
         serializer = LoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
@@ -122,6 +139,18 @@ class AuthSessionView(APIView):
 
         try:
             refresh = RefreshToken(refresh_token)
+
+            # Kiểm tra token đã bị blacklist chưa
+            try:
+                refresh.check_blacklist()
+            except Exception:
+                response = Response(
+                    {"detail": "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại."},
+                    status=status.HTTP_401_UNAUTHORIZED,
+                )
+                delete_refresh_cookie(response)
+                return response
+
             access = str(refresh.access_token)
 
             User = get_user_model()

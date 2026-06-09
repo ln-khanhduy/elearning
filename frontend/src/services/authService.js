@@ -117,7 +117,7 @@ export const verifyOtp = async (email,otp) => {
 
 export const resendOtp = async (email) => {
   validateEmail(email);
-  await forgotPasswordApi({ email });
+  await forgotPasswordApi({ email: email.toLowerCase().trim() });
 };
 
 export const resetPassword = async (token, password, confirmPassword) => {

@@ -1,18 +1,61 @@
 .main-layout {
-  display: flex;
   min-height: 100vh;
   background: #f5f7fb;
 }
 
-.main-layout-right {
-  flex: 1;
+.main-layout-left {
   display: flex;
   flex-direction: column;
-  min-width: 0;
+  min-height: 100vh;
+}
+
+.main-layout-body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  margin-top: 72px;
+  position: relative;
 }
 
 .main-content {
   flex: 1;
   padding: 24px;
   overflow-y: auto;
+  min-width: 0;
+  height: calc(100vh - 72px);
+}
+
+/* Overlay cho mobile sidebar */
+.sidebar-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 998;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* ===== RESPONSIVE: Mobile-first ===== */
+
+/* Tablet nhỏ & Mobile (< 992px) */
+@media (max-width: 991.98px) {
+  .main-content {
+    padding: 16px;
+    height: auto;
+    min-height: calc(100vh - 72px);
+  }
+}
+
+/* Mobile (< 576px) */
+@media (max-width: 575.98px) {
+  .main-content {
+    padding: 12px;
+  }
 }
