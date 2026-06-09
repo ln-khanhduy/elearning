@@ -3,99 +3,105 @@ from apps.users.models import Role, RolePermission
 
 
 PERMISSIONS = {
-    # Admin / Role / Permission
-    "admin.create": "Tạo admin",
-    "admin.assign_role": "Gán role cho admin",
-    "admin.change_role": "Thay đổi role admin",
-    "admin.lock": "Khóa admin",
-    "admin.delete": "Xóa admin",
-    "admin.view": "Xem thông tin admin",
+    # Admin
+    "admin.admin.create": "Tạo admin",
+    "admin.admin.assign_role": "Gán role cho admin",
+    "admin.admin.change_role": "Thay đổi role admin",
+    "admin.admin.lock": "Khóa admin",
+    "admin.admin.delete": "Xóa admin",
+    "admin.admin.view": "Xem thông tin admin",
 
-    "role.create": "Tạo role",
-    "role.update": "Sửa role",
-    "role.delete": "Xóa role",
-    "role.view": "Xem danh sách role",
-    "role.view_permissions": "Xem danh sách permission của role",
-    "role.assign_permission": "Gán permission cho role",
-    "role.revoke_permission": "Thu hồi permission của role",
+    # Role
+    "admin.role.create": "Tạo role",
+    "admin.role.update": "Sửa role",
+    "admin.role.delete": "Xóa role",
+    "admin.role.view": "Xem danh sách role",
+    "admin.role.view_permissions": "Xem danh sách permission của role",
+    "admin.role.assign_permission": "Gán permission cho role",
+    "admin.role.revoke_permission": "Thu hồi permission của role",
 
     # Dashboard
-    "dashboard.view": "Xem dashboard",
+    "admin.dashboard.view": "Xem dashboard",
 
     # Course
-    "course.view": "Xem danh sách khóa học",
-    "course.create": "Tạo khóa học",
-    "course.update": "Sửa khóa học",
-    "course.delete": "Xóa khóa học",
-    "course.hide": "Ẩn khóa học",
-    "course.approve": "Duyệt khóa học",
-    "course.feedback_instructor": "Gửi phản hồi cho instructor",
+    "course.course.view": "Xem danh sách khóa học",
+    "course.course.create": "Tạo khóa học",
+    "course.course.update": "Sửa khóa học",
+    "course.course.delete": "Xóa khóa học",
+    "course.course.hide": "Ẩn khóa học",
+    "course.course.approve": "Duyệt khóa học",
+    "course.course.feedback_instructor": "Gửi phản hồi cho instructor",
 
-    # Category / Tag
-    "category.create": "Tạo danh mục",
-    "category.update": "Sửa danh mục",
-    "category.delete": "Xóa danh mục",
-    "category.view": "Xem danh mục",
+    # Category
+    "course.category.create": "Tạo danh mục",
+    "course.category.update": "Sửa danh mục",
+    "course.category.delete": "Xóa danh mục",
+    "course.category.view": "Xem danh mục",
 
-    "tag.create": "Tạo tag",
-    "tag.update": "Sửa tag",
-    "tag.delete": "Xóa tag",
-    "tag.view": "Xem tag",
+    # Tag
+    "course.tag.create": "Tạo tag",
+    "course.tag.update": "Sửa tag",
+    "course.tag.delete": "Xóa tag",
+    "course.tag.view": "Xem tag",
 
-    # Lesson / Quiz
-    "lesson.create": "Tạo bài học",
-    "lesson.update": "Sửa bài học",
-    "lesson.delete": "Xóa bài học",
+    # Lesson
+    "course.lesson.create": "Tạo bài học",
+    "course.lesson.update": "Sửa bài học",
+    "course.lesson.delete": "Xóa bài học",
 
-    "quiz.create": "Tạo bài kiểm tra",
-    "quiz.update": "Sửa bài kiểm tra",
-    "quiz.delete": "Xóa bài kiểm tra",
+    # Quiz
+    "course.quiz.create": "Tạo bài kiểm tra",
+    "course.quiz.update": "Sửa bài kiểm tra",
+    "course.quiz.delete": "Xóa bài kiểm tra",
 
-    # Comment / Review
-    "comment.create": "Bình luận",
-    "comment.reply": "Phản hồi bình luận",
-    "comment.hide": "Ẩn bình luận",
-    "comment.delete": "Xóa bình luận",
+    # Comment
+    "course.comment.create": "Bình luận",
+    "course.comment.reply": "Phản hồi bình luận",
+    "course.comment.hide": "Ẩn bình luận",
+    "course.comment.delete": "Xóa bình luận",
 
-    "review.create": "Đánh giá khóa học",
-    "review.view": "Xem đánh giá",
+    # Review
+    "course.review.create": "Đánh giá khóa học",
+    "course.review.view": "Xem đánh giá",
 
     # Instructor
-    "instructor.view": "Xem danh sách instructor",
-    "instructor.lock": "Khóa tài khoản instructor",
-    "instructor.support": "Hỗ trợ instructor",
-    "instructor.withdraw_request": "Gửi yêu cầu rút tiền",
-    "instructor.sales_history": "Xem lịch sử bán hàng",
+    "user.instructor.view": "Xem danh sách instructor",
+    "user.instructor.lock": "Khóa tài khoản instructor",
+    "user.instructor.support": "Hỗ trợ instructor",
+    "user.instructor.approve": "Duyệt hồ sơ instructor",
+    "user.instructor.reject": "Từ chối hồ sơ instructor",
+    "user.instructor.withdraw_request": "Gửi yêu cầu rút tiền",
+    "user.instructor.sales_history": "Xem lịch sử bán hàng",
 
     # User
-    "user.view": "Xem thông tin user",
-    "user.update": "Cập nhật thông tin user",
-    "user.lock": "Khóa tài khoản user",
-    "user.unlock": "Mở khóa tài khoản user",
-    "user.notify": "Gửi thông báo cho user",
-    "user.complaint_resolve": "Giải quyết khiếu nại user",
+    "user.user.view": "Xem thông tin user",
+    "user.user.update": "Cập nhật thông tin user",
+    "user.user.lock": "Khóa tài khoản user",
+    "user.user.unlock": "Mở khóa tài khoản user",
+    "user.user.notify": "Gửi thông báo cho user",
+    "user.user.complaint_resolve": "Giải quyết khiếu nại user",
 
     # Finance
-    "finance.revenue_view": "Xem doanh thu",
-    "finance.withdraw_approve": "Duyệt lệnh rút tiền",
-    "finance.discount_config": "Cấu hình giảm giá",
-    "finance.fee_config": "Cấu hình thu phí",
-    "finance.report_export": "Xuất báo cáo tài chính",
+    "finance.finance.revenue_view": "Xem doanh thu",
+    "finance.finance.withdraw_approve": "Duyệt lệnh rút tiền",
+    "finance.finance.discount_config": "Cấu hình giảm giá",
+    "finance.finance.fee_config": "Cấu hình thu phí",
+    "finance.finance.report_export": "Xuất báo cáo tài chính",
 
-    # Student
-    "course.search": "Tìm kiếm khóa học",
-    "course.preview": "Xem thử khóa học",
-    "course.buy": "Mua khóa học",
-    "wallet.deposit": "Nạp tiền vào ví",
-    "payment.create": "Thanh toán",
-    "learning.view": "Học bài",
-    "assignment.submit": "Làm bài tập",
-    "profile.manage": "Quản lý thông tin cá nhân",
-    "my_course.view": "Xem khóa học đã mua",
+    # Student permissions
+    "student.course.search": "Tìm kiếm khóa học",
+    "student.course.preview": "Xem thử khóa học",
+    "student.course.buy": "Mua khóa học",
+    "student.wallet.deposit": "Nạp tiền vào ví",
+    "student.payment.create": "Thanh toán",
+    "student.learning.view": "Học bài",
+    "student.assignment.submit": "Làm bài tập",
+    "student.profile.manage": "Quản lý thông tin cá nhân",
+    "student.my_course.view": "Xem khóa học đã mua",
 
-    # Instructor finance / discount
-    "wallet.view_balance": "Xem số dư ví",
-    "course.discount_self": "Tự giảm giá khóa học",
+    # Instructor finance
+    "instructor.wallet.view_balance": "Xem số dư ví",
+    "instructor.course.discount_self": "Tự giảm giá khóa học",
 }
 
 
@@ -103,89 +109,91 @@ ROLE_PERMISSIONS = {
     "SUPERADMIN": list(PERMISSIONS.keys()),
 
     "COURSE_ADMIN": [
-        "course.view",
-        "course.approve",
-        "course.hide",
-        "course.delete",
-        "course.feedback_instructor",
+        "course.course.view",
+        "course.course.approve",
+        "course.course.hide",
+        "course.course.delete",
+        "course.course.feedback_instructor",
 
-        "category.create",
-        "category.update",
-        "category.delete",
-        "category.view",
+        "course.category.create",
+        "course.category.update",
+        "course.category.delete",
+        "course.category.view",
 
-        "tag.create",
-        "tag.update",
-        "tag.delete",
-        "tag.view",
+        "course.tag.create",
+        "course.tag.update",
+        "course.tag.delete",
+        "course.tag.view",
 
-        "comment.hide",
-        "comment.delete",
+        "course.comment.hide",
+        "course.comment.delete",
     ],
 
     "INSTRUCTOR_MANAGER": [
-        "instructor.view",
-        "instructor.lock",
-        "instructor.support",
+        "user.instructor.view",
+        "user.instructor.lock",
+        "user.instructor.support",
+        "user.instructor.approve",
+        "user.instructor.reject",
     ],
 
     "USER_MANAGER": [
-        "user.view",
-        "user.update",
-        "user.lock",
-        "user.unlock",
-        "user.notify",
-        "user.complaint_resolve",
+        "user.user.view",
+        "user.user.update",
+        "user.user.lock",
+        "user.user.unlock",
+        "user.user.notify",
+        "user.user.complaint_resolve",
     ],
 
     "FINANCE_ADMIN": [
-        "finance.revenue_view",
-        "finance.withdraw_approve",
-        "finance.discount_config",
-        "finance.fee_config",
-        "finance.report_export",
+        "finance.finance.revenue_view",
+        "finance.finance.withdraw_approve",
+        "finance.finance.discount_config",
+        "finance.finance.fee_config",
+        "finance.finance.report_export",
     ],
 
     "INSTRUCTOR": [
-        "course.create",
-        "course.update",
-        "course.delete",
-        "course.discount_self",
+        "course.course.create",
+        "course.course.update",
+        "course.course.delete",
+        "instructor.course.discount_self",
 
-        "lesson.create",
-        "lesson.update",
-        "lesson.delete",
+        "course.lesson.create",
+        "course.lesson.update",
+        "course.lesson.delete",
 
-        "quiz.create",
-        "quiz.update",
-        "quiz.delete",
+        "course.quiz.create",
+        "course.quiz.update",
+        "course.quiz.delete",
 
-        "wallet.view_balance",
-        "instructor.sales_history",
-        "instructor.withdraw_request",
+        "instructor.wallet.view_balance",
+        "user.instructor.sales_history",
+        "user.instructor.withdraw_request",
 
-        "comment.reply",
+        "course.comment.reply",
     ],
 
     "STUDENT": [
-        "course.search",
-        "course.preview",
-        "course.buy",
+        "student.course.search",
+        "student.course.preview",
+        "student.course.buy",
 
-        "wallet.deposit",
-        "payment.create",
+        "student.wallet.deposit",
+        "student.payment.create",
 
-        "learning.view",
-        "assignment.submit",
+        "student.learning.view",
+        "student.assignment.submit",
 
-        "review.create",
-        "review.view",
+        "course.review.create",
+        "course.review.view",
 
-        "comment.create",
-        "comment.reply",
+        "course.comment.create",
+        "course.comment.reply",
 
-        "profile.manage",
-        "my_course.view",
+        "student.profile.manage",
+        "student.my_course.view",
     ],
 }
 

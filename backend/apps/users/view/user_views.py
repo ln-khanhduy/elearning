@@ -15,7 +15,7 @@ from apps.users.serializers.user_serializer import (
 
 class UserListAPIView(APIView):
     permission_classes = [IsAuthenticated, HasRequiredPermission]
-    required_permission = "user.view"
+    required_permission = "user.user.view"
 
     def get(self, request):
         serializer = UserListSerializer(UserRepository.get_all_users(), many=True)
@@ -24,7 +24,7 @@ class UserListAPIView(APIView):
 
 class UserDetailAPIView(APIView):
     permission_classes = [IsAuthenticated, HasRequiredPermission]
-    required_permission = "user.view"
+    required_permission = "user.user.view"
 
     def get(self, request, user_id):
         serializer = UserDetailSerializer(UserRepository.get_user_by_id(user_id))
@@ -50,7 +50,7 @@ class UpdateProfileAPIView(APIView):
 
 class ChangeUserRoleAPIView(APIView):
     permission_classes = [IsAuthenticated, HasRequiredPermission]
-    required_permission = "user.change_role"
+    required_permission = "admin.admin.change_role"
 
     def patch(self, request, user_id):
         serializer = ChangeUserRoleSerializer(data=request.data)
@@ -61,7 +61,7 @@ class ChangeUserRoleAPIView(APIView):
 
 class LockUserAPIView(APIView):
     permission_classes = [IsAuthenticated, HasRequiredPermission]
-    required_permission = "user.lock"
+    required_permission = "user.user.lock"
 
     def patch(self, request, user_id):
         serializer = LockUnlockUserSerializer(data=request.data)
@@ -72,7 +72,7 @@ class LockUserAPIView(APIView):
 
 class UnlockUserAPIView(APIView):
     permission_classes = [IsAuthenticated, HasRequiredPermission]
-    required_permission = "user.unlock"
+    required_permission = "user.user.unlock"
 
     def patch(self, request, user_id):
         UserService.unlock_user(user_id, request.user)
@@ -101,7 +101,7 @@ class InstructorApplyAPIView(APIView):
 
 class InstructorApplicationListAPIView(APIView):
     permission_classes = [IsAuthenticated, HasRequiredPermission]
-    required_permission = "instructor.view"
+    required_permission = "user.instructor.view"
 
     def get(self, request):
         serializer = InstructorApplicationSerializer(InstructorRepository.get_all_applications(), many=True)
@@ -110,7 +110,7 @@ class InstructorApplicationListAPIView(APIView):
 
 class InstructorApplicationDetailAPIView(APIView):
     permission_classes = [IsAuthenticated, HasRequiredPermission]
-    required_permission = "instructor.view"
+    required_permission = "user.instructor.view"
 
     def get(self, request, application_id):
         serializer = InstructorApplicationSerializer(InstructorRepository.get_application_by_id(application_id))
@@ -120,15 +120,15 @@ class InstructorApplicationDetailAPIView(APIView):
 class InstructorApplicationReviewAPIView(APIView):
     permission_classes = [IsAuthenticated, HasRequiredPermission]
 
+    def get_required_permission(self, review_status):
+        return "user.instructor.approve" if review_status == "APPROVED" else "user.instructor.reject"
+
     def patch(self, request, application_id):
         serializer = InstructorReviewSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
         review_status = serializer.validated_data["status"]
-        self.required_permission = "instructor.approve" if review_status == "APPROVED" else "instructor.reject"
-
-        if not HasRequiredPermission().has_permission(request, self):
-            return Response({"detail": "Bạn không có quyền thực hiện chức năng này."}, status=status.HTTP_403_FORBIDDEN)
+        self.required_permission = self.get_required_permission(review_status)
 
         application, detail = InstructorService.review_application(
             application_id,

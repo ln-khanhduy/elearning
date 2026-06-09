@@ -1,5 +1,5 @@
 export const sidebarItems = [
-  { type: "item", label: "Dashboard", path: "/dashboard", icon: "bi-grid", roles: ["STUDENT", "INSTRUCTOR", "COURSE_ADMIN", "INSTRUCTOR_MANAGER", "USER_MANAGER", "FINANCE_ADMIN", "SUPERADMIN"] },
+  { type: "item", label: "Dashboard", path: "/dashboard", icon: "bi-grid", roles: ["SUPERADMIN"] },
 
   { type: "group", label: "Quản lý học tập" },
   { type: "item", label: "Khóa học", path: "/courses", icon: "bi-mortarboard", roles: ["STUDENT", "COURSE_ADMIN"] },

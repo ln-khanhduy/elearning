@@ -35,12 +35,14 @@ function ForgotPasswordPage() {
             <h2 className="forgot-title"> Khôi phục mật khẩu </h2>
             <p className="forgot-subtitle"> Vui lòng nhập email để chúng tôi gửi mã OTP khôi phục </p>
           </div>
+
           {/* Error Message */}
           {error && (
             <div className="alert alert-danger" role="alert">
               {error}
             </div>
           )}
+
           {/* Form */}
           <form onSubmit={handleSubmit}>
             <InputField label="EMAIL ĐĂNG KÝ" type="email" placeholder="example@gmail.com" icon="bi-envelope"
