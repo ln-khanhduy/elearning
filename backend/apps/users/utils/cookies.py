@@ -1,27 +1,23 @@
 from django.conf import settings
 
-REFRESH_COOKIE_NAME = 'refresh_token'
-REFRESH_COOKIE_PATH = '/'
+REFRESH_COOKIE_NAME = "refresh_token"
 
 
 def set_refresh_cookie(response, refresh_token):
-    max_age = int(settings.SIMPLE_JWT['REFRESH_TOKEN_LIFETIME'].total_seconds())
-
     response.set_cookie(
-        REFRESH_COOKIE_NAME,
-        refresh_token,
+        key=REFRESH_COOKIE_NAME,
+        value=refresh_token,
         httponly=True,
-        secure=True,
-        samesite='Lax',
-        path=REFRESH_COOKIE_PATH,
-        max_age=max_age,
+        secure=not settings.DEBUG,
+        samesite="Lax",
+        max_age=7 * 24 * 60 * 60,
+        path="/",
     )
 
 
 def delete_refresh_cookie(response):
     response.delete_cookie(
-        REFRESH_COOKIE_NAME,
-        path=REFRESH_COOKIE_PATH,
-        samesite='Lax',
-        secure=True,
+        key=REFRESH_COOKIE_NAME,
+        path="/",
+        samesite="Lax",
     )

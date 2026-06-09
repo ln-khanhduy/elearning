@@ -1,6 +1,4 @@
 import { useNavigate } from "react-router-dom";
-import Header from "../../components/layout/Header";
-import Footer from "../../components/layout/Footer";
 import "../../style/home.css";
 
 function HomePage() {
@@ -12,8 +10,6 @@ function HomePage() {
 
   return (
     <div className="home-page">
-      <Header />
-
       <main>
         <section className="hero-section">
           <div className="container-fluid hero-container">
@@ -138,7 +134,6 @@ function HomePage() {
         </section>
       </main>
 
-      <Footer />
     </div>
   );
 }

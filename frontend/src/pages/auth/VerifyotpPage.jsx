@@ -1,5 +1,3 @@
-import Header from "../../components/layout/Header";
-import Footer from "../../components/layout/Footer";
 import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
@@ -9,7 +7,7 @@ import {
   verifyRegisterOtp,
 } from "../../services/authService";
 import "../../style/auth-css/verify-otp.css";
-import { useAuth } from "../../context/UserContext";
+import { useUser } from "../../context/UserContext";
 
 function VerifyOtpPage() {
   const [otp, setOtp] = useState(new Array(6).fill(""));
@@ -17,7 +15,7 @@ function VerifyOtpPage() {
   const [loading, setLoading] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
   const [email, setEmail] = useState("");
-  const { reloadUser } = useAuth();
+  const { reloadUser } = useUser();
 
   const inputRefs = useRef([]);
   const navigate = useNavigate();
@@ -111,8 +109,6 @@ const handleResend = async () => {
 
   return (
     <div className="verify-page">
-      <Header />
-
       <main className="verify-main">
         <div className="verify-card">
           <div className="verify-icon">
@@ -173,8 +169,6 @@ const handleResend = async () => {
           </div>
         </div>
       </main>
-
-      <Footer />
     </div>
   );
 }

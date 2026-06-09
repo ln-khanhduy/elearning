@@ -1,53 +1,70 @@
-import { createContext, useContext, useEffect, useState } from "react";
-import { getCurrentUserApi } from "../api/userAPI";
-import { refreshTokenApi } from "../api/authAPI";
-import { getAccessToken, setAccessToken } from "../utils/authToken";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
+import { getAuthSessionApi } from "../api/authAPI";
+import {
+  clearAuthSessionData,
+  setAccessToken as saveAccessToken,
+} from "../utils/authToken";
 
-const UserContext = createContext(null);
+const UserContext = createContext();
 
 export function UserProvider({ children }) {
+  const hasLoadedRef = useRef(false);
+
   const [user, setUser] = useState(null);
+  const [accessToken, setAccessTokenState] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  const setAccessToken = (token) => {
+    setAccessTokenState(token || null);
+
+    if (token) {
+      saveAccessToken(token);
+    }
+  };
+
+  const clearUserSession = () => {
+    clearAuthSessionData();
+    setAccessTokenState(null);
+    setUser(null);
+  };
+
   const loadUser = async () => {
-    setLoading(true);
-
     try {
-      let token = getAccessToken();
+      const data = await getAuthSessionApi();
 
-      if (!token) {
-        const tokenResponse = await refreshTokenApi();
-        token = tokenResponse?.access;
-
-        if (token) {
-          setAccessToken(token);
-        }
-      }
-
-      if (!token) {
-        setUser(null);
-        return;
-      }
-
-      const currentUser = await getCurrentUserApi();
-      setUser(currentUser);
+      setAccessToken(data.access);
+      setUser(data.user);
     } catch (error) {
-      console.error(error);
-      setUser(null);
+      clearUserSession();
     } finally {
       setLoading(false);
     }
   };
 
+  const reloadUser = async () => {
+    setLoading(true);
+    await loadUser();
+  };
+
   useEffect(() => {
+    if (hasLoadedRef.current) return;
+
+    hasLoadedRef.current = true;
     loadUser();
   }, []);
 
-  return (
-    <UserContext.Provider value={{ user, setUser, loading, reloadUser: loadUser, isAuthenticated: !!user }}>
-      {children}
-    </UserContext.Provider>
-  );
+  const value = {
+    user,
+    setUser,
+    accessToken,
+    setAccessToken,
+    loading,
+    isAuthenticated: !!user,
+    reloadUser,
+    clearUserSession,
+  };
+
+  return <UserContext.Provider value={value}>{children}</UserContext.Provider>;
 }
 
-export const useAuth = () => useContext(UserContext);
+export const useUser = () => useContext(UserContext);

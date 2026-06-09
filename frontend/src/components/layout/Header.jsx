@@ -1,15 +1,14 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import logoSrc from "../../img/logo.png";
-import { clearAuthSessionData } from "../../utils/authToken";
 import { logoutApi } from "../../api/authAPI";
-import { useAuth } from "../../context/UserContext";
+import { useUser } from "../../context/UserContext";
 import "../../style/layout-css/header.css";
 
 function Header() {
   const [openMenu, setOpenMenu] = useState(false);
   const navigate = useNavigate();
-  const { user, isAuthenticated, loading, setUser } = useAuth();
+  const { user, isAuthenticated, loading, clearUserSession } = useUser();
 
   const handleLogout = async () => {
     try {
@@ -17,10 +16,9 @@ function Header() {
     } catch (error) {
       console.error(error);
     } finally {
-      clearAuthSessionData();
-      setUser(null);
+      clearUserSession();
       setOpenMenu(false);
-      navigate("/login");
+      navigate("/login", { replace: true });
     }
   };
 
@@ -28,10 +26,10 @@ function Header() {
     <header className="header-container">
       <div className="container-fluid header-wrapper">
         <div className="header-left">
-          <div className="logo-box">
+          <Link to="/home" className="logo-box text-decoration-none">
             <img src={logoSrc} alt="Logo" className="logo-img" />
             <div className="logo fw-bold">LMS Learn</div>
-          </div>
+          </Link>
 
           <nav className="nav-menu">
             <Link to="/home">Trang chủ</Link>
@@ -51,27 +49,60 @@ function Header() {
             <div className="header-auth-loading"></div>
           ) : isAuthenticated ? (
             <div className="user-actions">
-              <span className="user-fullname">{user?.full_name || user?.email}</span>
+              <span className="user-email">{user?.email}</span>
 
               <div className="user-menu">
-                <button type="button" className="avatar-btn" onClick={() => setOpenMenu((prev) => !prev)}>
-                  {user?.avatar_url ? <img src={user.avatar_url} alt="Avatar" className="avatar-img" /> : <span className="avatar-circle">{user?.full_name?.charAt(0)?.toUpperCase() || "U"}</span>}
+                <button
+                  type="button"
+                  className="avatar-btn"
+                  onClick={() => setOpenMenu((prev) => !prev)}
+                >
+                  {user?.avatar_url ? (
+                    <img src={user.avatar_url} alt="Avatar" className="avatar-img" />
+                  ) : (
+                    <span className="avatar-circle">
+                      {(user?.email || "U").charAt(0).toUpperCase()}
+                    </span>
+                  )}
                 </button>
 
                 {openMenu && (
                   <div className="user-dropdown">
-                    <Link to="/profile" className="user-dropdown-item" onClick={() => setOpenMenu(false)}>Hồ sơ</Link>
-                    <button type="button" className="user-dropdown-item logout-item" onClick={handleLogout}>Đăng xuất</button>
+                    <Link
+                      to="/profile"
+                      className="user-dropdown-item"
+                      onClick={() => setOpenMenu(false)}
+                    >
+                      Hồ sơ
+                    </Link>
+
+                    <button
+                      type="button"
+                      className="user-dropdown-item logout-item"
+                      onClick={handleLogout}
+                    >
+                      Đăng xuất
+                    </button>
                   </div>
                 )}
               </div>
 
-              <button type="button" className="btn btn-outline-danger btn-sm px-3" onClick={handleLogout}>Đăng xuất</button>
+              <button
+                type="button"
+                className="btn btn-outline-danger btn-sm px-3"
+                onClick={handleLogout}
+              >
+                Đăng xuất
+              </button>
             </div>
           ) : (
             <>
-              <Link to="/login" className="btn btn-outline-primary btn-sm px-3">Đăng nhập</Link>
-              <Link to="/register" className="btn btn-primary btn-sm px-3">Đăng ký</Link>
+              <Link to="/login" className="btn btn-outline-primary btn-sm px-3">
+                Đăng nhập
+              </Link>
+              <Link to="/register" className="btn btn-primary btn-sm px-3">
+                Đăng ký
+              </Link>
             </>
           )}
         </div>

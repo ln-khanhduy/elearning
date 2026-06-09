@@ -1,7 +1,5 @@
 ﻿import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
-import Header from "../../components/layout/Header";
-import Footer from "../../components/layout/Footer";
 import InputField from "../../components/auth/InputField";
 import { sendRegisterOtp } from "../../services/authService";
 import "../../style/auth-css/register.css";
@@ -40,7 +38,6 @@ function RegisterPage() {
 
   return (
     <div className="register-page">
-      <Header />
 
       <main className="register-main">
         <div className="register-card">
@@ -115,7 +112,6 @@ function RegisterPage() {
           </div>
         </div>
       </main>
-      <Footer />
     </div>
   );
 }

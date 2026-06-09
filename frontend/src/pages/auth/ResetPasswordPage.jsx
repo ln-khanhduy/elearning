@@ -1,7 +1,5 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
-import Header from "../../components/layout/Header";
-import Footer from "../../components/layout/Footer";
 import InputField from "../../components/auth/InputField";
 import { Link, useNavigate } from "react-router-dom";
 import { resetPassword } from "../../services/authService";
@@ -46,7 +44,6 @@ function ResetPasswordPage() {
 
   return (
     <div className="reset-page">
-      <Header />
       <main className="reset-main">
         <div className="reset-card">
           {/* Title */}
@@ -79,7 +76,6 @@ function ResetPasswordPage() {
           </div>
         </div>
       </main>
-      <Footer />
     </div>
   );
 }

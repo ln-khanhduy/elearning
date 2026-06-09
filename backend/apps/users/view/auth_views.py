@@ -1,7 +1,6 @@
-import urllib.parse
 
 from django.conf import settings
-from django.http import HttpResponseRedirect
+from django.contrib.auth import get_user_model
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import ensure_csrf_cookie
 from rest_framework import status
@@ -9,10 +8,11 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.exceptions import APIException
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 from rest_framework_simplejwt.views import TokenRefreshView
+from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from apps.users.serializers.auth_serializer import (
     ForgotPasswordSerializer, LoginSerializer, RegisterResendOTPSerializer,
@@ -91,7 +91,13 @@ class TokenRefreshCookieView(TokenRefreshView):
             raise ValidationError("Refresh token không tìm thấy.")
 
         serializer = self.get_serializer(data={"refresh": refresh_token})
-        serializer.is_valid(raise_exception=True)
+
+        try:
+            serializer.is_valid(raise_exception=True)
+        except (TokenError, InvalidToken):
+            response = Response({"detail": "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại."}, status=status.HTTP_401_UNAUTHORIZED)
+            delete_refresh_cookie(response)
+            return response
 
         response = Response(serializer.validated_data, status=status.HTTP_200_OK)
         new_refresh = serializer.validated_data.get("refresh")
@@ -100,6 +106,41 @@ class TokenRefreshCookieView(TokenRefreshView):
             set_refresh_cookie(response, new_refresh)
 
         return response
+
+
+class AuthSessionView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        refresh_token = request.COOKIES.get(REFRESH_COOKIE_NAME)
+
+        if not refresh_token:
+            return Response(
+                {"detail": "Refresh token không tìm thấy."},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+
+        try:
+            refresh = RefreshToken(refresh_token)
+            access = str(refresh.access_token)
+
+            User = get_user_model()
+            user = User.objects.select_related("role").get(id=refresh["user_id"])
+        except Exception:
+            response = Response(
+                {"detail": "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại."},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+            delete_refresh_cookie(response)
+            return response
+
+        return Response(
+            {
+                "access": access,
+                "user": UserSerializer(user).data,
+            },
+            status=status.HTTP_200_OK,
+        )
 
 
 class ForgotPasswordView(APIView):
@@ -132,34 +173,6 @@ class ResetPasswordView(APIView):
         return Response({"detail": "Mật khẩu mới đã được cập nhật."}, status=status.HTTP_200_OK)
 
 
-class GoogleLoginRedirect(APIView):
-    permission_classes = [AllowAny]
-
-    def get(self, request):
-        return HttpResponseRedirect(GoogleOAuthService.build_google_oauth_url())
-
-
-@method_decorator(ensure_csrf_cookie, name="dispatch")
-class GoogleCallbackView(APIView):
-    permission_classes = [AllowAny]
-
-    def get(self, request):
-        code = request.GET.get("code")
-
-        if not code:
-            return Response({"detail": "Không nhận được mã Google."}, status=status.HTTP_400_BAD_REQUEST)
-
-        try:
-            user = GoogleOAuthService.login_with_google_code(code)
-            tokens = AuthService.generate_tokens_for_user(user)
-            response = HttpResponseRedirect(urllib.parse.urljoin(settings.FRONTEND_URL, "/oauth-success"))
-            set_refresh_cookie(response, tokens["refresh"])
-            return response
-        except APIException as exc:
-            fallback_url = urllib.parse.urljoin(settings.FRONTEND_URL, f"/login?error={urllib.parse.quote(str(exc))}")
-            return HttpResponseRedirect(fallback_url)
-
-
 class RegisterResendOTPView(APIView):
     permission_classes = [AllowAny]
 
@@ -168,3 +181,29 @@ class RegisterResendOTPView(APIView):
         serializer.is_valid(raise_exception=True)
         RegisterService.resend_register_otp(serializer.validated_data["email"])
         return Response({"detail": "Mã OTP mới đã được gửi."}, status=status.HTTP_200_OK)
+    
+class GoogleIdTokenLoginView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        id_token_value = request.data.get("id_token")
+
+        if not id_token_value:
+            return Response(
+                {"detail": "Thiếu id_token Google."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        user = GoogleOAuthService.login_with_google_id_token(id_token_value)
+        tokens = AuthService.generate_tokens_for_user(user)
+
+        response = Response(
+            {
+                "access": tokens["access"],
+                "user": UserSerializer(user).data,
+            },
+            status=status.HTTP_200_OK
+        )
+
+        set_refresh_cookie(response, tokens["refresh"])
+        return response

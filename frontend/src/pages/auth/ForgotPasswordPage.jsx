@@ -1,5 +1,3 @@
-import Header from "../../components/layout/Header";
-import Footer from "../../components/layout/Footer";
 import InputField from "../../components/auth/InputField";
 import "../../style/auth-css/forgot-password.css";
 
@@ -30,7 +28,6 @@ function ForgotPasswordPage() {
 
   return (
     <div className="forgot-page">
-      <Header />
       <main className="forgot-main">
         <div className="forgot-card">
           {/* Title */}
@@ -59,7 +56,6 @@ function ForgotPasswordPage() {
           </div>
         </div>
       </main>
-      <Footer/>
     </div>
   );
 }
