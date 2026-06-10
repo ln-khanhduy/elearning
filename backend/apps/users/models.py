@@ -158,5 +158,3 @@ class InstructorProfile(models.Model):
         indexes = [
             models.Index(fields=['status', 'applied_at']),              # Admin lọc hồ sơ mới chờ duyệt
         ]
-
-

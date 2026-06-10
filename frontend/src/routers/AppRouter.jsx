@@ -10,7 +10,10 @@ import VerifyotpPage from "../pages/auth/VerifyotpPage";
 import ResetPasswordPage from "../pages/auth/ResetPasswordPage";
 import HomePage from "../pages/public/HomePage";
 import AdminDashboardPage from "../pages/admin/AdminDashboardPage";
-import ProfilePage from "../pages/profile/ProfilePage";
+import ProfilePage from "../pages/public/ProfilePage";
+import InstructorApplyPage from "../pages/instructor/InstructorApplyPage";
+import InstructorApplicationStatusPage from "../pages/instructor/InstructorApplicationStatusPage";
+import AdminInstructorApplicationsPage from "../pages/admin/AdminInstructorApplicationsPage";
 
 function AppRouter() {
   return (
@@ -40,10 +43,11 @@ function AppRouter() {
 
           {/* Người dùng & Giảng viên */}
           <Route path="/admin/users" element={<ProtectedRoute allowedRoles={["USER_MANAGER", "SUPERADMIN"]}><></></ProtectedRoute>} />
-          <Route path="/instructor/apply" element={<ProtectedRoute allowedRoles={["STUDENT"]}><></></ProtectedRoute>} />
+          <Route path="/instructor/apply" element={<ProtectedRoute allowedRoles={["STUDENT"]}><InstructorApplyPage /></ProtectedRoute>} />
+          <Route path="/instructor/application-status" element={<ProtectedRoute allowedRoles={["STUDENT", "INSTRUCTOR"]}><InstructorApplicationStatusPage /></ProtectedRoute>} />
           <Route path="/admin/instructors" element={<ProtectedRoute allowedRoles={["INSTRUCTOR_MANAGER", "SUPERADMIN"]}><></></ProtectedRoute>} />
           <Route path="/admin/instructor-support" element={<ProtectedRoute allowedRoles={["INSTRUCTOR_MANAGER"]}><></></ProtectedRoute>} />
-          <Route path="/admin/register-instructor" element={<ProtectedRoute allowedRoles={["INSTRUCTOR_MANAGER", "SUPERADMIN"]}><></></ProtectedRoute>} />
+          <Route path="/admin/register-instructor" element={<ProtectedRoute allowedRoles={["INSTRUCTOR_MANAGER", "SUPERADMIN"]}><AdminInstructorApplicationsPage /></ProtectedRoute>} />
           <Route path="/admin/complaints" element={<ProtectedRoute allowedRoles={["USER_MANAGER"]}><></></ProtectedRoute>} />
 
           {/* Tài chính */}

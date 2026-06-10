@@ -12,6 +12,7 @@ export const sidebarItems = [
   { type: "group", label: "Người dùng & Giảng viên" },
   { type: "item", label: "Quản lý người dùng", path: "/admin/users", icon: "bi-people", roles: ["USER_MANAGER", "SUPERADMIN"] },
   { type: "item", label: "Đăng ký làm giảng viên", path: "/instructor/apply", icon: "bi-person-plus", roles: ["STUDENT"] },
+  { type: "item", label: "Trạng thái đăng ký GV", path: "/instructor/application-status", icon: "bi-file-earmark-check", roles: ["STUDENT", "INSTRUCTOR"] },
   { type: "item", label: "Danh sách giảng viên", path: "/admin/instructors", icon: "bi-person-badge", roles: ["INSTRUCTOR_MANAGER", "SUPERADMIN"] },
   { type: "item", label: "Hỗ trợ giảng viên", path: "/admin/instructor-support", icon: "bi-headset", roles: ["INSTRUCTOR_MANAGER"] },
   { type: "item", label: "Hồ sơ đăng ký giảng viên", path: "/admin/register-instructor", icon: "bi-file-earmark-person", roles: ["INSTRUCTOR_MANAGER", "SUPERADMIN"] },

@@ -113,16 +113,19 @@ DATABASES = {
 # Password validation configuration
 AUTH_PASSWORD_VALIDATORS = [
     {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+        'NAME': 'apps.common.password_validators.VietnameseUserAttributeSimilarityValidator',
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        'NAME': 'apps.common.password_validators.VietnameseMinimumLengthValidator',
+        'OPTIONS': {
+            'min_length': 6,
+        }
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+        'NAME': 'apps.common.password_validators.VietnameseCommonPasswordValidator',
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+        'NAME': 'apps.common.password_validators.VietnameseNumericPasswordValidator',
     },
 ]
 # Internationalization
@@ -180,16 +183,22 @@ SIMPLE_JWT = {
 }
 
 # Cloudinary configuration
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': os.getenv('CLOUDINARY_CLOUD_NAME'),
+    'API_KEY': os.getenv('CLOUDINARY_API_KEY'),
+    'API_SECRET': os.getenv('CLOUDINARY_API_SECRET'),
+}
+
 STORAGES = {
     "default": {
-        "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
+        "BACKEND": "apps.common.cloudinary_storage.SmartMediaCloudinaryStorage",
     },
     "staticfiles": {
         "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
     },
 }
 
-DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+DEFAULT_FILE_STORAGE = 'apps.common.cloudinary_storage.SmartMediaCloudinaryStorage'
 
 # CORS and CSRF configuration
 FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:3000')

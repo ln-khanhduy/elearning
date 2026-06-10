@@ -1,4 +1,3 @@
-
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
@@ -43,6 +42,11 @@ def _check_rate_limit(key: str) -> None:
 
 @method_decorator(ensure_csrf_cookie, name="dispatch")
 class RegisterSendOTPView(APIView):
+    """
+    POST /api/auth/register/send-otp/ - Gửi mã OTP đăng ký tài khoản.
+    Nhận full_name, email, password, confirm_password, accepted_terms.
+    Gửi OTP đến email nếu thông tin hợp lệ.
+    """
     permission_classes = [AllowAny]
 
     def post(self, request):
@@ -55,6 +59,10 @@ class RegisterSendOTPView(APIView):
 
 @method_decorator(ensure_csrf_cookie, name="dispatch")
 class RegisterVerifyOTPView(APIView):
+    """
+    POST /api/auth/register/verify-otp/ - Xác thực OTP và tạo tài khoản.
+    Nhận email và otp. Nếu OTP hợp lệ, tạo user và trả về token JWT.
+    """
     permission_classes = [AllowAny]
 
     def post(self, request):
@@ -71,6 +79,10 @@ class RegisterVerifyOTPView(APIView):
 
 @method_decorator(ensure_csrf_cookie, name="dispatch")
 class AuthLoginView(APIView):
+    """
+    POST /api/auth/login/ - Đăng nhập bằng email/username và password.
+    Có rate limit 5 lần/5 phút theo IP. Trả về access token và set refresh token cookie.
+    """
     permission_classes = [AllowAny]
 
     def post(self, request):
@@ -88,6 +100,10 @@ class AuthLoginView(APIView):
 
 
 class AuthLogoutView(APIView):
+    """
+    POST /api/auth/logout/ - Đăng xuất.
+    Blacklist refresh token và xóa cookie.
+    """
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
@@ -98,6 +114,10 @@ class AuthLogoutView(APIView):
 
 
 class TokenRefreshCookieView(TokenRefreshView):
+    """
+    POST /api/auth/token/refresh/ - Làm mới access token bằng refresh token từ cookie.
+    Nếu refresh token hết hạn, xóa cookie và trả về 401.
+    """
     permission_classes = [AllowAny]
     serializer_class = TokenRefreshSerializer
 
@@ -126,6 +146,10 @@ class TokenRefreshCookieView(TokenRefreshView):
 
 
 class AuthSessionView(APIView):
+    """
+    GET /api/auth/session/ - Kiểm tra phiên đăng nhập từ refresh token cookie.
+    Nếu token hợp lệ, trả về access token mới và thông tin user.
+    """
     permission_classes = [AllowAny]
 
     def get(self, request):
@@ -173,6 +197,10 @@ class AuthSessionView(APIView):
 
 
 class ForgotPasswordView(APIView):
+    """
+    POST /api/auth/forgot-password/ - Gửi mã OTP đặt lại mật khẩu.
+    Nhận email, kiểm tra email tồn tại, gửi OTP nếu hợp lệ.
+    """
     permission_classes = [AllowAny]
 
     def post(self, request):
@@ -183,16 +211,27 @@ class ForgotPasswordView(APIView):
 
 
 class VerifyOTPView(APIView):
+    """
+    POST /api/auth/verify-otp/ - Xác thực OTP đặt lại mật khẩu.
+    Nhận email và otp. Nếu OTP hợp lệ, trả về reset_token để đặt mật khẩu mới.
+    """
     permission_classes = [AllowAny]
 
     def post(self, request):
         serializer = VerifyOTPSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        reset_token = PasswordResetService.verify_otp_and_create_token(serializer.validated_data["email"], serializer.validated_data["otp"])
+        reset_token = PasswordResetService.verify_otp_and_create_token(
+            serializer.validated_data["email"], serializer.validated_data["otp"]
+        )
         return Response({"detail": "OTP hợp lệ.", "reset_token": reset_token}, status=status.HTTP_200_OK)
 
 
 class ResetPasswordView(APIView):
+    """
+    POST /api/auth/reset-password/ - Đặt lại mật khẩu mới.
+    Nhận token (từ verify-otp), password và confirm_password.
+    Cập nhật mật khẩu nếu token hợp lệ.
+    """
     permission_classes = [AllowAny]
 
     def post(self, request):
@@ -203,6 +242,10 @@ class ResetPasswordView(APIView):
 
 
 class RegisterResendOTPView(APIView):
+    """
+    POST /api/auth/register/resend-otp/ - Gửi lại mã OTP đăng ký mới.
+    Nhận email, kiểm tra thông tin đăng ký còn hiệu lực, gửi OTP mới.
+    """
     permission_classes = [AllowAny]
 
     def post(self, request):
@@ -210,8 +253,13 @@ class RegisterResendOTPView(APIView):
         serializer.is_valid(raise_exception=True)
         RegisterService.resend_register_otp(serializer.validated_data["email"])
         return Response({"detail": "Mã OTP mới đã được gửi."}, status=status.HTTP_200_OK)
-    
+
+
 class GoogleIdTokenLoginView(APIView):
+    """
+    POST /api/auth/google/ - Đăng nhập bằng Google OAuth.
+    Nhận id_token từ Google. Xác thực token, tạo hoặc lấy user, trả về JWT.
+    """
     permission_classes = [AllowAny]
 
     def post(self, request):

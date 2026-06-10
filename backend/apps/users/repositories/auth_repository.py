@@ -5,17 +5,17 @@ from apps.users.models import Role
 User = get_user_model()
 
 
-# Repository quản lý truy vấn với User/Role
-# Tách phần truy cập dữ liệu khỏi business logic
 class AuthRepository:
+    """Repository quản lý truy vấn dữ liệu User và Role - tách biệt ORM khỏi business logic."""
+
     @staticmethod
     def get_user_by_email(email: str):
-        # Lấy user theo email không phân biệt hoa thường
+        """Lấy user theo email, không phân biệt hoa thường. Trả về None nếu không tìm thấy."""
         return User.objects.filter(email__iexact=email).first()
 
     @staticmethod
     def get_user_by_username(username: str):
-        # Lấy user theo username không phân biệt hoa thường
+        """Lấy user theo username, không phân biệt hoa thường. Trả về None nếu không tìm thấy."""
         return User.objects.filter(username__iexact=username).first()
 
     @staticmethod
@@ -27,7 +27,7 @@ class AuthRepository:
         last_name: str = '',
         role: Role = None,
     ):
-        # Tạo user mới với thông tin cơ bản và role
+        """Tạo user mới với thông tin cơ bản và role, sử dụng create_user để hash password tự động."""
         return User.objects.create_user(
             username=username,
             email=email,
@@ -39,6 +39,6 @@ class AuthRepository:
 
     @staticmethod
     def get_or_create_role(code: str, name: str):
-        # Lấy role theo code hoặc tạo mới nếu chưa tồn tại
+        """Lấy role theo code hoặc tạo mới nếu chưa tồn tại."""
         role, _ = Role.objects.get_or_create(code=code, defaults={'name': name})
         return role

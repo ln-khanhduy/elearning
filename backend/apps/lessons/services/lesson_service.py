@@ -9,13 +9,30 @@ from apps.lessons.repositories.section_repository import SectionRepository
 class LessonService:
     @staticmethod
     def check_course_owner(course, user):
+        """Kiểm tra user có phải là chủ sở hữu khóa học không. SUPERADMIN luôn được phép."""
         if user.role and user.role.code == "SUPERADMIN":
             return
         if course.instructor_id != user.id:
             raise PermissionDenied("Bạn không có quyền thao tác với khóa học này.")
 
     @staticmethod
+    def get_lessons_by_section(section_id):
+        """Lấy danh sách bài học trong một chương (ủy quyền cho Repository truy vấn)."""
+        return LessonRepository.get_by_section(section_id)
+
+    @staticmethod
+    def get_lesson_detail(lesson_id):
+        """Lấy thông tin chi tiết của một bài học (ủy quyền cho Repository truy vấn)."""
+        return LessonRepository.get_by_id(lesson_id)
+
+    @staticmethod
     def create_lesson(section_id, user, data):
+        """
+        Tạo bài học mới trong một chương.
+        - Kiểm tra quyền sở hữu khóa học
+        - Kiểm tra thứ tự bài học không bị trùng
+        - Tạo slug từ title và kiểm tra không bị trùng slug trong cùng chương
+        """
         section = SectionRepository.get_by_id(section_id)
         LessonService.check_course_owner(section.course, user)
 
@@ -32,6 +49,12 @@ class LessonService:
 
     @staticmethod
     def update_lesson(lesson_id, user, data):
+        """
+        Cập nhật thông tin bài học.
+        - Kiểm tra quyền sở hữu khóa học
+        - Kiểm tra thứ tự mới không bị trùng (nếu có thay đổi)
+        - Kiểm tra title mới không bị trùng slug (nếu có thay đổi)
+        """
         lesson = LessonRepository.get_by_id(lesson_id)
         LessonService.check_course_owner(lesson.section.course, user)
 
@@ -53,12 +76,22 @@ class LessonService:
 
     @staticmethod
     def delete_lesson(lesson_id, user):
+        """
+        Xóa bài học.
+        - Kiểm tra quyền sở hữu khóa học trước khi xóa
+        """
         lesson = LessonRepository.get_by_id(lesson_id)
         LessonService.check_course_owner(lesson.section.course, user)
         lesson.delete()
 
     @staticmethod
     def reorder_lessons(section_id, user, lessons_data):
+        """
+        Sắp xếp lại thứ tự các bài học trong một chương.
+        - Kiểm tra quyền sở hữu khóa học
+        - Kiểm tra danh sách id và order không bị trùng
+        - Cập nhật order cho từng bài học trong một transaction
+        """
         section = SectionRepository.get_by_id(section_id)
         LessonService.check_course_owner(section.course, user)
 

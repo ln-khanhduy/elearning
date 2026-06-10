@@ -1,0 +1,426 @@
+/* ===== ĐĂNG KÝ GIẢNG VIÊN ===== */
+.instructor-apply-page {
+  max-width: 720px;
+  margin: 0 auto;
+  font-family: Inter, sans-serif;
+  padding: 0 16px;
+}
+
+.apply-header {
+  margin-bottom: 32px;
+}
+
+.apply-header h2 {
+  font-size: 28px;
+  font-weight: 700;
+  color: #181c1e;
+  margin: 0 0 4px;
+  font-family: Inter, sans-serif;
+}
+
+.apply-header p {
+  font-size: 14px;
+  color: #43474f;
+  margin: 0;
+  font-family: Inter, sans-serif;
+}
+
+/* ===== STEPS INDICATOR ===== */
+.apply-steps {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  margin-bottom: 32px;
+}
+
+.apply-step {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  background: #f1f4f6;
+  color: #737780;
+  font-size: 13px;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.apply-step.active {
+  background: #e8f0fe;
+  color: #0e3b69;
+}
+
+.step-number {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  background: #c3c6d0;
+  color: #fff;
+}
+
+.apply-step.active .step-number {
+  background: #0e3b69;
+}
+
+.step-connector {
+  width: 40px;
+  height: 2px;
+  background: #c3c6d0;
+  margin: 0 4px;
+}
+
+/* ===== CARD ===== */
+.apply-card {
+  background: #ffffff;
+  border: 1px solid #c3c6d0;
+  border-radius: 12px;
+  padding: 32px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.apply-card-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #181c1e;
+  margin: 0 0 4px;
+  font-family: Inter, sans-serif;
+}
+
+.apply-card-desc {
+  font-size: 13px;
+  color: #43474f;
+  margin: 0 0 24px;
+  font-family: Inter, sans-serif;
+}
+
+/* ===== FIELDS ===== */
+.apply-field {
+  margin-bottom: 20px;
+}
+
+.apply-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  color: #43474f;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+  font-family: Inter, sans-serif;
+}
+
+.apply-input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #c3c6d0;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: Inter, sans-serif;
+  background: #ffffff;
+  color: #181c1e;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-sizing: border-box;
+}
+
+.apply-input:focus {
+  border-color: #0e3b69;
+  box-shadow: 0 0 0 2px rgba(14, 59, 105, 0.15);
+}
+
+.apply-textarea {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #c3c6d0;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: Inter, sans-serif;
+  background: #ffffff;
+  color: #181c1e;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-sizing: border-box;
+  resize: vertical;
+  min-height: 100px;
+}
+
+.apply-textarea:focus {
+  border-color: #0e3b69;
+  box-shadow: 0 0 0 2px rgba(14, 59, 105, 0.15);
+}
+
+/* ===== FILE UPLOAD ===== */
+.apply-file-upload {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  border: 2px dashed #c3c6d0;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+  color: #43474f;
+  font-size: 13px;
+  font-family: Inter, sans-serif;
+}
+
+.apply-file-upload:hover {
+  border-color: #0e3b69;
+  background: #f8faff;
+}
+
+.apply-file-upload i {
+  font-size: 24px;
+  color: #0e3b69;
+}
+
+/* ===== TERMS ===== */
+.apply-terms {
+  margin-bottom: 24px;
+  padding: 16px;
+  background: #f8faff;
+  border-radius: 8px;
+  border: 1px solid #e0e3e5;
+}
+
+.apply-checkbox {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  cursor: pointer;
+  font-size: 13px;
+  color: #43474f;
+  font-family: Inter, sans-serif;
+}
+
+.apply-checkbox input[type="checkbox"] {
+  margin-top: 2px;
+  width: 16px;
+  height: 16px;
+  accent-color: #0e3b69;
+  flex-shrink: 0;
+}
+
+/* ===== BUTTONS ===== */
+.apply-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-top: 8px;
+}
+
+.apply-btn-primary {
+  padding: 12px 32px;
+  border: none;
+  background: #0e3b69;
+  color: #ffffff;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(14, 59, 105, 0.2);
+  transition: opacity 0.2s, transform 0.1s;
+  font-family: Inter, sans-serif;
+  display: inline-flex;
+  align-items: center;
+}
+
+.apply-btn-primary:hover {
+  opacity: 0.9;
+}
+
+.apply-btn-primary:active {
+  transform: scale(0.98);
+}
+
+.apply-btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.apply-btn-outline {
+  padding: 12px 24px;
+  border: 1px solid #0e3b69;
+  background: transparent;
+  color: #0e3b69;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  font-family: Inter, sans-serif;
+  display: inline-flex;
+  align-items: center;
+}
+
+.apply-btn-outline:hover {
+  background: #f1f4f6;
+}
+
+/* ===== STATUS BANNER ===== */
+.apply-status-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 20px 24px;
+  border-radius: 12px;
+  border: 1px solid;
+}
+
+.apply-status-banner.status-pending {
+  background: #fff8e1;
+  border-color: #ffe082;
+}
+
+.apply-status-banner.status-approved {
+  background: #e8f5e9;
+  border-color: #a5d6a7;
+}
+
+.apply-status-banner.status-rejected {
+  background: #fbe9e7;
+  border-color: #ef9a9a;
+}
+
+.apply-status-icon {
+  font-size: 32px;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.status-pending .apply-status-icon {
+  color: #b8860b;
+}
+
+.status-approved .apply-status-icon {
+  color: #2e7d32;
+}
+
+.status-rejected .apply-status-icon {
+  color: #c62828;
+}
+
+.apply-status-text h4 {
+  margin: 0 0 4px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #181c1e;
+}
+
+.apply-status-text p {
+  margin: 0;
+  font-size: 13px;
+  color: #43474f;
+  line-height: 1.5;
+}
+
+/* ===== DETAIL GRID ===== */
+.apply-detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.apply-detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.apply-detail-item.full-width {
+  grid-column: 1 / -1;
+}
+
+.apply-detail-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #43474f;
+  letter-spacing: 0.5px;
+}
+
+.apply-detail-value {
+  font-size: 14px;
+  color: #181c1e;
+  word-break: break-word;
+}
+
+.apply-detail-value a {
+  color: #0e3b69;
+  text-decoration: none;
+}
+
+.apply-detail-value a:hover {
+  text-decoration: underline;
+}
+
+.apply-detail-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  width: fit-content;
+}
+
+.badge-pending {
+  background: #fff8e1;
+  color: #b8860b;
+}
+
+.badge-approved {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.badge-rejected {
+  background: #fbe9e7;
+  color: #c62828;
+}
+
+.apply-divider {
+  border: none;
+  border-top: 1px solid #e0e3e5;
+  margin: 20px 0;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 767.98px) {
+  .apply-header h2 {
+    font-size: 22px;
+  }
+
+  .apply-card {
+    padding: 20px 16px;
+  }
+
+  .apply-form-actions {
+    flex-direction: column;
+  }
+
+  .apply-btn-primary,
+  .apply-btn-outline {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .apply-steps {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .step-connector {
+    width: 2px;
+    height: 16px;
+  }
+
+  .apply-detail-grid {
+    grid-template-columns: 1fr;
+  }
+}

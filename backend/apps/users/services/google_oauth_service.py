@@ -12,9 +12,15 @@ from apps.users.repositories.auth_repository import AuthRepository
 
 
 class GoogleOAuthService:
-    # Lấy hoặc tạo user dựa trên thông tin từ Google
+    """Service xử lý đăng nhập bằng Google OAuth - xác thực token và tạo/tìm user."""
+
     @staticmethod
     def get_or_create_google_user(google_info: dict):
+        """
+        Tìm user theo email từ Google, nếu chưa tồn tại thì tạo mới với role STUDENT.
+        - Nếu user đã tồn tại: trả về user hiện tại
+        - Nếu user chưa tồn tại: tạo user mới với password ngẫu nhiên và avatar từ Google
+        """
         email = google_info.get("email")
 
         if not email:
@@ -43,9 +49,14 @@ class GoogleOAuthService:
 
         return user
 
-    
     @staticmethod
     def login_with_google_id_token(id_token_value):
+        """
+        Xác thực id_token từ Google và trả về user tương ứng.
+        - Xác minh token với Google OAuth2
+        - Kiểm tra email đã được xác thực
+        - Tạo hoặc lấy user từ thông tin Google
+        """
         try:
             google_info = id_token.verify_oauth2_token(
                 id_token_value,

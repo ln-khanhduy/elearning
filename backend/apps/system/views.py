@@ -3,21 +3,24 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from apps.common.permissions import HasRequiredPermission
+from apps.system.services.admin_log_service import AdminLogService
+
 from apps.system.serializers.dashboard_serializer import DashboardDataSerializer
 from apps.system.services.dashboard_service import AdminDashboardService
 
 
+
 class AdminDashboardView(APIView):
-    permission_classes = [IsAuthenticated]
+    """
+    GET /api/dashboard/ - Lấy dữ liệu thống kê cho trang dashboard admin.
+    Yêu cầu quyền: admin.dashboard.view
+    Có thể lọc theo năm: ?year=2026
+    """
+    permission_classes = [IsAuthenticated, HasRequiredPermission]
+    required_permission = "admin.dashboard.view"
 
     def get(self, request):
-        # Chỉ SUPERADMIN mới được xem dashboard
-        if request.user.role.code != "SUPERADMIN":
-            return Response(
-                {"detail": "Bạn không có quyền truy cập trang này."},
-                status=status.HTTP_403_FORBIDDEN,
-            )
-
         year = request.query_params.get("year")
         if year:
             try:
@@ -28,4 +31,13 @@ class AdminDashboardView(APIView):
         data = AdminDashboardService.get_dashboard_data(year)
         serializer = DashboardDataSerializer(data)
 
+        AdminLogService.log(
+            admin=request.user,
+            action_type='DASHBOARD_VIEW',
+            detail=f"Admin {request.user.email} đã xem dashboard (năm: {year or 'tất cả'})",
+        )
+
+
         return Response(serializer.data)
+
+

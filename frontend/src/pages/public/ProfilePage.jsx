@@ -1,10 +1,12 @@
 import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useUser } from "../../context/UserContext";
 import { updateProfileApi, changePasswordApi } from "../../api/userAPI";
 import "../../style/profile.css";
 
 function ProfilePage() {
+  const navigate = useNavigate();
   const { user, reloadUser } = useUser();
 
   // ===== State cho form thông tin cá nhân =====
@@ -215,21 +217,39 @@ function ProfilePage() {
             </div>
           </div>
 
-          {/* Card: Bảo mật */}
-          <div className="profile-card">
-            <h4 className="profile-card-title">
-              <span className="material-symbols-outlined" style={{ fontSize: 20, color: "var(--primary)" }}>security</span>
-              Bảo mật
-            </h4>
-            <p className="profile-card-desc">Mật khẩu của bạn nên được cập nhật định kỳ để đảm bảo an toàn cho tài khoản.</p>
-            <button className="profile-btn-outline" onClick={() => setShowPasswordModal(true)}>
-              <span className="material-symbols-outlined" style={{ fontSize: 18 }}>lock_reset</span>
-              Đổi mật khẩu
-            </button>
-          </div>
+          {/* Card: Đăng ký giảng viên (chỉ hiển thị với STUDENT) */}
+          {roleCode === "STUDENT" && (
+            <div className="profile-card">
+              <h4 className="profile-card-title">
+                <span className="material-symbols-outlined" style={{ fontSize: 20, color: "var(--primary)" }}>school</span>
+                Đăng ký giảng viên
+              </h4>
+              <p className="profile-card-desc">Bạn muốn trở thành giảng viên? Đăng ký ngay để bắt đầu tạo khóa học và chia sẻ kiến thức.</p>
+              <button className="profile-btn-outline" onClick={() => navigate("/instructor/apply")}>
+                <span className="material-symbols-outlined" style={{ fontSize: 18 }}>person_add</span>
+                Đăng ký ngay
+              </button>
+            </div>
+          )}
+
+          {/* Card: Trạng thái đăng ký giảng viên (chỉ hiển thị với INSTRUCTOR) */}
+          {roleCode === "INSTRUCTOR" && (
+            <div className="profile-card">
+              <h4 className="profile-card-title">
+                <span className="material-symbols-outlined" style={{ fontSize: 20, color: "var(--primary)" }}>badge</span>
+                Thông tin giảng viên
+              </h4>
+              <p className="profile-card-desc">Xem trạng thái hồ sơ đăng ký giảng viên và thông tin liên quan.</p>
+              <button className="profile-btn-outline" onClick={() => navigate("/instructor/application-status")}>
+                <span className="material-symbols-outlined" style={{ fontSize: 18 }}>visibility</span>
+                Xem hồ sơ giảng viên
+              </button>
+            </div>
+          )}
+
         </div>
 
-        {/* === CỘT PHẢI: Form chi tiết cá nhân === */}
+        {/* === CỘT PHẢI: Form chi tiết cá nhân + Bảo mật === */}
         <div className="profile-right">
           <div className="profile-card">
             <h4 className="profile-card-title">Chi tiết cá nhân</h4>
@@ -282,6 +302,19 @@ function ProfilePage() {
                 </button>
               </div>
             </form>
+          </div>
+
+          {/* Card: Bảo mật */}
+          <div className="profile-card">
+            <h4 className="profile-card-title">
+              <span className="material-symbols-outlined" style={{ fontSize: 20, color: "var(--primary)" }}>security</span>
+              Bảo mật
+            </h4>
+            <p className="profile-card-desc">Mật khẩu của bạn nên được cập nhật định kỳ để đảm bảo an toàn cho tài khoản.</p>
+            <button className="profile-btn-outline" onClick={() => setShowPasswordModal(true)}>
+              <span className="material-symbols-outlined" style={{ fontSize: 18 }}>lock_reset</span>
+              Đổi mật khẩu
+            </button>
           </div>
         </div>
       </div>

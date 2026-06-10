@@ -12,7 +12,17 @@ function ProtectedRoute({ children, allowedRoles }) {
     return <Navigate to="/login" replace />;
   }
 
-  if (allowedRoles && !allowedRoles.includes(user?.role)) {
+  // Lấy role code: có thể là string "STUDENT" hoặc object {code: "STUDENT"}
+  const getRoleCode = (role) => {
+    if (!role) return null;
+    if (typeof role === "string") return role;
+    if (typeof role === "object" && role?.code) return role.code;
+    return null;
+  };
+
+  const userRoleCode = getRoleCode(user?.role);
+
+  if (allowedRoles && !allowedRoles.includes(userRoleCode)) {
     return <Navigate to="/home" replace />;
   }
 

@@ -8,110 +8,73 @@ from apps.users.services.otp_service import OTPService, OTP_EXPIRE_SECONDS
 
 
 class RegisterService:
+    """Service quản lý quá trình đăng ký tài khoản - OTP, cache thông tin và tạo user."""
+
     PREFIX = "register"
-    """
-    Chức năng: Tạo key cache dùng để lưu mã OTP đăng ký theo email người dùng.
-    Đầu vào: email (địa chỉ email đăng ký)
-    Đầu ra: Chuỗi key cache có định dạng register_otp:<email>.
-    """
+
     @staticmethod
     def get_register_otp_cache_key(email: str):
+        """Tạo key cache lưu mã OTP đăng ký theo email."""
         return f"register_otp:{email.lower()}"
-    """
-    Chức năng: Tạo key cache dùng để lưu tạm thông tin đăng ký trước khi xác thực OTP.
-    Đầu vào: email (địa chỉ email đăng ký)
-    Đầu ra: Chuỗi key cache có định dạng register_data:<email>.
-    """
+
     @staticmethod
     def get_register_data_cache_key(email: str):
+        """Tạo key cache lưu thông tin đăng ký tạm thời trước khi xác thực OTP."""
         return f"register_data:{email.lower()}"
-    """
-    Chức năng: Kiểm tra email có đang bị khóa xác thực OTP hay không.
-    Đầu vào: email (địa chỉ email cần kiểm tra)
-    Đầu ra: True nếu email đang bị khóa, False nếu không bị khóa.
-    """
+
     @staticmethod
     def check_register_otp_locked(email: str):
+        """Kiểm tra email có đang bị khóa do nhập sai OTP đăng ký quá nhiều lần hay không."""
         return OTPService.check_locked(RegisterService.PREFIX, email)
-    """
-    Chức năng: Tăng số lần nhập sai OTP của email lên một đơn vị.
-    Đầu vào: email (địa chỉ email cần ghi nhận số lần nhập sai)
-    Đầu ra: Số lần nhập sai hiện tại hoặc trạng thái xử lý từ OTPService.
-    """
+
     @staticmethod
     def increment_register_otp_attempts(email: str):
+        """Tăng số lần nhập sai OTP đăng ký cho email và trả về số lần thử sau khi tăng."""
         return OTPService.increment_attempts(RegisterService.PREFIX, email)
-    """
-    Chức năng: Đặt lại số lần nhập sai OTP của email về 0.
-    Đầu vào: email (địa chỉ email cần đặt lại)
-    Đầu ra: Không có.
-    """
+
     @staticmethod
     def reset_register_otp_attempts(email: str):
+        """Đặt lại số lần nhập sai OTP đăng ký cho email về 0 (gọi khi OTP được xác thực thành công)."""
         OTPService.reset_attempts(RegisterService.PREFIX, email)
-    """
-    Chức năng: Khóa xác thực OTP đối với email khi vượt quá số lần nhập sai cho phép.
-    Đầu vào: email (địa chỉ email cần khóa)
-    Đầu ra: Không có.
-    """
+
     @staticmethod
     def lock_register_otp_for_email(email: str):
+        """Khóa email khi người dùng nhập sai OTP đăng ký quá số lần cho phép."""
         OTPService.lock_email(RegisterService.PREFIX, email)
-    """
-    Chức năng: Lưu mã OTP đăng ký vào cache với thời gian hết hạn xác định.
-    Đầu vào: email (địa chỉ email đăng ký), code (mã OTP)
-    Đầu ra: Không có.
-    """
+
     @staticmethod
     def set_register_otp(email: str, code: str):
-        cache.set(RegisterService.get_register_otp_cache_key(email),code,OTP_EXPIRE_SECONDS,)
-    """
-    Chức năng: Lấy mã OTP đăng ký từ cache.
-    Đầu vào: email (địa chỉ email đăng ký)
-    Đầu ra: Mã OTP nếu tồn tại, ngược lại trả về None.
-    """
+        """Lưu mã OTP đăng ký vào cache với thời gian hết hạn."""
+        cache.set(RegisterService.get_register_otp_cache_key(email), code, OTP_EXPIRE_SECONDS)
+
     @staticmethod
     def get_register_otp(email: str):
+        """Lấy mã OTP đăng ký từ cache."""
         return cache.get(RegisterService.get_register_otp_cache_key(email))
-    """
-    Chức năng: Xóa mã OTP đăng ký khỏi cache.
-    Đầu vào: email (địa chỉ email đăng ký)
-    Đầu ra: Không có.
-    """
+
     @staticmethod
     def delete_register_otp(email: str):
+        """Xóa mã OTP đăng ký khỏi cache (gọi khi OTP đã được sử dụng hoặc hết hạn)."""
         cache.delete(RegisterService.get_register_otp_cache_key(email))
-    """
-    Chức năng: Lưu tạm thông tin đăng ký người dùng vào cache trước khi xác thực OTP.
-    Đầu vào: email (địa chỉ email đăng ký), data (thông tin đăng ký của người dùng)
-    Đầu ra: Không có.
-    """
+
     @staticmethod
     def set_register_data(email: str, data: dict):
-        cache.set(RegisterService.get_register_data_cache_key(email), data,OTP_EXPIRE_SECONDS,)
-    """
-    Chức năng: Lấy thông tin đăng ký đã lưu trong cache.
-    Đầu vào: email (địa chỉ email đăng ký)
-    Đầu ra: Thông tin đăng ký dưới dạng dictionary hoặc None nếu không tồn tại.
-    """
+        """Lưu tạm thông tin đăng ký người dùng vào cache trước khi xác thực OTP."""
+        cache.set(RegisterService.get_register_data_cache_key(email), data, OTP_EXPIRE_SECONDS)
+
     @staticmethod
     def get_register_data(email: str):
+        """Lấy thông tin đăng ký đã lưu trong cache."""
         return cache.get(RegisterService.get_register_data_cache_key(email))
-    """
-    Chức năng: Xóa thông tin đăng ký đã lưu trong cache.
-    Đầu vào: email (địa chỉ email đăng ký)
-    Đầu ra: Không có.
-    """
+
     @staticmethod
     def delete_register_data(email: str):
+        """Xóa thông tin đăng ký đã lưu trong cache (gọi khi đăng ký hoàn tất hoặc hết hạn)."""
         cache.delete(RegisterService.get_register_data_cache_key(email))
-    """
-    Chức năng: Gửi email chứa mã OTP để xác thực đăng ký tài khoản.
-    Đầu vào: email (địa chỉ email người nhận), code (mã OTP)
-    Đầu ra: Không có, nhưng hệ thống sẽ gửi email đến người dùng.
-    """
+
     @staticmethod
     def send_register_otp_email(email: str, code: str):
+        """Gửi email chứa mã OTP xác thực đăng ký tài khoản."""
         subject = "Mã OTP đăng ký tài khoản"
 
         message = (
@@ -121,46 +84,40 @@ class RegisterService:
             f"Mã có hiệu lực trong {OTP_EXPIRE_SECONDS // 60} phút.\n\n"
             f"LSN Learn"
         )
-        send_mail(subject, message,settings.DEFAULT_FROM_EMAIL,[email],fail_silently=False,)
-    """
-    Chức năng: Tạo mới tài khoản học viên sau khi xác thực OTP thành công.
-    Đầu vào:
-        - full_name: Họ và tên người dùng.
-        - email: Địa chỉ email đăng ký.
-        - password: Mật khẩu tài khoản.
-    Đầu ra: Đối tượng User vừa được tạo trong hệ thống.
-    """
+        send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [email], fail_silently=False)
+
     @staticmethod
     def create_student_user(full_name: str, email: str, password: str):
+        """Tạo tài khoản học viên mới với role STUDENT sau khi xác thực OTP thành công."""
         first_name, _, last_name = full_name.partition(" ")
         role = AuthRepository.get_or_create_role("STUDENT", "Student")
-        return AuthRepository.create_user(username=email, email=email,password=password,first_name=first_name,last_name=last_name,role=role,)
-    
-    """ 
-    Chức năng: Xử lý yêu cầu gửi mã OTP đăng ký mới.
-    Đầu vào:
-        - full_name: Họ và tên người dùng.
-        - email: Địa chỉ email đăng ký.
-        - password: Mật khẩu tài khoản.
-    Đầu ra: Hệ thống sẽ gửi mã OTP đến email người dùng nếu thông tin hợp lệ.
-    """
+        return AuthRepository.create_user(
+            username=email, email=email, password=password,
+            first_name=first_name, last_name=last_name, role=role,
+        )
+
     @staticmethod
     def send_register_otp(full_name, email, password):
+        """
+        Xử lý yêu cầu gửi mã OTP đăng ký.
+        - Lưu thông tin đăng ký tạm thời vào cache
+        - Tạo OTP, lưu vào cache và gửi email
+        """
         email = email.lower()
         otp_code = OTPService.generate_otp_code()
         RegisterService.set_register_data(email, {"full_name": full_name, "email": email, "password": password})
         RegisterService.set_register_otp(email, otp_code)
         RegisterService.send_register_otp_email(email, otp_code)
 
-    """ 
-    Chức năng: Xử lý yêu cầu xác thực mã OTP đăng ký và tạo tài khoản nếu OTP hợp lệ.
-    Đầu vào:
-        - email: Địa chỉ email đăng ký.
-        - otp: Mã OTP do người dùng nhập để xác thực.
-    Đầu ra: Nếu OTP hợp lệ, hệ thống sẽ tạo tài khoản mới và trả về đối tượng User. Nếu OTP không hợp lệ hoặc có lỗi khác, sẽ trả về lỗi tương ứng.
-    """
     @staticmethod
     def verify_register_otp(email, otp):
+        """
+        Xác thực mã OTP đăng ký và tạo tài khoản nếu OTP hợp lệ.
+        - Kiểm tra email không bị khóa
+        - Kiểm tra OTP khớp với cache
+        - Nếu sai quá 5 lần: khóa email
+        - Nếu đúng: tạo user, xóa cache, trả về user
+        """
         email = email.lower()
 
         if RegisterService.check_register_otp_locked(email):
@@ -183,20 +140,21 @@ class RegisterService:
         if AuthRepository.get_user_by_email(email):
             raise ValidationError("Email đã được sử dụng.")
 
-        user = RegisterService.create_student_user(register_data["full_name"], register_data["email"], register_data["password"])
+        user = RegisterService.create_student_user(
+            register_data["full_name"], register_data["email"], register_data["password"]
+        )
         RegisterService.delete_register_otp(email)
         RegisterService.delete_register_data(email)
         return user
 
-    """
-    Chức năng: Xử lý yêu cầu gửi lại mã OTP đăng ký mới cho email đã đăng ký trước đó.
-    Đầu vào:
-        - email: Địa chỉ email đăng ký.
-    Đầu ra: Hệ thống sẽ gửi mã OTP mới đến email người dùng nếu thông tin hợp lệ và không bị khóa.
-    Nếu email bị khóa hoặc không tồn tại thông tin đăng ký, sẽ trả về lỗi tương ứng.
-    """
     @staticmethod
     def resend_register_otp(email):
+        """
+        Xử lý yêu cầu gửi lại mã OTP đăng ký mới.
+        - Kiểm tra email không bị khóa
+        - Kiểm tra thông tin đăng ký còn hiệu lực
+        - Tạo OTP mới và gửi email
+        """
         email = email.lower()
 
         if RegisterService.check_register_otp_locked(email):

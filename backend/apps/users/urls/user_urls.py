@@ -10,10 +10,19 @@ from apps.users.view.user_views import (
     UnlockUserAPIView,
     ChangePasswordAPIView,
     InstructorApplyAPIView,
+    MyInstructorApplicationAPIView,
     InstructorApplicationListAPIView,
     InstructorApplicationDetailAPIView,
     InstructorApplicationReviewAPIView,
+    DownloadInstructorCVAPIView,
+    PreviewInstructorCVAPIView,
+    InstructorCertificateUploadAPIView,
+    InstructorCertificateListAPIView,
+    InstructorCertificateDeleteAPIView,
+    DownloadInstructorCertificateAPIView,
+    PreviewInstructorCertificateAPIView,
 )
+
 urlpatterns = [
     path("", UserListAPIView.as_view(), name="user-list"),
     path("<uuid:user_id>/", UserDetailAPIView.as_view(), name="user-detail"),
@@ -27,7 +36,18 @@ urlpatterns = [
     path("<uuid:user_id>/unlock/", UnlockUserAPIView.as_view(), name="unlock-user"),
 
     path("instructors/apply/", InstructorApplyAPIView.as_view(), name="instructor-apply"),
+    path("instructors/my-application/", MyInstructorApplicationAPIView.as_view(), name="my-instructor-application"),
     path("instructors/applications/",InstructorApplicationListAPIView.as_view(),name="instructor-application-list"),
     path("instructors/applications/<int:application_id>/",InstructorApplicationDetailAPIView.as_view(),name="instructor-application-detail"),
     path("instructors/applications/<int:application_id>/review/",InstructorApplicationReviewAPIView.as_view(),name="instructor-application-review"),
+    path("instructors/applications/<int:application_id>/cv/",DownloadInstructorCVAPIView.as_view(),name="instructor-application-cv"),
+    path("instructors/applications/<int:application_id>/certificates/",InstructorCertificateUploadAPIView.as_view(),name="instructor-certificate-upload"),
+    path("instructors/applications/<int:application_id>/certificates/list/",InstructorCertificateListAPIView.as_view(),name="instructor-certificate-list"),
+    path("instructors/applications/<int:application_id>/certificates/<int:certificate_id>/",InstructorCertificateDeleteAPIView.as_view(),name="instructor-certificate-delete"),
+    path("instructors/applications/<int:application_id>/certificates/<int:certificate_id>/download/",DownloadInstructorCertificateAPIView.as_view(),name="instructor-certificate-download"),
+    path("instructors/applications/<int:application_id>/certificates/<int:certificate_id>/preview/",PreviewInstructorCertificateAPIView.as_view(),name="instructor-certificate-preview"),
+    path("instructors/applications/<int:application_id>/cv/preview/",PreviewInstructorCVAPIView.as_view(),name="instructor-cv-preview"),
+
 ]
+
+

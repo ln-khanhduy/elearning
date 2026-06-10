@@ -12,117 +12,84 @@ RESET_TOKEN_EXPIRE_SECONDS = 60 * 30
 
 
 class PasswordResetService:
+    """Service quản lý quá trình đặt lại mật khẩu - OTP, token, gửi email và cập nhật mật khẩu."""
+
     PREFIX = "password_reset"
-    # Tạo key cache lưu OTP quên mật khẩu theo email người dùng 
+
     @staticmethod
     def get_otp_cache_key(email: str):
+        """Tạo key cache lưu OTP đặt lại mật khẩu theo email."""
         return f"password_reset_otp:{email.lower()}"
-    """
-    Chức năng: Quản lý OTP và token cho quá trình đặt lại mật khẩu, bao gồm:
-    Đầu vào: token (mã token dùng một lần để xác thực yêu cầu đặt lại mật khẩu)
-    Đầu ra: Trả về True nếu token đã được sử dụng, False nếu chưa.
-    """
+
     @staticmethod
     def get_reset_token_cache_key(token: str):
+        """Tạo key cache lưu token đặt lại mật khẩu để kiểm tra đã sử dụng."""
         return f"password_reset_token:{token}"
-    """
-    Chức năng: Kiểm tra xem email đã bị khóa do nhập sai OTP quá nhiều lần hay chưa.
-    Đầu vào: email (địa chỉ email của người dùng)
-    Đầu ra: Trả về True nếu email đang bị khóa, False nếu không.
-    """
+
     @staticmethod
     def check_otp_locked(email: str):
+        """Kiểm tra email có đang bị khóa do nhập sai OTP đặt lại mật khẩu quá nhiều lần hay không."""
         return OTPService.check_locked(PasswordResetService.PREFIX, email)
-    """
-    Chức năng: Tăng số lần thử OTP cho email.
-    Đầu vào: email (địa chỉ email của người dùng)
-    Đầu ra: Trả về số lần thử OTP sau khi được tăng.
-    """
+
     @staticmethod
     def increment_otp_attempts(email: str):
+        """Tăng số lần thử OTP đặt lại mật khẩu cho email và trả về số lần thử sau khi tăng."""
         return OTPService.increment_attempts(PasswordResetService.PREFIX, email)
-    """
-    Chức năng: Đặt lại số lần thử OTP cho email (thường được gọi khi OTP được sử dụng thành công).
-    Đầu vào: email (địa chỉ email của người dùng)
-    Đầu ra: Không có, nhưng sẽ xóa cache liên quan đến số lần thử OTP của email.
-    """
+
     @staticmethod
     def reset_otp_attempts(email: str):
+        """Đặt lại số lần thử OTP đặt lại mật khẩu cho email về 0 (gọi khi OTP được xác thực thành công)."""
         OTPService.reset_attempts(PasswordResetService.PREFIX, email)
-    """
-    Chức năng: Khóa email khi người dùng nhập sai OTP quá nhiều lần.
-    Đầu vào: email (địa chỉ email của người dùng)
-    Đầu ra: Không có, nhưng sẽ cập nhật cache để đánh dấu email là bị khóa trong một khoảng thời gian nhất định.
-    """
+
     @staticmethod
     def lock_otp_for_email(email: str):
+        """Khóa email khi người dùng nhập sai OTP đặt lại mật khẩu quá số lần cho phép."""
         OTPService.lock_email(PasswordResetService.PREFIX, email)
-    """
-    Chức năng: Quản lý OTP cho quá trình đặt lại mật khẩu, bao gồm:
-    Đầu vào: email (địa chỉ email của người dùng), code (mã OTP được tạo ra)
-    Đầu ra: Không có, nhưng sẽ lưu mã OTP vào cache với thời gian hết hạn nhất định.
-    """
+
     @staticmethod
     def set_otp_code(email: str, code: str):
-        cache.set(PasswordResetService.get_otp_cache_key(email),code,OTP_EXPIRE_SECONDS,)
-    """
-    Chức năng: gửi email chứa mã OTP cho người dùng khi họ yêu cầu đặt lại mật khẩu.
-    Đầu vào: email (địa chỉ email của người dùng), code (mã OTP được tạo ra)
-    Đầu ra: Không có, nhưng sẽ sử dụng hệ thống email của Django để gửi email đến người dùng.
-    """
+        """Lưu mã OTP đặt lại mật khẩu vào cache với thời gian hết hạn."""
+        cache.set(PasswordResetService.get_otp_cache_key(email), code, OTP_EXPIRE_SECONDS)
+
     @staticmethod
     def get_otp_code(email: str):
+        """Lấy mã OTP đặt lại mật khẩu từ cache."""
         return cache.get(PasswordResetService.get_otp_cache_key(email))
-    """
-    Chức năng: Xóa mã OTP khỏi cache, thường được gọi sau khi OTP đã được sử dụng thành công hoặc khi hết hạn.
-    Đầu vào: email (địa chỉ email của người dùng)
-    Đầu ra: Không có, nhưng sẽ xóa mã OTP khỏi cache.
-    """
+
     @staticmethod
     def delete_otp_code(email: str):
+        """Xóa mã OTP đặt lại mật khẩu khỏi cache (gọi khi OTP đã được sử dụng hoặc hết hạn)."""
         cache.delete(PasswordResetService.get_otp_cache_key(email))
-    """
-    Chức năng: Tạo token đặt lại mật khẩu dùng một lần dựa trên email người dùng.
-    Đầu vào: email (địa chỉ email của người dùng)
-    Đầu ra: Trả về token đặt lại mật khẩu.
-    """
+
     @staticmethod
     def get_password_reset_token(email: str):
+        """Tạo token đặt lại mật khẩu dùng một lần dựa trên email, có ký số để chống giả mạo."""
         signer = signing.TimestampSigner(salt="password-reset")
         return signer.sign(email.lower())
-    """
-    Chức năng: Xác minh token đặt lại mật khẩu và lấy email người dùng từ token.
-    Đầu vào: token (mã token dùng một lần để xác thực yêu cầu đặtlại mật khẩu)
-    Đầu ra: Trả về email người dùng nếu token hợp lệ, hoặc ném lỗi nếu không hợp lệ.
-    """
+
     @staticmethod
     def verify_password_reset_token(token: str):
+        """Xác minh token đặt lại mật khẩu và trả về email nếu token hợp lệ và chưa hết hạn."""
         signer = signing.TimestampSigner(salt="password-reset")
         return signer.unsign(token, max_age=RESET_TOKEN_EXPIRE_SECONDS)
-    """
-    Chức năng: Kiểm tra xem token đặt lại mật khẩu đã được sử dụng hay chưa, dựa trên việc kiểm tra cache.
-    Đầu vào: token (mã token dùng một lần để xác thực yêu cầu đặt lại mật khẩu)
-    Đầu ra: Trả về True nếu token đã được sử dụng, False nếu chưa.
-    """
+
     @staticmethod
     def is_reset_token_used(token: str):
+        """Kiểm tra token đặt lại mật khẩu đã được sử dụng hay chưa dựa trên cache."""
         return cache.get(PasswordResetService.get_reset_token_cache_key(token)) is not None
-    """
-    Chức năng: Đánh dấu token đặt lại mật khẩu đã được sử dụng bằng cách lưu trạng thái vào cache với thời gian hết hạn.
-    Đầu vào: token (mã token dùng một lần để xác thực yêu cầu đặt lại mật khẩu)
-    Đầu ra: Không có, nhưng sẽ cập nhật cache để đánh dấu token là đã sử dụng trong một khoảng thời gian nhất định.
-    """
+
     @staticmethod
     def mark_reset_token_used(token: str):
-        cache.set( PasswordResetService.get_reset_token_cache_key(token),True,RESET_TOKEN_EXPIRE_SECONDS,)
+        """Đánh dấu token đặt lại mật khẩu đã được sử dụng để tránh dùng lại."""
+        cache.set(
+            PasswordResetService.get_reset_token_cache_key(token),
+            True,
+            RESET_TOKEN_EXPIRE_SECONDS,
+        )
 
-    """
-    Chức năng: Gửi email chứa mã OTP cho người dùng khi họ yêu cầu đặt lại mật khẩu.
-    Đầu vào: email (địa chỉ email của người dùng), code (mã OTP được tạo ra)
-    Đầu ra: Không có, nhưng sẽ sử dụng hệ thống email của Django để gửi email đến người dùng.
-    """
     @staticmethod
     def send_password_reset_email(email: str, code: str):
+        """Gửi email chứa mã OTP đặt lại mật khẩu cho người dùng."""
         subject = "Mã OTP khôi phục mật khẩu"
 
         message = (
@@ -142,14 +109,13 @@ class PasswordResetService:
             fail_silently=False,
         )
 
-    """ 
-    Chức năng: Xử lý yêu cầu gửi mã OTP đặt lại mật khẩu mới cho email đã đăng ký trước đó.
-    Đầu vào: email (địa chỉ email của người dùng)
-    Đầu ra: Hệ thống sẽ gửi mã OTP mới đến email người dùng nếu thông tin hợp lệ và không bị khóa.
-    Nếu email bị khóa hoặc không tồn tại tài khoản liên quan, sẽ trả về lỗi tương ứng.
-    """
     @staticmethod
     def send_reset_otp(email):
+        """
+        Xử lý yêu cầu gửi mã OTP đặt lại mật khẩu.
+        - Kiểm tra email không bị khóa
+        - Tạo OTP mới, lưu vào cache và gửi email
+        """
         email = email.lower()
 
         if PasswordResetService.check_otp_locked(email):
@@ -159,14 +125,15 @@ class PasswordResetService:
         PasswordResetService.set_otp_code(email, otp_code)
         PasswordResetService.send_password_reset_email(email, otp_code)
 
-
-    """
-    Chức năng: Xử lý yêu cầu xác thực mã OTP đặt lại mật khẩu và tạo token đặt lại nếu OTP hợp lệ.
-    Đầu vào: email (địa chỉ email của người dùng), otp (mã OTP do người dùng nhập để xác thực)
-    Đầu ra: Nếu OTP hợp lệ, hệ thống sẽ trả về token đặt lại mật khẩu. Nếu OTP không hợp lệ hoặc có lỗi khác, sẽ trả về lỗi tương ứng.
-    """
     @staticmethod
     def verify_otp_and_create_token(email, otp):
+        """
+        Xác thực mã OTP đặt lại mật khẩu và tạo token nếu OTP hợp lệ.
+        - Kiểm tra email không bị khóa
+        - Kiểm tra OTP khớp với cache
+        - Nếu sai quá 5 lần: khóa email
+        - Nếu đúng: xóa OTP, reset attempts, trả về token
+        """
         email = email.lower()
 
         if PasswordResetService.check_otp_locked(email):
@@ -185,15 +152,14 @@ class PasswordResetService:
         PasswordResetService.reset_otp_attempts(email)
         return PasswordResetService.get_password_reset_token(email)
 
-        
-    """ 
-    Chức năng: Xử lý yêu cầu đặt lại mật khẩu mới bằng token đặt lại mật khẩu.
-    Đầu vào: token (token đặt lại mật khẩu), password (mật khẩu mới)
-    Đầu ra: Nếu token hợp lệ và chưa được sử dụng, hệ thống sẽ cập nhật mật khẩu mới cho tài khoản liên quan và trả về đối tượng User.
-    Nếu token không hợp lệ, đã được sử dụng, hoặc có lỗi khác, sẽ trả về lỗi tương ứng.
-    """
     @staticmethod
     def reset_password(token, password):
+        """
+        Đặt lại mật khẩu mới bằng token đã được xác thực.
+        - Kiểm tra token hợp lệ, chưa hết hạn và chưa được sử dụng
+        - Cập nhật mật khẩu mới cho user
+        - Đánh dấu token đã sử dụng
+        """
         if not token or not token.strip():
             raise ValidationError("Token không hợp lệ.")
 

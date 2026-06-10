@@ -1,14 +1,15 @@
 from django.utils import timezone
-from django.db.models import Sum
-from django.db.models.functions import TruncYear
 
 from apps.system.repositories.dashboard_repository import AdminDashboardRepository
-from apps.payments.models import PaymentTransaction
 
 
 class AdminDashboardService:
     @staticmethod
     def get_monthly_data(queryset_result):
+        """
+        Chuyển đổi dữ liệu thống kê theo tháng từ queryset thành mảng 12 tháng.
+        Điền giá trị 0 cho những tháng không có dữ liệu.
+        """
         months = {i: 0 for i in range(1, 13)}
 
         for item in queryset_result:
@@ -26,23 +27,17 @@ class AdminDashboardService:
 
     @staticmethod
     def get_total_revenue():
-        result = PaymentTransaction.objects.filter(
-            status__in=["PAID", "HOLD"]
-        ).aggregate(total=Sum("net_amount"))
-
-        return result["total"] or 0
+        """Lấy tổng doanh thu hệ thống (ủy quyền cho Repository truy vấn)."""
+        return AdminDashboardRepository.get_total_revenue()
 
     @staticmethod
     def get_revenue_by_year():
-        """Lấy doanh thu theo từng năm từ các giao dịch đã thanh toán."""
-        revenues = (
-            PaymentTransaction.objects
-            .filter(status__in=["PAID", "HOLD"])
-            .annotate(year=TruncYear("paid_at"))
-            .values("year")
-            .annotate(total=Sum("net_amount"))
-            .order_by("year")
-        )
+        """
+        Lấy doanh thu theo từng năm.
+        - Truy vấn doanh thu từ Repository
+        - Điền giá trị 0 cho những năm không có dữ liệu (từ 2019 đến năm hiện tại)
+        """
+        revenues = AdminDashboardRepository.get_revenue_by_year()
 
         revenue_map = {}
         for item in revenues:
@@ -61,6 +56,11 @@ class AdminDashboardService:
 
     @staticmethod
     def get_dashboard_data(year=None):
+        """
+        Tổng hợp tất cả dữ liệu thống kê cho dashboard admin.
+        Bao gồm: thống kê tổng quan, người dùng theo tháng/role, khóa học theo trạng thái,
+        hồ sơ giảng viên chờ duyệt, doanh thu và hoạt động gần đây.
+        """
         if year is None:
             year = timezone.now().year
 

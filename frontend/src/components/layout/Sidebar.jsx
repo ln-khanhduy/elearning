@@ -9,11 +9,19 @@ function Sidebar({ isOpen, onClose }) {
   const [collapsed, setCollapsed] = useState(false);
   const navigate = useNavigate();
   const { user, clearUserSession } = useUser();
-  const role = user?.role;
+  const roleCode = typeof user?.role === "object" && user?.role !== null ? user.role.code : user?.role;
 
-  const visibleItems = sidebarItems.filter((item) => {
-    if (item.type === "group") return true;
-    return item.roles.includes(role);
+  // Lọc: chỉ giữ item hợp lệ, và chỉ giữ group nếu có ít nhất 1 item hợp lệ trong group đó
+  const visibleItems = sidebarItems.filter((item, index) => {
+    if (item.type === "group") {
+      for (let i = index + 1; i < sidebarItems.length; i++) {
+        const next = sidebarItems[i];
+        if (next.type === "group") break;
+        if (next.roles.includes(roleCode)) return true;
+      }
+      return false;
+    }
+    return item.roles.includes(roleCode);
   });
 
   const hasItemAfterGroup = (index) => {
