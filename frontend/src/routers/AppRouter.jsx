@@ -14,6 +14,13 @@ import ProfilePage from "../pages/public/ProfilePage";
 import InstructorApplyPage from "../pages/instructor/InstructorApplyPage";
 import InstructorApplicationStatusPage from "../pages/instructor/InstructorApplicationStatusPage";
 import AdminInstructorApplicationsPage from "../pages/admin/AdminInstructorApplicationsPage";
+import InstructorCoursesPage from "../pages/instructor/InstructorCoursesPage";
+import InstructorCourseCreatePage from "../pages/instructor/InstructorCourseCreatePage";
+import InstructorCourseEditPage from "../pages/instructor/InstructorCourseEditPage";
+import AdminPendingCoursesPage from "../pages/admin/AdminPendingCoursesPage";
+import AdminCategoryTagPage from "../pages/admin/AdminCategoryTagPage";
+import MyCoursesPage from "../pages/student/MyCoursesPage";
+import AdminReviewsPage from "../pages/admin/AdminReviewsPage";
 
 function AppRouter() {
   return (
@@ -31,15 +38,16 @@ function AppRouter() {
         </Route>
         <Route element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
           {/* Dashboard - chỉ SUPERADMIN mới có thể xem */}
-        <Route path="/dashboard" element={<ProtectedRoute allowedRoles={["SUPERADMIN"]}><AdminDashboardPage /></ProtectedRoute>} />
+          <Route path="/dashboard" element={<ProtectedRoute allowedRoles={["SUPERADMIN"]}><AdminDashboardPage /></ProtectedRoute>} />
 
           {/* Học tập */}
-          <Route path="/courses" element={<ProtectedRoute allowedRoles={["STUDENT", "COURSE_ADMIN"]}><></></ProtectedRoute>} />
-          <Route path="/my-courses" element={<ProtectedRoute allowedRoles={["STUDENT", "INSTRUCTOR"]}><></></ProtectedRoute>} />
-          <Route path="/instructor/courses" element={<ProtectedRoute allowedRoles={["INSTRUCTOR", "SUPERADMIN"]}><></></ProtectedRoute>} />
-          <Route path="/admin/courses/pending" element={<ProtectedRoute allowedRoles={["COURSE_ADMIN"]}><></></ProtectedRoute>} />
-          <Route path="/admin/courses" element={<ProtectedRoute allowedRoles={["COURSE_ADMIN", "SUPERADMIN"]}><></></ProtectedRoute>} />
-          <Route path="/admin/reviews" element={<ProtectedRoute allowedRoles={["COURSE_ADMIN"]}><></></ProtectedRoute>} />
+          <Route path="/my-courses" element={<ProtectedRoute allowedRoles={["STUDENT", "INSTRUCTOR"]}><MyCoursesPage /></ProtectedRoute>} />
+          <Route path="/instructor/courses" element={<ProtectedRoute allowedRoles={["INSTRUCTOR", "SUPERADMIN"]}><InstructorCoursesPage /></ProtectedRoute>} />
+          <Route path="/instructor/courses/create" element={<ProtectedRoute allowedRoles={["INSTRUCTOR", "SUPERADMIN"]}><InstructorCourseCreatePage /></ProtectedRoute>} />
+          <Route path="/instructor/courses/:courseId/edit" element={<ProtectedRoute allowedRoles={["INSTRUCTOR", "SUPERADMIN"]}><InstructorCourseEditPage /></ProtectedRoute>} />
+          <Route path="/admin/courses/pending" element={<ProtectedRoute allowedRoles={["COURSE_ADMIN", "SUPERADMIN"]}><AdminPendingCoursesPage /></ProtectedRoute>} />
+          <Route path="/admin/courses/categories" element={<ProtectedRoute allowedRoles={["COURSE_ADMIN", "SUPERADMIN"]}><AdminCategoryTagPage /></ProtectedRoute>} />
+          <Route path="/admin/reviews" element={<ProtectedRoute allowedRoles={["COURSE_ADMIN", "SUPERADMIN"]}><AdminReviewsPage /></ProtectedRoute>} />
 
           {/* Người dùng & Giảng viên */}
           <Route path="/admin/users" element={<ProtectedRoute allowedRoles={["USER_MANAGER", "SUPERADMIN"]}><></></ProtectedRoute>} />
@@ -48,12 +56,12 @@ function AppRouter() {
           <Route path="/admin/instructors" element={<ProtectedRoute allowedRoles={["INSTRUCTOR_MANAGER", "SUPERADMIN"]}><></></ProtectedRoute>} />
           <Route path="/admin/instructor-support" element={<ProtectedRoute allowedRoles={["INSTRUCTOR_MANAGER"]}><></></ProtectedRoute>} />
           <Route path="/admin/register-instructor" element={<ProtectedRoute allowedRoles={["INSTRUCTOR_MANAGER", "SUPERADMIN"]}><AdminInstructorApplicationsPage /></ProtectedRoute>} />
-          <Route path="/admin/complaints" element={<ProtectedRoute allowedRoles={["USER_MANAGER"]}><></></ProtectedRoute>} />
+          <Route path="/admin/complaints" element={<ProtectedRoute allowedRoles={["USER_MANAGER", "SUPERADMIN"]}><></></ProtectedRoute>} />
 
           {/* Tài chính */}
-          <Route path="/finance/revenue" element={<ProtectedRoute allowedRoles={["FINANCE_ADMIN"]}><></></ProtectedRoute>} />
-          <Route path="/finance/transactions" element={<ProtectedRoute allowedRoles={["FINANCE_ADMIN"]}><></></ProtectedRoute>} />
-          <Route path="/finance/fees" element={<ProtectedRoute allowedRoles={["FINANCE_ADMIN"]}><></></ProtectedRoute>} />
+          <Route path="/finance/revenue" element={<ProtectedRoute allowedRoles={["FINANCE_ADMIN","SUPERADMIN"]}><></></ProtectedRoute>} />
+          <Route path="/finance/transactions" element={<ProtectedRoute allowedRoles={["FINANCE_ADMIN","SUPERADMIN"]}><></></ProtectedRoute>} />
+          <Route path="/finance/fees" element={<ProtectedRoute allowedRoles={["FINANCE_ADMIN","SUPERADMIN"]}><></></ProtectedRoute>} />
           <Route path="/finance/reports" element={<ProtectedRoute allowedRoles={["FINANCE_ADMIN"]}><></></ProtectedRoute>} />
 
           {/* Super Admin */}

@@ -73,8 +73,6 @@ class VietnameseUserAttributeSimilarityValidator:
             return
 
         user_attributes = []
-        if hasattr(user, "get_username"):
-            user_attributes.append(user.get_username())
         if hasattr(user, "email") and user.email:
             user_attributes.append(user.email)
         if hasattr(user, "first_name") and user.first_name:

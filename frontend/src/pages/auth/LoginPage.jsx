@@ -32,7 +32,7 @@ function LoginPage() {
     setLoading(true);
 
     try {
-      const data=await login({ login: email, password });
+      const data=await login({ email, password });
 
       saveAccessToken(data.access);
       setAccessToken(data.access);
@@ -112,7 +112,7 @@ function LoginPage() {
 
           <form onSubmit={handleSubmit}>
             <InputField
-              label="EMAIL HOẶC TÊN ĐĂNG NHẬP"
+              label="EMAIL"
               type="text"
               placeholder="name@gmail.com"
               icon="bi-person"
@@ -127,6 +127,7 @@ function LoginPage() {
                 <Link to="/forgot-password" className="forgot-link small">
                   Quên mật khẩu?
                 </Link>
+                
               </div>
 
               <InputField

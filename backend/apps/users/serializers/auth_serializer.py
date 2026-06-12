@@ -13,8 +13,9 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = [
-            'id', 'username', 'email', 'first_name', 'last_name', 'full_name',
+            'id', 'email', 'first_name', 'last_name', 'full_name',
             'phone', 'role', 'avatar_url', 'account_status', 'date_joined', 'last_login',
+            'google_email',
         ]
 
     def get_full_name(self, obj):
@@ -22,31 +23,28 @@ class UserSerializer(serializers.ModelSerializer):
         return obj.get_full_name() or obj.first_name
 
     def get_avatar_url(self, obj):
-        """Lấy URL ảnh đại diện, ưu tiên ảnh upload, fallback về Google avatar."""
+        """Lấy URL ảnh đại diện của user."""
         return obj.avatar_url
 
 
 class LoginSerializer(serializers.Serializer):
     """Serializer kiểm tra payload đăng nhập và xác thực credentials - trả về user nếu hợp lệ."""
 
-    login = serializers.CharField(required=True, allow_blank=False)
+    email = serializers.EmailField(required=True, allow_blank=False)
     password = serializers.CharField(write_only=True, required=True, allow_blank=False)
 
     def validate(self, attrs):
-        """Xác thực thông tin đăng nhập: kiểm tra email/username và password, trả về user nếu hợp lệ."""
-        login_value = attrs.get('login', '').strip()
+        """Xác thực thông tin đăng nhập: kiểm tra email và password, trả về user nếu hợp lệ."""
+        email_value = attrs.get('email', '').strip().lower()
         password = attrs.get('password', '').strip()
 
-        if not login_value:
-            raise serializers.ValidationError({'login': 'Email hoặc tên đăng nhập không được để trống.'})
+        if not email_value:
+            raise serializers.ValidationError({'email': 'Email không được để trống.'})
         if not password:
             raise serializers.ValidationError({'password': 'Mật khẩu không được để trống.'})
 
-        user = authenticate(username=login_value, password=password)
-        if user is None and '@' in login_value:
-            lookup = User.objects.filter(email__iexact=login_value).first()
-            if lookup:
-                user = authenticate(username=lookup.username, password=password)
+        # Xác thực bằng email 
+        user = authenticate(username=email_value, password=password)
         if user is None:
             raise serializers.ValidationError('Email hoặc mật khẩu không đúng.')
         if not user.is_active or user.account_status != 'ACTIVE':

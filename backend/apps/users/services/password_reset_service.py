@@ -2,7 +2,7 @@ from django.conf import settings
 from django.core import signing
 from django.core.cache import cache
 from django.core.mail import send_mail
-from jsonschema import ValidationError
+from rest_framework.exceptions import ValidationError
 
 from apps.users.services.otp_service import OTPService, OTP_EXPIRE_SECONDS
 from apps.users.repositories.auth_repository import AuthRepository

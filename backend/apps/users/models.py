@@ -34,6 +34,7 @@ class RolePermission(models.Model):
 class User(AbstractUser):
     """
     Tài khoản người dùng mở rộng từ AbstractUser của Django.
+    Sử dụng email làm định danh duy nhất để đăng nhập.
     """
     ACCOUNT_STATUS_CHOICES = (
         ('ACTIVE', 'Active'),              # Hoạt động bình thường
@@ -41,10 +42,11 @@ class User(AbstractUser):
         ('LOCKED', 'Locked'),              # Bị khóa vĩnh viễn (vi phạm)
     )
     id = models.UUIDField(primary_key=True, default=uuid7, editable=False)  # ID tự tăng cho mỗi user
+    username = models.CharField(max_length=150, blank=True, null=True, unique=False)
+    # Email là trường định danh duy nhất để đăng nhập, phải unique
+    email = models.EmailField(unique=True)
     # Ảnh đại diện, lưu vào thư mục avatars/
     avatar = models.ImageField(upload_to='avatars/', null=True, blank=True)
-    # URL ảnh đại diện từ Google (nếu đăng nhập bằng Google OAuth)
-    google_avatar_url = models.URLField(null=True, blank=True)
     # Số điện thoại liên hệ (tuỳ chọn)
     phone = models.CharField(max_length=15, null=True, blank=True)
     # Trạng thái tài khoản (ACTIVE / SUSPENDED / LOCKED)
@@ -61,18 +63,22 @@ class User(AbstractUser):
         blank=True,
         related_name='changed_user_statuses',
     )
+    # Email Google đã liên kết (dùng để xác thực Instructor)
+    google_email = models.EmailField(unique=True, null=True, blank=True)
     #  M2M groups để đặt tên bảng nối rõ ràng
     role = models.ForeignKey(
     Role,
     on_delete=models.PROTECT,
     related_name="users"
     )
+
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = []
+
     @property
     def avatar_url(self):
         if self.avatar:
             return self.avatar.url
-        if self.google_avatar_url:
-            return self.google_avatar_url
         return None
 
     class Meta:

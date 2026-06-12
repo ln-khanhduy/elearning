@@ -14,9 +14,9 @@ export const validateEmail = (email) => {
   }
 };
 
-export const validateLogin = ({ login, password }) => {
-  if (!login || !login.trim()) {
-    throw new Error('Email hoặc tên đăng nhập không được để trống.');
+export const validateLogin = ({ email, password }) => {
+  if (!email || !email.trim()) {
+    throw new Error('Email không được để trống.');
   }
   if (!password || !password.trim()) {
     throw new Error('Mật khẩu không được để trống.');
@@ -67,10 +67,10 @@ export const validateResetPassword = ({ password, confirmPassword }) => {
 };
 
 
-export const login = async ({ login, password }) => {
-  validateLogin({ login, password });
+export const login = async ({ email, password }) => {
+  validateLogin({ email, password });
   clearAuthSessionData();
-  const response = await loginApi({ login, password });
+  const response = await loginApi({ email, password });
   setAccessToken(response.access);
   return response;
 };

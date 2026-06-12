@@ -13,7 +13,7 @@ from apps.users.serializers.user_serializer import (
     UserListSerializer, UserDetailSerializer, UpdateProfileSerializer,
     ChangeUserRoleSerializer, LockUnlockUserSerializer, ChangePasswordSerializer,
     InstructorApplySerializer, InstructorApplicationSerializer, InstructorReviewSerializer,
-    InstructorCertificateSerializer,
+    InstructorCertificateSerializer, LinkGoogleSerializer,
 )
 
 
@@ -240,6 +240,7 @@ class InstructorApplicationReviewAPIView(APIView):
         required_perm = "user.instructor.approve" if review_status == "APPROVED" else "user.instructor.reject"
 
         # Kiểm tra quyền thủ công dựa trên hành động (duyệt hoặc từ chối)
+        # Phải check permission TRƯỚC khi gọi Service để tránh bypass
         self.required_permission = required_perm
         perm_checker = HasRequiredPermission()
         if not perm_checker.has_permission(request, self):
@@ -442,6 +443,27 @@ class InstructorCertificateListAPIView(APIView):
         certificates = InstructorService.get_certificates(application)
         serializer = InstructorCertificateSerializer(certificates, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class LinkGoogleAPIView(APIView):
+    """
+    POST /api/users/link-google/ - Liên kết Google Account với user hiện tại.
+    Body: { "id_token": "google_id_token" }
+    Yêu cầu: user phải đăng nhập.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        serializer = LinkGoogleSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = UserService.link_google_account(
+            request.user,
+            serializer.validated_data["id_token"]
+        )
+        return Response({
+            "detail": "Liên kết Google Account thành công.",
+            "user": UserDetailSerializer(user).data
+        }, status=status.HTTP_200_OK)
 
 
 class InstructorCertificateDeleteAPIView(APIView):

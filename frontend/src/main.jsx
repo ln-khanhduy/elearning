@@ -12,7 +12,7 @@ import AppRouter from "./routers/AppRouter";
 import { ToastContainer } from "react-toastify";
 
 const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-document.title = "LSN Learn";
+document.title = "LMS Learn";
 const faviconEl = document.getElementById("app-favicon");
 if (faviconEl) {
 	faviconEl.href = logoSrc;

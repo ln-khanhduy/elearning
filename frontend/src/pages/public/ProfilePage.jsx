@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import { GoogleLogin } from "@react-oauth/google";
 import { useUser } from "../../context/UserContext";
-import { updateProfileApi, changePasswordApi } from "../../api/userAPI";
+import { updateProfileApi, changePasswordApi, linkGoogleAccountApi } from "../../api/userAPI";
 import "../../style/profile.css";
 
 function ProfilePage() {
@@ -28,6 +29,35 @@ function ProfilePage() {
     confirm_password: "",
   });
   const [changingPassword, setChangingPassword] = useState(false);
+
+  // ===== State cho link Google =====
+  const [linkingGoogle, setLinkingGoogle] = useState(false);
+
+  // ===== Xử lý link Google =====
+  const handleGoogleLinkSuccess = async (credentialResponse) => {
+    if (linkingGoogle) return;
+    setLinkingGoogle(true);
+
+    try {
+      const idToken = credentialResponse.credential;
+      if (!idToken) {
+        throw new Error("Không nhận được mã đăng nhập từ Google.");
+      }
+
+      await linkGoogleAccountApi(idToken);
+      await reloadUser();
+      toast.success("Liên kết Google Account thành công!");
+    } catch (error) {
+      toast.error(error.message || "Liên kết Google thất bại.");
+    } finally {
+      setLinkingGoogle(false);
+    }
+  };
+
+  const handleGoogleLinkError = () => {
+    setLinkingGoogle(false);
+    toast.error("Không thể liên kết Google Account.");
+  };
 
   // Đổ dữ liệu user vào form
   useEffect(() => {
@@ -215,6 +245,44 @@ function ProfilePage() {
                 </span>
               </div>
             </div>
+          </div>
+
+          {/* Card: Google Account */}
+          <div className="profile-card">
+            <h4 className="profile-card-title">
+              <span className="material-symbols-outlined" style={{ fontSize: 20, color: "var(--primary)" }}>google</span>
+              Google Account
+            </h4>
+            {user.google_email ? (
+              <>
+                <p className="profile-card-desc" style={{ marginBottom: 8 }}>
+                  <span className="profile-status-badge status-active" style={{ fontSize: 11, marginRight: 8 }}>Đã liên kết</span>
+                </p>
+                <p className="profile-meta-value" style={{ fontSize: 13, margin: 0 }}>
+                  {user.google_email}
+                </p>
+              </>
+            ) : (
+              <>
+                <p className="profile-card-desc">
+                  <span className="profile-status-badge status-locked" style={{ fontSize: 11, marginRight: 8 }}>Chưa liên kết</span>
+                </p>
+                <p className="profile-card-desc" style={{ fontSize: 13 }}>
+                  Liên kết Google Account để đăng ký trở thành giảng viên.
+                </p>
+                {linkingGoogle ? (
+                  <button className="profile-btn-outline" disabled>
+                    <span className="spinner-border spinner-border-sm me-2"></span>
+                    Đang liên kết...
+                  </button>
+                ) : (
+                  <GoogleLogin
+                    onSuccess={handleGoogleLinkSuccess}
+                    onError={handleGoogleLinkError}
+                  />
+                )}
+              </>
+            )}
           </div>
 
           {/* Card: Đăng ký giảng viên (chỉ hiển thị với STUDENT) */}

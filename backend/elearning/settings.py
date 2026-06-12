@@ -144,6 +144,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
@@ -200,9 +202,18 @@ STORAGES = {
 
 DEFAULT_FILE_STORAGE = 'apps.common.cloudinary_storage.SmartMediaCloudinaryStorage'
 
+
 # CORS and CSRF configuration
 FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:3000')
-CORS_ALLOWED_ORIGINS = [FRONTEND_URL]
+CORS_ALLOWED_ORIGINS = [
+    FRONTEND_URL,
+    'http://localhost:5173',
+    'http://127.0.0.1:5173',
+]
 CORS_ALLOW_CREDENTIALS = True
 CSRF_COOKIE_SECURE = not DEBUG
-CSRF_TRUSTED_ORIGINS = [FRONTEND_URL]
+CSRF_TRUSTED_ORIGINS = [
+    FRONTEND_URL,
+    'http://localhost:5173',
+    'http://127.0.0.1:5173',
+]

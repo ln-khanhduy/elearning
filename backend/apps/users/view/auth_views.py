@@ -15,8 +15,9 @@ from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from apps.users.serializers.auth_serializer import (
-    ForgotPasswordSerializer, LoginSerializer, RegisterResendOTPSerializer,
-    RegisterSendOTPSerializer, RegisterVerifyOTPSerializer, ResetPasswordSerializer,
+    ForgotPasswordSerializer, GoogleLoginSerializer, LoginSerializer,
+    RegisterResendOTPSerializer, RegisterSendOTPSerializer,
+    RegisterVerifyOTPSerializer, ResetPasswordSerializer,
     UserSerializer, VerifyOTPSerializer,
 )
 from apps.users.services.auth_service import AuthService
@@ -69,7 +70,12 @@ class RegisterVerifyOTPView(APIView):
         serializer = RegisterVerifyOTPSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        user = RegisterService.verify_register_otp(serializer.validated_data["email"], serializer.validated_data["otp"])
+        try:
+            user = RegisterService.verify_register_otp(serializer.validated_data["email"], serializer.validated_data["otp"])
+        except ValidationError as e:
+            message = e.detail[0] if isinstance(e.detail, list) else str(e.detail)
+            return Response({"detail": str(message)}, status=status.HTTP_400_BAD_REQUEST)
+
         tokens = AuthService.generate_tokens_for_user(user)
 
         response = Response({"user": UserSerializer(user).data, "access": tokens["access"]}, status=status.HTTP_201_CREATED)
@@ -80,7 +86,7 @@ class RegisterVerifyOTPView(APIView):
 @method_decorator(ensure_csrf_cookie, name="dispatch")
 class AuthLoginView(APIView):
     """
-    POST /api/auth/login/ - Đăng nhập bằng email/username và password.
+    POST /api/auth/login/ - Đăng nhập bằng email và password.
     Có rate limit 5 lần/5 phút theo IP. Trả về access token và set refresh token cookie.
     """
     permission_classes = [AllowAny]
@@ -206,7 +212,11 @@ class ForgotPasswordView(APIView):
     def post(self, request):
         serializer = ForgotPasswordSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        PasswordResetService.send_reset_otp(serializer.validated_data["email"])
+        try:
+            PasswordResetService.send_reset_otp(serializer.validated_data["email"])
+        except ValidationError as e:
+            message = e.detail[0] if isinstance(e.detail, list) else str(e.detail)
+            return Response({"detail": str(message)}, status=status.HTTP_400_BAD_REQUEST)
         return Response({"detail": "Đã gửi mã OTP đến email. Vui lòng kiểm tra hộp thư đến."}, status=status.HTTP_200_OK)
 
 
@@ -220,9 +230,13 @@ class VerifyOTPView(APIView):
     def post(self, request):
         serializer = VerifyOTPSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        reset_token = PasswordResetService.verify_otp_and_create_token(
-            serializer.validated_data["email"], serializer.validated_data["otp"]
-        )
+        try:
+            reset_token = PasswordResetService.verify_otp_and_create_token(
+                serializer.validated_data["email"], serializer.validated_data["otp"]
+            )
+        except ValidationError as e:
+            message = e.detail[0] if isinstance(e.detail, list) else str(e.detail)
+            return Response({"detail": str(message)}, status=status.HTTP_400_BAD_REQUEST)
         return Response({"detail": "OTP hợp lệ.", "reset_token": reset_token}, status=status.HTTP_200_OK)
 
 
@@ -237,7 +251,11 @@ class ResetPasswordView(APIView):
     def post(self, request):
         serializer = ResetPasswordSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        PasswordResetService.reset_password(serializer.validated_data["token"], serializer.validated_data["password"])
+        try:
+            PasswordResetService.reset_password(serializer.validated_data["token"], serializer.validated_data["password"])
+        except ValidationError as e:
+            message = e.detail[0] if isinstance(e.detail, list) else str(e.detail)
+            return Response({"detail": str(message)}, status=status.HTTP_400_BAD_REQUEST)
         return Response({"detail": "Mật khẩu mới đã được cập nhật."}, status=status.HTTP_200_OK)
 
 
@@ -251,7 +269,11 @@ class RegisterResendOTPView(APIView):
     def post(self, request):
         serializer = RegisterResendOTPSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        RegisterService.resend_register_otp(serializer.validated_data["email"])
+        try:
+            RegisterService.resend_register_otp(serializer.validated_data["email"])
+        except ValidationError as e:
+            message = e.detail[0] if isinstance(e.detail, list) else str(e.detail)
+            return Response({"detail": str(message)}, status=status.HTTP_400_BAD_REQUEST)
         return Response({"detail": "Mã OTP mới đã được gửi."}, status=status.HTTP_200_OK)
 
 
@@ -263,24 +285,21 @@ class GoogleIdTokenLoginView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
-        id_token_value = request.data.get("id_token")
+        serializer = GoogleLoginSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
 
-        if not id_token_value:
-            return Response(
-                {"detail": "Thiếu id_token Google."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        try:
+            user = GoogleOAuthService.login_with_google_id_token(serializer.validated_data["id_token"])
+        except ValidationError as e:
+            message = e.detail[0] if isinstance(e.detail, list) else str(e.detail)
+            return Response({"detail": str(message)}, status=status.HTTP_400_BAD_REQUEST)
 
-        user = GoogleOAuthService.login_with_google_id_token(id_token_value)
         tokens = AuthService.generate_tokens_for_user(user)
 
-        response = Response(
-            {
-                "access": tokens["access"],
-                "user": UserSerializer(user).data,
-            },
-            status=status.HTTP_200_OK
-        )
+        response = Response({
+            "access": tokens["access"],
+            "user": UserSerializer(user).data,
+        }, status=status.HTTP_200_OK)
 
         set_refresh_cookie(response, tokens["refresh"])
         return response

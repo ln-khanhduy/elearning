@@ -75,7 +75,7 @@ function Header({ onToggleSidebar }) {
           ) : (
             <>
               <Link to="/login" className="btn btn-outline-primary btn-sm px-3">Đăng nhập</Link>
-              <Link to="/register" className="btn btn-primary btn-sm px-3 d-none d-sm-inline-block">Đăng ký</Link>
+              <Link to="/register" className="btn btn-primary btn-sm px-3">Đăng ký</Link>
             </>
           )}
         </div>

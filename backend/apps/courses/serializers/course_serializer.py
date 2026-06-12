@@ -3,14 +3,15 @@ from apps.courses.models import Course
 
 
 class CourseListSerializer(serializers.ModelSerializer):
-    """Serializer cho danh sách khóa học - bao gồm tên instructor và URL thumbnail."""
+    """Serializer cho danh sách khóa học - bao gồm tên instructor, category và URL thumbnail."""
 
     instructor_name = serializers.CharField(source="instructor.get_full_name", read_only=True)
+    category_name = serializers.CharField(source="category.name", read_only=True)
     thumbnail_url = serializers.SerializerMethodField()
 
     class Meta:
         model = Course
-        fields = ["id", "title", "slug", "description", "thumbnail_url", "price", "status", "instructor_name", "created_at"]
+        fields = ["id", "title", "slug", "description", "thumbnail_url", "price", "status", "instructor_name", "category_name", "created_at"]
 
     def get_thumbnail_url(self, obj):
         """Lấy URL đầy đủ của thumbnail khóa học, trả về None nếu không có."""
@@ -18,16 +19,17 @@ class CourseListSerializer(serializers.ModelSerializer):
 
 
 class CourseDetailSerializer(serializers.ModelSerializer):
-    """Serializer cho chi tiết khóa học - bao gồm tên instructor, URL thumbnail và thông tin duyệt."""
+    """Serializer cho chi tiết khóa học - bao gồm tên instructor, category, URL thumbnail và thông tin duyệt."""
 
     instructor_name = serializers.CharField(source="instructor.get_full_name", read_only=True)
+    category_name = serializers.CharField(source="category.name", read_only=True)
     thumbnail_url = serializers.SerializerMethodField()
 
     class Meta:
         model = Course
         fields = [
             "id", "title", "slug", "description", "thumbnail_url", "preview_video_url",
-            "price", "status", "approval_note", "instructor_name", "created_at", "updated_at",
+            "price", "status", "approval_note", "instructor_name", "category_name", "created_at", "updated_at",
         ]
 
     def get_thumbnail_url(self, obj):

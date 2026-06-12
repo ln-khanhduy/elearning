@@ -66,7 +66,7 @@ function Sidebar({ isOpen, onClose }) {
           }
 
           return (
-            <NavLink key={item.path} to={item.path} className={({ isActive }) => isActive ? "sidebar-link active" : "sidebar-link"} title={collapsed ? item.label : undefined} onClick={handleNavClick}>
+            <NavLink key={item.path} to={item.path} className={({ isActive }) => isActive ? "sidebar-link active" : "sidebar-link"} title={collapsed ? item.label : undefined} onClick={handleNavClick} end>
               <i className={`bi ${item.icon}`}></i>
               {!collapsed && <span>{item.label}</span>}
             </NavLink>

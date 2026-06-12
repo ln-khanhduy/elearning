@@ -18,7 +18,7 @@ class UserListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ["id", "email", "username", "first_name", "last_name", "phone", "avatar_url", "account_status", "role"]
+        fields = ["id", "email", "first_name", "last_name", "phone", "avatar_url", "account_status", "role"]
 
 
 class UserDetailSerializer(serializers.ModelSerializer):
@@ -29,9 +29,9 @@ class UserDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = [
-            "id", "email", "username", "first_name", "last_name",
+            "id", "email", "first_name", "last_name",
             "phone", "avatar_url", "account_status", "account_status_reason",
-            "date_joined", "last_login", "role",
+            "date_joined", "last_login", "role", "google_email",
         ]
 
 
@@ -79,6 +79,7 @@ class ChangePasswordSerializer(serializers.Serializer):
 class InstructorApplySerializer(serializers.ModelSerializer):
     """Serializer cho đăng ký giảng viên - nhận thông tin chuyên môn, CV, thông tin ngân hàng và xác nhận điều khoản."""
 
+    cv_file = serializers.FileField(required=True)
     portfolio_link = serializers.CharField(required=False, allow_blank=True, allow_null=True, default='')
     contact_phone = serializers.CharField(required=False, allow_blank=True, allow_null=True, default='')
     bio = serializers.CharField(required=False, allow_blank=True, allow_null=True, default='')
@@ -90,6 +91,14 @@ class InstructorApplySerializer(serializers.ModelSerializer):
             "bank_name", "bank_account_number", "bank_account_name",
             "is_terms_accepted",
         ]
+
+    def validate_bank_account_number(self, value):
+        """Kiểm tra số tài khoản ngân hàng chỉ chứa chữ số và có độ dài hợp lệ."""
+        if not value.isdigit():
+            raise serializers.ValidationError("Số tài khoản ngân hàng chỉ được chứa chữ số.")
+        if len(value) < 6 or len(value) > 30:
+            raise serializers.ValidationError("Số tài khoản ngân hàng phải từ 6 đến 30 chữ số.")
+        return value
 
     def validate_is_terms_accepted(self, value):
         """Kiểm tra người dùng đã đồng ý với điều khoản hợp tác giảng viên hay chưa."""
@@ -120,6 +129,9 @@ class InstructorApplicationSerializer(serializers.ModelSerializer):
 
     user = UserDetailSerializer(read_only=True)
     certificates = InstructorCertificateSerializer(many=True, read_only=True)
+    reviewed_by_id = serializers.SerializerMethodField()
+    reviewed_by_email = serializers.SerializerMethodField()
+    reviewed_by_name = serializers.SerializerMethodField()
 
     class Meta:
         model = InstructorProfile
@@ -127,9 +139,31 @@ class InstructorApplicationSerializer(serializers.ModelSerializer):
             "id", "user", "bio", "portfolio_link", "cv_file", "contact_phone",
             "bank_name", "bank_account_number", "bank_account_name",
             "is_terms_accepted", "status", "rejection_reason",
-            "reviewed_by", "reviewed_at", "applied_at", "created_at", "updated_at",
+            "reviewed_by", "reviewed_by_id", "reviewed_by_email", "reviewed_by_name",
+            "reviewed_at", "applied_at", "created_at", "updated_at",
             "certificates",
         ]
+
+    def get_reviewed_by_id(self, obj):
+        return obj.reviewed_by.id if obj.reviewed_by else None
+
+    def get_reviewed_by_email(self, obj):
+        return obj.reviewed_by.email if obj.reviewed_by else None
+
+    def get_reviewed_by_name(self, obj):
+        if obj.reviewed_by:
+            return obj.reviewed_by.get_full_name() or obj.reviewed_by.first_name
+        return None
+
+
+class LinkGoogleSerializer(serializers.Serializer):
+    """Serializer cho liên kết Google Account - nhận id_token từ Google."""
+
+    id_token = serializers.CharField(
+        write_only=True,
+        allow_blank=False,
+        trim_whitespace=True,
+    )
 
 
 class InstructorReviewSerializer(serializers.Serializer):

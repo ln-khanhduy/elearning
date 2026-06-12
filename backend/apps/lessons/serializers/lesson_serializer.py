@@ -17,8 +17,8 @@ class LessonSerializer(serializers.ModelSerializer):
         ]
 
     def get_video_url(self, obj):
-        """Lấy URL đầy đủ của video bài học, trả về None nếu không có."""
-        return obj.video_file.url if obj.video_file else None
+        """Lấy URL video của bài học."""
+        return obj.video_url
 
     def get_material_url(self, obj):
         """Lấy URL đầy đủ của tài liệu bài học, trả về None nếu không có."""
@@ -29,10 +29,11 @@ class LessonCreateUpdateSerializer(serializers.ModelSerializer):
     """Serializer cho tạo/cập nhật bài học - validate title, order, duration và content_type."""
 
     title = serializers.CharField(min_length=3, max_length=50, trim_whitespace=True)
+    duration_seconds = serializers.IntegerField(required=False, min_value=0)
 
     class Meta:
         model = Lesson
-        fields = ["title", "description", "content_type", "video_file", "material_file", "order", "duration_seconds", "is_free", "status"]
+        fields = ["title", "description", "content_type", "material_file", "order", "duration_seconds", "is_free", "status"]
 
     def validate_title(self, value):
         """Kiểm tra tên bài học không được để trống hoặc chỉ chứa khoảng trắng."""
@@ -48,6 +49,8 @@ class LessonCreateUpdateSerializer(serializers.ModelSerializer):
 
     def validate_duration_seconds(self, value):
         """Kiểm tra thời lượng bài học phải là số không âm."""
+        if value is None:
+            return 0
         if value < 0:
             raise serializers.ValidationError("Thời lượng bài học không hợp lệ.")
         return value

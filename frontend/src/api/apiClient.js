@@ -20,13 +20,34 @@ export const getErrorMessage = (error) => {
   if (data.error) return data.error;
   if (data.message) return data.message;
 
-  const firstKey = Object.keys(data)[0];
-
-  if (firstKey) {
-    const value = data[firstKey];
-    if (Array.isArray(value)) return value[0];
+  // Hàm đệ quy để lấy message lỗi đầu tiên từ nested object
+  const extractFirstError = (obj) => {
+    if (!obj || typeof obj !== "object") return null;
+    if (Array.isArray(obj)) {
+      if (obj.length === 0) return null;
+      const first = obj[0];
+      if (typeof first === "string") return first;
+      if (typeof first === "object") return extractFirstError(first);
+      return null;
+    }
+    const keys = Object.keys(obj);
+    if (keys.length === 0) return null;
+    const firstKey = keys[0];
+    const value = obj[firstKey];
     if (typeof value === "string") return value;
-  }
+    if (Array.isArray(value)) {
+      if (value.length === 0) return null;
+      const first = value[0];
+      if (typeof first === "string") return first;
+      if (typeof first === "object") return extractFirstError(first);
+      return null;
+    }
+    if (typeof value === "object") return extractFirstError(value);
+    return null;
+  };
+
+  const extracted = extractFirstError(data);
+  if (extracted) return extracted;
 
   return "Có lỗi xảy ra. Vui lòng thử lại.";
 };

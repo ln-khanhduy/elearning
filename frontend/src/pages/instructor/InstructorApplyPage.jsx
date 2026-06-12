@@ -1,6 +1,9 @@
 import { useState, useRef, useEffect } from "react";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
+import { GoogleLogin } from "@react-oauth/google";
+import { useUser } from "../../context/UserContext";
+import { linkGoogleAccountApi } from "../../api/userAPI";
 import {
   getMyApplication,
   getCertificates,
@@ -14,6 +17,35 @@ import "../../style/instructor-apply.css";
 
 function InstructorApplyPage() {
   const navigate = useNavigate();
+  const { user, reloadUser } = useUser();
+
+  // ===== State cho link Google =====
+  const [linkingGoogle, setLinkingGoogle] = useState(false);
+
+  const handleGoogleLinkSuccess = async (credentialResponse) => {
+    if (linkingGoogle) return;
+    setLinkingGoogle(true);
+
+    try {
+      const idToken = credentialResponse.credential;
+      if (!idToken) {
+        throw new Error("Không nhận được mã đăng nhập từ Google.");
+      }
+
+      await linkGoogleAccountApi(idToken);
+      await reloadUser();
+      toast.success("Liên kết Google Account thành công!");
+    } catch (error) {
+      toast.error(error.message || "Liên kết Google thất bại.");
+    } finally {
+      setLinkingGoogle(false);
+    }
+  };
+
+  const handleGoogleLinkError = () => {
+    setLinkingGoogle(false);
+    toast.error("Không thể liên kết Google Account.");
+  };
 
   // Form state
   const [bio, setBio] = useState("");
@@ -283,6 +315,30 @@ function InstructorApplyPage() {
           <span className="step-label">Thông tin thanh toán</span>
         </div>
       </div>
+
+      {/* Cảnh báo nếu chưa liên kết Google Account */}
+      {!user?.google_email && (
+        <div className="apply-card" style={{ border: "2px solid #dc3545", marginBottom: 24 }}>
+          <div className="text-center py-3">
+            <i className="bi bi-google" style={{ fontSize: 48, color: "#dc3545" }}></i>
+            <h5 className="mt-3 mb-2" style={{ color: "#dc3545" }}>Cần liên kết Google Account</h5>
+            <p className="text-muted mb-3">
+              Bạn cần liên kết Google Account trước khi đăng ký giảng viên.
+            </p>
+            {linkingGoogle ? (
+              <button className="apply-btn-primary" disabled>
+                <span className="spinner-border spinner-border-sm me-2"></span>
+                Đang liên kết...
+              </button>
+            ) : (
+              <GoogleLogin
+                onSuccess={handleGoogleLinkSuccess}
+                onError={handleGoogleLinkError}
+              />
+            )}
+          </div>
+        </div>
+      )}
 
       <form className="apply-form" onSubmit={handleSubmit}>
         {step === 1 && (

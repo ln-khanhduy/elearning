@@ -5,8 +5,8 @@ from apps.courses.models import Course
 class CourseRepository:
     @staticmethod
     def get_all():
-        """Lấy danh sách tất cả khóa học, kèm thông tin instructor và category, sắp xếp theo ngày tạo mới nhất."""
-        return Course.objects.select_related("instructor", "category").all().order_by("-created_at")
+        """Lấy danh sách tất cả khóa học (trừ DELETED), kèm thông tin instructor và category, sắp xếp theo ngày tạo mới nhất."""
+        return Course.objects.select_related("instructor", "category").exclude(status="DELETED").order_by("-created_at")
 
     @staticmethod
     def get_by_id(course_id):
@@ -18,8 +18,8 @@ class CourseRepository:
 
     @staticmethod
     def get_pending_courses():
-        """Lấy danh sách khóa học đang chờ duyệt (status = pending), sắp xếp theo thời gian cập nhật."""
-        return Course.objects.select_related("instructor", "category").filter(status="pending").order_by("-updated_at")
+        """Lấy danh sách khóa học đang chờ duyệt (status = PENDING), sắp xếp theo thời gian cập nhật."""
+        return Course.objects.select_related("instructor", "category").filter(status="PENDING").order_by("-updated_at")
 
     @staticmethod
     def create(data):

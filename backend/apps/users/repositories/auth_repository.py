@@ -14,22 +14,17 @@ class AuthRepository:
         return User.objects.filter(email__iexact=email).first()
 
     @staticmethod
-    def get_user_by_username(username: str):
-        """Lấy user theo username, không phân biệt hoa thường. Trả về None nếu không tìm thấy."""
-        return User.objects.filter(username__iexact=username).first()
-
-    @staticmethod
     def create_user(
-        username: str,
         email: str,
         password: str,
         first_name: str = '',
         last_name: str = '',
         role: Role = None,
     ):
-        """Tạo user mới với thông tin cơ bản và role, sử dụng create_user để hash password tự động."""
+        """Tạo user mới với thông tin cơ bản và role, sử dụng create_user để hash password tự động.
+        Email được dùng làm định danh duy nhất."""
         return User.objects.create_user(
-            username=username,
+            username=email,  # Giữ username=email để tương thích với AbstractUser
             email=email,
             password=password,
             first_name=first_name,

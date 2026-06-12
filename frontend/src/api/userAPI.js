@@ -77,3 +77,9 @@ export const previewCertificateApi = (applicationId, certificateId) => {
 export const previewCvApi = (applicationId) => {
   return `${apiClient.defaults.baseURL}/api/users/instructors/applications/${applicationId}/cv/preview/`;
 };
+
+export const linkGoogleAccountApi = async (idToken) => {
+  return request(() => apiClient.post("/api/users/link-google/", {
+    id_token: idToken,
+  }));
+};

@@ -24,6 +24,19 @@ class UserRepository:
         """Lấy thông tin role theo mã code (VD: 'STUDENT', 'INSTRUCTOR'). Trả về 404 nếu không tìm thấy."""
         return get_object_or_404(Role, code=code)
 
+    @staticmethod
+    def get_user_by_google_email(google_email):
+        """Lấy user theo google_email. Trả về None nếu không tìm thấy."""
+        # Dùng exact lookup vì google_email đã được lower-case trước khi lưu
+        return User.objects.filter(google_email=google_email.lower()).first()
+
+    @staticmethod
+    def link_google_account(user, google_email):
+        """Liên kết Google Account với user. Lưu google_email vào user."""
+        user.google_email = google_email
+        user.save(update_fields=["google_email"])
+        return user
+
 
 class InstructorRepository:
     @staticmethod

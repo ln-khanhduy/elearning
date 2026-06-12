@@ -1,18 +1,19 @@
 import os
 import cloudinary
-from django.http import HttpResponse, HttpResponseRedirect
+from django.db import IntegrityError, transaction
+from django.http import HttpResponseRedirect
 from django.utils import timezone
-from rest_framework.exceptions import ValidationError as DRFValidationError, PermissionDenied, NotFound
-
+from rest_framework.exceptions import ValidationError as DRFValidationError
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError as DjangoValidationError
+from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from apps.common.permissions import HasRequiredPermission
 from apps.system.services.admin_log_service import AdminLogService
 from apps.users.repositories.user_repository import UserRepository, InstructorRepository, InstructorCertificateRepository
 from apps.users.utils.cookies import REFRESH_COOKIE_NAME
-from rest_framework_simplejwt.authentication import JWTAuthentication
-from rest_framework_simplejwt.tokens import RefreshToken
+from apps.users.services.google_oauth_service import GoogleOAuthService
 
 
 
@@ -45,10 +46,15 @@ class UserService:
         """
         Thay đổi vai trò (role) của người dùng.
         - Tìm user và role theo ID từ Repository
+        - Chặn gán role SUPERADMIN qua API
         - Gán role mới và lưu vào database
         """
         user = UserRepository.get_user_by_id(user_id)
         role = UserRepository.get_role_by_id(role_id)
+        if role.code == "SUPERADMIN":
+            raise DRFValidationError({
+                "detail": "Không thể gán quyền Super Admin qua API."
+            })
         user.role = role
         user.save(update_fields=["role"])
         return user
@@ -114,6 +120,28 @@ class UserService:
         return user
 
     @staticmethod
+    @transaction.atomic
+    def link_google_account(user, id_token_value):
+        """
+        Liên kết Google Account với user hiện tại.
+        - Xác thực id_token từ Google thông qua GoogleOAuthService
+        - Lấy email từ payload Google
+        - Kiểm tra google_email chưa được liên kết với user khác
+        - Lưu google_email vào user (bọc transaction để tránh race condition)
+        """
+        google_info = GoogleOAuthService.verify_google_token(id_token_value)
+        google_email = google_info["email"].lower()
+
+        existing_user = UserRepository.get_user_by_google_email(google_email)
+        if existing_user and existing_user.id != user.id:
+            raise DRFValidationError({"google_email": "Google Account này đã được liên kết với tài khoản khác."})
+
+        try:
+            return UserRepository.link_google_account(user, google_email)
+        except IntegrityError:
+            raise DRFValidationError({"google_email": "Google Account này đã được liên kết với tài khoản khác."})
+
+    @staticmethod
     def change_password(user, old_password, new_password):
         """
         Đổi mật khẩu cho người dùng.
@@ -140,15 +168,31 @@ class UserService:
 
 class InstructorService:
     """Service quản lý hồ sơ đăng ký giảng viên - nộp đơn, xem hồ sơ, duyệt/từ chối, chứng chỉ, tải file."""
+    # TODO: Tách InstructorService thành Application/Certificate/File service khi refactor lớn.
 
     @staticmethod
+    @transaction.atomic
     def apply(user, validated_data):
         """
         Xử lý đăng ký trở thành giảng viên.
+        - Kiểm tra tài khoản không bị khóa
+        - Kiểm tra user đã liên kết Google Account chưa
         - Nếu user đã có hồ sơ PENDING hoặc APPROVED: báo lỗi
         - Nếu user đã có hồ sơ REJECTED: cập nhật lại hồ sơ cũ thành PENDING
-        - Nếu user chưa có hồ sơ: tạo mới
+        - Nếu user chưa có hồ sơ: tạo mới (bọc transaction để tránh race condition)
         """
+        # Kiểm tra tài khoản không bị khóa
+        if user.account_status != "ACTIVE":
+            raise DRFValidationError({
+                "detail": "Tài khoản của bạn đang bị khóa hoặc tạm ngừng."
+            })
+
+        # Kiểm tra user đã liên kết Google Account chưa
+        if not user.google_email:
+            raise DRFValidationError(
+                {"detail": "Vui lòng liên kết Google Account trước khi đăng ký giảng viên."}
+            )
+
         existing = InstructorRepository.get_application_by_user(user)
         if existing:
             if existing.status == "PENDING":
@@ -165,8 +209,13 @@ class InstructorService:
             existing.save()
             return existing
 
-        profile = InstructorRepository.create_application(user, validated_data)
-        return profile
+        try:
+            profile = InstructorRepository.create_application(user, validated_data)
+            return profile
+        except IntegrityError:
+            raise DRFValidationError({
+                "detail": "Bạn đã gửi hồ sơ giảng viên rồi."
+            })
 
 
     @staticmethod

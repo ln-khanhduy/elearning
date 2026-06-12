@@ -25,8 +25,6 @@ PERMISSIONS = {
 
     # Course
     "course.course.view": "Xem danh sách khóa học",
-    "course.course.create": "Tạo khóa học",
-    "course.course.update": "Sửa khóa học",
     "course.course.delete": "Xóa khóa học",
     "course.course.hide": "Ẩn khóa học",
     "course.course.approve": "Duyệt khóa học",
@@ -44,15 +42,6 @@ PERMISSIONS = {
     "course.tag.delete": "Xóa tag",
     "course.tag.view": "Xem tag",
 
-    # Lesson
-    "course.lesson.create": "Tạo bài học",
-    "course.lesson.update": "Sửa bài học",
-    "course.lesson.delete": "Xóa bài học",
-
-    # Quiz
-    "course.quiz.create": "Tạo bài kiểm tra",
-    "course.quiz.update": "Sửa bài kiểm tra",
-    "course.quiz.delete": "Xóa bài kiểm tra",
 
     # Comment
     "course.comment.create": "Bình luận",
@@ -61,7 +50,6 @@ PERMISSIONS = {
     "course.comment.delete": "Xóa bình luận",
 
     # Review
-    "course.review.create": "Đánh giá khóa học",
     "course.review.view": "Xem đánh giá",
 
     # Instructor
@@ -92,7 +80,6 @@ PERMISSIONS = {
     "student.course.search": "Tìm kiếm khóa học",
     "student.course.preview": "Xem thử khóa học",
     "student.course.buy": "Mua khóa học",
-    "student.wallet.deposit": "Nạp tiền vào ví",
     "student.payment.create": "Thanh toán",
     "student.learning.view": "Học bài",
     "student.assignment.submit": "Làm bài tập",

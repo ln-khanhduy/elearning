@@ -45,8 +45,8 @@ class Lesson(models.Model):
     # Mô tả ngắn hiển thị trước khi vào bài           
     description = models.TextField(null=True, blank=True) 
     content_type = models.CharField(max_length=20, choices=CONTENT_TYPE_CHOICES, default='VIDEO')
-    # URL video
-    video_file = models.FileField(upload_to="lessons/videos/", null=True, blank=True)
+    # URL video (YouTube)
+    video_url = models.URLField(max_length=500, null=True, blank=True)
     # URL tài liệu đính kèm (PDF/Word), nếu có
     material_file = models.FileField(upload_to="lessons/materials/", null=True, blank=True)
     # Thứ tự trình bày (số nhỏ hơn hiển thị trước)

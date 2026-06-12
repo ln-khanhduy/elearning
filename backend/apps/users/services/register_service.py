@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.core.cache import cache
 from django.core.mail import send_mail
-from jsonschema import ValidationError
+from rest_framework.exceptions import ValidationError
 
 from apps.users.repositories.auth_repository import AuthRepository
 from apps.users.services.otp_service import OTPService, OTP_EXPIRE_SECONDS
@@ -92,7 +92,7 @@ class RegisterService:
         first_name, _, last_name = full_name.partition(" ")
         role = AuthRepository.get_or_create_role("STUDENT", "Student")
         return AuthRepository.create_user(
-            username=email, email=email, password=password,
+            email=email, password=password,
             first_name=first_name, last_name=last_name, role=role,
         )
 

@@ -1,11 +1,12 @@
-from datetime import timezone
-
+from django.utils import timezone
 from django.utils.text import slugify
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from apps.courses.repositories.course_repository import CourseRepository
 
 
 class CourseService:
+    """Service quản lý khóa học - tạo, cập nhật, xóa, gửi duyệt, duyệt/từ chối, public."""
+
     @staticmethod
     def search_courses(keyword=None, status_value=None, category_id=None):
         """
@@ -25,7 +26,7 @@ class CourseService:
     @staticmethod
     def get_pending_courses():
         """
-        Lấy danh sách khóa học đang chờ duyệt (status = pending).
+        Lấy danh sách khóa học đang chờ duyệt (status = PENDING).
         Ủy quyền cho Repository thực hiện truy vấn.
         """
         return CourseRepository.get_pending_courses()
@@ -33,14 +34,14 @@ class CourseService:
     @staticmethod
     def create_course(user, validated_data):
         """
-        Tạo khóa học mới với trạng thái draft.
+        Tạo khóa học mới với trạng thái PENDING.
         - Gán instructor là user hiện tại
         - Tạo slug từ title
-        - Đặt trạng thái mặc định là draft
+        - Đặt trạng thái mặc định là PENDING
         """
         validated_data["instructor"] = user
         validated_data["slug"] = slugify(validated_data["title"])
-        validated_data["status"] = "draft"
+        validated_data["status"] = "PENDING"
         return CourseRepository.create(validated_data)
 
     @staticmethod
@@ -48,7 +49,7 @@ class CourseService:
         """
         Cập nhật thông tin khóa học.
         - Kiểm tra quyền sở hữu (chỉ instructor hoặc SUPERADMIN mới được sửa)
-        - Nếu khóa học đã được duyệt hoặc published, đưa về trạng thái pending để duyệt lại
+        - Nếu khóa học đã được duyệt hoặc published, đưa về trạng thái PENDING để duyệt lại
         """
         course = CourseRepository.get_by_id(course_id)
 
@@ -61,8 +62,8 @@ class CourseService:
         if "title" in validated_data:
             course.slug = slugify(validated_data["title"])
 
-        if course.status in ["approved", "published"]:
-            course.status = "pending"
+        if course.status in ["APPROVED", "PUBLISHED"]:
+            course.status = "PENDING"
 
         course.save()
         return course
@@ -70,7 +71,7 @@ class CourseService:
     @staticmethod
     def delete_course(course_id, user):
         """
-        Xóa khóa học.
+        Xóa khóa học (xóa mềm).
         - Kiểm tra quyền sở hữu (chỉ instructor hoặc SUPERADMIN mới được xóa)
         """
         course = CourseRepository.get_by_id(course_id)
@@ -78,24 +79,25 @@ class CourseService:
         if course.instructor_id != user.id and user.role.code != "SUPERADMIN":
             raise PermissionDenied("Bạn không có quyền xóa khóa học này.")
 
-        course.delete()
+        course.status = "DELETED"
+        course.save(update_fields=["status"])
 
     @staticmethod
     def submit_for_review(course_id, user):
         """
         Gửi khóa học chờ duyệt.
         - Kiểm tra quyền sở hữu
-        - Chỉ có thể gửi duyệt nếu khóa học đang ở trạng thái draft hoặc rejected
+        - Chỉ có thể gửi duyệt nếu khóa học đang ở trạng thái REJECTED
         """
         course = CourseRepository.get_by_id(course_id)
 
         if course.instructor_id != user.id:
             raise PermissionDenied("Bạn không có quyền gửi duyệt khóa học này.")
 
-        if course.status not in ["draft", "rejected"]:
-            raise ValidationError("Chỉ có thể gửi duyệt khóa học ở trạng thái draft hoặc rejected.")
+        if course.status not in ["REJECTED"]:
+            raise ValidationError("Chỉ có thể gửi duyệt khóa học ở trạng thái REJECTED.")
 
-        course.status = "pending"
+        course.status = "PENDING"
         course.save(update_fields=["status"])
         return course
 
@@ -103,15 +105,15 @@ class CourseService:
     def approve_course(course_id, admin_user):
         """
         Duyệt khóa học.
-        - Kiểm tra khóa học đang ở trạng thái pending
-        - Cập nhật trạng thái thành approved kèm thông tin người duyệt và thời gian
+        - Kiểm tra khóa học đang ở trạng thái PENDING
+        - Cập nhật trạng thái thành APPROVED kèm thông tin người duyệt và thời gian
         """
         course = CourseRepository.get_by_id(course_id)
 
-        if course.status != "pending":
+        if course.status != "PENDING":
             raise ValidationError({"status": "Chỉ khóa học đang chờ duyệt mới được duyệt."})
 
-        course.status = "approved"
+        course.status = "APPROVED"
         course.approved_by = admin_user
         course.approved_at = timezone.now()
         course.approval_note = ""
@@ -122,15 +124,15 @@ class CourseService:
     def reject_course(course_id, admin_user, approval_note):
         """
         Từ chối khóa học kèm lý do.
-        - Kiểm tra khóa học đang ở trạng thái pending
-        - Cập nhật trạng thái thành rejected kèm lý do từ chối
+        - Kiểm tra khóa học đang ở trạng thái PENDING
+        - Cập nhật trạng thái thành REJECTED kèm lý do từ chối
         """
         course = CourseRepository.get_by_id(course_id)
 
-        if course.status != "pending":
+        if course.status != "PENDING":
             raise ValidationError({"status": "Chỉ khóa học đang chờ duyệt mới được từ chối."})
 
-        course.status = "rejected"
+        course.status = "REJECTED"
         course.approved_by = admin_user
         course.approved_at = timezone.now()
         course.approval_note = approval_note
@@ -142,17 +144,55 @@ class CourseService:
         """
         Public khóa học sau khi đã được duyệt.
         - Kiểm tra quyền sở hữu
-        - Chỉ có thể public nếu khóa học đã được duyệt (approved)
+        - Chỉ có thể public nếu khóa học đã được duyệt (APPROVED)
         """
         course = CourseRepository.get_by_id(course_id)
 
         if course.instructor_id != user.id:
             raise PermissionDenied("Bạn không có quyền public khóa học này.")
 
-        if course.status != "approved":
+        if course.status != "APPROVED":
             raise ValidationError({"status": "Chỉ khóa học đã duyệt mới được public."})
 
-        course.status = "published"
+        course.status = "PUBLISHED"
         course.published_at = timezone.now()
         course.save(update_fields=["status", "published_at", "updated_at"])
+        return course
+
+    @staticmethod
+    def hide_course(course_id, user):
+        """
+        Ẩn khóa học (HIDDEN).
+        - Kiểm tra quyền sở hữu (instructor) hoặc SUPERADMIN
+        - Chỉ có thể ẩn nếu khóa học đang PUBLISHED
+        """
+        course = CourseRepository.get_by_id(course_id)
+
+        if course.instructor_id != user.id and user.role.code != "SUPERADMIN":
+            raise PermissionDenied("Bạn không có quyền ẩn khóa học này.")
+
+        if course.status != "PUBLISHED":
+            raise ValidationError({"status": "Chỉ khóa học đã public mới có thể ẩn."})
+
+        course.status = "HIDDEN"
+        course.save(update_fields=["status", "updated_at"])
+        return course
+
+    @staticmethod
+    def unhide_course(course_id, user):
+        """
+        Hiện lại khóa học đã ẩn (PUBLISHED).
+        - Kiểm tra quyền sở hữu (instructor) hoặc SUPERADMIN
+        - Chỉ có thể hiện lại nếu khóa học đang HIDDEN
+        """
+        course = CourseRepository.get_by_id(course_id)
+
+        if course.instructor_id != user.id and user.role.code != "SUPERADMIN":
+            raise PermissionDenied("Bạn không có quyền hiện lại khóa học này.")
+
+        if course.status != "HIDDEN":
+            raise ValidationError({"status": "Chỉ khóa học đang ẩn mới có thể hiện lại."})
+
+        course.status = "PUBLISHED"
+        course.save(update_fields=["status", "updated_at"])
         return course
