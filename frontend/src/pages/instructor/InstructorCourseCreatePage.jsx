@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { getCategoriesApi, createFullCourseApi } from "../../api/courseAPI";
-import "../../style/instructor-courses.css";
 
 const initQuiz = () => ({ title: "", description: "", time_limit_minutes: null, passing_score: 0, questions: [] });
 const initQ = () => ({ question_type: "MCQ", prompt: "", order: 1, points: 1, correct_text_answer: "", options: [] });

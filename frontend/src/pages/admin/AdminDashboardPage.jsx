@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import { getDashboardDataApi } from "../../api/dashboardAPI";
-import "../../style/admin-dashboard.css";
 
 function AdminDashboardPage() {
   const [dashboardData, setDashboardData] = useState(null);

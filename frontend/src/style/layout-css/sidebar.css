@@ -1,9 +1,10 @@
+
 /* ===== DESKTOP SIDEBAR (mặc định) ===== */
 .app-sidebar {
-  width: 260px;
+  width: var(--sidebar-width, 220px);
   background: #fff;
   border-right: 1px solid #edf0f5;
-  padding: 14px;
+  padding: 10px;
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
@@ -11,20 +12,20 @@
   font-family: Roboto, "Helvetica Neue", Arial, sans-serif;
   position: sticky;
   top: 0;
-  height: calc(100vh - 72px);
+  height: calc(100vh - var(--header-height, 60px));
   align-self: flex-start;
 }
 
 .app-sidebar.collapsed {
-  width: 60px;
-  padding: 14px 8px;
+  width: var(--sidebar-collapsed-width, 56px);
+  padding: 10px 4px;
 }
 
 /* ===== Nút thu gọn ===== */
 .sidebar-collapse-top {
   display: flex;
   justify-content: flex-end;
-  margin-bottom: 12px;
+  margin-bottom: 6px;
   flex-shrink: 0;
 }
 
@@ -36,9 +37,9 @@
   border: none;
   background: #f0f2f5;
   color: #5a6a7a;
-  width: 26px;
-  height: 26px;
-  border-radius: 6px;
+  width: 22px;
+  height: 22px;
+  border-radius: 5px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -53,7 +54,7 @@
 }
 
 .sidebar-collapse-btn i {
-  font-size: 13px;
+  font-size: 11px;
 }
 
 /* ===== MENU ===== */
@@ -79,8 +80,8 @@
 }
 
 .sidebar-group {
-  margin: 18px 10px 8px;
-  font-size: 11px;
+  margin: 12px 8px 4px;
+  font-size: 9px;
   font-weight: 700;
   color: #9aa3b2;
   text-transform: uppercase;
@@ -92,20 +93,20 @@
 
 .sidebar-group.collapsed {
   text-align: center;
-  margin: 18px 0 8px;
-  font-size: 13px;
+  margin: 12px 0 4px;
+  font-size: 11px;
 }
 
 .sidebar-link {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
-  margin-bottom: 4px;
-  border-radius: 10px;
+  gap: 8px;
+  padding: 7px 8px;
+  margin-bottom: 1px;
+  border-radius: 7px;
   color: #4b5563;
   text-decoration: none;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
   white-space: nowrap;
   overflow: hidden;
@@ -114,7 +115,7 @@
 
 .collapsed .sidebar-link {
   justify-content: center;
-  padding: 10px 0;
+  padding: 7px 0;
 }
 
 .sidebar-link:hover {
@@ -129,7 +130,7 @@
 }
 
 .sidebar-link i {
-  font-size: 17px;
+  font-size: 15px;
   flex-shrink: 0;
 }
 
@@ -140,23 +141,23 @@
   color: #ef4444;
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
+  gap: 8px;
+  padding: 7px 8px;
   font-weight: 600;
   cursor: pointer;
   flex-shrink: 0;
-  margin-top: 8px;
-  border-radius: 10px;
+  margin-top: 4px;
+  border-radius: 7px;
   transition: background 0.2s;
   white-space: nowrap;
   overflow: hidden;
   font-family: inherit;
-  font-size: 14px;
+  font-size: 13px;
 }
 
 .collapsed .sidebar-logout {
   justify-content: center;
-  padding: 10px 0;
+  padding: 7px 0;
 }
 
 .sidebar-logout:hover {
@@ -164,7 +165,7 @@
 }
 
 .sidebar-logout i {
-  font-size: 17px;
+  font-size: 15px;
   flex-shrink: 0;
 }
 
@@ -174,17 +175,17 @@
 @media (max-width: 991.98px) {
   .app-sidebar {
     position: fixed;
-    top: 72px;
+    top: var(--header-height, 60px);
     left: 0;
     bottom: 0;
     z-index: 999;
-    width: 280px;
-    height: calc(100vh - 72px);
+    width: 260px;
+    height: calc(100vh - var(--header-height, 60px));
     border-right: 1px solid #edf0f5;
     box-shadow: 4px 0 16px rgba(0, 0, 0, 0.1);
     transform: translateX(-100%);
     border-radius: 0;
-    padding: 16px;
+    padding: 12px;
   }
 
   .app-sidebar.mobile-open {
@@ -193,13 +194,13 @@
 
   /* Khi mobile, không cho collapse sidebar */
   .app-sidebar.collapsed {
-    width: 280px;
-    padding: 16px;
+    width: 260px;
+    padding: 12px;
   }
 
   .app-sidebar.collapsed .sidebar-link {
     justify-content: flex-start;
-    padding: 10px 12px;
+    padding: 7px 8px;
   }
 
   .app-sidebar.collapsed .sidebar-link span {
@@ -208,8 +209,8 @@
 
   .app-sidebar.collapsed .sidebar-group {
     text-align: left;
-    margin: 18px 10px 8px;
-    font-size: 11px;
+    margin: 12px 8px 4px;
+    font-size: 9px;
   }
 
   .app-sidebar.collapsed .sidebar-group.collapsed {
@@ -218,7 +219,7 @@
 
   .app-sidebar.collapsed .sidebar-logout {
     justify-content: flex-start;
-    padding: 10px 12px;
+    padding: 7px 8px;
   }
 
   .app-sidebar.collapsed .sidebar-logout span {
@@ -234,6 +235,6 @@
 @media (max-width: 575.98px) {
   .app-sidebar {
     width: 100%;
-    max-width: 300px;
+    max-width: 280px;
   }
 }

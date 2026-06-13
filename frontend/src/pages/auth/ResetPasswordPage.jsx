@@ -4,8 +4,6 @@ import InputField from "../../components/auth/InputField";
 import { Link, useNavigate } from "react-router-dom";
 import { resetPassword } from "../../services/authService";
 
-import "../../style/auth-css/reset-password.css";
-
 function ResetPasswordPage() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");

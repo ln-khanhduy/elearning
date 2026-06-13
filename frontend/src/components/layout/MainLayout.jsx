@@ -4,8 +4,6 @@ import Header from "./Header";
 import Footer from "./Footer";
 import Sidebar from "./Sidebar";
 
-import "../../style/layout-css/main-layout.css";
-
 function MainLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 

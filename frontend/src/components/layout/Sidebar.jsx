@@ -3,7 +3,6 @@ import { NavLink, useNavigate } from "react-router-dom";
 import { sidebarItems } from "../../utils/sidebarItems";
 import { useUser } from "../../context/UserContext";
 import { logoutApi } from "../../api/authAPI";
-import "../../style/layout-css/sidebar.css";
 
 function Sidebar({ isOpen, onClose }) {
   const [collapsed, setCollapsed] = useState(false);

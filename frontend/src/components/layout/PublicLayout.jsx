@@ -4,11 +4,13 @@ import Footer from "./Footer";
 
 function PublicLayout() {
   return (
-    <>
+    <div className="public-layout">
       <Header />
-      <Outlet />
+      <div className="public-layout-content">
+        <Outlet />
+      </div>
       <Footer />
-    </>
+    </div>
   );
 }
 

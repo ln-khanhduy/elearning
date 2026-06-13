@@ -1,16 +1,75 @@
-:root{
+/* ===== IMPORTS ===== */
+/* Layout */
+@import url('./layout-css/header.css');
+@import url('./layout-css/sidebar.css');
+@import url('./layout-css/main-layout.css');
+@import url('./layout-css/footer.css');
+
+/* Auth */
+@import url('./auth-css/login.css');
+@import url('./auth-css/register.css');
+@import url('./auth-css/forgot-password.css');
+@import url('./auth-css/verify-otp.css');
+@import url('./auth-css/reset-password.css');
+
+/* Pages */
+@import url('./home.css');
+@import url('./profile.css');
+@import url('./instructor-apply.css');
+@import url('./my-courses.css');
+@import url('./instructor-courses.css');
+
+/* Admin */
+@import url('./admin-dashboard.css');
+@import url('./admin-courses.css');
+@import url('./admin-instructor-applications.css');
+@import url('./admin-reviews.css');
+
+/* ===== CSS VARIABLES ===== */
+:root {
   --bg: #f5f7fb;
   --primary: #0f3d75;
   --muted: #69707a;
   --card: #ffffff;
   --input-bg: #fbfdfe;
+
+  /* Spacing & sizing variables - COMPACT */
+  --header-height: 60px;
+  --sidebar-width: 220px;
+  --sidebar-collapsed-width: 56px;
+  --content-padding-desktop: 20px;
+  --content-padding-tablet: 14px;
+  --content-padding-mobile: 10px;
+  --card-padding: 18px;
+  --card-radius: 10px;
+  --input-height: 40px;
+  --btn-height: 40px;
+  --font-size-body: 14px;
+  --font-size-small: 13px;
+  --font-size-xs: 12px;
 }
 
+/* ===== PUBLIC LAYOUT ===== */
+.public-layout {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.public-layout-content {
+  flex: 1;
+  /* Offset for fixed header */
+  padding-top: var(--header-height, 60px);
+}
+
+/* ===== BASE ===== */
 body {
   margin: 0;
   font-family: Roboto, "Helvetica Neue", Arial, sans-serif;
   background: var(--bg);
   color: #222;
+  font-size: var(--font-size-body);
+  line-height: 1.5;
 }
 
 * {
@@ -25,9 +84,8 @@ a {
 .container-center {
   max-width: 1100px;
   margin: 0 auto;
-  padding-left: 24px;
-  padding-right: 24px;
+  padding-left: 20px;
+  padding-right: 20px;
 }
 
 .small { font-size: 0.85rem; }
-

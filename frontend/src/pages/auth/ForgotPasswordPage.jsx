@@ -1,5 +1,4 @@
 import InputField from "../../components/auth/InputField";
-import "../../style/auth-css/forgot-password.css";
 
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";

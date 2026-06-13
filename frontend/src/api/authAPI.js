@@ -28,7 +28,16 @@ export const loginApi = async (data) => {
 };
 
 export const getAuthSessionApi = async () => {
-  return request(() => apiClient.get("/api/auth/session/"));
+  try {
+    const res = await apiClient.get("/api/auth/session/");
+    return res.data;
+  } catch (error) {
+    // 401 = chưa đăng nhập -> return null, không throw
+    if (error.response?.status === 401) {
+      return null;
+    }
+    throw new Error(getErrorMessage(error));
+  }
 };
 
 export const refreshTokenApi = async () => {

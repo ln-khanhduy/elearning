@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { getCourses, getCategories } from "../../services/courseService";
-import "../../style/home.css";
 
 function HomePage() {
   const navigate = useNavigate();

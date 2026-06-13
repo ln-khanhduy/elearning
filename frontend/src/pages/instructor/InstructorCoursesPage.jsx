@@ -10,7 +10,6 @@ import {
   unhideCourse,
 } from "../../services/courseService";
 import { useUser } from "../../context/UserContext";
-import "../../style/instructor-courses.css";
 
 const STATUS_MAP = {
   PENDING: { label: "Chờ duyệt", color: "#ffc107", icon: "bi-clock-history" },

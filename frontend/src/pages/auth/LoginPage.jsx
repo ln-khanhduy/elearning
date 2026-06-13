@@ -8,8 +8,6 @@ import { login } from "../../services/authService";
 import { useUser } from "../../context/UserContext";
 import { setAccessToken as saveAccessToken } from "../../utils/authToken";
 
-import "../../style/auth-css/login.css";
-
 function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

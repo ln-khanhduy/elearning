@@ -1,17 +1,17 @@
 /* ===== ĐĂNG KÝ GIẢNG VIÊN ===== */
 .instructor-apply-page {
-  max-width: 720px;
+  max-width: 640px;
   margin: 0 auto;
   font-family: Inter, sans-serif;
   padding: 0 16px;
 }
 
 .apply-header {
-  margin-bottom: 32px;
+  margin-bottom: 20px;
 }
 
 .apply-header h2 {
-  font-size: 28px;
+  font-size: 22px;
   font-weight: 700;
   color: #181c1e;
   margin: 0 0 4px;
@@ -19,7 +19,7 @@
 }
 
 .apply-header p {
-  font-size: 14px;
+  font-size: 13px;
   color: #43474f;
   margin: 0;
   font-family: Inter, sans-serif;
@@ -31,18 +31,18 @@
   align-items: center;
   justify-content: center;
   gap: 0;
-  margin-bottom: 32px;
+  margin-bottom: 20px;
 }
 
 .apply-step {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
+  gap: 4px;
+  padding: 5px 12px;
   border-radius: 8px;
   background: #f1f4f6;
   color: #737780;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
   transition: all 0.2s;
 }
@@ -53,16 +53,17 @@
 }
 
 .step-number {
-  width: 24px;
-  height: 24px;
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 12px;
+  font-size: 10px;
   font-weight: 700;
   background: #c3c6d0;
   color: #fff;
+  flex-shrink: 0;
 }
 
 .apply-step.active .step-number {
@@ -70,7 +71,7 @@
 }
 
 .step-connector {
-  width: 40px;
+  width: 28px;
   height: 2px;
   background: #c3c6d0;
   margin: 0 4px;
@@ -80,13 +81,13 @@
 .apply-card {
   background: #ffffff;
   border: 1px solid #c3c6d0;
-  border-radius: 12px;
-  padding: 32px;
+  border-radius: var(--card-radius, 10px);
+  padding: var(--card-padding, 18px);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
 .apply-card-title {
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 700;
   color: #181c1e;
   margin: 0 0 4px;
@@ -94,39 +95,40 @@
 }
 
 .apply-card-desc {
-  font-size: 13px;
+  font-size: 12px;
   color: #43474f;
-  margin: 0 0 24px;
+  margin: 0 0 16px;
   font-family: Inter, sans-serif;
 }
 
 /* ===== FIELDS ===== */
 .apply-field {
-  margin-bottom: 20px;
+  margin-bottom: 14px;
 }
 
 .apply-label {
   display: block;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
   color: #43474f;
   letter-spacing: 0.5px;
-  margin-bottom: 6px;
+  margin-bottom: 4px;
   font-family: Inter, sans-serif;
 }
 
 .apply-input {
   width: 100%;
-  padding: 12px 16px;
+  padding: 8px 12px;
   border: 1px solid #c3c6d0;
   border-radius: 8px;
-  font-size: 14px;
+  font-size: 13px;
   font-family: Inter, sans-serif;
   background: #ffffff;
   color: #181c1e;
   outline: none;
   transition: border-color 0.2s, box-shadow 0.2s;
   box-sizing: border-box;
+  height: var(--input-height, 40px);
 }
 
 .apply-input:focus {
@@ -136,10 +138,10 @@
 
 .apply-textarea {
   width: 100%;
-  padding: 12px 16px;
+  padding: 8px 12px;
   border: 1px solid #c3c6d0;
   border-radius: 8px;
-  font-size: 14px;
+  font-size: 13px;
   font-family: Inter, sans-serif;
   background: #ffffff;
   color: #181c1e;
@@ -147,7 +149,7 @@
   transition: border-color 0.2s, box-shadow 0.2s;
   box-sizing: border-box;
   resize: vertical;
-  min-height: 100px;
+  min-height: 72px;
 }
 
 .apply-textarea:focus {
@@ -159,14 +161,14 @@
 .apply-file-upload {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 16px;
+  gap: 8px;
+  padding: 10px 14px;
   border: 2px dashed #c3c6d0;
   border-radius: 8px;
   cursor: pointer;
   transition: border-color 0.2s, background 0.2s;
   color: #43474f;
-  font-size: 13px;
+  font-size: 12px;
   font-family: Inter, sans-serif;
 }
 
@@ -176,14 +178,14 @@
 }
 
 .apply-file-upload i {
-  font-size: 24px;
+  font-size: 18px;
   color: #0e3b69;
 }
 
 /* ===== TERMS ===== */
 .apply-terms {
-  margin-bottom: 24px;
-  padding: 16px;
+  margin-bottom: 16px;
+  padding: 12px;
   background: #f8faff;
   border-radius: 8px;
   border: 1px solid #e0e3e5;
@@ -192,17 +194,17 @@
 .apply-checkbox {
   display: flex;
   align-items: flex-start;
-  gap: 10px;
+  gap: 8px;
   cursor: pointer;
-  font-size: 13px;
+  font-size: 12px;
   color: #43474f;
   font-family: Inter, sans-serif;
 }
 
 .apply-checkbox input[type="checkbox"] {
   margin-top: 2px;
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
   accent-color: #0e3b69;
   flex-shrink: 0;
 }
@@ -211,17 +213,17 @@
 .apply-form-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 12px;
-  padding-top: 8px;
+  gap: 8px;
+  padding-top: 6px;
 }
 
 .apply-btn-primary {
-  padding: 12px 32px;
+  padding: 8px 24px;
   border: none;
   background: #0e3b69;
   color: #ffffff;
   border-radius: 8px;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
   cursor: pointer;
   box-shadow: 0 2px 8px rgba(14, 59, 105, 0.2);
@@ -229,6 +231,7 @@
   font-family: Inter, sans-serif;
   display: inline-flex;
   align-items: center;
+  height: var(--btn-height, 40px);
 }
 
 .apply-btn-primary:hover {
@@ -245,18 +248,19 @@
 }
 
 .apply-btn-outline {
-  padding: 12px 24px;
+  padding: 8px 16px;
   border: 1px solid #0e3b69;
   background: transparent;
   color: #0e3b69;
   border-radius: 8px;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   transition: background 0.2s;
   font-family: Inter, sans-serif;
   display: inline-flex;
   align-items: center;
+  height: var(--btn-height, 40px);
 }
 
 .apply-btn-outline:hover {
@@ -267,9 +271,9 @@
 .apply-status-banner {
   display: flex;
   align-items: flex-start;
-  gap: 16px;
-  padding: 20px 24px;
-  border-radius: 12px;
+  gap: 12px;
+  padding: 14px 18px;
+  border-radius: var(--card-radius, 10px);
   border: 1px solid;
 }
 
@@ -289,7 +293,7 @@
 }
 
 .apply-status-icon {
-  font-size: 32px;
+  font-size: 24px;
   flex-shrink: 0;
   line-height: 1;
 }
@@ -308,14 +312,14 @@
 
 .apply-status-text h4 {
   margin: 0 0 4px;
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 700;
   color: #181c1e;
 }
 
 .apply-status-text p {
   margin: 0;
-  font-size: 13px;
+  font-size: 12px;
   color: #43474f;
   line-height: 1.5;
 }
@@ -324,7 +328,7 @@
 .apply-detail-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 16px;
+  gap: 12px;
 }
 
 .apply-detail-item {
@@ -338,14 +342,14 @@
 }
 
 .apply-detail-label {
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
   color: #43474f;
   letter-spacing: 0.5px;
 }
 
 .apply-detail-value {
-  font-size: 14px;
+  font-size: 13px;
   color: #181c1e;
   word-break: break-word;
 }
@@ -361,9 +365,9 @@
 
 .apply-detail-badge {
   display: inline-block;
-  padding: 4px 12px;
+  padding: 2px 8px;
   border-radius: 20px;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.3px;
   width: fit-content;
@@ -387,17 +391,17 @@
 .apply-divider {
   border: none;
   border-top: 1px solid #e0e3e5;
-  margin: 20px 0;
+  margin: 14px 0;
 }
 
 /* ===== RESPONSIVE ===== */
 @media (max-width: 767.98px) {
   .apply-header h2 {
-    font-size: 22px;
+    font-size: 18px;
   }
 
   .apply-card {
-    padding: 20px 16px;
+    padding: 16px 14px;
   }
 
   .apply-form-actions {
@@ -412,12 +416,12 @@
 
   .apply-steps {
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
   }
 
   .step-connector {
     width: 2px;
-    height: 16px;
+    height: 12px;
   }
 
   .apply-detail-grid {

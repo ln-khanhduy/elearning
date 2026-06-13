@@ -6,7 +6,6 @@ import {
   getPreviewCertificateUrl,
   getPreviewCvUrl,
 } from "../../services/adminInstructorService";
-import "../../style/admin-instructor-applications.css";
 
 function AdminInstructorApplicationsPage() {
   const [applications, setApplications] = useState([]);

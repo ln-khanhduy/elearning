@@ -16,7 +16,6 @@ import {
   reorderLessons,
 } from "../../services/courseService";
 import { getCategoriesApi } from "../../api/courseAPI";
-import "../../style/instructor-courses.css";
 
 function InstructorCourseEditPage() {
   const { courseId } = useParams();

@@ -1,5 +1,3 @@
-import "../../style/layout-css/footer.css";
-
 function Footer() {
   return (
     <footer className="footer-container">

@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { getAuthSessionApi } from "../api/authAPI";
 import {
   clearAuthSessionData,
+  getAccessToken,
   setAccessToken as saveAccessToken,
 } from "../utils/authToken";
 
@@ -29,11 +30,24 @@ export function UserProvider({ children }) {
   };
 
   const loadUser = async () => {
+    // Nếu không có access token trong memory, không gọi API session
+    // -> user chưa đăng nhập, set thẳng về null
+    if (!getAccessToken()) {
+      setUser(null);
+      setLoading(false);
+      return;
+    }
+
     try {
       const data = await getAuthSessionApi();
 
-      setAccessToken(data.access);
-      setUser(data.user);
+      if (data) {
+        setAccessToken(data.access);
+        setUser(data.user);
+      } else {
+        // API trả về null (401) -> chưa đăng nhập
+        clearUserSession();
+      }
     } catch (error) {
       clearUserSession();
     } finally {

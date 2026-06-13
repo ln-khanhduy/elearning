@@ -1,6 +1,6 @@
 /* ==================== ADMIN PENDING COURSES PAGE ==================== */
 .admin-courses-page {
-  padding: 24px;
+  padding: 20px;
   max-width: 1200px;
   margin: 0 auto;
 }
@@ -9,11 +9,11 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 24px;
+  margin-bottom: 16px;
 }
 
 .admin-courses-header h2 {
-  font-size: 24px;
+  font-size: 20px;
   font-weight: 700;
   color: #1a1a2e;
   margin: 0;
@@ -21,27 +21,27 @@
 
 .admin-courses-header p {
   margin: 4px 0 0;
-  font-size: 14px;
+  font-size: 13px;
 }
 
 /* ===== EMPTY STATE ===== */
 .admin-courses-empty {
   text-align: center;
-  padding: 60px 20px;
+  padding: 32px 20px;
   background: #fff;
-  border-radius: 12px;
+  border-radius: var(--card-radius, 10px);
   border: 2px dashed #dee2e6;
 }
 
 .admin-courses-empty i {
-  font-size: 48px;
+  font-size: 36px;
   color: #198754;
-  margin-bottom: 16px;
+  margin-bottom: 10px;
 }
 
 .admin-courses-empty h4 {
   color: #495057;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 .admin-courses-empty p {
@@ -51,7 +51,7 @@
 /* ===== TABLE ===== */
 .admin-courses-table-wrapper {
   background: #fff;
-  border-radius: 12px;
+  border-radius: var(--card-radius, 10px);
   border: 1px solid #e9ecef;
   overflow-x: auto;
 }
@@ -62,9 +62,9 @@
 }
 
 .admin-courses-table th {
-  padding: 14px 16px;
+  padding: 10px 12px;
   text-align: left;
-  font-size: 12px;
+  font-size: 10px;
   font-weight: 700;
   color: #6c757d;
   text-transform: uppercase;
@@ -75,8 +75,8 @@
 }
 
 .admin-courses-table td {
-  padding: 14px 16px;
-  font-size: 14px;
+  padding: 10px 12px;
+  font-size: 13px;
   color: #212529;
   border-bottom: 1px solid #f0f0f0;
   vertical-align: middle;
@@ -93,13 +93,13 @@
 .admin-course-info {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
 }
 
 .admin-course-thumb {
-  width: 56px;
-  height: 40px;
-  border-radius: 6px;
+  width: 44px;
+  height: 32px;
+  border-radius: 5px;
   overflow: hidden;
   flex-shrink: 0;
   background: #f8f9fa;
@@ -118,13 +118,13 @@
   align-items: center;
   justify-content: center;
   color: #adb5bd;
-  font-size: 16px;
+  font-size: 12px;
 }
 
 /* ===== ACTION BUTTONS ===== */
 .admin-course-actions {
   display: flex;
-  gap: 6px;
+  gap: 4px;
   flex-wrap: nowrap;
 }
 
@@ -132,12 +132,12 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 6px 12px;
+  padding: 5px 10px;
   background: #d1e7dd;
   color: #0f5132;
   border: 1px solid #a3cfbb;
   border-radius: 6px;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
@@ -157,12 +157,12 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 6px 12px;
+  padding: 5px 10px;
   background: #fce4ec;
   color: #dc3545;
   border: 1px solid #f1aeb5;
   border-radius: 6px;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
@@ -195,9 +195,9 @@
 
 .admin-modal {
   background: #fff;
-  border-radius: 12px;
+  border-radius: var(--card-radius, 10px);
   width: 100%;
-  max-width: 480px;
+  max-width: 440px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
 }
 
@@ -205,11 +205,11 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px 24px 0;
+  padding: 14px 18px 0;
 }
 
 .admin-modal-header h5 {
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 700;
   color: #1a1a2e;
   margin: 0;
@@ -218,7 +218,7 @@
 .admin-modal-close {
   background: none;
   border: none;
-  font-size: 20px;
+  font-size: 16px;
   color: #6c757d;
   cursor: pointer;
   padding: 4px;
@@ -230,35 +230,35 @@
 }
 
 .admin-modal-body {
-  padding: 20px 24px;
+  padding: 14px 18px;
 }
 
 .admin-modal-footer {
   display: flex;
   justify-content: flex-end;
-  gap: 12px;
-  padding: 0 24px 20px;
+  gap: 8px;
+  padding: 0 18px 14px;
 }
 
 /* ===== FORM ELEMENTS ===== */
 .course-form-group {
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 
 .course-form-label {
   display: block;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 600;
   color: #212529;
-  margin-bottom: 6px;
+  margin-bottom: 5px;
 }
 
 .course-form-textarea {
   width: 100%;
-  padding: 10px 14px;
+  padding: 8px 12px;
   border: 1px solid #dee2e6;
   border-radius: 8px;
-  font-size: 14px;
+  font-size: 13px;
   color: #212529;
   resize: vertical;
   transition: border-color 0.2s;
@@ -275,12 +275,12 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 8px 20px;
+  padding: 6px 14px;
   background: #fff;
   color: #495057;
   border: 1px solid #dee2e6;
   border-radius: 8px;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;
@@ -294,13 +294,13 @@
 /* ===== RESPONSIVE ===== */
 @media (max-width: 768px) {
   .admin-courses-page {
-    padding: 16px;
+    padding: 14px;
   }
 
   .admin-courses-table th,
   .admin-courses-table td {
-    padding: 10px 12px;
-    font-size: 13px;
+    padding: 8px 10px;
+    font-size: 12px;
   }
 
   .admin-course-info {

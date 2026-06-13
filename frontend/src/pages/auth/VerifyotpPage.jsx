@@ -6,7 +6,6 @@ import {
   verifyOtp,
   verifyRegisterOtp,
 } from "../../services/authService";
-import "../../style/auth-css/verify-otp.css";
 import { useUser } from "../../context/UserContext";
 
 function VerifyOtpPage() {

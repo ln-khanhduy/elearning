@@ -1,318 +1,325 @@
-/* ===== ADMIN - HỒ SƠ ĐĂNG KÝ GIẢNG VIÊN ===== */
 .admin-applications-page {
-  max-width: 1100px;
+  padding: 20px;
+  max-width: 1200px;
   margin: 0 auto;
-  font-family: Inter, sans-serif;
-  padding: 0 16px;
 }
 
-.app-page-header {
+.admin-applications-header {
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  margin-bottom: 24px;
+  align-items: flex-start;
+  margin-bottom: 16px;
 }
 
-.app-page-header h2 {
-  font-size: 24px;
+.admin-applications-header h2 {
+  font-size: 20px;
   font-weight: 700;
-  color: #181c1e;
-  margin: 0 0 4px;
-}
-
-.app-page-header p {
-  font-size: 14px;
-  color: #43474f;
+  color: #1a1a2e;
   margin: 0;
 }
 
-/* ===== FILTER TABS ===== */
-.app-filter-tabs {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 20px;
-  flex-wrap: wrap;
-}
-
-.app-filter-btn {
-  padding: 8px 20px;
-  border: 1px solid #c3c6d0;
-  background: #ffffff;
-  color: #43474f;
-  border-radius: 8px;
+.admin-applications-header p {
+  margin: 4px 0 0;
   font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-  font-family: Inter, sans-serif;
+  color: #6c757d;
 }
 
-.app-filter-btn:hover {
-  border-color: #0e3b69;
-  color: #0e3b69;
+.admin-applications-empty {
+  text-align: center;
+  padding: 32px 20px;
+  background: #fff;
+  border-radius: var(--card-radius, 10px);
+  border: 2px dashed #dee2e6;
 }
 
-.app-filter-btn.active {
-  background: #0e3b69;
-  color: #ffffff;
-  border-color: #0e3b69;
+.admin-applications-empty i {
+  font-size: 36px;
+  color: #198754;
+  margin-bottom: 10px;
 }
 
-/* ===== TABLE ===== */
-.app-table-wrapper {
-  background: #ffffff;
-  border: 1px solid #e0e3e5;
-  border-radius: 12px;
+.admin-applications-empty h4 {
+  color: #495057;
+  margin-bottom: 6px;
+}
+
+.admin-applications-empty p {
+  color: #6c757d;
+}
+
+.admin-applications-table-wrapper {
+  background: #fff;
+  border-radius: var(--card-radius, 10px);
+  border: 1px solid #e9ecef;
   overflow-x: auto;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
-.app-table {
+.admin-applications-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 13px;
 }
 
-.app-table thead {
-  background: #f8faff;
-}
-
-.app-table th {
-  padding: 12px 16px;
+.admin-applications-table th {
+  padding: 10px 12px;
   text-align: left;
+  font-size: 10px;
   font-weight: 700;
-  font-size: 11px;
-  color: #43474f;
+  color: #6c757d;
+  text-transform: uppercase;
   letter-spacing: 0.5px;
-  border-bottom: 1px solid #e0e3e5;
+  background: #f8f9fa;
+  border-bottom: 2px solid #e9ecef;
   white-space: nowrap;
 }
 
-.app-table td {
-  padding: 14px 16px;
-  border-bottom: 1px solid #f1f4f6;
-  color: #181c1e;
+.admin-applications-table td {
+  padding: 10px 12px;
+  font-size: 13px;
+  color: #212529;
+  border-bottom: 1px solid #f0f0f0;
   vertical-align: middle;
 }
 
-.app-table tbody tr:hover {
-  background: #f8faff;
-}
-
-.app-table tbody tr:last-child td {
+.admin-applications-table tr:last-child td {
   border-bottom: none;
 }
 
-/* ===== USER INFO ===== */
-.app-user-info {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+.admin-applications-table tr:hover td {
+  background: #f8f9ff;
 }
 
-.app-user-avatar {
-  width: 36px;
-  height: 36px;
+.applicant-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.applicant-avatar {
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
-  overflow: hidden;
-  flex-shrink: 0;
-  background: #e8f0fe;
+  background: #e9ecef;
   display: flex;
   align-items: center;
   justify-content: center;
-}
-
-.app-user-avatar img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.app-user-initial {
-  font-size: 14px;
   font-weight: 700;
-  color: #0e3b69;
-}
-
-.app-user-name {
-  font-weight: 600;
-  font-size: 13px;
-  color: #181c1e;
-}
-
-.app-user-phone {
   font-size: 12px;
-  color: #737780;
+  color: #495057;
+  flex-shrink: 0;
 }
 
-/* ===== BADGES ===== */
-.app-badge {
-  display: inline-block;
-  padding: 4px 12px;
-  border-radius: 20px;
+.applicant-name {
+  font-weight: 600;
+}
+
+.applicant-email {
   font-size: 11px;
+  color: #6c757d;
+}
+
+.badge {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 20px;
+  font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.3px;
 }
 
 .badge-pending {
-  background: #fff8e1;
-  color: #b8860b;
+  background: #fff3cd;
+  color: #856404;
 }
 
 .badge-approved {
-  background: #e8f5e9;
-  color: #2e7d32;
+  background: #d4edda;
+  color: #155724;
 }
 
 .badge-rejected {
-  background: #fbe9e7;
-  color: #c62828;
+  background: #f8d7da;
+  color: #721c24;
 }
 
-/* ===== ACTION BUTTONS ===== */
-.app-actions {
+.admin-application-actions {
   display: flex;
-  gap: 6px;
+  gap: 4px;
+  flex-wrap: nowrap;
 }
 
-.app-btn-view,
-.app-btn-approve,
-.app-btn-reject {
-  width: 32px;
-  height: 32px;
-  border: 1px solid #e0e3e5;
-  border-radius: 6px;
-  background: #ffffff;
-  display: flex;
+.admin-btn-approve {
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
+  gap: 4px;
+  padding: 5px 10px;
+  background: #d1e7dd;
+  color: #0f5132;
+  border: 1px solid #a3cfbb;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
-  font-size: 14px;
+  white-space: nowrap;
 }
 
-.app-btn-view:hover {
-  border-color: #0e3b69;
-  color: #0e3b69;
-  background: #f8faff;
+.admin-btn-approve:hover:not(:disabled) {
+  background: #badbcc;
 }
 
-.app-btn-approve:hover {
-  border-color: #2e7d32;
-  color: #2e7d32;
-  background: #e8f5e9;
+.admin-btn-approve:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
-.app-btn-reject:hover {
-  border-color: #c62828;
-  color: #c62828;
-  background: #fbe9e7;
-}
-
-/* ===== EMPTY STATE ===== */
-.app-empty {
-  text-align: center;
-  padding: 60px 20px;
-  background: #ffffff;
-  border: 1px solid #e0e3e5;
-  border-radius: 12px;
-}
-
-/* ===== DETAIL CARD ===== */
-.app-detail-card {
-  margin-top: 20px;
-  background: #ffffff;
-  border: 1px solid #e0e3e5;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-  overflow: hidden;
-}
-
-.app-detail-header {
-  display: flex;
+.admin-btn-reject {
+  display: inline-flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 16px 20px;
-  border-bottom: 1px solid #e0e3e5;
-  background: #f8faff;
-}
-
-.app-detail-header h4 {
-  margin: 0;
-  font-size: 15px;
-  font-weight: 700;
-  color: #181c1e;
-}
-
-.app-btn-close {
-  width: 28px;
-  height: 28px;
-  border: none;
-  background: transparent;
+  gap: 4px;
+  padding: 5px 10px;
+  background: #fce4ec;
+  color: #dc3545;
+  border: 1px solid #f1aeb5;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
   cursor: pointer;
-  color: #737780;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.admin-btn-reject:hover:not(:disabled) {
+  background: #f8d7da;
+}
+
+.admin-btn-reject:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.admin-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 4px;
-}
-
-.app-btn-close:hover {
-  background: #f1f4f6;
-  color: #181c1e;
-}
-
-.app-detail-body {
+  z-index: 1050;
   padding: 20px;
 }
 
-.app-detail-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
+.admin-modal {
+  background: #fff;
+  border-radius: var(--card-radius, 10px);
+  width: 100%;
+  max-width: 440px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
 }
 
-.app-detail-field.full-width {
-  grid-column: 1 / -1;
+.admin-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 18px 0;
 }
 
-
-.app-detail-field label {
-  display: block;
-  font-size: 11px;
+.admin-modal-header h5 {
+  font-size: 16px;
   font-weight: 700;
-  color: #43474f;
-  letter-spacing: 0.5px;
-  margin-bottom: 4px;
-}
-
-.app-detail-field p {
+  color: #1a1a2e;
   margin: 0;
-  font-size: 14px;
-  color: #181c1e;
-  word-break: break-word;
 }
 
-.app-link-file {
-  color: #0e3b69;
-  text-decoration: none;
+.admin-modal-close {
+  background: none;
+  border: none;
+  font-size: 16px;
+  color: #6c757d;
+  cursor: pointer;
+  padding: 4px;
+  line-height: 1;
+}
+
+.admin-modal-close:hover {
+  color: #212529;
+}
+
+.admin-modal-body {
+  padding: 14px 18px;
+}
+
+.admin-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 0 18px 14px;
+}
+
+.course-form-group {
+  margin-bottom: 12px;
+}
+
+.course-form-label {
+  display: block;
+  font-size: 12px;
   font-weight: 600;
+  color: #212529;
+  margin-bottom: 5px;
 }
 
-.app-link-file:hover {
-  text-decoration: underline;
+.course-form-textarea {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #212529;
+  resize: vertical;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
 }
 
-/* ===== RESPONSIVE ===== */
-@media (max-width: 767.98px) {
-  .app-detail-grid {
-    grid-template-columns: 1fr;
+.course-form-textarea:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.course-btn-outline {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 14px;
+  background: #fff;
+  color: #495057;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.course-btn-outline:hover {
+  background: #f8f9fa;
+  border-color: #ced4da;
+}
+
+@media (max-width: 768px) {
+  .admin-applications-page {
+    padding: 14px;
   }
 
-  .app-page-header {
+  .admin-applications-table th,
+  .admin-applications-table td {
+    padding: 8px 10px;
+    font-size: 12px;
+  }
+
+  .admin-application-actions {
     flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
   }
 }

@@ -13,8 +13,6 @@ import {
   submitApplication,
 } from "../../services/instructorService";
 
-import "../../style/instructor-apply.css";
-
 function InstructorApplyPage() {
   const navigate = useNavigate();
   const { user, reloadUser } = useUser();

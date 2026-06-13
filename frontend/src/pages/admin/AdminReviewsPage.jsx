@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "react-toastify";
 import { getReviews, updateReviewStatus } from "../../services/reviewService";
-import "../../style/admin-reviews.css";
 
 function AdminReviewsPage() {
   const STATUS_MAP = {

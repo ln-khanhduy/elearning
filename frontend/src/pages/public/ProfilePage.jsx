@@ -4,7 +4,6 @@ import { toast } from "react-toastify";
 import { GoogleLogin } from "@react-oauth/google";
 import { useUser } from "../../context/UserContext";
 import { updateProfileApi, changePasswordApi, linkGoogleAccountApi } from "../../api/userAPI";
-import "../../style/profile.css";
 
 function ProfilePage() {
   const navigate = useNavigate();

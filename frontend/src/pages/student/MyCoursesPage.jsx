@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import { getMyCourses } from "../../services/enrollmentService";
-import "../../style/my-courses.css";
 
 function MyCoursesPage() {
   const STATUS_MAP = {

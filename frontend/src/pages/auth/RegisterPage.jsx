@@ -2,7 +2,6 @@
 import { useState } from "react";
 import InputField from "../../components/auth/InputField";
 import { sendRegisterOtp } from "../../services/authService";
-import "../../style/auth-css/register.css";
 
 function RegisterPage() {
   const [fullName, setFullName] = useState("");

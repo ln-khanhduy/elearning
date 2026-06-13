@@ -3,7 +3,6 @@ import { useState } from "react";
 import logoSrc from "../../img/logo.png";
 import { logoutApi } from "../../api/authAPI";
 import { useUser } from "../../context/UserContext";
-import "../../style/layout-css/header.css";
 
 function Header({ onToggleSidebar }) {
   const [openMenu, setOpenMenu] = useState(false);

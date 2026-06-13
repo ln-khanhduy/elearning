@@ -1,27 +1,28 @@
 .admin-dashboard {
   background: #f3f7fb;
   min-height: 100vh;
-  padding: 28px;
+  padding: 20px;
   color: #082b4d;
   font-family: Arial, sans-serif;
 }
 
 .dashboard-header h2 {
   margin: 0;
-  font-size: 22px;
+  font-size: 18px;
   font-weight: 800;
 }
 
 .dashboard-header p {
-  margin: 6px 0 20px;
+  margin: 4px 0 14px;
   color: #5d7188;
+  font-size: 13px;
 }
 
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 14px;
-  margin-bottom: 20px;
+  gap: 12px;
+  margin-bottom: 16px;
 }
 
 .stat-card,
@@ -36,30 +37,30 @@
 }
 
 .stat-card {
-  padding: 18px;
+  padding: 14px;
 }
 
 .stat-card span {
   display: block;
-  font-size: 12px;
+  font-size: 10px;
   font-weight: 700;
   text-transform: uppercase;
   color: #214f86;
-  margin-bottom: 10px;
+  margin-bottom: 6px;
 }
 
 .stat-card strong {
-  font-size: 18px;
+  font-size: 16px;
 }
 
 .dashboard-main {
   display: grid;
   grid-template-columns: 2fr 1fr;
-  gap: 20px;
+  gap: 16px;
 }
 
 .chart-card {
-  padding: 20px;
+  padding: 16px;
 }
 
 .card-header,
@@ -74,28 +75,29 @@
 .permission-card h3,
 .activity-header h3 {
   margin: 0;
-  font-size: 16px;
+  font-size: 14px;
 }
 
 .card-header p,
 .permission-card p {
-  margin: 6px 0 0;
+  margin: 4px 0 0;
   color: #667c92;
-  font-size: 13px;
+  font-size: 12px;
 }
 
 .card-header select {
   border: 1px solid #d7e1ec;
   border-radius: 6px;
-  padding: 8px 12px;
+  padding: 5px 8px;
+  font-size: 12px;
 }
 
 .bar-chart {
-  height: 180px;
+  height: 140px;
   display: flex;
   align-items: end;
-  gap: 15px;
-  margin-top: 30px;
+  gap: 10px;
+  margin-top: 20px;
 }
 
 .bar-item {
@@ -105,8 +107,8 @@
 
 .bar {
   width: 100%;
-  max-width: 32px;
-  margin: 0 auto 10px;
+  max-width: 24px;
+  margin: 0 auto 6px;
   background: #9bc4ff;
   border-radius: 6px 6px 0 0;
 }
@@ -116,36 +118,36 @@
 }
 
 .bar-item span {
-  font-size: 11px;
+  font-size: 10px;
   color: #2d4a67;
 }
 
 .role-card {
-  padding: 20px;
+  padding: 16px;
   background: #e5e9ed;
 }
 
 .role-item {
   background: white;
   border-radius: 6px;
-  padding: 12px;
-  margin-top: 12px;
+  padding: 8px;
+  margin-top: 8px;
   display: flex;
   justify-content: space-between;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
 }
 
 .revenue-card {
-  min-height: 260px;
+  min-height: 200px;
 }
 
 .filter-buttons button {
   border: 0;
   background: #eef3f8;
-  padding: 7px 10px;
-  border-radius: 12px;
-  font-size: 11px;
+  padding: 5px 8px;
+  border-radius: 10px;
+  font-size: 10px;
   font-weight: 700;
   margin-left: 4px;
 }
@@ -156,23 +158,23 @@
 }
 
 .line-chart {
-  margin-top: 30px;
+  margin-top: 20px;
 }
 
 .line-chart svg {
   width: 100%;
-  height: 180px;
+  height: 140px;
 }
 
 .year-labels {
   display: flex;
   justify-content: space-between;
-  font-size: 11px;
+  font-size: 10px;
   color: #647890;
 }
 
 .permission-card {
-  padding: 24px;
+  padding: 18px;
   background: #07345f;
   color: white;
   align-self: start;
@@ -184,22 +186,23 @@
 }
 
 .permission-card button {
-  margin-top: 18px;
+  margin-top: 12px;
   border: 0;
   background: white;
   color: #07345f;
   border-radius: 6px;
-  padding: 10px 14px;
+  padding: 6px 12px;
   font-weight: 800;
+  font-size: 12px;
 }
 
 .activity-card {
-  margin-top: 20px;
+  margin-top: 14px;
   overflow: hidden;
 }
 
 .activity-header {
-  padding: 18px 20px;
+  padding: 12px 16px;
   border-bottom: 1px solid #e2eaf2;
 }
 
@@ -208,18 +211,18 @@
   background: transparent;
   color: #07345f;
   font-weight: 800;
-  font-size: 12px;
+  font-size: 11px;
 }
 
 table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 12px;
+  font-size: 11px;
 }
 
 th,
 td {
-  padding: 14px 20px;
+  padding: 10px 16px;
   border-bottom: 1px solid #edf2f7;
   text-align: left;
 }
@@ -227,15 +230,15 @@ td {
 th {
   text-transform: uppercase;
   color: #526b83;
-  font-size: 11px;
+  font-size: 10px;
 }
 
 .status {
   display: inline-block;
-  padding: 6px 10px;
+  padding: 3px 7px;
   border-radius: 20px;
   font-weight: 800;
-  font-size: 11px;
+  font-size: 10px;
 }
 
 .status-0 {

@@ -8,7 +8,6 @@ import {
   getPreviewCertificateUrl,
   getPreviewCvUrl,
 } from "../../services/instructorService";
-import "../../style/instructor-apply.css";
 
 function InstructorApplicationStatusPage() {
   const navigate = useNavigate();
