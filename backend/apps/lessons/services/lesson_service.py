@@ -3,7 +3,7 @@ from django.utils.text import slugify
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from apps.lessons.models import Lesson
 from apps.lessons.repositories.lesson_repository import LessonRepository
-from apps.lessons.repositories.section_repository import SectionRepository
+from apps.lessons.repositories.chapter_repository import ChapterRepository
 
 
 class LessonService:
@@ -33,7 +33,7 @@ class LessonService:
         - Kiểm tra thứ tự bài học không bị trùng
         - Tạo slug từ title và kiểm tra không bị trùng slug trong cùng chương
         """
-        section = SectionRepository.get_by_id(section_id)
+        section = ChapterRepository.get_by_id(section_id)
         LessonService.check_course_owner(section.course, user)
 
         if LessonRepository.exists_order(section_id, data["order"]):
@@ -92,7 +92,7 @@ class LessonService:
         - Kiểm tra danh sách id và order không bị trùng
         - Cập nhật order cho từng bài học trong một transaction
         """
-        section = SectionRepository.get_by_id(section_id)
+        section = ChapterRepository.get_by_id(section_id)
         LessonService.check_course_owner(section.course, user)
 
         ids = [item["id"] for item in lessons_data]

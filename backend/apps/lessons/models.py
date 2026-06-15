@@ -1,9 +1,9 @@
 from django.db import models
 
 
-class Section(models.Model):
-    """ Phần (Section) trong một khóa học, dùng để nhóm các bài học lại với nhau."""
-    course = models.ForeignKey('courses.Course',on_delete=models.CASCADE,related_name='sections')
+class Chapter(models.Model):
+    """ Phần (Chapter) trong một khóa học, dùng để nhóm các bài học lại với nhau."""
+    course = models.ForeignKey('courses.Course',on_delete=models.CASCADE,related_name='chapters')
     # tên phần
     title = models.CharField(max_length=50)
     # mô tả ngắn về phần này
@@ -14,7 +14,7 @@ class Section(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        db_table = 'course_section'
+        db_table = 'course_chapter'
         ordering = ['order', 'id']   # Sắp xếp theo thứ tự 
         indexes = [
             models.Index(fields=['course', 'order']),  # Load nhanh
@@ -37,7 +37,7 @@ class Lesson(models.Model):
     )
 
     #id phần chứa bài học này
-    section = models.ForeignKey(Section,on_delete=models.CASCADE,related_name='lessons')
+    chapter = models.ForeignKey(Chapter,on_delete=models.CASCADE,related_name='lessons')
     # URL dùng trong đường dẫn (VD: /courses/python-co-ban/bai-1-gioi-thieu)
     slug = models.SlugField(max_length=100)
     # Tên bài học
@@ -64,9 +64,9 @@ class Lesson(models.Model):
         db_table = 'lesson'
         ordering = ['order', 'id']   # Sắp xếp theo thứ tự 
         indexes = [
-            models.Index(fields=['section', 'order']),  # Load nhanh
+            models.Index(fields=['chapter', 'order']),  # Load nhanh
         ]
         constraints = [
-            models.UniqueConstraint(fields=["section", "slug"],name="unique_section_lesson_slug"),            # Mỗi bài học trong cùng một phần phải có slug duy nhất
-            models.UniqueConstraint(fields=["section", "order"],name="unique_lesson_order_in_section")       # Mỗi bài học trong cùng một phần phải có thứ tự duy nhất
+            models.UniqueConstraint(fields=["chapter", "slug"],name="unique_chapter_lesson_slug"),            # Mỗi bài học trong cùng một phần phải có slug duy nhất
+            models.UniqueConstraint(fields=["chapter", "order"],name="unique_lesson_order_in_chapter")       # Mỗi bài học trong cùng một phần phải có thứ tự duy nhất
         ]    
