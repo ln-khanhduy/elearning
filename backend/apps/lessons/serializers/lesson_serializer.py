@@ -1,17 +1,34 @@
+import re
 from rest_framework import serializers
 from apps.lessons.models import Lesson
+
+
+def validate_youtube_url(value):
+    """Kiểm tra URL YouTube hợp lệ và trích xuất Video ID."""
+    if not value:
+        return value
+    youtube_regex = (
+        r'(https?://)?(www\.)?'
+        r'(youtube\.com/watch\?v=|youtu\.be/|youtube\.com/embed/)'
+        r'([a-zA-Z0-9_-]{11})'
+    )
+    match = re.match(youtube_regex, value)
+    if not match:
+        raise serializers.ValidationError("URL YouTube không hợp lệ.")
+    return value
 
 
 class LessonSerializer(serializers.ModelSerializer):
     """Serializer cho bài học - bao gồm URL video và tài liệu từ file upload."""
 
+    chapter = serializers.IntegerField(source="section_id", read_only=True)
     video_url = serializers.SerializerMethodField()
     material_url = serializers.SerializerMethodField()
 
     class Meta:
         model = Lesson
         fields = [
-            "id", "section", "slug", "title", "description", "content_type",
+            "id", "chapter", "slug", "title", "description", "content_type",
             "video_url", "material_url", "order", "duration_seconds",
             "is_free", "status", "created_at", "updated_at",
         ]
@@ -26,14 +43,17 @@ class LessonSerializer(serializers.ModelSerializer):
 
 
 class LessonCreateUpdateSerializer(serializers.ModelSerializer):
-    """Serializer cho tạo/cập nhật bài học - validate title, order, duration và content_type."""
+    """Serializer cho tạo/cập nhật bài học - validate title, order, content_type, video_url, material_file."""
 
     title = serializers.CharField(min_length=3, max_length=50, trim_whitespace=True)
-    duration_seconds = serializers.IntegerField(required=False, min_value=0)
+    duration_seconds = serializers.IntegerField(required=False, min_value=0, allow_null=True)
 
     class Meta:
         model = Lesson
-        fields = ["title", "description", "content_type", "material_file", "order", "duration_seconds", "is_free", "status"]
+        fields = [
+            "title", "description", "content_type", "video_url",
+            "material_file", "order", "duration_seconds", "is_free", "status",
+        ]
 
     def validate_title(self, value):
         """Kiểm tra tên bài học không được để trống hoặc chỉ chứa khoảng trắng."""
@@ -47,13 +67,23 @@ class LessonCreateUpdateSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Thứ tự bài học không hợp lệ.")
         return value
 
-    def validate_duration_seconds(self, value):
-        """Kiểm tra thời lượng bài học phải là số không âm."""
-        if value is None:
-            return 0
-        if value < 0:
-            raise serializers.ValidationError("Thời lượng bài học không hợp lệ.")
-        return value
+    def validate_video_url(self, value):
+        """Kiểm tra URL YouTube hợp lệ nếu content_type là VIDEO."""
+        return validate_youtube_url(value)
+
+    def validate(self, attrs):
+        """Validate phụ thuộc content_type."""
+        content_type = attrs.get("content_type")
+        video_url = attrs.get("video_url")
+        material_file = attrs.get("material_file")
+
+        if content_type == "VIDEO" and not video_url:
+            raise serializers.ValidationError({"video_url": "Bài học VIDEO phải có URL video."})
+
+        if content_type == "DOCUMENT" and not material_file:
+            raise serializers.ValidationError({"material_file": "Bài học DOCUMENT phải có tài liệu đính kèm."})
+
+        return attrs
 
 
 class LessonReorderSerializer(serializers.Serializer):

@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { getCategoriesApi, createFullCourseApi } from "../../api/courseAPI";
+import { getCategoriesApi, createCourseApi } from "../../api/courseAPI";
+
 
 const initQuiz = () => ({ title: "", description: "", time_limit_minutes: null, passing_score: 0, questions: [] });
 const initQ = () => ({ question_type: "MCQ", prompt: "", order: 1, points: 1, correct_text_answer: "", options: [] });
@@ -20,18 +21,23 @@ function InstructorCourseCreatePage() {
   const [files, setFiles] = useState({});
   const [quizzes, setQuizzes] = useState({});
 
-  useEffect(() => { getCategoriesApi().then(setCategories).catch(() => {}); }, []);
+  useEffect(() => {
+    getCategoriesApi()
+      .then((res) => setCategories(res?.data || res || []))
+      .catch(() => {});
+  }, []);
+
 
   const upd = (obj, setter) => (e) => setter({ ...obj, [e.target.name]: e.target.value });
   const onThumbnail = (e) => {
     const f = e.target.files[0];
     if (!f) return;
-    if (!["image/jpeg", "image/png", "image/jpg", "image/webp"].includes(f.type)) { toast.error("Chỉ chấp nhận JPG, PNG, WEBP."); return; }
+    if (!["đamage/jpeg", "image/png", "image/jpg", "image/webp"].includes(f.type)) { toast.error("Chỉ chấp nhận JPG, PNG, WEBP."); return; }
     if (f.size > 5 * 1024 * 1024) { toast.error("Kích thước ảnh tối đa 5MB."); return; }
     setThumbnail(f); setPreview(URL.createObjectURL(f));
   };
 
-  // Sections
+  // Chapter
   const addSection = () => setSections(p => [...p, initSection(p.length + 1)]);
   const updSection = (i, f, v) => setSections(p => { const u = [...p]; u[i] = { ...u[i], [f]: v }; return u; });
   const delSection = (i) => {
@@ -104,7 +110,8 @@ function InstructorCourseCreatePage() {
 
     setLoading(true);
     try {
-      const res = await createFullCourseApi(formData);
+      const res = await createCourseApi(formData);
+
       toast.success("Tạo khóa học thành công!");
       navigate("/instructor/courses");
     } catch (error) {

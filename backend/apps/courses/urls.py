@@ -4,7 +4,7 @@ from apps.courses.views import (
     CourseUpdateAPIView, CourseDeleteAPIView,
     CourseSubmitReviewAPIView, PendingCourseListAPIView,
     CourseApproveAPIView, CourseRejectAPIView, CoursePublishAPIView,
-    CourseHideAPIView, CourseUnhideAPIView, CourseFullCreateAPIView,
+    CourseHideAPIView, CourseUnhideAPIView, CourseCurriculumAPIView,
     CategoryListAPIView, CategoryCreateAPIView, CategoryUpdateAPIView, CategoryDeleteAPIView,
     TagListAPIView, TagCreateAPIView, TagUpdateAPIView, TagDeleteAPIView,
 )
@@ -13,7 +13,6 @@ from apps.courses.views import (
 urlpatterns = [
     path("", CourseListAPIView.as_view(), name="course-list"),
     path("create/", CourseCreateAPIView.as_view(), name="course-create"),
-    path("create-full/", CourseFullCreateAPIView.as_view(), name="course-create-full"),
     path("pending/", PendingCourseListAPIView.as_view(), name="course-pending"),
     path("<int:course_id>/", CourseDetailAPIView.as_view(), name="course-detail"),
     path("<int:course_id>/update/", CourseUpdateAPIView.as_view(), name="course-update"),
@@ -24,6 +23,7 @@ urlpatterns = [
     path("<int:course_id>/publish/", CoursePublishAPIView.as_view(), name="course-publish"),
     path("<int:course_id>/hide/", CourseHideAPIView.as_view(), name="course-hide"),
     path("<int:course_id>/unhide/", CourseUnhideAPIView.as_view(), name="course-unhide"),
+    path("<int:course_id>/curriculum/", CourseCurriculumAPIView.as_view(), name="course-curriculum"),
 
     # Category
     path("categories/", CategoryListAPIView.as_view(), name="category-list"),

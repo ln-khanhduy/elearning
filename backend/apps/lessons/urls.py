@@ -1,19 +1,25 @@
 from django.urls import path
-from apps.lessons.views import (CourseSectionListAPIView, SectionCreateAPIView, SectionUpdateAPIView, SectionDeleteAPIView, SectionReorderAPIView,
-                                SectionLessonListAPIView, LessonDetailAPIView, LessonCreateAPIView, LessonUpdateAPIView, LessonDeleteAPIView, LessonReorderAPIView)
+from apps.lessons.views import (
+    CourseChapterListAPIView, ChapterCreateAPIView, ChapterUpdateAPIView,
+    ChapterDeleteAPIView, ChapterReorderAPIView,
+    ChapterLessonListAPIView, LessonDetailAPIView, LessonCreateAPIView,
+    LessonUpdateAPIView, LessonDeleteAPIView, LessonReorderAPIView,
+)
 
 
 urlpatterns = [
-    path("courses/<int:course_id>/sections/", CourseSectionListAPIView.as_view()),
-    path("courses/<int:course_id>/sections/create/", SectionCreateAPIView.as_view()),
-    path("courses/<int:course_id>/sections/reorder/", SectionReorderAPIView.as_view()),
-    path("sections/<int:section_id>/update/", SectionUpdateAPIView.as_view()),
-    path("sections/<int:section_id>/delete/", SectionDeleteAPIView.as_view()),
+    # Chapter
+    path("courses/<int:course_id>/chapters/", CourseChapterListAPIView.as_view(), name="course-chapter-list"),
+    path("courses/<int:course_id>/chapters/create/", ChapterCreateAPIView.as_view(), name="chapter-create"),
+    path("courses/<int:course_id>/chapters/reorder/", ChapterReorderAPIView.as_view(), name="chapter-reorder"),
+    path("chapters/<int:chapter_id>/update/", ChapterUpdateAPIView.as_view(), name="chapter-update"),
+    path("chapters/<int:chapter_id>/delete/", ChapterDeleteAPIView.as_view(), name="chapter-delete"),
 
-    path("sections/<int:section_id>/lessons/", SectionLessonListAPIView.as_view()),
-    path("sections/<int:section_id>/lessons/create/", LessonCreateAPIView.as_view()),
-    path("sections/<int:section_id>/lessons/reorder/", LessonReorderAPIView.as_view()),
-    path("lessons/<int:lesson_id>/", LessonDetailAPIView.as_view()),
-    path("lessons/<int:lesson_id>/update/", LessonUpdateAPIView.as_view()),
-    path("lessons/<int:lesson_id>/delete/", LessonDeleteAPIView.as_view()),
+    # Lesson
+    path("chapters/<int:chapter_id>/lessons/", ChapterLessonListAPIView.as_view(), name="chapter-lesson-list"),
+    path("chapters/<int:chapter_id>/lessons/create/", LessonCreateAPIView.as_view(), name="lesson-create"),
+    path("chapters/<int:chapter_id>/lessons/reorder/", LessonReorderAPIView.as_view(), name="lesson-reorder"),
+    path("lessons/<int:lesson_id>/", LessonDetailAPIView.as_view(), name="lesson-detail"),
+    path("lessons/<int:lesson_id>/update/", LessonUpdateAPIView.as_view(), name="lesson-update"),
+    path("lessons/<int:lesson_id>/delete/", LessonDeleteAPIView.as_view(), name="lesson-delete"),
 ]

@@ -1,7 +1,6 @@
 from django.db import transaction
 from django.utils.text import slugify
 from rest_framework.exceptions import PermissionDenied, ValidationError
-from apps.lessons.models import Lesson
 from apps.lessons.repositories.lesson_repository import LessonRepository
 from apps.lessons.repositories.chapter_repository import ChapterRepository
 
@@ -16,9 +15,9 @@ class LessonService:
             raise PermissionDenied("Bạn không có quyền thao tác với khóa học này.")
 
     @staticmethod
-    def get_lessons_by_section(section_id):
+    def get_lessons_by_chapter(chapter_id):
         """Lấy danh sách bài học trong một chương (ủy quyền cho Repository truy vấn)."""
-        return LessonRepository.get_by_section(section_id)
+        return LessonRepository.get_by_chapter(chapter_id)
 
     @staticmethod
     def get_lesson_detail(lesson_id):
@@ -26,24 +25,28 @@ class LessonService:
         return LessonRepository.get_by_id(lesson_id)
 
     @staticmethod
-    def create_lesson(section_id, user, data):
+    def create_lesson(chapter_id, user, data):
         """
         Tạo bài học mới trong một chương.
         - Kiểm tra quyền sở hữu khóa học
         - Kiểm tra thứ tự bài học không bị trùng
         - Tạo slug từ title và kiểm tra không bị trùng slug trong cùng chương
         """
-        section = ChapterRepository.get_by_id(section_id)
-        LessonService.check_course_owner(section.course, user)
+        chapter = ChapterRepository.get_by_id(chapter_id)
+        LessonService.check_course_owner(chapter.course, user)
 
-        if LessonRepository.exists_order(section_id, data["order"]):
+        order = data.get("order")
+        if order is None:
+            last = LessonRepository.get_by_chapter(chapter_id).order_by("-order").first()
+            data["order"] = (last.order + 1) if last else 1
+        elif LessonRepository.exists_order(chapter_id, order):
             raise ValidationError({"order": "Thứ tự bài học đã tồn tại trong chương này."})
 
         slug = slugify(data["title"])
-        if LessonRepository.exists_slug(section_id, slug):
+        if LessonRepository.exists_slug(chapter_id, slug):
             raise ValidationError({"title": "Tên bài học đã tồn tại trong chương này."})
 
-        data["section"] = section
+        data["section_id"] = chapter_id
         data["slug"] = slug
         return LessonRepository.create(data)
 
@@ -82,18 +85,18 @@ class LessonService:
         """
         lesson = LessonRepository.get_by_id(lesson_id)
         LessonService.check_course_owner(lesson.section.course, user)
-        lesson.delete()
+        LessonRepository.delete(lesson_id)
 
     @staticmethod
-    def reorder_lessons(section_id, user, lessons_data):
+    def reorder_lessons(chapter_id, user, lessons_data):
         """
         Sắp xếp lại thứ tự các bài học trong một chương.
         - Kiểm tra quyền sở hữu khóa học
         - Kiểm tra danh sách id và order không bị trùng
         - Cập nhật order cho từng bài học trong một transaction
         """
-        section = ChapterRepository.get_by_id(section_id)
-        LessonService.check_course_owner(section.course, user)
+        chapter = ChapterRepository.get_by_id(chapter_id)
+        LessonService.check_course_owner(chapter.course, user)
 
         ids = [item["id"] for item in lessons_data]
         orders = [item["order"] for item in lessons_data]
@@ -103,8 +106,8 @@ class LessonService:
         if len(orders) != len(set(orders)):
             raise ValidationError({"order": "Thứ tự bài học không được trùng."})
 
-        lessons = Lesson.objects.filter(section_id=section_id, id__in=ids)
-        lesson_map = {lesson.id: lesson for lesson in lessons}
+        lessons = LessonRepository.get_by_chapter(chapter_id)
+        lesson_map = {lesson.id: lesson for lesson in lessons if lesson.id in ids}
 
         if len(lesson_map) != len(ids):
             raise ValidationError("Danh sách bài học không hợp lệ.")
@@ -115,4 +118,4 @@ class LessonService:
                 lesson.order = item["order"]
                 lesson.save(update_fields=["order", "updated_at"])
 
-        return LessonRepository.get_by_section(section_id)
+        return LessonRepository.get_by_chapter(chapter_id)

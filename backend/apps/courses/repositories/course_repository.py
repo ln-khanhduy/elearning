@@ -1,5 +1,7 @@
 from rest_framework.exceptions import NotFound
 from apps.courses.models import Course
+from apps.lessons.models import Chapter
+
 
 
 class CourseRepository:
@@ -27,12 +29,13 @@ class CourseRepository:
         return Course.objects.create(**data)
 
     @staticmethod
-    def search(keyword=None, status_value=None, category_id=None):
+    def search(keyword=None, status_value=None, category_id=None, instructor_id=None):
         """
         Tìm kiếm khóa học theo từ khóa (title), lọc theo trạng thái và danh mục.
         - keyword: tìm kiếm không phân biệt hoa thường trong title
         - status_value: lọc theo trạng thái (draft, pending, approved, rejected, published)
         - category_id: lọc theo danh mục
+        - instructor_id: lọc theo instructor
         """
         listcourse = CourseRepository.get_all()
 
@@ -44,9 +47,29 @@ class CourseRepository:
 
         if category_id:
             listcourse = listcourse.filter(category_id=category_id)
+
+        if instructor_id:
+            listcourse = listcourse.filter(instructor_id=instructor_id)
+
         return listcourse
 
     @staticmethod
-    def exitst_by_id(course_id):
+    def exists_by_id(course_id):
         """Kiểm tra khóa học có tồn tại trong hệ thống hay không dựa trên ID."""
         return Course.objects.filter(id=course_id).exists()
+
+    @staticmethod
+    def get_by_instructor(instructor_id):
+        """Lấy danh sách khóa học của một instructor."""
+        return Course.objects.select_related("instructor", "category").filter(instructor_id=instructor_id).exclude(status="DELETED").order_by("-created_at")
+
+    @staticmethod
+    def count_chapters(course_id):
+        """Đếm số chapter (chapter) của một khóa học."""
+        return Chapter.objects.filter(course_id=course_id).count()
+
+    @staticmethod
+    def count_lessons(course_id):
+        """Đếm số lesson của một khóa học."""
+        from apps.lessons.models import Lesson
+        return Lesson.objects.filter(chapter__course_id=course_id).count()

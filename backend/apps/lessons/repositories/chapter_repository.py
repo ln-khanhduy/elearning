@@ -25,3 +25,24 @@ class ChapterRepository:
     def exists_order(course_id, order):
         """Kiểm tra thứ tự chương đã tồn tại trong khóa học hay chưa."""
         return Chapter.objects.filter(course_id=course_id, order=order).exists()
+
+    @staticmethod
+    def get_next_order(course_id):
+        """Lấy order tiếp theo cho chương mới trong khóa học."""
+        last = Chapter.objects.filter(course_id=course_id).order_by("-order").first()
+        return (last.order + 1) if last else 1
+
+    @staticmethod
+    def update(chapter_id, data):
+        """Cập nhật chương học."""
+        chapter = ChapterRepository.get_by_id(chapter_id)
+        for key, value in data.items():
+            setattr(chapter, key, value)
+        chapter.save()
+        return chapter
+
+    @staticmethod
+    def delete(chapter_id):
+        """Xóa chương học."""
+        chapter = ChapterRepository.get_by_id(chapter_id)
+        chapter.delete()

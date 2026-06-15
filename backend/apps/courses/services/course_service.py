@@ -8,12 +8,12 @@ class CourseService:
     """Service quản lý khóa học - tạo, cập nhật, xóa, gửi duyệt, duyệt/từ chối, public."""
 
     @staticmethod
-    def search_courses(keyword=None, status_value=None, category_id=None):
+    def search_courses(keyword=None, status_value=None, category_id=None, instructor_id=None):
         """
-        Tìm kiếm và lọc danh sách khóa học dựa trên từ khóa, trạng thái và danh mục.
+        Tìm kiếm và lọc danh sách khóa học dựa trên từ khóa, trạng thái, danh mục và instructor.
         Ủy quyền cho Repository thực hiện truy vấn.
         """
-        return CourseRepository.search(keyword, status_value, category_id)
+        return CourseRepository.search(keyword, status_value, category_id, instructor_id)
 
     @staticmethod
     def get_course_detail(course_id):

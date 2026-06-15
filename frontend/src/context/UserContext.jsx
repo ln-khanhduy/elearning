@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useRef, useState } from "react";
-import { getAuthSessionApi } from "../api/authAPI";
+import { getAuthSessionApi, refreshTokenApi } from "../api/authAPI";
 import {
   clearAuthSessionData,
   getAccessToken,
@@ -30,12 +30,25 @@ export function UserProvider({ children }) {
   };
 
   const loadUser = async () => {
-    // Nếu không có access token trong memory, không gọi API session
-    // -> user chưa đăng nhập, set thẳng về null
+    // Nếu không có access token trong memory (sau khi refresh trang),
+    // thử refresh token từ httpOnly cookie trước
     if (!getAccessToken()) {
-      setUser(null);
-      setLoading(false);
-      return;
+      try {
+        const refreshRes = await refreshTokenApi();
+        if (refreshRes?.access) {
+          setAccessToken(refreshRes.access);
+        } else {
+          // Không refresh được -> chưa đăng nhập
+          setUser(null);
+          setLoading(false);
+          return;
+        }
+      } catch {
+        // Refresh thất bại (không có refresh token cookie) -> chưa đăng nhập
+        setUser(null);
+        setLoading(false);
+        return;
+      }
     }
 
     try {

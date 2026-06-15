@@ -1,7 +1,6 @@
 from django.db import transaction
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from apps.courses.repositories.course_repository import CourseRepository
-from apps.lessons.models import Chapter
 from apps.lessons.repositories.chapter_repository import ChapterRepository
 
 
@@ -25,11 +24,16 @@ class ChapterService:
         Tạo chương học mới trong khóa học.
         - Kiểm tra quyền sở hữu khóa học
         - Kiểm tra thứ tự chương không bị trùng
+        - Tự động gợi ý order tiếp theo nếu không được cung cấp
         """
         course = CourseRepository.get_by_id(course_id)
-        ChapterRepository.check_course_owner(course, user)
+        ChapterService.check_course_owner(course, user)
 
-        if ChapterRepository.exists_order(course_id, validated_data["order"]):
+        order = validated_data.get("order")
+        if order is None:
+            order = ChapterRepository.get_next_order(course_id)
+            validated_data["order"] = order
+        elif ChapterRepository.exists_order(course_id, order):
             raise ValidationError({"order": "Thứ tự chương đã tồn tại trong khóa học này."})
 
         validated_data["course"] = course
@@ -43,7 +47,7 @@ class ChapterService:
         - Kiểm tra thứ tự mới không bị trùng (nếu có thay đổi)
         """
         chapter = ChapterRepository.get_by_id(chapter_id)
-        ChapterRepository.check_course_owner(chapter.course, user)
+        ChapterService.check_course_owner(chapter.course, user)
 
         new_order = validated_data.get("order")
         if new_order is not None and new_order != chapter.order:
@@ -63,8 +67,8 @@ class ChapterService:
         - Kiểm tra quyền sở hữu khóa học trước khi xóa
         """
         chapter = ChapterRepository.get_by_id(chapter_id)
-        ChapterRepository.check_course_owner(chapter.course, user)
-        chapter.delete()
+        ChapterService.check_course_owner(chapter.course, user)
+        ChapterRepository.delete(chapter_id)
 
     @staticmethod
     def reorder_chapter(course_id, user, chapter_data):
@@ -75,7 +79,7 @@ class ChapterService:
         - Cập nhật order cho từng chương trong một transaction
         """
         course = CourseRepository.get_by_id(course_id)
-        ChapterRepository.check_course_owner(course, user)
+        ChapterService.check_course_owner(course, user)
 
         chapter_ids = [item.get("id") for item in chapter_data]
         orders = [item.get("order") for item in chapter_data]
@@ -83,15 +87,18 @@ class ChapterService:
         if len(orders) != len(set(orders)):
             raise ValidationError({"order": "Thứ tự chương không được trùng."})
 
-        chapter = Chapter.objects.filter(course_id=course_id, id__in=chapter_ids)
-        chapter_map = {chapter.id: chapter for chapter in chapter}
+        chapters = ChapterRepository.get_by_course(course_id)
+        chapter_map = {ch.id: ch for ch in chapters if ch.id in chapter_ids}
+
+        if len(chapter_map) != len(chapter_ids):
+            raise ValidationError("Danh sách chương không hợp lệ.")
 
         with transaction.atomic():
             for item in chapter_data:
-                chapter = chapter_map.get(item.get("id"))
-                if not chapter:
+                ch = chapter_map.get(item.get("id"))
+                if not ch:
                     raise ValidationError("Danh sách chương không hợp lệ.")
-                chapter.order = item.get("order")
-                chapter.save(update_fields=["order", "updated_at"])
+                ch.order = item.get("order")
+                ch.save(update_fields=["order", "updated_at"])
 
         return ChapterRepository.get_by_course(course_id)

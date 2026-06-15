@@ -17,6 +17,9 @@ export const getCoursesApi = async (params = {}) => {
   if (params.q) query.append("q", params.q);
   if (params.status) query.append("status", params.status);
   if (params.category) query.append("category", params.category);
+  if (params.instructor) query.append("instructor", params.instructor);
+  if (params.page) query.append("page", params.page);
+  if (params.page_size) query.append("page_size", params.page_size);
   const qs = query.toString();
   return request(() => apiClient.get(`/api/courses/${qs ? `?${qs}` : ""}`));
 };
@@ -28,14 +31,6 @@ export const getCourseDetailApi = async (courseId) => {
 export const createCourseApi = async (data) => {
   return request(() =>
     apiClient.post("/api/courses/create/", data, {
-      headers: { "Content-Type": "multipart/form-data" },
-    })
-  );
-};
-
-export const createFullCourseApi = async (data) => {
-  return request(() =>
-    apiClient.post("/api/courses/create-full/", data, {
       headers: { "Content-Type": "multipart/form-data" },
     })
   );
@@ -83,66 +78,11 @@ export const unhideCourseApi = async (courseId) => {
   return request(() => apiClient.patch(`/api/courses/${courseId}/unhide/`));
 };
 
-// ==================== SECTIONS ====================
-// BE: /api/lessons/courses/{course_id}/sections/
+// ==================== CURRICULUM ====================
+// BE: /api/courses/{course_id}/curriculum/
 
-export const getSectionsApi = async (courseId) => {
-  return request(() => apiClient.get(`/api/lessons/courses/${courseId}/sections/`));
-};
-
-export const createSectionApi = async (courseId, data) => {
-  return request(() => apiClient.post(`/api/lessons/courses/${courseId}/sections/create/`, data));
-};
-
-export const updateSectionApi = async (sectionId, data) => {
-  return request(() => apiClient.patch(`/api/lessons/sections/${sectionId}/update/`, data));
-};
-
-export const deleteSectionApi = async (sectionId) => {
-  return request(() => apiClient.delete(`/api/lessons/sections/${sectionId}/delete/`));
-};
-
-export const reorderSectionsApi = async (courseId, sections) => {
-  return request(() =>
-    apiClient.patch(`/api/lessons/courses/${courseId}/sections/reorder/`, { sections })
-  );
-};
-
-// ==================== LESSONS ====================
-// BE: /api/lessons/sections/{section_id}/lessons/
-
-export const getLessonsApi = async (sectionId) => {
-  return request(() => apiClient.get(`/api/lessons/sections/${sectionId}/lessons/`));
-};
-
-export const getLessonDetailApi = async (lessonId) => {
-  return request(() => apiClient.get(`/api/lessons/lessons/${lessonId}/`));
-};
-
-export const createLessonApi = async (sectionId, data) => {
-  return request(() =>
-    apiClient.post(`/api/lessons/sections/${sectionId}/lessons/create/`, data, {
-      headers: { "Content-Type": "multipart/form-data" },
-    })
-  );
-};
-
-export const updateLessonApi = async (lessonId, data) => {
-  return request(() =>
-    apiClient.patch(`/api/lessons/lessons/${lessonId}/update/`, data, {
-      headers: { "Content-Type": "multipart/form-data" },
-    })
-  );
-};
-
-export const deleteLessonApi = async (lessonId) => {
-  return request(() => apiClient.delete(`/api/lessons/lessons/${lessonId}/delete/`));
-};
-
-export const reorderLessonsApi = async (sectionId, lessons) => {
-  return request(() =>
-    apiClient.patch(`/api/lessons/sections/${sectionId}/lessons/reorder/`, { lessons })
-  );
+export const getCurriculumApi = async (courseId) => {
+  return request(() => apiClient.get(`/api/courses/${courseId}/curriculum/`));
 };
 
 // ==================== CATEGORIES ====================

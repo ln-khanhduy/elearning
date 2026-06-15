@@ -12,41 +12,76 @@ from apps.courses.serializers.course_serializer import (
     CourseCreateUpdateSerializer, CourseRejectSerializer,
 )
 from apps.courses.serializers.category_tag_serializer import CategorySerializer, TagSerializer
-from apps.courses.serializers.course_full_create_serializer import CourseFullCreateSerializer
-from apps.courses.services.course_full_create_service import CourseFullCreateService
 from apps.courses.models import Category, Tag
-from apps.lessons.models import Section, Lesson
 
+from apps.lessons.repositories.chapter_repository import ChapterRepository
+from apps.lessons.repositories.lesson_repository import LessonRepository
+from apps.lessons.serializers.chapter_serializer import ChapterSerializer
+from apps.lessons.serializers.lesson_serializer import LessonSerializer
+from apps.quizzes.repositories.quiz_repository import QuizRepository
+from apps.quizzes.repositories.question_repository import QuestionRepository
+from apps.quizzes.serializers.quiz_serializer import QuizSerializer
+from apps.quizzes.serializers.question_serializer import QuestionSerializer
+
+
+def success_response(data=None, message="Success", http_status=status.HTTP_200_OK):
+    return Response({
+        "success": True,
+        "message": message,
+        "data": data,
+    }, status=http_status)
+
+
+def error_response(message="Error", errors=None, http_status=status.HTTP_400_BAD_REQUEST):
+    return Response({
+        "success": False,
+        "message": message,
+        "errors": errors or {},
+    }, status=http_status)
 
 
 class CourseListAPIView(APIView):
     """
     GET /api/courses/ - Lấy danh sách khóa học.
-    Có thể tìm kiếm theo từ khóa (q), lọc theo trạng thái (status) hoặc danh mục (category).
-    Không yêu cầu đăng nhập.
+    Hỗ trợ: search (q), filter status, category, instructor, pagination (page, page_size).
     """
     permission_classes = [AllowAny]
 
     def get(self, request):
+        page = int(request.GET.get("page", 1))
+        page_size = int(request.GET.get("page_size", 10))
+
         courses = CourseService.search_courses(
             keyword=request.GET.get("q"),
             status_value=request.GET.get("status"),
-            category_id=request.GET.get("category")
+            category_id=request.GET.get("category"),
+            instructor_id=request.GET.get("instructor"),
         )
-        serializer = CourseListSerializer(courses, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+
+        total = courses.count()
+        start = (page - 1) * page_size
+        end = start + page_size
+        page_courses = courses[start:end]
+
+        serializer = CourseListSerializer(page_courses, many=True)
+        return success_response({
+            "items": serializer.data,
+            "total": total,
+            "page": page,
+            "page_size": page_size,
+            "total_pages": (total + page_size - 1) // page_size,
+        })
 
 
 class CourseDetailAPIView(APIView):
     """
     GET /api/courses/{course_id}/ - Lấy thông tin chi tiết của một khóa học.
-    Không yêu cầu đăng nhập.
     """
     permission_classes = [AllowAny]
 
     def get(self, request, course_id):
         course = CourseService.get_course_detail(course_id)
-        return Response(CourseDetailSerializer(course).data, status=status.HTTP_200_OK)
+        return success_response(CourseDetailSerializer(course).data)
 
 
 class CourseCreateAPIView(APIView):
@@ -61,14 +96,20 @@ class CourseCreateAPIView(APIView):
         role_code = user.role.code if user.role else None
 
         if role_code != "INSTRUCTOR":
-            return Response(
-                {"detail": "Chỉ giảng viên mới có quyền tạo khóa học."},
-                status=status.HTTP_403_FORBIDDEN
-            )
+            return error_response("Chỉ giảng viên mới có quyền tạo khóa học.", http_status=status.HTTP_403_FORBIDDEN)
 
         serializer = CourseCreateUpdateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        course = CourseService.create_course(request.user, serializer.validated_data)
+
+        validated_data = serializer.validated_data
+        tags_ids = validated_data.pop("tags", [])
+        course = CourseService.create_course(request.user, validated_data)
+
+        # Gán tags
+        if tags_ids:
+            tags = Tag.objects.filter(id__in=tags_ids)
+            course.tags.set(tags)
+
         AdminLogService.log(
             admin=request.user,
             action_type='COURSE_CREATE',
@@ -77,16 +118,16 @@ class CourseCreateAPIView(APIView):
             target_type='Course',
         )
 
-        return Response({
-            "detail": "Tạo khóa học thành công.",
-            "course": CourseDetailSerializer(course).data
-        }, status=status.HTTP_201_CREATED)
+        return success_response(
+            CourseDetailSerializer(course).data,
+            "Tạo khóa học thành công.",
+            status.HTTP_201_CREATED
+        )
 
 
 class CourseUpdateAPIView(APIView):
     """
     PATCH /api/courses/{course_id}/ - Cập nhật thông tin khóa học.
-    Yêu cầu quyền: course.course.update
     """
     permission_classes = [IsAuthenticated, HasRequiredPermission]
     required_permission = "course.course.update"
@@ -94,7 +135,16 @@ class CourseUpdateAPIView(APIView):
     def patch(self, request, course_id):
         serializer = CourseCreateUpdateSerializer(data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
-        course = CourseService.update_course(course_id, request.user, serializer.validated_data)
+
+        validated_data = serializer.validated_data
+        tags_ids = validated_data.pop("tags", None)
+        course = CourseService.update_course(course_id, request.user, validated_data)
+
+        # Cập nhật tags nếu có
+        if tags_ids is not None:
+            tags = Tag.objects.filter(id__in=tags_ids)
+            course.tags.set(tags)
+
         AdminLogService.log(
             admin=request.user,
             action_type='COURSE_UPDATE',
@@ -103,16 +153,15 @@ class CourseUpdateAPIView(APIView):
             target_type='Course',
         )
 
-        return Response({
-            "detail": "Cập nhật khóa học thành công.",
-            "course": CourseDetailSerializer(course).data
-        }, status=status.HTTP_200_OK)
+        return success_response(
+            CourseDetailSerializer(course).data,
+            "Cập nhật khóa học thành công.",
+        )
 
 
 class CourseDeleteAPIView(APIView):
     """
     DELETE /api/courses/{course_id}/ - Xóa khóa học (xóa mềm).
-    Yêu cầu quyền: course.course.delete
     """
     permission_classes = [IsAuthenticated, HasRequiredPermission]
     required_permission = "course.course.delete"
@@ -130,29 +179,24 @@ class CourseDeleteAPIView(APIView):
             target_type='Course',
         )
 
-        return Response({"detail": "Xóa khóa học thành công."}, status=status.HTTP_200_OK)
+        return success_response(None, "Xóa khóa học thành công.")
 
 
 class CourseSubmitReviewAPIView(APIView):
     """
     PATCH /api/courses/{course_id}/submit-review/ - Gửi khóa học chờ duyệt.
-    Yêu cầu quyền: course.course.update
     """
     permission_classes = [IsAuthenticated, HasRequiredPermission]
     required_permission = "course.course.update"
 
     def patch(self, request, course_id):
         course = CourseService.submit_for_review(course_id, request.user)
-        return Response({
-            "detail": "Đã gửi khóa học chờ duyệt.",
-            "course": CourseDetailSerializer(course).data
-        }, status=status.HTTP_200_OK)
+        return success_response(CourseDetailSerializer(course).data, "Đã gửi khóa học chờ duyệt.")
 
 
 class PendingCourseListAPIView(APIView):
     """
     GET /api/courses/pending/ - Lấy danh sách khóa học đang chờ duyệt.
-    Yêu cầu quyền: course.course.approve
     """
     permission_classes = [IsAuthenticated, HasRequiredPermission]
     required_permission = "course.course.approve"
@@ -160,13 +204,12 @@ class PendingCourseListAPIView(APIView):
     def get(self, request):
         courses = CourseService.get_pending_courses()
         serializer = CourseListSerializer(courses, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return success_response(serializer.data)
 
 
 class CourseApproveAPIView(APIView):
     """
     PATCH /api/courses/{course_id}/approve/ - Duyệt khóa học.
-    Yêu cầu quyền: course.course.approve
     """
     permission_classes = [IsAuthenticated, HasRequiredPermission]
     required_permission = "course.course.approve"
@@ -181,16 +224,12 @@ class CourseApproveAPIView(APIView):
             target_type='Course',
         )
 
-        return Response({
-            "detail": "Duyệt khóa học thành công.",
-            "course": CourseDetailSerializer(course).data
-        }, status=status.HTTP_200_OK)
+        return success_response(CourseDetailSerializer(course).data, "Duyệt khóa học thành công.")
 
 
 class CourseRejectAPIView(APIView):
     """
     PATCH /api/courses/{course_id}/reject/ - Từ chối khóa học kèm lý do.
-    Yêu cầu quyền: course.course.approve
     """
     permission_classes = [IsAuthenticated, HasRequiredPermission]
     required_permission = "course.course.approve"
@@ -209,16 +248,12 @@ class CourseRejectAPIView(APIView):
             target_type='Course',
         )
 
-        return Response({
-            "detail": "Từ chối khóa học thành công.",
-            "course": CourseDetailSerializer(course).data
-        }, status=status.HTTP_200_OK)
+        return success_response(CourseDetailSerializer(course).data, "Từ chối khóa học thành công.")
 
 
 class CoursePublishAPIView(APIView):
     """
     PATCH /api/courses/{course_id}/publish/ - Public khóa học sau khi đã được duyệt.
-    Yêu cầu quyền: course.course.update
     """
     permission_classes = [IsAuthenticated, HasRequiredPermission]
     required_permission = "course.course.update"
@@ -233,16 +268,12 @@ class CoursePublishAPIView(APIView):
             target_type='Course',
         )
 
-        return Response({
-            "detail": "Public khóa học thành công.",
-            "course": CourseDetailSerializer(course).data
-        }, status=status.HTTP_200_OK)
+        return success_response(CourseDetailSerializer(course).data, "Public khóa học thành công.")
 
 
 class CourseHideAPIView(APIView):
     """
     PATCH /api/courses/{course_id}/hide/ - Ẩn khóa học.
-    Yêu cầu quyền: course.course.hide
     """
     permission_classes = [IsAuthenticated, HasRequiredPermission]
     required_permission = "course.course.hide"
@@ -257,16 +288,12 @@ class CourseHideAPIView(APIView):
             target_type='Course',
         )
 
-        return Response({
-            "detail": "Ẩn khóa học thành công.",
-            "course": CourseDetailSerializer(course).data
-        }, status=status.HTTP_200_OK)
+        return success_response(CourseDetailSerializer(course).data, "Ẩn khóa học thành công.")
 
 
 class CourseUnhideAPIView(APIView):
     """
     PATCH /api/courses/{course_id}/unhide/ - Hiện lại khóa học đã ẩn.
-    Yêu cầu quyền: course.course.hide
     """
     permission_classes = [IsAuthenticated, HasRequiredPermission]
     required_permission = "course.course.hide"
@@ -281,95 +308,48 @@ class CourseUnhideAPIView(APIView):
             target_type='Course',
         )
 
-        return Response({
-            "detail": "Hiện lại khóa học thành công.",
-            "course": CourseDetailSerializer(course).data
-        }, status=status.HTTP_200_OK)
+        return success_response(CourseDetailSerializer(course).data, "Hiện lại khóa học thành công.")
 
 
-class CourseFullCreateAPIView(APIView):
+class CourseCurriculumAPIView(APIView):
     """
-    POST /api/courses/create-full/ - Tạo khóa học đầy đủ (kèm chương, bài học, bài tập).
-    Chỉ INSTRUCTOR mới được tạo khóa học.
-    Ảnh và video bắt buộc phải tải lên Cloudinary thông qua SmartMediaCloudinaryStorage.
+    GET /api/courses/{course_id}/curriculum/ - Lấy toàn bộ cây curriculum của khóa học.
+    Trả về: Course -> Chapters -> Lessons -> Quizzes -> Questions
     """
     permission_classes = [IsAuthenticated]
 
-    def post(self, request):
-        user = request.user
-        role_code = user.role.code if user.role else None
+    def get(self, request, course_id):
+        course = CourseService.get_course_detail(course_id)
+        course_data = CourseDetailSerializer(course).data
 
-        if role_code != "INSTRUCTOR":
-            return Response(
-                {"detail": "Chỉ giảng viên mới có quyền tạo khóa học."},
-                status=status.HTTP_403_FORBIDDEN
-            )
+        chapters = ChapterRepository.get_by_course(course_id)
+        chapters_data = []
+        for chapter in chapters:
+            chapter_data = ChapterSerializer(chapter).data
 
-        import json
+            lessons = LessonRepository.get_by_chapter(chapter.id)
+            lessons_data = []
+            for lesson in lessons:
+                lesson_data = LessonSerializer(lesson).data
 
-        data_str = request.data.get("data")
-        if not data_str:
-            return Response(
-                {"detail": "Thiếu dữ liệu 'data' (JSON string)."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+                quizzes = QuizRepository.get_by_lesson(lesson.id)
+                quizzes_data = []
+                for quiz in quizzes:
+                    quiz_data = QuizSerializer(quiz).data
 
-        try:
-            data = json.loads(data_str) if isinstance(data_str, str) else data_str
-        except json.JSONDecodeError:
-            return Response(
-                {"detail": "Dữ liệu 'data' không phải JSON hợp lệ."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+                    questions = QuestionRepository.get_by_quiz(quiz.id)
+                    questions_data = QuestionSerializer(questions, many=True).data
+                    quiz_data["questions"] = questions_data
+                    quizzes_data.append(quiz_data)
 
-        # Gắn file thumbnail nếu có
-        thumbnail_file = request.FILES.get("thumbnail")
-        if thumbnail_file:
-            data["thumbnail"] = thumbnail_file
+                lesson_data["quizzes"] = quizzes_data
+                lessons_data.append(lesson_data)
 
-        # Gắn file material cho từng bài học
-        # File key pattern: lesson_files_{sectionIdx}_{lessonIdx}_material
-        sections = data.get("sections", [])
-        for si, section in enumerate(sections):
-            lessons = section.get("lessons", [])
-            for li, lesson in enumerate(lessons):
-                material_key = f"lesson_files_{si}_{li}_material"
-                if material_key in request.FILES:
-                    lesson["material_file"] = request.FILES[material_key]
+            chapter_data["lessons"] = lessons_data
+            chapters_data.append(chapter_data)
 
-        serializer = CourseFullCreateSerializer(data=data)
-        try:
-            serializer.is_valid(raise_exception=True)
-        except Exception:
-            import logging
-            logger = logging.getLogger(__name__)
-            logger.error(f"CourseFullCreate validation errors: {serializer.errors}")
-            raise
-
-        course = CourseFullCreateService.create_full_course(user, serializer.validated_data)
-
-        AdminLogService.log(
-            admin=request.user,
-            action_type='COURSE_CREATE',
-            detail=f"{request.user.email} đã tạo khóa học đầy đủ '{course.title}' (ID: {course.id})",
-            target_id=str(course.id),
-            target_type='Course',
-        )
-
-        # Xây dựng map lesson index -> lesson_id để frontend dễ dàng upload video
-        lessons_map = {}
-        sections_qs = Section.objects.filter(course=course).order_by("order", "id")
-        for si, sec in enumerate(sections_qs):
-            lessons_qs = Lesson.objects.filter(section=sec).order_by("order", "id")
-            for li, les in enumerate(lessons_qs):
-                lessons_map[f"{si}-{li}"] = les.id
-
-        return Response({
-            "detail": "Tạo khóa học thành công.",
-            "course_id": course.id,
-            "course_title": course.title,
-            "lessons_map": lessons_map,
-        }, status=status.HTTP_201_CREATED)
+        course_data["chapters"] = chapters_data
+        return success_response(course_data)
 
 
 # ==================== CATEGORY ====================
@@ -377,20 +357,18 @@ class CourseFullCreateAPIView(APIView):
 class CategoryListAPIView(APIView):
     """
     GET /api/courses/categories/ - Lấy danh sách danh mục.
-    Không yêu cầu đăng nhập.
     """
     permission_classes = [AllowAny]
 
     def get(self, request):
         categories = Category.objects.all().order_by("name")
         serializer = CategorySerializer(categories, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return success_response(serializer.data)
 
 
 class CategoryCreateAPIView(APIView):
     """
     POST /api/courses/categories/create/ - Tạo danh mục mới.
-    Yêu cầu quyền: course.category.create
     """
     permission_classes = [IsAuthenticated, HasRequiredPermission]
     required_permission = "course.category.create"
@@ -403,13 +381,12 @@ class CategoryCreateAPIView(APIView):
             name=serializer.validated_data["name"],
             slug=slugify(serializer.validated_data["name"])
         )
-        return Response(CategorySerializer(category).data, status=status.HTTP_201_CREATED)
+        return success_response(CategorySerializer(category).data, "Tạo danh mục thành công.", status.HTTP_201_CREATED)
 
 
 class CategoryUpdateAPIView(APIView):
     """
     PATCH /api/courses/categories/{category_id}/update/ - Cập nhật danh mục.
-    Yêu cầu quyền: course.category.update
     """
     permission_classes = [IsAuthenticated, HasRequiredPermission]
     required_permission = "course.category.update"
@@ -417,7 +394,7 @@ class CategoryUpdateAPIView(APIView):
     def patch(self, request, category_id):
         category = Category.objects.filter(id=category_id).first()
         if not category:
-            return Response({"detail": "Không tìm thấy danh mục."}, status=status.HTTP_404_NOT_FOUND)
+            return error_response("Không tìm thấy danh mục.", http_status=status.HTTP_404_NOT_FOUND)
         serializer = CategorySerializer(data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         if "name" in serializer.validated_data:
@@ -425,13 +402,12 @@ class CategoryUpdateAPIView(APIView):
             category.name = serializer.validated_data["name"]
             category.slug = slugify(serializer.validated_data["name"])
         category.save()
-        return Response(CategorySerializer(category).data, status=status.HTTP_200_OK)
+        return success_response(CategorySerializer(category).data, "Cập nhật danh mục thành công.")
 
 
 class CategoryDeleteAPIView(APIView):
     """
     DELETE /api/courses/categories/{category_id}/delete/ - Xóa danh mục.
-    Yêu cầu quyền: course.category.delete
     """
     permission_classes = [IsAuthenticated, HasRequiredPermission]
     required_permission = "course.category.delete"
@@ -439,9 +415,9 @@ class CategoryDeleteAPIView(APIView):
     def delete(self, request, category_id):
         category = Category.objects.filter(id=category_id).first()
         if not category:
-            return Response({"detail": "Không tìm thấy danh mục."}, status=status.HTTP_404_NOT_FOUND)
+            return error_response("Không tìm thấy danh mục.", http_status=status.HTTP_404_NOT_FOUND)
         category.delete()
-        return Response({"detail": "Xóa danh mục thành công."}, status=status.HTTP_200_OK)
+        return success_response(None, "Xóa danh mục thành công.")
 
 
 # ==================== TAG ====================
@@ -449,20 +425,18 @@ class CategoryDeleteAPIView(APIView):
 class TagListAPIView(APIView):
     """
     GET /api/courses/tags/ - Lấy danh sách tag.
-    Không yêu cầu đăng nhập.
     """
     permission_classes = [AllowAny]
 
     def get(self, request):
         tags = Tag.objects.all().order_by("name")
         serializer = TagSerializer(tags, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return success_response(serializer.data)
 
 
 class TagCreateAPIView(APIView):
     """
     POST /api/courses/tags/create/ - Tạo tag mới.
-    Yêu cầu quyền: course.tag.create
     """
     permission_classes = [IsAuthenticated, HasRequiredPermission]
     required_permission = "course.tag.create"
@@ -475,13 +449,12 @@ class TagCreateAPIView(APIView):
             name=serializer.validated_data["name"],
             slug=slugify(serializer.validated_data["name"])
         )
-        return Response(TagSerializer(tag).data, status=status.HTTP_201_CREATED)
+        return success_response(TagSerializer(tag).data, "Tạo tag thành công.", status.HTTP_201_CREATED)
 
 
 class TagUpdateAPIView(APIView):
     """
     PATCH /api/courses/tags/{tag_id}/update/ - Cập nhật tag.
-    Yêu cầu quyền: course.tag.update
     """
     permission_classes = [IsAuthenticated, HasRequiredPermission]
     required_permission = "course.tag.update"
@@ -489,7 +462,7 @@ class TagUpdateAPIView(APIView):
     def patch(self, request, tag_id):
         tag = Tag.objects.filter(id=tag_id).first()
         if not tag:
-            return Response({"detail": "Không tìm thấy tag."}, status=status.HTTP_404_NOT_FOUND)
+            return error_response("Không tìm thấy tag.", http_status=status.HTTP_404_NOT_FOUND)
         serializer = TagSerializer(data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         if "name" in serializer.validated_data:
@@ -497,13 +470,12 @@ class TagUpdateAPIView(APIView):
             tag.name = serializer.validated_data["name"]
             tag.slug = slugify(serializer.validated_data["name"])
         tag.save()
-        return Response(TagSerializer(tag).data, status=status.HTTP_200_OK)
+        return success_response(TagSerializer(tag).data, "Cập nhật tag thành công.")
 
 
 class TagDeleteAPIView(APIView):
     """
     DELETE /api/courses/tags/{tag_id}/delete/ - Xóa tag.
-    Yêu cầu quyền: course.tag.delete
     """
     permission_classes = [IsAuthenticated, HasRequiredPermission]
     required_permission = "course.tag.delete"
@@ -511,6 +483,6 @@ class TagDeleteAPIView(APIView):
     def delete(self, request, tag_id):
         tag = Tag.objects.filter(id=tag_id).first()
         if not tag:
-            return Response({"detail": "Không tìm thấy tag."}, status=status.HTTP_404_NOT_FOUND)
+            return error_response("Không tìm thấy tag.", http_status=status.HTTP_404_NOT_FOUND)
         tag.delete()
-        return Response({"detail": "Xóa tag thành công."}, status=status.HTTP_200_OK)
+        return success_response(None, "Xóa tag thành công.")

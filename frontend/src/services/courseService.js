@@ -2,7 +2,6 @@ import {
   getCoursesApi,
   getCourseDetailApi,
   createCourseApi,
-  createFullCourseApi,
   updateCourseApi,
   deleteCourseApi,
   submitCourseReviewApi,
@@ -12,20 +11,42 @@ import {
   publishCourseApi,
   hideCourseApi,
   unhideCourseApi,
-  getSectionsApi,
-  createSectionApi,
-  updateSectionApi,
-  deleteSectionApi,
-  reorderSectionsApi,
+  getCurriculumApi,
+  getCategoriesApi,
+  getTagsApi,
+} from "../api/courseAPI";
+
+import {
+  getChaptersApi,
+  createChapterApi,
+  updateChapterApi,
+  deleteChapterApi,
+  reorderChaptersApi,
+} from "../api/chapterAPI";
+
+import {
   getLessonsApi,
   getLessonDetailApi,
   createLessonApi,
   updateLessonApi,
   deleteLessonApi,
   reorderLessonsApi,
-  getCategoriesApi,
-  getTagsApi,
-} from "../api/courseAPI";
+} from "../api/lessonAPI";
+
+import {
+  getQuizzesApi,
+  getQuizDetailApi,
+  createQuizApi,
+  updateQuizApi,
+  deleteQuizApi,
+} from "../api/quizAPI";
+
+import {
+  getQuestionsApi,
+  createQuestionApi,
+  updateQuestionApi,
+  deleteQuestionApi,
+} from "../api/questionAPI";
 
 // ==================== COURSES ====================
 
@@ -39,10 +60,6 @@ export const getCourseDetail = async (courseId) => {
 
 export const createCourse = async (data) => {
   return await createCourseApi(data);
-};
-
-export const createFullCourse = async (data) => {
-  return await createFullCourseApi(data);
 };
 
 export const updateCourse = async (courseId, data) => {
@@ -81,40 +98,46 @@ export const unhideCourse = async (courseId) => {
   return await unhideCourseApi(courseId);
 };
 
-// ==================== SECTIONS ====================
+// ==================== CURRICULUM ====================
 
-export const getSections = async (courseId) => {
-  return await getSectionsApi(courseId);
+export const getCurriculum = async (courseId) => {
+  return await getCurriculumApi(courseId);
 };
 
-export const createSection = async (courseId, data) => {
-  return await createSectionApi(courseId, data);
+// ==================== CHAPTERS ====================
+
+export const getChapters = async (courseId) => {
+  return await getChaptersApi(courseId);
 };
 
-export const updateSection = async (sectionId, data) => {
-  return await updateSectionApi(sectionId, data);
+export const createChapter = async (courseId, data) => {
+  return await createChapterApi(courseId, data);
 };
 
-export const deleteSection = async (sectionId) => {
-  return await deleteSectionApi(sectionId);
+export const updateChapter = async (chapterId, data) => {
+  return await updateChapterApi(chapterId, data);
 };
 
-export const reorderSections = async (courseId, sections) => {
-  return await reorderSectionsApi(courseId, sections);
+export const deleteChapter = async (chapterId) => {
+  return await deleteChapterApi(chapterId);
+};
+
+export const reorderChapters = async (courseId, chapters) => {
+  return await reorderChaptersApi(courseId, chapters);
 };
 
 // ==================== LESSONS ====================
 
-export const getLessons = async (sectionId) => {
-  return await getLessonsApi(sectionId);
+export const getLessons = async (chapterId) => {
+  return await getLessonsApi(chapterId);
 };
 
 export const getLessonDetail = async (lessonId) => {
   return await getLessonDetailApi(lessonId);
 };
 
-export const createLesson = async (sectionId, data) => {
-  return await createLessonApi(sectionId, data);
+export const createLesson = async (chapterId, data) => {
+  return await createLessonApi(chapterId, data);
 };
 
 export const updateLesson = async (lessonId, data) => {
@@ -125,8 +148,48 @@ export const deleteLesson = async (lessonId) => {
   return await deleteLessonApi(lessonId);
 };
 
-export const reorderLessons = async (sectionId, lessons) => {
-  return await reorderLessonsApi(sectionId, lessons);
+export const reorderLessons = async (chapterId, lessons) => {
+  return await reorderLessonsApi(chapterId, lessons);
+};
+
+// ==================== QUIZZES ====================
+
+export const getQuizzes = async (lessonId) => {
+  return await getQuizzesApi(lessonId);
+};
+
+export const getQuizDetail = async (quizId) => {
+  return await getQuizDetailApi(quizId);
+};
+
+export const createQuiz = async (lessonId, data) => {
+  return await createQuizApi(lessonId, data);
+};
+
+export const updateQuiz = async (quizId, data) => {
+  return await updateQuizApi(quizId, data);
+};
+
+export const deleteQuiz = async (quizId) => {
+  return await deleteQuizApi(quizId);
+};
+
+// ==================== QUESTIONS ====================
+
+export const getQuestions = async (quizId) => {
+  return await getQuestionsApi(quizId);
+};
+
+export const createQuestion = async (quizId, data) => {
+  return await createQuestionApi(quizId, data);
+};
+
+export const updateQuestion = async (questionId, data) => {
+  return await updateQuestionApi(questionId, data);
+};
+
+export const deleteQuestion = async (questionId) => {
+  return await deleteQuestionApi(questionId);
 };
 
 // ==================== CATEGORIES & TAGS ====================

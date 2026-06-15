@@ -4,19 +4,39 @@ import { toast } from "react-toastify";
 import {
   getCourseDetail,
   updateCourse,
-  getSections,
-  createSection,
-  updateSection,
-  deleteSection,
-  reorderSections,
-  getLessons,
+  getCurriculum,
+  getCategories,
+  getTags,
+  createChapter,
+  updateChapter,
+  deleteChapter,
   createLesson,
   updateLesson,
   deleteLesson,
-  reorderLessons,
+  createQuiz,
+  updateQuiz,
+  deleteQuiz,
+  createQuestion,
+  updateQuestion,
+  deleteQuestion,
 } from "../../services/courseService";
-import { getCategoriesApi } from "../../api/courseAPI";
 
+// ==================== INITIALIZERS ====================
+const emptyChapter = () => ({ title: "", description: "" });
+const emptyLesson = () => ({
+  title: "", description: "", content_type: "VIDEO",
+  is_free: false, material_file: null, video_url: "",
+});
+const emptyQuiz = () => ({
+  title: "", description: "", time_limit_minutes: null, passing_score: 0,
+});
+const emptyQuestion = () => ({
+  question_type: "MCQ", prompt: "", points: 1, order: 1,
+  correct_text_answer: "", options: [],
+});
+const emptyOption = () => ({ text: "", is_correct: false });
+
+// ==================== MAIN COMPONENT ====================
 function InstructorCourseEditPage() {
   const { courseId } = useParams();
   const navigate = useNavigate();
@@ -24,11 +44,10 @@ function InstructorCourseEditPage() {
   // Course state
   const [course, setCourse] = useState(null);
   const [categories, setCategories] = useState([]);
+  const [tags, setTags] = useState([]);
+  const [selectedTags, setSelectedTags] = useState([]);
   const [formData, setFormData] = useState({
-    title: "",
-    description: "",
-    price: "",
-    category: "",
+    title: "", description: "", price: "", category: "",
     preview_video_url: "",
   });
   const [thumbnail, setThumbnail] = useState(null);
@@ -37,27 +56,37 @@ function InstructorCourseEditPage() {
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState({});
 
-  // Sections state
-  const [sections, setSections] = useState([]);
-  const [expandedSection, setExpandedSection] = useState(null);
-  const [sectionForm, setSectionForm] = useState({ title: "", description: "" });
-  const [editingSection, setEditingSection] = useState(null);
-  const [sectionLoading, setSectionLoading] = useState(false);
+  // Curriculum tree
+  const [curriculum, setCurriculum] = useState([]); // chapters with nested lessons/quizzes/questions
 
-  // Lessons state
-  const [lessonsMap, setLessonsMap] = useState({});
-  const [lessonForm, setLessonForm] = useState({
-    title: "", description: "", content_type: "VIDEO",
-    material_file: null, is_free: false,
-  });
-  const [editingLesson, setEditingLesson] = useState(null);
-  const [lessonSectionId, setLessonSectionId] = useState(null);
-  const [lessonLoading, setLessonLoading] = useState(false);
+  // Chapter form
+  const [chapterForm, setChapterForm] = useState(emptyChapter());
+  const [editingChapterId, setEditingChapterId] = useState(null);
+  const [showChapterForm, setShowChapterForm] = useState(false);
 
-  // Load course
+  // Lesson form
+  const [lessonForm, setLessonForm] = useState(emptyLesson());
+  const [editingLessonId, setEditingLessonId] = useState(null);
+  const [lessonChapterId, setLessonChapterId] = useState(null);
+  const [showLessonForm, setShowLessonForm] = useState(false);
+
+  // Quiz form
+  const [quizForm, setQuizForm] = useState(emptyQuiz());
+  const [editingQuizId, setEditingQuizId] = useState(null);
+  const [quizLessonId, setQuizLessonId] = useState(null);
+  const [showQuizForm, setShowQuizForm] = useState(false);
+
+  // Question form
+  const [questionForm, setQuestionForm] = useState(emptyQuestion());
+  const [editingQuestionId, setEditingQuestionId] = useState(null);
+  const [questionQuizId, setQuestionQuizId] = useState(null);
+  const [showQuestionForm, setShowQuestionForm] = useState(false);
+
+  // ==================== LOAD DATA ====================
   const loadCourse = useCallback(async () => {
     try {
-      const data = await getCourseDetail(courseId);
+      const res = await getCourseDetail(courseId);
+      const data = res?.data || res;
       setCourse(data);
       setFormData({
         title: data.title || "",
@@ -67,71 +96,48 @@ function InstructorCourseEditPage() {
         preview_video_url: data.preview_video_url || "",
       });
       setThumbnailPreview(data.thumbnail_url || "");
+      setSelectedTags(data.tags?.map((t) => t.id) || []);
+
     } catch (error) {
       toast.error("Không thể tải thông tin khóa học.");
       navigate("/instructor/courses");
-    } finally {
-      setLoading(false);
     }
   }, [courseId, navigate]);
 
-  // Load sections
-  const loadSections = useCallback(async () => {
+  const loadCurriculum = useCallback(async () => {
     try {
-      const data = await getSections(courseId);
-      setSections(data || []);
-    } catch (error) {
-      // Sections may be empty
+      const res = await getCurriculum(courseId);
+      const data = res?.data || res;
+      setCurriculum(data?.chapters || []);
+
+    } catch {
+      // curriculum may be empty
     }
   }, [courseId]);
 
-  // Load lessons for a section
-  const loadLessons = useCallback(async (sectionId) => {
-    try {
-      const data = await getLessons(sectionId);
-      setLessonsMap((prev) => ({ ...prev, [sectionId]: data || [] }));
-    } catch (error) {
-      // Lessons may be empty
-    }
-  }, []);
-
   useEffect(() => {
     loadCourse();
-    loadSections();
-    const fetchCategories = async () => {
+    loadCurriculum();
+    const fetchMeta = async () => {
       try {
-        const data = await getCategoriesApi();
-        setCategories(data);
+        const [cats, tgs] = await Promise.all([getCategories(), getTags()]);
+        setCategories(cats?.data || cats || []);
+        setTags(tgs?.data || tgs || []);
+
       } catch {
         // ignore
       }
     };
-    fetchCategories();
-  }, [loadCourse, loadSections]);
+    fetchMeta();
+  }, [loadCourse, loadCurriculum]);
 
-  // ==================== COURSE VALIDATE ====================
+  // ==================== COURSE VALIDATION ====================
   const validateCourse = () => {
     const errs = {};
-    if (!formData.title || !formData.title.trim()) {
-      errs.title = "Tiêu đề khóa học không được để trống.";
-    } else if (formData.title.trim().length < 5) {
-      errs.title = "Tiêu đề phải có ít nhất 5 ký tự.";
-    } else if (formData.title.trim().length > 50) {
-      errs.title = "Tiêu đề không được vượt quá 50 ký tự.";
-    } else if (/[<>{}$%^&*()=+[\]\\|;:'",.!@#~`]/.test(formData.title)) {
-      errs.title = "Tiêu đề không được chứa ký tự đặc biệt.";
-    }
-    if (!formData.description || !formData.description.trim()) {
-      errs.description = "Mô tả khóa học không được để trống.";
-    } else if (formData.description.trim().length < 20) {
-      errs.description = "Mô tả phải có ít nhất 20 ký tự.";
-    }
-    if (!formData.price || isNaN(formData.price) || Number(formData.price) <= 0) {
-      errs.price = "Giá khóa học phải là số dương.";
-    }
-    if (formData.preview_video_url && !/^https?:\/\/.+/.test(formData.preview_video_url)) {
-      errs.preview_video_url = "URL video không hợp lệ.";
-    }
+    if (!formData.title?.trim()) errs.title = "Tiêu đề không được để trống.";
+    if (!formData.description?.trim()) errs.description = "Mô tả không được để trống.";
+    if (!formData.price || isNaN(formData.price) || Number(formData.price) < 0)
+      errs.price = "Giá phải là số >= 0.";
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -171,8 +177,9 @@ function InstructorCourseEditPage() {
       if (formData.category) form.append("category", formData.category);
       if (formData.preview_video_url) form.append("preview_video_url", formData.preview_video_url.trim());
       if (thumbnail) form.append("thumbnail", thumbnail);
+      selectedTags.forEach((tid) => form.append("tags", tid));
       const result = await updateCourse(courseId, form);
-      toast.success(result.detail || "Cập nhật khóa học thành công!");
+      toast.success(result?.message || "Cập nhật khóa học thành công!");
     } catch (error) {
       toast.error(error.message || "Có lỗi xảy ra.");
     } finally {
@@ -180,170 +187,287 @@ function InstructorCourseEditPage() {
     }
   };
 
-  // ==================== SECTION HANDLERS ====================
-  const validateSection = () => {
-    if (!sectionForm.title || !sectionForm.title.trim()) {
+  // ==================== CHAPTER HANDLERS ====================
+  const resetChapterForm = () => {
+    setChapterForm(emptyChapter());
+    setEditingChapterId(null);
+    setShowChapterForm(false);
+  };
+
+  const handleAddChapter = () => {
+    resetChapterForm();
+    setShowChapterForm(true);
+  };
+
+  const handleEditChapter = (chapter) => {
+    setChapterForm({ title: chapter.title, description: chapter.description || "" });
+    setEditingChapterId(chapter.id);
+    setShowChapterForm(true);
+  };
+
+  const handleSaveChapter = async () => {
+    if (!chapterForm.title?.trim()) {
       toast.error("Tên chương không được để trống.");
-      return false;
+      return;
     }
-    if (sectionForm.title.trim().length > 50) {
-      toast.error("Tên chương không được vượt quá 50 ký tự.");
-      return false;
-    }
-    if (/[<>{}$%^&*()=+[\]\\|;:'",!@#~`]/.test(sectionForm.title)) {
-      toast.error("Tên chương không được chứa ký tự đặc biệt.");
-      return false;
-    }
-    return true;
-  };
-
-  const handleAddSection = async () => {
-    if (!validateSection()) return;
-    setSectionLoading(true);
     try {
-      const result = await createSection(courseId, sectionForm);
-      toast.success(result.detail || "Thêm chương thành công!");
-      setSectionForm({ title: "", description: "" });
-      loadSections();
-    } catch (error) {
-      toast.error(error.message || "Có lỗi xảy ra.");
-    } finally {
-      setSectionLoading(false);
-    }
-  };
-
-  const handleEditSection = (section) => {
-    setEditingSection(section.id);
-    setSectionForm({ title: section.title, description: section.description || "" });
-  };
-
-  const handleUpdateSection = async () => {
-    if (!validateSection()) return;
-    setSectionLoading(true);
-    try {
-      const result = await updateSection(editingSection, sectionForm);
-      toast.success(result.detail || "Cập nhật chương thành công!");
-      setEditingSection(null);
-      setSectionForm({ title: "", description: "" });
-      loadSections();
-    } catch (error) {
-      toast.error(error.message || "Có lỗi xảy ra.");
-    } finally {
-      setSectionLoading(false);
-    }
-  };
-
-  const handleDeleteSection = async (sectionId) => {
-    if (!window.confirm("Xóa chương này sẽ xóa tất cả bài học bên trong. Bạn có chắc?")) return;
-    try {
-      await deleteSection(sectionId);
-      toast.success("Xóa chương thành công!");
-      setExpandedSection(null);
-      loadSections();
-    } catch (error) {
-      toast.error(error.message || "Có lỗi xảy ra.");
-    }
-  };
-
-  const handleCancelSectionEdit = () => {
-    setEditingSection(null);
-    setSectionForm({ title: "", description: "" });
-  };
-
-  const toggleSection = (sectionId) => {
-    if (expandedSection === sectionId) {
-      setExpandedSection(null);
-    } else {
-      setExpandedSection(sectionId);
-      if (!lessonsMap[sectionId]) {
-        loadLessons(sectionId);
+      if (editingChapterId) {
+        await updateChapter(editingChapterId, chapterForm);
+        toast.success("Cập nhật chương thành công!");
+      } else {
+        await createChapter(courseId, chapterForm);
+        toast.success("Thêm chương thành công!");
       }
+      resetChapterForm();
+      loadCurriculum();
+    } catch (error) {
+      toast.error(error.message || "Có lỗi xảy ra.");
+    }
+  };
+
+  const handleDeleteChapter = async (chapterId) => {
+    if (!window.confirm("Xóa chương sẽ xóa tất cả bài học bên trong. Bạn có chắc?")) return;
+    try {
+      await deleteChapter(chapterId);
+      toast.success("Xóa chương thành công!");
+      loadCurriculum();
+    } catch (error) {
+      toast.error(error.message || "Có lỗi xảy ra.");
     }
   };
 
   // ==================== LESSON HANDLERS ====================
-  const validateLesson = () => {
-    if (!lessonForm.title || !lessonForm.title.trim()) {
-      toast.error("Tên bài học không được để trống.");
-      return false;
-    }
-    if (lessonForm.title.trim().length > 50) {
-      toast.error("Tên bài học không được vượt quá 50 ký tự.");
-      return false;
-    }
-    if (/[<>{}$%^&*()=+[\]\\|;:'",!@#~`]/.test(lessonForm.title)) {
-      toast.error("Tên bài học không được chứa ký tự đặc biệt.");
-      return false;
-    }
-    return true;
-  };
-
   const resetLessonForm = () => {
-    setLessonForm({
-      title: "", description: "", content_type: "VIDEO",
-      material_file: null, is_free: false,
-    });
-    setEditingLesson(null);
-    setLessonSectionId(null);
+    setLessonForm(emptyLesson());
+    setEditingLessonId(null);
+    setLessonChapterId(null);
+    setShowLessonForm(false);
   };
 
-  const handleAddLesson = (sectionId) => {
+  const handleAddLesson = (chapterId) => {
     resetLessonForm();
-    setLessonSectionId(sectionId);
+    setLessonChapterId(chapterId);
+    setShowLessonForm(true);
   };
 
-  const handleEditLesson = (sectionId, lesson) => {
-    setLessonSectionId(sectionId);
-    setEditingLesson(lesson.id);
+  const handleEditLesson = (chapterId, lesson) => {
+    setLessonChapterId(chapterId);
+    setEditingLessonId(lesson.id);
     setLessonForm({
       title: lesson.title || "",
       description: lesson.description || "",
       content_type: lesson.content_type || "VIDEO",
-      material_file: null,
       is_free: lesson.is_free || false,
+      material_file: null,
+      video_url: lesson.video_url || "",
     });
+    setShowLessonForm(true);
   };
 
   const handleSaveLesson = async () => {
-    if (!validateLesson()) return;
-    setLessonLoading(true);
+    if (!lessonForm.title?.trim()) {
+      toast.error("Tên bài học không được để trống.");
+      return;
+    }
     try {
       const form = new FormData();
       form.append("title", lessonForm.title.trim());
       form.append("description", lessonForm.description.trim());
       form.append("content_type", lessonForm.content_type);
       form.append("is_free", lessonForm.is_free ? "true" : "false");
-      if (lessonForm.material_file) form.append("material_file", lessonForm.material_file);
+      if (lessonForm.content_type === "VIDEO" && lessonForm.video_url) {
+        form.append("video_url", lessonForm.video_url.trim());
+      }
+      if (lessonForm.material_file) {
+        form.append("material_file", lessonForm.material_file);
+      }
 
-      if (editingLesson) {
-        const result = await updateLesson(editingLesson, form);
-        toast.success(result.detail || "Cập nhật bài học thành công!");
+      if (editingLessonId) {
+        await updateLesson(editingLessonId, form);
+        toast.success("Cập nhật bài học thành công!");
       } else {
-        const result = await createLesson(lessonSectionId, form);
-        toast.success(result.detail || "Thêm bài học thành công!");
+        await createLesson(lessonChapterId, form);
+        toast.success("Thêm bài học thành công!");
       }
       resetLessonForm();
-      loadLessons(lessonSectionId);
+      loadCurriculum();
     } catch (error) {
       toast.error(error.message || "Có lỗi xảy ra.");
-    } finally {
-      setLessonLoading(false);
     }
   };
 
-  const handleDeleteLesson = async (sectionId, lessonId) => {
+  const handleDeleteLesson = async (lessonId) => {
     if (!window.confirm("Bạn có chắc muốn xóa bài học này?")) return;
     try {
       await deleteLesson(lessonId);
       toast.success("Xóa bài học thành công!");
-      loadLessons(sectionId);
+      loadCurriculum();
     } catch (error) {
       toast.error(error.message || "Có lỗi xảy ra.");
     }
   };
 
-  const handleCancelLesson = () => {
-    resetLessonForm();
+  // ==================== QUIZ HANDLERS ====================
+  const resetQuizForm = () => {
+    setQuizForm(emptyQuiz());
+    setEditingQuizId(null);
+    setQuizLessonId(null);
+    setShowQuizForm(false);
+  };
+
+  const handleAddQuiz = (lessonId) => {
+    resetQuizForm();
+    setQuizLessonId(lessonId);
+    setShowQuizForm(true);
+  };
+
+  const handleEditQuiz = (lessonId, quiz) => {
+    setQuizLessonId(lessonId);
+    setEditingQuizId(quiz.id);
+    setQuizForm({
+      title: quiz.title || "",
+      description: quiz.description || "",
+      time_limit_minutes: quiz.time_limit_minutes || null,
+      passing_score: quiz.passing_score || 0,
+    });
+    setShowQuizForm(true);
+  };
+
+  const handleSaveQuiz = async () => {
+    if (!quizForm.title?.trim()) {
+      toast.error("Tên bài tập không được để trống.");
+      return;
+    }
+    try {
+      const payload = {
+        ...quizForm,
+        time_limit_minutes: quizForm.time_limit_minutes ? Number(quizForm.time_limit_minutes) : null,
+        passing_score: Number(quizForm.passing_score),
+      };
+      if (editingQuizId) {
+        await updateQuiz(editingQuizId, payload);
+        toast.success("Cập nhật bài tập thành công!");
+      } else {
+        await createQuiz(quizLessonId, payload);
+        toast.success("Thêm bài tập thành công!");
+      }
+      resetQuizForm();
+      loadCurriculum();
+    } catch (error) {
+      toast.error(error.message || "Có lỗi xảy ra.");
+    }
+  };
+
+  const handleDeleteQuiz = async (quizId) => {
+    if (!window.confirm("Bạn có chắc muốn xóa bài tập này?")) return;
+    try {
+      await deleteQuiz(quizId);
+      toast.success("Xóa bài tập thành công!");
+      loadCurriculum();
+    } catch (error) {
+      toast.error(error.message || "Có lỗi xảy ra.");
+    }
+  };
+
+  // ==================== QUESTION HANDLERS ====================
+  const resetQuestionForm = () => {
+    setQuestionForm(emptyQuestion());
+    setEditingQuestionId(null);
+    setQuestionQuizId(null);
+    setShowQuestionForm(false);
+  };
+
+  const handleAddQuestion = (quizId) => {
+    resetQuestionForm();
+    setQuestionQuizId(quizId);
+    setShowQuestionForm(true);
+  };
+
+  const handleEditQuestion = (quizId, question) => {
+    setQuestionQuizId(quizId);
+    setEditingQuestionId(question.id);
+    setQuestionForm({
+      question_type: question.question_type || "MCQ",
+      prompt: question.prompt || "",
+      points: question.points || 1,
+      order: question.order || 1,
+      correct_text_answer: question.correct_text_answer || "",
+      options: question.options?.map((o) => ({ text: o.text, is_correct: o.is_correct })) || [],
+    });
+    setShowQuestionForm(true);
+  };
+
+  const handleSaveQuestion = async () => {
+    if (!questionForm.prompt?.trim()) {
+      toast.error("Nội dung câu hỏi không được để trống.");
+      return;
+    }
+    if (questionForm.question_type === "MCQ") {
+      if (questionForm.options.length < 2) {
+        toast.error("Câu hỏi trắc nghiệm cần ít nhất 2 đáp án.");
+        return;
+      }
+      if (!questionForm.options.some((o) => o.is_correct)) {
+        toast.error("Cần ít nhất 1 đáp án đúng.");
+        return;
+      }
+    }
+    if (questionForm.question_type === "FILL_BLANK" && !questionForm.correct_text_answer?.trim()) {
+      toast.error("Câu hỏi điền khuyết cần có đáp án đúng.");
+      return;
+    }
+    try {
+      const payload = {
+        ...questionForm,
+        points: Number(questionForm.points),
+        order: Number(questionForm.order),
+      };
+      if (editingQuestionId) {
+        await updateQuestion(editingQuestionId, payload);
+        toast.success("Cập nhật câu hỏi thành công!");
+      } else {
+        await createQuestion(questionQuizId, payload);
+        toast.success("Thêm câu hỏi thành công!");
+      }
+      resetQuestionForm();
+      loadCurriculum();
+    } catch (error) {
+      toast.error(error.message || "Có lỗi xảy ra.");
+    }
+  };
+
+  const handleDeleteQuestion = async (questionId) => {
+    if (!window.confirm("Bạn có chắc muốn xóa câu hỏi này?")) return;
+    try {
+      await deleteQuestion(questionId);
+      toast.success("Xóa câu hỏi thành công!");
+      loadCurriculum();
+    } catch (error) {
+      toast.error(error.message || "Có lỗi xảy ra.");
+    }
+  };
+
+  // Question option helpers
+  const addOption = () => {
+    setQuestionForm((prev) => ({
+      ...prev,
+      options: [...prev.options, emptyOption()],
+    }));
+  };
+
+  const updateOption = (index, field, value) => {
+    setQuestionForm((prev) => {
+      const opts = [...prev.options];
+      opts[index] = { ...opts[index], [field]: value };
+      return { ...prev, options: opts };
+    });
+  };
+
+  const removeOption = (index) => {
+    setQuestionForm((prev) => ({
+      ...prev,
+      options: prev.options.filter((_, i) => i !== index),
+    }));
   };
 
   // ==================== RENDER ====================
@@ -367,8 +491,7 @@ function InstructorCourseEditPage() {
           <p className="text-muted">{course?.title}</p>
         </div>
         <button className="course-btn-outline" onClick={() => navigate("/instructor/courses")}>
-          <i className="bi bi-arrow-left me-2"></i>
-          Quay lại
+          <i className="bi bi-arrow-left me-2"></i>Quay lại
         </button>
       </div>
 
@@ -383,7 +506,6 @@ function InstructorCourseEditPage() {
               type="text" name="title"
               className={`course-form-input ${errors.title ? "is-invalid" : ""}`}
               value={formData.title} onChange={handleCourseChange}
-              maxLength={50}
             />
             {errors.title && <small className="course-form-error">{errors.title}</small>}
           </div>
@@ -418,11 +540,31 @@ function InstructorCourseEditPage() {
               >
                 <option value="">-- Chọn danh mục --</option>
                 {categories.map((cat) => (
-                  <option key={cat.id} value={cat.id}>
-                    {cat.name}
-                  </option>
+                  <option key={cat.id} value={cat.id}>{cat.name}</option>
                 ))}
               </select>
+            </div>
+          </div>
+
+          <div className="course-form-group">
+            <label className="course-form-label">Tags</label>
+            <div className="d-flex flex-wrap gap-2">
+              {tags.map((tag) => (
+                <label key={tag.id} className="tag-checkbox-label">
+                  <input
+                    type="checkbox"
+                    checked={selectedTags.includes(tag.id)}
+                    onChange={() => {
+                      setSelectedTags((prev) =>
+                        prev.includes(tag.id)
+                          ? prev.filter((id) => id !== tag.id)
+                          : [...prev, tag.id]
+                      );
+                    }}
+                  />
+                  <span className="ms-1">{tag.name}</span>
+                </label>
+              ))}
             </div>
           </div>
 
@@ -461,205 +603,418 @@ function InstructorCourseEditPage() {
         </div>
       </form>
 
-      {/* ===== SECTIONS & LESSONS ===== */}
+      {/* ===== CURRICULUM BUILDER ===== */}
       <div className="course-form-card">
-        <h4 className="course-form-section-title">Nội dung khóa học</h4>
-        <p className="text-muted small mb-3">
-          Thêm các chương (section) và bài học (lesson) cho khóa học.
-        </p>
-
-        {/* Add Section Form */}
-        <div className="section-add-form">
-          <h6 className="fw-bold mb-2">
-            {editingSection ? "Chỉnh sửa chương" : "Thêm chương mới"}
-          </h6>
-          <div className="course-form-row">
-            <div className="course-form-group flex-grow-1">
-              <input
-                type="text"
-                className="course-form-input"
-                placeholder="Tên chương (VD: Chương 1: Giới thiệu)"
-                value={sectionForm.title}
-                onChange={(e) => setSectionForm((prev) => ({ ...prev, title: e.target.value }))}
-                maxLength={50}
-              />
-            </div>
-            <div className="course-form-group flex-grow-1">
-              <input
-                type="text"
-                className="course-form-input"
-                placeholder="Mô tả ngắn (không bắt buộc)"
-                value={sectionForm.description}
-                onChange={(e) => setSectionForm((prev) => ({ ...prev, description: e.target.value }))}
-              />
-            </div>
-            <div className="d-flex gap-2 align-items-end pb-2">
-              {editingSection ? (
-                <>
-                  <button className="course-btn-primary btn-sm" onClick={handleUpdateSection} disabled={sectionLoading}>
-                    {sectionLoading ? "Đang lưu..." : "Cập nhật"}
-                  </button>
-                  <button className="course-btn-outline btn-sm" onClick={handleCancelSectionEdit}>Hủy</button>
-                </>
-              ) : (
-                <button className="course-btn-primary btn-sm" onClick={handleAddSection} disabled={sectionLoading}>
-                  {sectionLoading ? "Đang thêm..." : "Thêm"}
-                </button>
-              )}
-            </div>
-          </div>
+        <div className="d-flex justify-content-between align-items-center mb-3">
+          <h4 className="course-form-section-title mb-0">Curriculum Builder</h4>
+          <button className="course-btn-primary btn-sm" onClick={handleAddChapter}>
+            <i className="bi bi-plus-lg me-1"></i>Thêm chương
+          </button>
         </div>
 
-        {/* Sections List */}
-        {sections.length === 0 ? (
+        {/* Chapter Form */}
+        {showChapterForm && (
+          <div className="chapter-form mb-3 p-3 bg-light rounded border">
+            <h6 className="fw-bold mb-2">
+              {editingChapterId ? "Chỉnh sửa chương" : "Thêm chương mới"}
+            </h6>
+            <div className="course-form-row">
+              <div className="course-form-group flex-grow-1">
+                <input
+                  type="text" className="course-form-input"
+                  placeholder="Tên chương"
+                  value={chapterForm.title}
+                  onChange={(e) => setChapterForm((p) => ({ ...p, title: e.target.value }))}
+                />
+              </div>
+              <div className="course-form-group flex-grow-1">
+                <input
+                  type="text" className="course-form-input"
+                  placeholder="Mô tả (không bắt buộc)"
+                  value={chapterForm.description}
+                  onChange={(e) => setChapterForm((p) => ({ ...p, description: e.target.value }))}
+                />
+              </div>
+            </div>
+            <div className="d-flex gap-2 mt-2">
+              <button className="course-btn-primary btn-sm" onClick={handleSaveChapter}>
+                {editingChapterId ? "Cập nhật" : "Thêm"}
+              </button>
+              <button className="course-btn-outline btn-sm" onClick={resetChapterForm}>Hủy</button>
+            </div>
+          </div>
+        )}
+
+        {/* Curriculum Tree */}
+        {curriculum.length === 0 ? (
           <div className="text-center py-4 text-muted">
             <i className="bi bi-collection" style={{ fontSize: 32 }}></i>
             <p className="mt-2">Chưa có chương nào. Thêm chương đầu tiên!</p>
           </div>
         ) : (
-          <div className="sections-list">
-            {sections.map((section, index) => (
-              <div key={section.id} className="section-item">
-                <div className="section-header" onClick={() => toggleSection(section.id)}>
-                  <div className="section-header-left">
-                    <i className={`bi ${expandedSection === section.id ? "bi-chevron-down" : "bi-chevron-right"} me-2`}></i>
-                    <span className="section-order">Chương {index + 1}</span>
-                    <span className="section-title-text">{section.title}</span>
+          <div className="curriculum-tree">
+            {curriculum.map((chapter, cIdx) => (
+              <div key={chapter.id} className="chapter-node mb-3 border rounded">
+                {/* Chapter Header */}
+                <div className="chapter-header d-flex justify-content-between align-items-center p-3 bg-light">
+                  <div>
+                    <strong>Chương {cIdx + 1}: {chapter.title}</strong>
+                    {chapter.description && (
+                      <small className="d-block text-muted">{chapter.description}</small>
+                    )}
                   </div>
-                  <div className="section-header-actions" onClick={(e) => e.stopPropagation()}>
-                    <button className="btn btn-sm btn-outline-primary me-1" onClick={() => handleEditSection(section)}>
+                  <div className="chapter-actions">
+                    <button className="btn btn-sm btn-outline-primary me-1" onClick={() => handleEditChapter(chapter)}>
                       <i className="bi bi-pencil"></i>
                     </button>
-                    <button className="btn btn-sm btn-outline-danger" onClick={() => handleDeleteSection(section.id)}>
+                    <button className="btn btn-sm btn-outline-danger" onClick={() => handleDeleteChapter(chapter.id)}>
                       <i className="bi bi-trash"></i>
                     </button>
                   </div>
                 </div>
 
-                {expandedSection === section.id && (
-                  <div className="section-body">
-                    {/* Lessons */}
-                    {(lessonsMap[section.id] || []).length === 0 ? (
-                      <div className="text-center py-3 text-muted">
-                        <small>Chưa có bài học nào.</small>
-                      </div>
-                    ) : (
-                      <div className="lessons-list">
-                        {(lessonsMap[section.id] || []).map((lesson, lIndex) => (
-                          <div key={lesson.id} className="lesson-item">
-                            <div className="lesson-info">
-                              <span className="lesson-order">Bài {lIndex + 1}</span>
-                              <span className="lesson-title">{lesson.title}</span>
-                              <span className="lesson-type-badge">
-                                {lesson.content_type === "VIDEO" ? (
-                                  <><i className="bi bi-play-circle me-1"></i>Video</>
-                                ) : (
-                                  <><i className="bi bi-file-text me-1"></i>Tài liệu</>
-                                )}
-                              </span>
-                              {lesson.is_free && (
-                                <span className="lesson-free-badge">Miễn phí</span>
-                              )}
-                              {lesson.duration_seconds > 0 && (
-                                <span className="lesson-duration">
-                                  {Math.floor(lesson.duration_seconds / 60)}:{(lesson.duration_seconds % 60).toString().padStart(2, "0")}
-                                </span>
-                              )}
-                            </div>
-                            <div className="lesson-actions">
-                              <button className="btn btn-sm btn-outline-primary me-1" onClick={() => handleEditLesson(section.id, lesson)}>
-                                <i className="bi bi-pencil"></i>
-                              </button>
-                              <button className="btn btn-sm btn-outline-danger" onClick={() => handleDeleteLesson(section.id, lesson.id)}>
-                                <i className="bi bi-trash"></i>
-                              </button>
-                            </div>
+                {/* Lessons */}
+                <div className="chapter-lessons p-3">
+                  {(chapter.lessons || []).length === 0 ? (
+                    <p className="text-muted small mb-2">Chưa có bài học nào.</p>
+                  ) : (
+                    chapter.lessons.map((lesson, lIdx) => (
+                      <div key={lesson.id} className="lesson-node mb-2 p-2 border rounded">
+                        {/* Lesson Header */}
+                        <div className="d-flex justify-content-between align-items-center">
+                          <div>
+                            <strong>Bài {lIdx + 1}: {lesson.title}</strong>
+                            <span className="badge bg-secondary ms-2">
+                              {lesson.content_type === "VIDEO" ? "Video" : "Tài liệu"}
+                            </span>
+                            {lesson.is_free && (
+                              <span className="badge bg-success ms-1">Miễn phí</span>
+                            )}
                           </div>
-                        ))}
-                      </div>
-                    )}
+                          <div className="lesson-actions">
+                            <button className="btn btn-sm btn-outline-primary me-1" onClick={() => handleEditLesson(chapter.id, lesson)}>
+                              <i className="bi bi-pencil"></i>
+                            </button>
+                            <button className="btn btn-sm btn-outline-danger me-1" onClick={() => handleDeleteLesson(lesson.id)}>
+                              <i className="bi bi-trash"></i>
+                            </button>
+                            <button className="btn btn-sm btn-outline-success" onClick={() => handleAddQuiz(lesson.id)}>
+                              <i className="bi bi-plus-circle me-1"></i>Bài tập
+                            </button>
+                          </div>
+                        </div>
 
-                    {/* Add Lesson Form */}
-                    {lessonSectionId === section.id ? (
-                      <div className="lesson-add-form mt-3 p-3 bg-light rounded">
-                        <h6 className="fw-bold mb-2">
-                          {editingLesson ? "Chỉnh sửa bài học" : "Thêm bài học mới"}
-                        </h6>
-                        <div className="course-form-group">
-                          <label className="course-form-label">Tên bài học <span className="text-danger">*</span></label>
-                          <input
-                            type="text" className="course-form-input"
-                            placeholder="VD: Bài 1: Giới thiệu về Python"
-                            value={lessonForm.title}
-                            onChange={(e) => setLessonForm((prev) => ({ ...prev, title: e.target.value }))}
-                            maxLength={50}
-                          />
-                        </div>
-                        <div className="course-form-group">
-                          <label className="course-form-label">Mô tả</label>
-                          <textarea
-                            className="course-form-textarea" rows={2}
-                            value={lessonForm.description}
-                            onChange={(e) => setLessonForm((prev) => ({ ...prev, description: e.target.value }))}
-                          />
-                        </div>
-                        <div className="course-form-row">
-                          <div className="course-form-group">
-                            <label className="course-form-label">Loại nội dung</label>
-                            <select
-                              className="course-form-input"
-                              value={lessonForm.content_type}
-                              onChange={(e) => setLessonForm((prev) => ({ ...prev, content_type: e.target.value }))}
-                            >
-                              <option value="VIDEO">Video</option>
-                              <option value="DOCUMENT">Tài liệu</option>
-                            </select>
-                          </div>
-                        </div>
-                        <div className="course-form-group">
-                          <label className="course-form-label">Tài liệu đính kèm</label>
-                          <input
-                            type="file"
-                            className="course-form-input"
-                            accept=".pdf,.doc,.docx,.ppt,.pptx,.txt"
-                            onChange={(e) => {
-                              const file = e.target.files[0];
-                              setLessonForm((prev) => ({ ...prev, material_file: file }));
-                            }}
-                          />
-                        </div>
-                        <div className="course-form-checkbox">
-                          <label>
-                            <input
-                              type="checkbox"
-                              checked={lessonForm.is_free}
-                              onChange={(e) => setLessonForm((prev) => ({ ...prev, is_free: e.target.checked }))}
-                            />
-                            <span className="ms-2">Bài học miễn phí (không cần đăng ký khóa học)</span>
-                          </label>
-                        </div>
-                        <div className="d-flex gap-2 mt-2">
-                          <button className="course-btn-primary btn-sm" onClick={handleSaveLesson} disabled={lessonLoading}>
-                            {lessonLoading ? "Đang lưu..." : (editingLesson ? "Cập nhật" : "Thêm bài học")}
-                          </button>
-                          <button className="course-btn-outline btn-sm" onClick={handleCancelLesson}>Hủy</button>
+                        {/* Quizzes */}
+                        <div className="lesson-quizzes ms-3 mt-2">
+                          {(lesson.quizzes || []).length === 0 ? (
+                            <p className="text-muted small mb-0">Chưa có bài tập nào.</p>
+                          ) : (
+                            lesson.quizzes.map((quiz, qIdx) => (
+                              <div key={quiz.id} className="quiz-node mb-2 p-2 border rounded bg-light">
+                                {/* Quiz Header */}
+                                <div className="d-flex justify-content-between align-items-center">
+                                  <div>
+                                    <strong>Bài tập {qIdx + 1}: {quiz.title}</strong>
+                                    {quiz.time_limit_minutes && (
+                                      <span className="badge bg-info ms-2">{quiz.time_limit_minutes} phút</span>
+                                    )}
+                                    <span className="badge bg-warning ms-1">Đạt: {quiz.passing_score}</span>
+                                  </div>
+                                  <div className="quiz-actions">
+                                    <button className="btn btn-sm btn-outline-primary me-1" onClick={() => handleEditQuiz(lesson.id, quiz)}>
+                                      <i className="bi bi-pencil"></i>
+                                    </button>
+                                    <button className="btn btn-sm btn-outline-danger me-1" onClick={() => handleDeleteQuiz(quiz.id)}>
+                                      <i className="bi bi-trash"></i>
+                                    </button>
+                                    <button className="btn btn-sm btn-outline-success" onClick={() => handleAddQuestion(quiz.id)}>
+                                      <i className="bi bi-plus-circle me-1"></i>Câu hỏi
+                                    </button>
+                                  </div>
+                                </div>
+
+                                {/* Questions */}
+                                <div className="quiz-questions ms-3 mt-2">
+                                  {(quiz.questions || []).length === 0 ? (
+                                    <p className="text-muted small mb-0">Chưa có câu hỏi nào.</p>
+                                  ) : (
+                                    quiz.questions.map((question, qnIdx) => (
+                                      <div key={question.id} className="question-node mb-1 p-2 border rounded">
+                                        <div className="d-flex justify-content-between align-items-center">
+                                          <div>
+                                            <small>
+                                              <strong>Câu {qnIdx + 1}:</strong> {question.prompt?.substring(0, 80)}
+                                              {question.prompt?.length > 80 ? "..." : ""}
+                                            </small>
+                                            <span className="badge bg-secondary ms-2">
+                                              {question.question_type === "MCQ" ? "Trắc nghiệm" :
+                                               question.question_type === "FILL_BLANK" ? "Điền khuyết" : "Tự luận"}
+                                            </span>
+                                            <span className="badge bg-primary ms-1">{question.points} điểm</span>
+                                          </div>
+                                          <div>
+                                            <button className="btn btn-sm btn-outline-primary me-1" onClick={() => handleEditQuestion(quiz.id, question)}>
+                                              <i className="bi bi-pencil"></i>
+                                            </button>
+                                            <button className="btn btn-sm btn-outline-danger" onClick={() => handleDeleteQuestion(question.id)}>
+                                              <i className="bi bi-trash"></i>
+                                            </button>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    ))
+                                  )}
+                                </div>
+                              </div>
+                            ))
+                          )}
                         </div>
                       </div>
-                    ) : (
-                      <button
-                        className="course-btn-outline btn-sm mt-2"
-                        onClick={() => handleAddLesson(section.id)}
-                      >
-                        <i className="bi bi-plus-lg me-1"></i>Thêm bài học
-                      </button>
-                    )}
-                  </div>
-                )}
+                    ))
+                  )}
+
+                  {/* Add Lesson Button */}
+                  <button className="course-btn-outline btn-sm mt-2" onClick={() => handleAddLesson(chapter.id)}>
+                    <i className="bi bi-plus-lg me-1"></i>Thêm bài học
+                  </button>
+                </div>
               </div>
             ))}
           </div>
         )}
       </div>
+
+      {/* ===== LESSON FORM MODAL ===== */}
+      {showLessonForm && (
+        <div className="modal-backdrop-custom">
+          <div className="modal-content-custom">
+            <h5 className="fw-bold mb-3">
+              {editingLessonId ? "Chỉnh sửa bài học" : "Thêm bài học mới"}
+            </h5>
+            <div className="course-form-group">
+              <label className="course-form-label">Tên bài học <span className="text-danger">*</span></label>
+              <input
+                type="text" className="course-form-input"
+                value={lessonForm.title}
+                onChange={(e) => setLessonForm((p) => ({ ...p, title: e.target.value }))}
+              />
+            </div>
+            <div className="course-form-group">
+              <label className="course-form-label">Mô tả</label>
+              <textarea
+                className="course-form-textarea" rows={2}
+                value={lessonForm.description}
+                onChange={(e) => setLessonForm((p) => ({ ...p, description: e.target.value }))}
+              />
+            </div>
+            <div className="course-form-row">
+              <div className="course-form-group">
+                <label className="course-form-label">Loại nội dung</label>
+                <select
+                  className="course-form-input"
+                  value={lessonForm.content_type}
+                  onChange={(e) => setLessonForm((p) => ({ ...p, content_type: e.target.value }))}
+                >
+                  <option value="VIDEO">Video</option>
+                  <option value="DOCUMENT">Tài liệu</option>
+                </select>
+              </div>
+              <div className="course-form-group">
+                <label className="course-form-label">Miễn phí</label>
+                <select
+                  className="course-form-input"
+                  value={lessonForm.is_free ? "true" : "false"}
+                  onChange={(e) => setLessonForm((p) => ({ ...p, is_free: e.target.value === "true" }))}
+                >
+                  <option value="false">Không</option>
+                  <option value="true">Có</option>
+                </select>
+              </div>
+            </div>
+            {lessonForm.content_type === "VIDEO" && (
+              <div className="course-form-group">
+                <label className="course-form-label">URL Video (YouTube)</label>
+                <input
+                  type="url" className="course-form-input"
+                  value={lessonForm.video_url}
+                  onChange={(e) => setLessonForm((p) => ({ ...p, video_url: e.target.value }))}
+                  placeholder="https://www.youtube.com/watch?v=..."
+                />
+              </div>
+            )}
+            <div className="course-form-group">
+              <label className="course-form-label">Tài liệu đính kèm</label>
+              <input
+                type="file" className="course-form-input"
+                accept=".pdf,.doc,.docx"
+                onChange={(e) => setLessonForm((p) => ({ ...p, material_file: e.target.files[0] }))}
+              />
+            </div>
+            <div className="d-flex gap-2 mt-3">
+              <button className="course-btn-primary btn-sm" onClick={handleSaveLesson}>
+                {editingLessonId ? "Cập nhật" : "Thêm"}
+              </button>
+              <button className="course-btn-outline btn-sm" onClick={resetLessonForm}>Hủy</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ===== QUIZ FORM MODAL ===== */}
+      {showQuizForm && (
+        <div className="modal-backdrop-custom">
+          <div className="modal-content-custom">
+            <h5 className="fw-bold mb-3">
+              {editingQuizId ? "Chỉnh sửa bài tập" : "Thêm bài tập mới"}
+            </h5>
+            <div className="course-form-group">
+              <label className="course-form-label">Tên bài tập <span className="text-danger">*</span></label>
+              <input
+                type="text" className="course-form-input"
+                value={quizForm.title}
+                onChange={(e) => setQuizForm((p) => ({ ...p, title: e.target.value }))}
+              />
+            </div>
+            <div className="course-form-group">
+              <label className="course-form-label">Mô tả</label>
+              <textarea
+                className="course-form-textarea" rows={2}
+                value={quizForm.description}
+                onChange={(e) => setQuizForm((p) => ({ ...p, description: e.target.value }))}
+              />
+            </div>
+            <div className="course-form-row">
+              <div className="course-form-group">
+                <label className="course-form-label">Thời gian (phút)</label>
+                <input
+                  type="number" className="course-form-input" min="0"
+                  value={quizForm.time_limit_minutes || ""}
+                  onChange={(e) => setQuizForm((p) => ({ ...p, time_limit_minutes: e.target.value }))}
+                />
+              </div>
+              <div className="course-form-group">
+                <label className="course-form-label">Điểm đạt</label>
+                <input
+                  type="number" className="course-form-input" min="0"
+                  value={quizForm.passing_score}
+                  onChange={(e) => setQuizForm((p) => ({ ...p, passing_score: e.target.value }))}
+                />
+              </div>
+            </div>
+            <div className="d-flex gap-2 mt-3">
+              <button className="course-btn-primary btn-sm" onClick={handleSaveQuiz}>
+                {editingQuizId ? "Cập nhật" : "Thêm"}
+              </button>
+              <button className="course-btn-outline btn-sm" onClick={resetQuizForm}>Hủy</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ===== QUESTION FORM MODAL ===== */}
+      {showQuestionForm && (
+        <div className="modal-backdrop-custom">
+          <div className="modal-content-custom">
+            <h5 className="fw-bold mb-3">
+              {editingQuestionId ? "Chỉnh sửa câu hỏi" : "Thêm câu hỏi mới"}
+            </h5>
+            <div className="course-form-group">
+              <label className="course-form-label">Loại câu hỏi</label>
+              <select
+                className="course-form-input"
+                value={questionForm.question_type}
+                onChange={(e) => setQuestionForm((p) => ({ ...p, question_type: e.target.value }))}
+              >
+                <option value="MCQ">Trắc nghiệm</option>
+                <option value="FILL_BLANK">Điền khuyết</option>
+                <option value="ESSAY">Tự luận</option>
+              </select>
+            </div>
+            <div className="course-form-group">
+              <label className="course-form-label">Nội dung câu hỏi <span className="text-danger">*</span></label>
+              <textarea
+                className="course-form-textarea" rows={3}
+                value={questionForm.prompt}
+                onChange={(e) => setQuestionForm((p) => ({ ...p, prompt: e.target.value }))}
+              />
+            </div>
+            <div className="course-form-row">
+              <div className="course-form-group">
+                <label className="course-form-label">Điểm</label>
+                <input
+                  type="number" className="course-form-input" min="0.5" step="0.5"
+                  value={questionForm.points}
+                  onChange={(e) => setQuestionForm((p) => ({ ...p, points: e.target.value }))}
+                />
+              </div>
+              <div className="course-form-group">
+                <label className="course-form-label">Thứ tự</label>
+                <input
+                  type="number" className="course-form-input" min="1"
+                  value={questionForm.order}
+                  onChange={(e) => setQuestionForm((p) => ({ ...p, order: e.target.value }))}
+                />
+              </div>
+            </div>
+
+            {questionForm.question_type === "FILL_BLANK" && (
+              <div className="course-form-group">
+                <label className="course-form-label">Đáp án đúng <span className="text-danger">*</span></label>
+                <input
+                  type="text" className="course-form-input"
+                  value={questionForm.correct_text_answer}
+                  onChange={(e) => setQuestionForm((p) => ({ ...p, correct_text_answer: e.target.value }))}
+                  placeholder="Nhập đáp án đúng"
+                />
+              </div>
+            )}
+
+            {questionForm.question_type === "MCQ" && (
+              <div className="mt-3">
+                <div className="d-flex justify-content-between align-items-center mb-2">
+                  <strong className="small">Đáp án</strong>
+                  <button type="button" className="course-btn-sm course-btn-outline" onClick={addOption}>
+                    <i className="bi bi-plus-lg me-1"></i>Thêm đáp án
+                  </button>
+                </div>
+                {questionForm.options.map((opt, oIdx) => (
+                  <div key={oIdx} className="option-row d-flex align-items-center gap-2 mb-2">
+                    <input
+                      type="text" className="course-form-input flex-grow-1"
+                      value={opt.text}
+                      onChange={(e) => updateOption(oIdx, "text", e.target.value)}
+                      placeholder={`Đáp án ${oIdx + 1}`}
+                    />
+                    <label className="d-flex align-items-center">
+                      <input
+                        type="radio"
+                        name={`correct-opt-${questionQuizId}-${editingQuestionId || "new"}`}
+                        checked={opt.is_correct}
+                        onChange={() => {
+                          questionForm.options.forEach((_, oi) => updateOption(oi, "is_correct", oi === oIdx));
+                        }}
+                      />
+                      <span className="ms-1 small">Đúng</span>
+                    </label>
+                    <button type="button" className="btn btn-sm btn-outline-danger" onClick={() => removeOption(oIdx)}>
+                      <i className="bi bi-x-lg"></i>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="d-flex gap-2 mt-3">
+              <button className="course-btn-primary btn-sm" onClick={handleSaveQuestion}>
+                {editingQuestionId ? "Cập nhật" : "Thêm"}
+              </button>
+              <button className="course-btn-outline btn-sm" onClick={resetQuestionForm}>Hủy</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal and tag styles are now in instructor-courses.css */}
     </div>
   );
 }
