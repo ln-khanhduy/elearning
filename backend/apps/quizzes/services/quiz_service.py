@@ -30,7 +30,7 @@ class QuizService:
         - Đặt trạng thái mặc định là IN_PROCESS
         """
         lesson = LessonRepository.get_by_id(lesson_id)
-        QuizService.check_course_owner(lesson.section.course, user)
+        QuizService.check_course_owner(lesson.chapter.course, user)
 
         validated_data["lesson"] = lesson
         validated_data.setdefault("status", "IN_PROCESS")
@@ -43,7 +43,7 @@ class QuizService:
         - Kiểm tra quyền sở hữu khóa học
         """
         quiz = QuizRepository.get_by_id(quiz_id)
-        QuizService.check_course_owner(quiz.lesson.section.course, user)
+        QuizService.check_course_owner(quiz.lesson.chapter.course, user)
 
         for key, value in validated_data.items():
             setattr(quiz, key, value)
@@ -58,5 +58,5 @@ class QuizService:
         - Kiểm tra quyền sở hữu khóa học trước khi xóa
         """
         quiz = QuizRepository.get_by_id(quiz_id)
-        QuizService.check_course_owner(quiz.lesson.section.course, user)
+        QuizService.check_course_owner(quiz.lesson.chapter.course, user)
         QuizRepository.delete(quiz_id)

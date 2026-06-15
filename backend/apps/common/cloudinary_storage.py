@@ -15,5 +15,8 @@ class SmartMediaCloudinaryStorage(MediaCloudinaryStorage):
         ext = os.path.splitext(name)[1].lower()
         if ext in self.IMAGE_EXTENSIONS:
             return RESOURCE_TYPES['IMAGE']
-        else:
+        elif ext:
             return RESOURCE_TYPES['RAW']
+        else:
+
+            return RESOURCE_TYPES['IMAGE']

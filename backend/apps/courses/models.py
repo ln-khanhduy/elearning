@@ -17,21 +17,6 @@ class Category(models.Model):
         ordering = ['name']
 
 
-class Tag(models.Model):
-    """
-    Nhãn bổ sung cho khóa học.
-    Một khóa học có thể gắn nhiều tag; một tag gắn với nhiều khóa học.
-    Dùng để tìm kiếm linh hoạt.
-    VD: #python, #beginner, #web-dev.
-    """
-    name = models.CharField(max_length=50, unique=True)  # Tên nhãn, duy nhất toàn hệ thống
-    slug = models.SlugField(unique=True)                  # Đường dẫn URL của nhãn
-
-    class Meta:
-        db_table = 'course_tag'
-        ordering = ['name']
-
-
 class Course(models.Model):
     """
     Khóa học
@@ -49,8 +34,6 @@ class Course(models.Model):
     instructor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='courses')
     # id danh mục chính - SET_NULL để không xóa khóa học khi xóa category
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True, related_name='category_courses')
-    # Các nhãn gắn kèm, bảng nối
-    tags = models.ManyToManyField(Tag, blank=True, related_name='tag_courses', db_table='course_tag_map')
     title = models.CharField(max_length=100)        # Tên khóa học
     slug = models.SlugField(unique=True)             # URL, dùng trong đường dẫn
     description = models.TextField()                 # Mô tả chi tiết khóa học

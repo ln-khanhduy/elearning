@@ -27,7 +27,7 @@ class QuestionService:
         - Nếu là FILL_BLANK: kiểm tra correct_text_answer không được để trống
         """
         quiz = QuizRepository.get_by_id(quiz_id)
-        QuestionService.check_course_owner(quiz.lesson.section.course, user)
+        QuestionService.check_course_owner(quiz.lesson.chapter.course, user)
 
         points = validated_data.get("points")
         if points is not None and points <= 0:
@@ -68,7 +68,7 @@ class QuestionService:
         - Nếu là MCQ: cập nhật lại options (xóa cũ, tạo mới)
         """
         question = QuestionRepository.get_by_id(question_id)
-        QuestionService.check_course_owner(question.quiz.lesson.section.course, user)
+        QuestionService.check_course_owner(question.quiz.lesson.chapter.course, user)
 
         options_data = validated_data.pop("options", None)
 
@@ -101,5 +101,5 @@ class QuestionService:
         - Kiểm tra quyền sở hữu khóa học trước khi xóa
         """
         question = QuestionRepository.get_by_id(question_id)
-        QuestionService.check_course_owner(question.quiz.lesson.section.course, user)
+        QuestionService.check_course_owner(question.quiz.lesson.chapter.course, user)
         QuestionRepository.delete(question_id)

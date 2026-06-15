@@ -5,10 +5,10 @@ from apps.quizzes.models import Quiz
 class QuizRepository:
     @staticmethod
     def get_by_id(quiz_id):
-        """Lấy chi tiết một quiz theo ID, kèm thông tin lesson, section, course. Trả về 404 nếu không tìm thấy."""
+        """Lấy chi tiết một quiz theo ID, kèm thông tin lesson, chapter, course. Trả về 404 nếu không tìm thấy."""
         quiz = Quiz.objects.select_related(
-            "lesson", "lesson__section", "lesson__section__course",
-            "lesson__section__course__instructor"
+            "lesson", "lesson__chapter", "lesson__chapter__course",
+            "lesson__chapter__course__instructor"
         ).filter(id=quiz_id).first()
         if not quiz:
             raise NotFound("Không tìm thấy bài tập.")

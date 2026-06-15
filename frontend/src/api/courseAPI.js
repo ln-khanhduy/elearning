@@ -53,7 +53,8 @@ export const submitCourseReviewApi = async (courseId) => {
 };
 
 export const getPendingCoursesApi = async () => {
-  return request(() => apiClient.get("/api/courses/pending/"));
+  const res = await apiClient.get("/api/courses/pending/");
+  return res.data?.data ?? [];
 };
 
 export const approveCourseApi = async (courseId) => {
@@ -102,23 +103,4 @@ export const updateCategoryApi = async (categoryId, name) => {
 
 export const deleteCategoryApi = async (categoryId) => {
   return request(() => apiClient.delete(`/api/courses/categories/${categoryId}/delete/`));
-};
-
-// ==================== TAGS ====================
-// BE: /api/courses/tags/
-
-export const getTagsApi = async () => {
-  return request(() => apiClient.get("/api/courses/tags/"));
-};
-
-export const createTagApi = async (name) => {
-  return request(() => apiClient.post("/api/courses/tags/create/", { name }));
-};
-
-export const updateTagApi = async (tagId, name) => {
-  return request(() => apiClient.patch(`/api/courses/tags/${tagId}/update/`, { name }));
-};
-
-export const deleteTagApi = async (tagId) => {
-  return request(() => apiClient.delete(`/api/courses/tags/${tagId}/delete/`));
 };

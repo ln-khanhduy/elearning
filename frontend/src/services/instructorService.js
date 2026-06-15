@@ -1,12 +1,5 @@
-import {
-  applyInstructorApi,
-  getMyInstructorApplicationApi,
-  uploadCertificateApi,
-  getCertificatesApi,
-  deleteCertificateApi,
-  previewCertificateApi,
-  previewCvApi,
-} from "../api/userAPI";
+import {applyInstructorApi,getMyInstructorApplicationApi,uploadCertificateApi,getCertificatesApi,
+  deleteCertificateApi,previewCertificateApi,previewCvApi,} from "../api/userAPI";
 
 export const submitApplication = async (formData) => {
   return await applyInstructorApi(formData);

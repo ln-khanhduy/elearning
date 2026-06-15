@@ -21,7 +21,7 @@ def validate_youtube_url(value):
 class LessonSerializer(serializers.ModelSerializer):
     """Serializer cho bài học - bao gồm URL video và tài liệu từ file upload."""
 
-    chapter = serializers.IntegerField(source="section_id", read_only=True)
+    chapter = serializers.IntegerField(source="chapter_id", read_only=True)
     video_url = serializers.SerializerMethodField()
     material_url = serializers.SerializerMethodField()
 
@@ -29,7 +29,7 @@ class LessonSerializer(serializers.ModelSerializer):
         model = Lesson
         fields = [
             "id", "chapter", "slug", "title", "description", "content_type",
-            "video_url", "material_url", "order", "duration_seconds",
+            "video_url", "material_url", "order",
             "is_free", "status", "created_at", "updated_at",
         ]
 
@@ -46,13 +46,12 @@ class LessonCreateUpdateSerializer(serializers.ModelSerializer):
     """Serializer cho tạo/cập nhật bài học - validate title, order, content_type, video_url, material_file."""
 
     title = serializers.CharField(min_length=3, max_length=50, trim_whitespace=True)
-    duration_seconds = serializers.IntegerField(required=False, min_value=0, allow_null=True)
 
     class Meta:
         model = Lesson
         fields = [
             "title", "description", "content_type", "video_url",
-            "material_file", "order", "duration_seconds", "is_free", "status",
+            "material_file", "order", "is_free", "status",
         ]
 
     def validate_title(self, value):

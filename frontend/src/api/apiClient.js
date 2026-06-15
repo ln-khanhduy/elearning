@@ -1,7 +1,7 @@
 import axios from "axios";
 import { getAccessToken, setAccessToken, clearAuthSessionData } from "../utils/authToken";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+const API_URL = import.meta.env.VITE_API_URL || "";
 
 const getCookie = (name) => {
   const cookieValue = document.cookie

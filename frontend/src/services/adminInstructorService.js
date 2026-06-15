@@ -1,9 +1,4 @@
-import {
-  getInstructorApplicationsApi,
-  reviewInstructorApplicationApi,
-  previewCertificateApi,
-  previewCvApi,
-} from "../api/userAPI";
+import {getInstructorApplicationsApi,reviewInstructorApplicationApi,previewCertificateApi,previewCvApi,} from "../api/userAPI";
 
 export const getApplications = async (statusFilter = "") => {
   return await getInstructorApplicationsApi(statusFilter);

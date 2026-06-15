@@ -40,7 +40,14 @@ class CourseService:
         - Đặt trạng thái mặc định là PENDING
         """
         validated_data["instructor"] = user
-        validated_data["slug"] = slugify(validated_data["title"])
+        base_slug = slugify(validated_data["title"])
+        slug = base_slug
+        counter = 1
+        from apps.courses.models import Course
+        while Course.objects.filter(slug=slug).exists():
+            slug = f"{base_slug}-{counter}"
+            counter += 1
+        validated_data["slug"] = slug
         validated_data["status"] = "PENDING"
         return CourseRepository.create(validated_data)
 
@@ -163,12 +170,12 @@ class CourseService:
     def hide_course(course_id, user):
         """
         Ẩn khóa học (HIDDEN).
-        - Kiểm tra quyền sở hữu (instructor) hoặc SUPERADMIN
+        - Chỉ instructor (chủ sở hữu) mới được ẩn khóa học của mình.
         - Chỉ có thể ẩn nếu khóa học đang PUBLISHED
         """
         course = CourseRepository.get_by_id(course_id)
 
-        if course.instructor_id != user.id and user.role.code != "SUPERADMIN":
+        if course.instructor_id != user.id:
             raise PermissionDenied("Bạn không có quyền ẩn khóa học này.")
 
         if course.status != "PUBLISHED":
@@ -182,12 +189,12 @@ class CourseService:
     def unhide_course(course_id, user):
         """
         Hiện lại khóa học đã ẩn (PUBLISHED).
-        - Kiểm tra quyền sở hữu (instructor) hoặc SUPERADMIN
+        - Chỉ instructor (chủ sở hữu) mới được hiện lại khóa học của mình.
         - Chỉ có thể hiện lại nếu khóa học đang HIDDEN
         """
         course = CourseRepository.get_by_id(course_id)
 
-        if course.instructor_id != user.id and user.role.code != "SUPERADMIN":
+        if course.instructor_id != user.id:
             raise PermissionDenied("Bạn không có quyền hiện lại khóa học này.")
 
         if course.status != "HIDDEN":

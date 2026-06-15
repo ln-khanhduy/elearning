@@ -9,6 +9,7 @@ import LoginPage from "../pages/auth/LoginPage";
 import VerifyotpPage from "../pages/auth/VerifyotpPage";
 import ResetPasswordPage from "../pages/auth/ResetPasswordPage";
 import HomePage from "../pages/public/HomePage";
+import CoursesPage from "../pages/public/CoursesPage";
 import AdminDashboardPage from "../pages/admin/AdminDashboardPage";
 import ProfilePage from "../pages/public/ProfilePage";
 import InstructorApplyPage from "../pages/instructor/InstructorApplyPage";
@@ -18,7 +19,7 @@ import InstructorCoursesPage from "../pages/instructor/InstructorCoursesPage";
 import InstructorCourseCreatePage from "../pages/instructor/InstructorCourseCreatePage";
 import InstructorCourseEditPage from "../pages/instructor/InstructorCourseEditPage";
 import AdminPendingCoursesPage from "../pages/admin/AdminPendingCoursesPage";
-import AdminCategoryTagPage from "../pages/admin/AdminCategoryTagPage";
+import AdminCategoryPage from "../pages/admin/AdminCategoryPage";
 import MyCoursesPage from "../pages/student/MyCoursesPage";
 import AdminReviewsPage from "../pages/admin/AdminReviewsPage";
 
@@ -29,6 +30,7 @@ function AppRouter() {
         <Route element={<PublicLayout />}>
           <Route path="/" element={<Navigate to="/home" replace />} />
           <Route path="/home" element={<HomePage />} />
+          <Route path="/courses" element={<CoursesPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
@@ -46,7 +48,7 @@ function AppRouter() {
           <Route path="/instructor/courses/create" element={<ProtectedRoute allowedRoles={["INSTRUCTOR", "SUPERADMIN"]}><InstructorCourseCreatePage /></ProtectedRoute>} />
           <Route path="/instructor/courses/:courseId/edit" element={<ProtectedRoute allowedRoles={["INSTRUCTOR", "SUPERADMIN"]}><InstructorCourseEditPage /></ProtectedRoute>} />
           <Route path="/admin/courses/pending" element={<ProtectedRoute allowedRoles={["COURSE_ADMIN", "SUPERADMIN"]}><AdminPendingCoursesPage /></ProtectedRoute>} />
-          <Route path="/admin/courses/categories" element={<ProtectedRoute allowedRoles={["COURSE_ADMIN", "SUPERADMIN"]}><AdminCategoryTagPage /></ProtectedRoute>} />
+          <Route path="/admin/courses/categories" element={<ProtectedRoute allowedRoles={["COURSE_ADMIN", "SUPERADMIN"]}><AdminCategoryPage /></ProtectedRoute>} />
           <Route path="/admin/reviews" element={<ProtectedRoute allowedRoles={["COURSE_ADMIN", "SUPERADMIN"]}><AdminReviewsPage /></ProtectedRoute>} />
 
           {/* Người dùng & Giảng viên */}

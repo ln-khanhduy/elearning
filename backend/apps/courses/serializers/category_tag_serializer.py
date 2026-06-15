@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from apps.courses.models import Category, Tag
+from apps.courses.models import Category
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -14,19 +14,4 @@ class CategorySerializer(serializers.ModelSerializer):
         """Kiểm tra tên danh mục không được để trống."""
         if not value.strip():
             raise serializers.ValidationError("Tên danh mục không được để trống.")
-        return value.strip()
-
-
-class TagSerializer(serializers.ModelSerializer):
-    """Serializer cho tag khóa học."""
-
-    class Meta:
-        model = Tag
-        fields = ["id", "name", "slug"]
-        read_only_fields = ["id", "slug"]
-
-    def validate_name(self, value):
-        """Kiểm tra tên tag không được để trống."""
-        if not value.strip():
-            raise serializers.ValidationError("Tên tag không được để trống.")
         return value.strip()

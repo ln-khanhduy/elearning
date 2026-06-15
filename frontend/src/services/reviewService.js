@@ -1,10 +1,4 @@
-import {
-  getReviewsApi,
-  getCourseReviewsApi,
-  getReviewDetailApi,
-  createReviewApi,
-  updateReviewStatusApi,
-} from "../api/reviewAPI";
+import {getReviewsApi,getCourseReviewsApi,getReviewDetailApi,createReviewApi,updateReviewStatusApi,} from "../api/reviewAPI";
 
 export const getReviews = async () => {
   return await getReviewsApi();

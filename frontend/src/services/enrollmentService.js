@@ -1,8 +1,4 @@
-import {
-  getMyCoursesApi,
-  getEnrollmentDetailApi,
-  checkEnrolledApi,
-} from "../api/enrollmentAPI";
+import {getMyCoursesApi,getEnrollmentDetailApi,checkEnrolledApi,} from "../api/enrollmentAPI";
 
 export const getMyCourses = async () => {
   return await getMyCoursesApi();

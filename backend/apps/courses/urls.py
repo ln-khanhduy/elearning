@@ -6,7 +6,6 @@ from apps.courses.views import (
     CourseApproveAPIView, CourseRejectAPIView, CoursePublishAPIView,
     CourseHideAPIView, CourseUnhideAPIView, CourseCurriculumAPIView,
     CategoryListAPIView, CategoryCreateAPIView, CategoryUpdateAPIView, CategoryDeleteAPIView,
-    TagListAPIView, TagCreateAPIView, TagUpdateAPIView, TagDeleteAPIView,
 )
 
 
@@ -30,10 +29,4 @@ urlpatterns = [
     path("categories/create/", CategoryCreateAPIView.as_view(), name="category-create"),
     path("categories/<int:category_id>/update/", CategoryUpdateAPIView.as_view(), name="category-update"),
     path("categories/<int:category_id>/delete/", CategoryDeleteAPIView.as_view(), name="category-delete"),
-
-    # Tag
-    path("tags/", TagListAPIView.as_view(), name="tag-list"),
-    path("tags/create/", TagCreateAPIView.as_view(), name="tag-create"),
-    path("tags/<int:tag_id>/update/", TagUpdateAPIView.as_view(), name="tag-update"),
-    path("tags/<int:tag_id>/delete/", TagDeleteAPIView.as_view(), name="tag-delete"),
 ]

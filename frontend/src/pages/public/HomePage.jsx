@@ -15,8 +15,8 @@ function HomePage() {
           getCourses({ status: "PUBLISHED" }),
           getCategories(),
         ]);
-        setCourses(coursesData || []);
-        setCategories(categoriesData || []);
+        setCourses(coursesData?.data?.items || coursesData || []);
+        setCategories(categoriesData?.data || categoriesData || []);
       } catch (error) {
         console.error("Lỗi tải dữ liệu homepage:", error);
       } finally {

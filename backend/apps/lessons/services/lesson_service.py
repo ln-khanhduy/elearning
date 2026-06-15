@@ -46,7 +46,7 @@ class LessonService:
         if LessonRepository.exists_slug(chapter_id, slug):
             raise ValidationError({"title": "Tên bài học đã tồn tại trong chương này."})
 
-        data["section_id"] = chapter_id
+        data["chapter_id"] = chapter_id
         data["slug"] = slug
         return LessonRepository.create(data)
 
@@ -59,15 +59,15 @@ class LessonService:
         - Kiểm tra title mới không bị trùng slug (nếu có thay đổi)
         """
         lesson = LessonRepository.get_by_id(lesson_id)
-        LessonService.check_course_owner(lesson.section.course, user)
+        LessonService.check_course_owner(lesson.chapter.course, user)
 
         new_order = data.get("order")
-        if new_order is not None and new_order != lesson.order and LessonRepository.exists_order(lesson.section_id, new_order):
+        if new_order is not None and new_order != lesson.order and LessonRepository.exists_order(lesson.chapter_id, new_order):
             raise ValidationError({"order": "Thứ tự bài học đã tồn tại trong chương này."})
 
         if "title" in data:
             slug = slugify(data["title"])
-            if slug != lesson.slug and LessonRepository.exists_slug(lesson.section_id, slug):
+            if slug != lesson.slug and LessonRepository.exists_slug(lesson.chapter_id, slug):
                 raise ValidationError({"title": "Tên bài học đã tồn tại trong chương này."})
             lesson.slug = slug
 
@@ -84,7 +84,7 @@ class LessonService:
         - Kiểm tra quyền sở hữu khóa học trước khi xóa
         """
         lesson = LessonRepository.get_by_id(lesson_id)
-        LessonService.check_course_owner(lesson.section.course, user)
+        LessonService.check_course_owner(lesson.chapter.course, user)
         LessonRepository.delete(lesson_id)
 
     @staticmethod

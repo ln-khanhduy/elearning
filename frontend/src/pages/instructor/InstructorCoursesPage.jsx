@@ -30,7 +30,7 @@ function InstructorCoursesPage() {
     try {
       setLoading(true);
       const data = await getCourses({});
-      const allCourses = data || [];
+      const allCourses = data?.data?.items || data || [];
       // Lọc khóa học của instructor hiện tại
       const myCourses = allCourses.filter(
         (c) => c.instructor_name === user?.get_full_name || c.instructor === user?.id

@@ -1,14 +1,13 @@
 from rest_framework import serializers
 from apps.courses.models import Course
-from apps.courses.serializers.category_tag_serializer import CategorySerializer, TagSerializer
+from apps.courses.serializers.category_tag_serializer import CategorySerializer
 
 
 class CourseListSerializer(serializers.ModelSerializer):
-    """Serializer cho danh sách khóa học - bao gồm tên instructor, category, tags và URL thumbnail."""
+    """Serializer cho danh sách khóa học - bao gồm tên instructor, category và URL thumbnail."""
 
     instructor_name = serializers.CharField(source="instructor.get_full_name", read_only=True)
     category = CategorySerializer(read_only=True)
-    tags = TagSerializer(many=True, read_only=True)
     thumbnail_url = serializers.SerializerMethodField()
     chapter_count = serializers.SerializerMethodField()
     lesson_count = serializers.SerializerMethodField()
@@ -17,7 +16,7 @@ class CourseListSerializer(serializers.ModelSerializer):
         model = Course
         fields = [
             "id", "title", "slug", "description", "thumbnail_url", "price",
-            "status", "instructor_name", "category", "tags",
+            "status", "instructor_name", "category",
             "chapter_count", "lesson_count", "created_at",
         ]
 
@@ -37,11 +36,10 @@ class CourseListSerializer(serializers.ModelSerializer):
 
 
 class CourseDetailSerializer(serializers.ModelSerializer):
-    """Serializer cho chi tiết khóa học - bao gồm tên instructor, category, tags, URL thumbnail và thông tin duyệt."""
+    """Serializer cho chi tiết khóa học - bao gồm tên instructor, category, URL thumbnail và thông tin duyệt."""
 
     instructor_name = serializers.CharField(source="instructor.get_full_name", read_only=True)
     category = CategorySerializer(read_only=True)
-    tags = TagSerializer(many=True, read_only=True)
     thumbnail_url = serializers.SerializerMethodField()
     chapter_count = serializers.SerializerMethodField()
     lesson_count = serializers.SerializerMethodField()
@@ -50,7 +48,7 @@ class CourseDetailSerializer(serializers.ModelSerializer):
         model = Course
         fields = [
             "id", "title", "slug", "description", "thumbnail_url", "preview_video_url",
-            "price", "status", "approval_note", "instructor_name", "category", "tags",
+            "price", "status", "approval_note", "instructor_name", "category",
             "chapter_count", "lesson_count", "created_at", "updated_at",
         ]
 
@@ -70,18 +68,14 @@ class CourseDetailSerializer(serializers.ModelSerializer):
 
 
 class CourseCreateUpdateSerializer(serializers.ModelSerializer):
-    """Serializer cho tạo/cập nhật khóa học - validate title, thumbnail, price, category và tags."""
+    """Serializer cho tạo/cập nhật khóa học - validate title, thumbnail, price, category."""
 
     title = serializers.CharField(min_length=5, max_length=50, trim_whitespace=True)
-    tags = serializers.ListField(
-        child=serializers.IntegerField(),
-        required=False,
-        write_only=True,
-    )
+    thumbnail = serializers.FileField(allow_null=True, required=False)
 
     class Meta:
         model = Course
-        fields = ["title", "description", "thumbnail", "preview_video_url", "price", "category", "tags"]
+        fields = ["title", "description", "thumbnail", "preview_video_url", "price", "category"]
 
     def validate_title(self, value):
         """Kiểm tra tiêu đề khóa học không được để trống hoặc chỉ chứa khoảng trắng."""

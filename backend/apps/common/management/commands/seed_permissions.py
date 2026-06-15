@@ -36,13 +36,6 @@ PERMISSIONS = {
     "course.category.delete": "Xóa danh mục",
     "course.category.view": "Xem danh mục",
 
-    # Tag
-    "course.tag.create": "Tạo tag",
-    "course.tag.update": "Sửa tag",
-    "course.tag.delete": "Xóa tag",
-    "course.tag.view": "Xem tag",
-
-
     # Comment
     "course.comment.create": "Bình luận",
     "course.comment.reply": "Phản hồi bình luận",
@@ -107,11 +100,6 @@ ROLE_PERMISSIONS = {
         "course.category.delete",
         "course.category.view",
 
-        "course.tag.create",
-        "course.tag.update",
-        "course.tag.delete",
-        "course.tag.view",
-
         "course.comment.hide",
         "course.comment.delete",
     ],
@@ -145,6 +133,7 @@ ROLE_PERMISSIONS = {
         "course.course.create",
         "course.course.update",
         "course.course.delete",
+        "course.course.hide",
         "instructor.course.discount_self",
 
         "course.lesson.create",

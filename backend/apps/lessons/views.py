@@ -11,6 +11,8 @@ from apps.lessons.services.chapter_service import ChapterService
 
 from apps.lessons.serializers.lesson_serializer import LessonSerializer, LessonCreateUpdateSerializer, LessonReorderSerializer
 from apps.lessons.services.lesson_service import LessonService
+from apps.lessons.repositories.lesson_repository import LessonRepository
+
 
 
 def success_response(data=None, message="Success", http_status=status.HTTP_200_OK):
@@ -95,7 +97,6 @@ class ChapterDeleteAPIView(APIView):
     required_permission = "course.lesson.delete"
 
     def delete(self, request, chapter_id):
-        chapter = ChapterService.get_chapters_by_course(0)  # just to get title
         from apps.lessons.repositories.chapter_repository import ChapterRepository
         chapter_obj = ChapterRepository.get_by_id(chapter_id)
         chapter_title = chapter_obj.title
@@ -210,7 +211,6 @@ class LessonDeleteAPIView(APIView):
     required_permission = "course.lesson.delete"
 
     def delete(self, request, lesson_id):
-        from apps.lessons.repositories.lesson_repository import LessonRepository
         lesson = LessonRepository.get_by_id(lesson_id)
         lesson_title = lesson.title
         lesson_id_str = str(lesson.id)

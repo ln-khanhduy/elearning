@@ -11,8 +11,8 @@ from apps.courses.serializers.course_serializer import (
     CourseListSerializer, CourseDetailSerializer,
     CourseCreateUpdateSerializer, CourseRejectSerializer,
 )
-from apps.courses.serializers.category_tag_serializer import CategorySerializer, TagSerializer
-from apps.courses.models import Category, Tag
+from apps.courses.serializers.category_tag_serializer import CategorySerializer
+from apps.courses.models import Category
 
 from apps.lessons.repositories.chapter_repository import ChapterRepository
 from apps.lessons.repositories.lesson_repository import LessonRepository
@@ -101,14 +101,7 @@ class CourseCreateAPIView(APIView):
         serializer = CourseCreateUpdateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        validated_data = serializer.validated_data
-        tags_ids = validated_data.pop("tags", [])
-        course = CourseService.create_course(request.user, validated_data)
-
-        # Gán tags
-        if tags_ids:
-            tags = Tag.objects.filter(id__in=tags_ids)
-            course.tags.set(tags)
+        course = CourseService.create_course(request.user, serializer.validated_data)
 
         AdminLogService.log(
             admin=request.user,
@@ -136,14 +129,7 @@ class CourseUpdateAPIView(APIView):
         serializer = CourseCreateUpdateSerializer(data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
 
-        validated_data = serializer.validated_data
-        tags_ids = validated_data.pop("tags", None)
-        course = CourseService.update_course(course_id, request.user, validated_data)
-
-        # Cập nhật tags nếu có
-        if tags_ids is not None:
-            tags = Tag.objects.filter(id__in=tags_ids)
-            course.tags.set(tags)
+        course = CourseService.update_course(course_id, request.user, serializer.validated_data)
 
         AdminLogService.log(
             admin=request.user,
@@ -274,9 +260,9 @@ class CoursePublishAPIView(APIView):
 class CourseHideAPIView(APIView):
     """
     PATCH /api/courses/{course_id}/hide/ - Ẩn khóa học.
+    - Instructor (chủ sở hữu) và SUPERADMIN được ẩn (kiểm tra trong service).
     """
-    permission_classes = [IsAuthenticated, HasRequiredPermission]
-    required_permission = "course.course.hide"
+    permission_classes = [IsAuthenticated]
 
     def patch(self, request, course_id):
         course = CourseService.hide_course(course_id, request.user)
@@ -294,9 +280,9 @@ class CourseHideAPIView(APIView):
 class CourseUnhideAPIView(APIView):
     """
     PATCH /api/courses/{course_id}/unhide/ - Hiện lại khóa học đã ẩn.
+    - Instructor (chủ sở hữu) và SUPERADMIN được hiện lại (kiểm tra trong service).
     """
-    permission_classes = [IsAuthenticated, HasRequiredPermission]
-    required_permission = "course.course.hide"
+    permission_classes = [IsAuthenticated]
 
     def patch(self, request, course_id):
         course = CourseService.unhide_course(course_id, request.user)
@@ -419,70 +405,3 @@ class CategoryDeleteAPIView(APIView):
         category.delete()
         return success_response(None, "Xóa danh mục thành công.")
 
-
-# ==================== TAG ====================
-
-class TagListAPIView(APIView):
-    """
-    GET /api/courses/tags/ - Lấy danh sách tag.
-    """
-    permission_classes = [AllowAny]
-
-    def get(self, request):
-        tags = Tag.objects.all().order_by("name")
-        serializer = TagSerializer(tags, many=True)
-        return success_response(serializer.data)
-
-
-class TagCreateAPIView(APIView):
-    """
-    POST /api/courses/tags/create/ - Tạo tag mới.
-    """
-    permission_classes = [IsAuthenticated, HasRequiredPermission]
-    required_permission = "course.tag.create"
-
-    def post(self, request):
-        serializer = TagSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        from django.utils.text import slugify
-        tag = Tag.objects.create(
-            name=serializer.validated_data["name"],
-            slug=slugify(serializer.validated_data["name"])
-        )
-        return success_response(TagSerializer(tag).data, "Tạo tag thành công.", status.HTTP_201_CREATED)
-
-
-class TagUpdateAPIView(APIView):
-    """
-    PATCH /api/courses/tags/{tag_id}/update/ - Cập nhật tag.
-    """
-    permission_classes = [IsAuthenticated, HasRequiredPermission]
-    required_permission = "course.tag.update"
-
-    def patch(self, request, tag_id):
-        tag = Tag.objects.filter(id=tag_id).first()
-        if not tag:
-            return error_response("Không tìm thấy tag.", http_status=status.HTTP_404_NOT_FOUND)
-        serializer = TagSerializer(data=request.data, partial=True)
-        serializer.is_valid(raise_exception=True)
-        if "name" in serializer.validated_data:
-            from django.utils.text import slugify
-            tag.name = serializer.validated_data["name"]
-            tag.slug = slugify(serializer.validated_data["name"])
-        tag.save()
-        return success_response(TagSerializer(tag).data, "Cập nhật tag thành công.")
-
-
-class TagDeleteAPIView(APIView):
-    """
-    DELETE /api/courses/tags/{tag_id}/delete/ - Xóa tag.
-    """
-    permission_classes = [IsAuthenticated, HasRequiredPermission]
-    required_permission = "course.tag.delete"
-
-    def delete(self, request, tag_id):
-        tag = Tag.objects.filter(id=tag_id).first()
-        if not tag:
-            return error_response("Không tìm thấy tag.", http_status=status.HTTP_404_NOT_FOUND)
-        tag.delete()
-        return success_response(None, "Xóa tag thành công.")
