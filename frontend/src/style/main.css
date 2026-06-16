@@ -49,7 +49,9 @@
   --muted: #69707a;
   --card: #ffffff;
   --input-bg: #fbfdfe;
-
+  --success: #16a34a;
+  --danger: #dc2626;
+  --warning: #f59e0b;
   /* Spacing & sizing variables - COMPACT */
   --header-height: 60px;
   --sidebar-width: 220px;

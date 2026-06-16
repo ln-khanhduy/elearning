@@ -242,7 +242,7 @@
 
 /* ===== FEATURED COURSES ===== */
 .featured-section {
-  background: #f8f9fa;
+  background:  var(--primary, #0f3d75);
 }
 
 .course-grid {
@@ -255,7 +255,6 @@
 }
 
 .course-card {
-  background: #fff;
   border-radius: 10px;
   overflow: hidden;
   border: 1px solid #e9ecef;
@@ -263,7 +262,6 @@
 }
 
 .course-card:hover {
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
   transform: translateY(-2px);
 }
 

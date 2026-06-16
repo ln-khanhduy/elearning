@@ -4,6 +4,7 @@ import { toast } from "react-toastify";
 import { useUser } from "../../../context/UserContext";
 import { useCourseDetail } from "../../../hooks/course-detail/useCourseDetail";
 import { useCourseProgress } from "../../../hooks/course-detail/useCourseProgress";
+import { enrollFreeCourseApi } from "../../../api/paymentAPI";
 import CourseHero from "../../../components/course-detail/CourseHero";
 import CourseProgressCard from "../../../components/course-detail/CourseProgressCard";
 import CourseContentList from "../../../components/course-detail/CourseContentList";
@@ -11,6 +12,7 @@ import InstructorCard from "../../../components/course-detail/InstructorCard";
 import CourseTabs, { TabPanel } from "../../../components/course-detail/CourseTabs";
 import "../../../style/course-detail/course-theme.css";
 import "../../../style/course-detail/course-detail-page.css";
+
 
 /**
  * CourseDetailPage - Trang chi tiết khóa học
@@ -48,9 +50,30 @@ function CourseDetailPage() {
       navigate("/login", { state: { from: `/courses/${courseId}` } });
       return;
     }
-    // TODO: Implement enrollment flow (redirect to payment or direct enroll)
-    toast.success("Tính năng đăng ký đang được phát triển.");
-  }, [isAuthenticated, navigate, courseId]);
+
+    if (!course) return;
+
+    // Khóa học miễn phí -> gọi API enroll-free
+    if (!course.price || Number(course.price) <= 0) {
+      try {
+        const result = await enrollFreeCourseApi(courseId);
+        toast.success(result?.message || "Đăng ký khóa học thành công!");
+        const redirectUrl = result?.data?.redirect_url;
+        if (redirectUrl) {
+          navigate(redirectUrl, { replace: true });
+        } else {
+          navigate(`/courses/${courseId}/learn`, { replace: true });
+        }
+      } catch (err) {
+        toast.error(err.message || "Đăng ký thất bại. Vui lòng thử lại.");
+      }
+      return;
+    }
+
+    // Khóa học có phí -> chuyển đến trang thanh toán
+    navigate(`/courses/${courseId}/checkout`);
+  }, [isAuthenticated, navigate, courseId, course]);
+
 
   const handleStartLearning = useCallback(() => {
     if (!isEnrolled) return;

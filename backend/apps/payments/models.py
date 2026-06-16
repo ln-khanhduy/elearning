@@ -25,8 +25,9 @@ class PaymentTransaction(models.Model):
     student = models.ForeignKey('users.User', on_delete=models.CASCADE, related_name='payment_transactions')
     # Khoa hoc duoc mua
     course = models.ForeignKey('courses.Course', on_delete=models.CASCADE, related_name='payment_transactions')
-    # Ma GD cua cong (doi soat) 
-    provider_transaction_id = models.CharField(max_length=100, unique=True) 
+    # Ma GD cua cong (doi soat) - nullable vì PENDING transaction chưa có provider ID
+    provider_transaction_id = models.CharField(max_length=100, unique=True, null=True, blank=True) 
+
     # Ten cong tt: 'vnpay', 'stripe', 'momo'
     provider = models.CharField(max_length=20, choices=PROVIDER_CHOICES) 
     # So tien hoc vien phai tra thuc te

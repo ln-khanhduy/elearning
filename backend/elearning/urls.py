@@ -29,7 +29,11 @@ urlpatterns = [
     path("api/enrollments/", include("apps.enrollments.urls")),
     path("api/learning/", include("apps.enrollments.urls")),
 
+    # Payments
+    path("api/payments/", include("apps.payments.urls")),
+
     path("api/system/", include("apps.system.urls")),
+
 ]
 
 

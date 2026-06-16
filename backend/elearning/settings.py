@@ -205,6 +205,7 @@ DEFAULT_FILE_STORAGE = 'apps.common.cloudinary_storage.SmartMediaCloudinaryStora
 
 # CORS and CSRF configuration
 FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:3000')
+BACKEND_URL = os.getenv('BACKEND_URL', 'http://localhost:8000')
 CORS_ALLOWED_ORIGINS = [
     FRONTEND_URL,
     'http://localhost:5173',
@@ -217,3 +218,18 @@ CSRF_TRUSTED_ORIGINS = [
     'http://localhost:5173',
     'http://127.0.0.1:5173',
 ]
+
+# ==================== PAYMENT CONFIGURATION ====================
+STRIPE_SECRET_KEY = os.getenv('STRIPE_SECRET_KEY')
+STRIPE_PUBLISHABLE_KEY = os.getenv('STRIPE_PUBLISHABLE_KEY')
+STRIPE_WEBHOOK_SECRET = os.getenv('STRIPE_WEBHOOK_SECRET')
+
+MOMO_PARTNER_CODE = os.getenv('MOMO_PARTNER_CODE')
+MOMO_ACCESS_KEY = os.getenv('MOMO_ACCESS_KEY')
+MOMO_SECRET_KEY = os.getenv('MOMO_SECRET_KEY')
+MOMO_ENDPOINT = os.getenv('MOMO_ENDPOINT')
+
+PAYMENT_HOLD_DAYS = int(os.getenv('PAYMENT_HOLD_DAYS', '7'))
+PLATFORM_FEE_PERCENT = int(os.getenv('PLATFORM_FEE_PERCENT', '30'))
+
+
