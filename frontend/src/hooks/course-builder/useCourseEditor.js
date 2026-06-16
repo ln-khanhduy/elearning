@@ -141,5 +141,6 @@ export default function useCourseEditor(courseId) {
     handleCourseChange,
     handleThumbnailChange,
     handleSaveCourse,
+    refetch: loadCourse,
   };
 }

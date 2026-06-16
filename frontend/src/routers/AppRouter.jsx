@@ -10,6 +10,7 @@ import VerifyotpPage from "../pages/auth/VerifyotpPage";
 import ResetPasswordPage from "../pages/auth/ResetPasswordPage";
 import HomePage from "../pages/public/HomePage";
 import CoursesPage from "../pages/public/CoursesPage";
+import CourseDetailPage from "../pages/public/course-detail/CourseDetailPage";
 import AdminDashboardPage from "../pages/admin/AdminDashboardPage";
 import ProfilePage from "../pages/public/ProfilePage";
 import InstructorApplyPage from "../pages/instructor/InstructorApplyPage";
@@ -21,6 +22,8 @@ import InstructorCourseEditPage from "../pages/instructor/InstructorCourseEditPa
 import AdminPendingCoursesPage from "../pages/admin/AdminPendingCoursesPage";
 import AdminCategoryPage from "../pages/admin/AdminCategoryPage";
 import MyCoursesPage from "../pages/student/MyCoursesPage";
+import LearningPage from "../pages/learning/LearningPage";
+
 import AdminReviewsPage from "../pages/admin/AdminReviewsPage";
 
 function AppRouter() {
@@ -31,6 +34,7 @@ function AppRouter() {
           <Route path="/" element={<Navigate to="/home" replace />} />
           <Route path="/home" element={<HomePage />} />
           <Route path="/courses" element={<CoursesPage />} />
+          <Route path="/courses/:courseId" element={<CourseDetailPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
@@ -44,6 +48,10 @@ function AppRouter() {
 
           {/* Học tập */}
           <Route path="/my-courses" element={<ProtectedRoute allowedRoles={["STUDENT", "INSTRUCTOR"]}><MyCoursesPage /></ProtectedRoute>} />
+          <Route path="/courses/:courseId/learn" element={<ProtectedRoute allowedRoles={["STUDENT", "INSTRUCTOR"]}><LearningPage /></ProtectedRoute>} />
+          <Route path="/courses/:courseId/learn/:lessonId" element={<ProtectedRoute allowedRoles={["STUDENT", "INSTRUCTOR"]}><LearningPage /></ProtectedRoute>} />
+
+
           <Route path="/instructor/courses" element={<ProtectedRoute allowedRoles={["INSTRUCTOR", "SUPERADMIN"]}><InstructorCoursesPage /></ProtectedRoute>} />
           <Route path="/instructor/courses/create" element={<ProtectedRoute allowedRoles={["INSTRUCTOR", "SUPERADMIN"]}><InstructorCourseCreatePage /></ProtectedRoute>} />
           <Route path="/instructor/courses/:courseId/edit" element={<ProtectedRoute allowedRoles={["INSTRUCTOR", "SUPERADMIN"]}><InstructorCourseEditPage /></ProtectedRoute>} />

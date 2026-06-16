@@ -21,13 +21,13 @@ export default function QuizItem({
           <span className="badge bg-warning ms-1">Đạt: {quiz.passing_score}</span>
         </div>
         <div className="quiz-actions">
-          <button className="btn btn-sm btn-outline-primary me-1" onClick={() => onEdit(quiz)}>
+          <button type="button" className="btn btn-sm btn-outline-primary me-1" onClick={() => onEdit(quiz)}>
             <i className="bi bi-pencil"></i>
           </button>
-          <button className="btn btn-sm btn-outline-danger me-1" onClick={() => onDelete(quiz.id)}>
+          <button type="button" className="btn btn-sm btn-outline-danger me-1" onClick={() => onDelete(quiz.id)}>
             <i className="bi bi-trash"></i>
           </button>
-          <button className="btn btn-sm btn-outline-success" onClick={() => onAddQuestion(quiz.id)}>
+          <button type="button" className="btn btn-sm btn-outline-success" onClick={() => onAddQuestion(quiz.id)}>
             <i className="bi bi-plus-circle me-1"></i>Câu hỏi
           </button>
         </div>

@@ -17,11 +17,13 @@ from apps.courses.models import Category
 from apps.lessons.repositories.chapter_repository import ChapterRepository
 from apps.lessons.repositories.lesson_repository import LessonRepository
 from apps.lessons.serializers.chapter_serializer import ChapterSerializer
-from apps.lessons.serializers.lesson_serializer import LessonSerializer
+from apps.lessons.serializers.lesson_serializer import LessonSerializer, LessonPreviewSerializer
 from apps.quizzes.repositories.quiz_repository import QuizRepository
 from apps.quizzes.repositories.question_repository import QuestionRepository
-from apps.quizzes.serializers.quiz_serializer import QuizSerializer
-from apps.quizzes.serializers.question_serializer import QuestionSerializer
+from apps.quizzes.serializers.quiz_serializer import QuizSerializer, QuizPreviewSerializer
+from apps.quizzes.serializers.question_serializer import QuestionSerializer, QuestionPreviewSerializer
+
+
 
 
 def success_response(data=None, message="Success", http_status=status.HTTP_200_OK):
@@ -299,10 +301,12 @@ class CourseUnhideAPIView(APIView):
 
 class CourseCurriculumAPIView(APIView):
     """
-    GET /api/courses/{course_id}/curriculum/ - Lấy toàn bộ cây curriculum của khóa học.
-    Trả về: Course -> Chapters -> Lessons -> Quizzes -> Questions
+    GET /api/courses/{course_id}/curriculum/ - Lấy curriculum preview cho public.
+    CHỈ trả về thông tin preview: chapter title, lesson title, content_type, is_free.
+    KHÔNG trả về video_url, material_url, quiz questions/options/answers.
+    Quiz chỉ trả về: id, title, question_count.
     """
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
     def get(self, request, course_id):
         course = CourseService.get_course_detail(course_id)
@@ -316,6 +320,52 @@ class CourseCurriculumAPIView(APIView):
             lessons = LessonRepository.get_by_chapter(chapter.id)
             lessons_data = []
             for lesson in lessons:
+                # Dùng LessonPreviewSerializer - KHÔNG expose video_url, material_url
+                lesson_data = LessonPreviewSerializer(lesson).data
+
+                # Public: chỉ trả quiz title + question_count, KHÔNG trả questions
+                quizzes = QuizRepository.get_by_lesson(lesson.id)
+                quizzes_data = QuizPreviewSerializer(quizzes, many=True).data
+                lesson_data["quizzes"] = quizzes_data
+                lessons_data.append(lesson_data)
+
+            chapter_data["lessons"] = lessons_data
+            chapters_data.append(chapter_data)
+
+        course_data["chapters"] = chapters_data
+        return success_response(course_data)
+
+
+class CourseCurriculumPreviewAPIView(APIView):
+    """
+    GET /api/courses/{course_id}/curriculum/preview/ - Lấy curriculum đầy đủ cho instructor/admin.
+    Chỉ instructor (chủ sở hữu) và admin mới được preview nội dung đầy đủ.
+    Trả về: video_url, material_url, quiz questions/options (KHÔNG có is_correct).
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, course_id):
+        course = CourseService.get_course_detail(course_id)
+        user = request.user
+        role_code = user.role.code if user.role else None
+
+        # Kiểm tra quyền: instructor chủ sở hữu hoặc admin
+        is_owner = course.instructor == user
+        is_admin = role_code in ("SUPERADMIN", "ADMIN")
+        if not is_owner and not is_admin:
+            return error_response("Bạn không có quyền xem nội dung khóa học này.", http_status=status.HTTP_403_FORBIDDEN)
+
+        course_data = CourseDetailSerializer(course).data
+
+        chapters = ChapterRepository.get_by_course(course_id)
+        chapters_data = []
+        for chapter in chapters:
+            chapter_data = ChapterSerializer(chapter).data
+
+            lessons = LessonRepository.get_by_chapter(chapter.id)
+            lessons_data = []
+            for lesson in lessons:
+                # Dùng LessonSerializer đầy đủ - có video_url, material_url
                 lesson_data = LessonSerializer(lesson).data
 
                 quizzes = QuizRepository.get_by_lesson(lesson.id)
@@ -324,7 +374,8 @@ class CourseCurriculumAPIView(APIView):
                     quiz_data = QuizSerializer(quiz).data
 
                     questions = QuestionRepository.get_by_quiz(quiz.id)
-                    questions_data = QuestionSerializer(questions, many=True).data
+                    # Dùng QuestionPreviewSerializer - KHÔNG expose is_correct, correct_text_answer
+                    questions_data = QuestionPreviewSerializer(questions, many=True).data
                     quiz_data["questions"] = questions_data
                     quizzes_data.append(quiz_data)
 
@@ -339,6 +390,7 @@ class CourseCurriculumAPIView(APIView):
 
 
 # ==================== CATEGORY ====================
+
 
 class CategoryListAPIView(APIView):
     """

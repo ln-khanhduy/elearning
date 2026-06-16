@@ -842,11 +842,16 @@
 /* ===== COURSE FORM ACTIONS ===== */
 .course-form-actions {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
+  align-items: center;
   gap: 12px;
   padding: 16px 0;
   border-top: 1px solid #e9ecef;
   margin-top: 24px;
+}
+
+.course-form-actions .ms-auto {
+  margin-left: auto;
 }
 
 /* ===== TAG CHECKBOX ===== */
@@ -1005,4 +1010,46 @@
     width: 100%;
     justify-content: center;
   }
+}
+
+/* ===== COURSE FORM NOTE ===== */
+.course-form-note {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  background: #e8f4fd;
+  border: 1px solid #b6d4fe;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #0c5460;
+}
+
+.course-form-note i {
+  font-size: 16px;
+  color: #0d6efd;
+}
+
+/* ===== COURSE BTN WARNING ===== */
+.course-btn-warning {
+  display: inline-flex;
+  align-items: center;
+  padding: 10px 24px;
+  background: #ffc107;
+  color: #212529;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  white-space: nowrap;
+}
+
+.course-btn-warning:hover {
+  background: #e0a800;
+}
+
+.course-btn-warning:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }

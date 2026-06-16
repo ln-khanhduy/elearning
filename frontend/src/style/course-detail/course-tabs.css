@@ -1,0 +1,90 @@
+/* ===== COURSE TABS ===== */
+.course-tabs {
+  width: 100%;
+}
+
+.course-tabs-nav {
+  display: flex;
+  border-bottom: 2px solid var(--course-border);
+  margin-bottom: 20px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.course-tabs-nav::-webkit-scrollbar {
+  display: none;
+}
+
+.tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 20px;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--course-text-muted);
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.tab-btn:hover {
+  color: var(--course-text);
+  background: #f8f9fa;
+}
+
+.tab-btn.tab-active {
+  color: var(--course-primary);
+  border-bottom-color: var(--course-primary);
+}
+
+.tab-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  background: var(--course-primary-light);
+  color: var(--course-primary);
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 10px;
+}
+
+.tab-active .tab-badge {
+  background: var(--course-primary);
+  color: #fff;
+}
+
+.tab-panel {
+  animation: tabFadeIn 0.25s ease;
+}
+
+@keyframes tabFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+  .tab-btn {
+    padding: 8px 14px;
+    font-size: 13px;
+  }
+
+  .course-tabs-nav {
+    gap: 0;
+  }
+}

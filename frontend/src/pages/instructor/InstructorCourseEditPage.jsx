@@ -8,7 +8,7 @@ import CurriculumBuilder from "../../components/course-builder/CurriculumBuilder
 import LessonFormModal from "../../components/course-builder/LessonFormModal";
 import QuizFormModal from "../../components/course-builder/QuizFormModal";
 import QuestionFormModal from "../../components/course-builder/QuestionFormModal";
-import { createCourse } from "../../services/courseService";
+import { createCourse, submitForReview } from "../../services/courseService";
 import apiClient from "../../api/apiClient";
 
 const DRAFT_KEY = "course_draft";
@@ -259,6 +259,37 @@ function InstructorCourseEditPage() {
     );
   }
 
+  const courseStatus = editor.course?.status;
+  const isPublished = courseStatus === "PUBLISHED";
+  const isApproved = courseStatus === "APPROVED";
+  const isPending = courseStatus === "PENDING";
+  const isRejected = courseStatus === "REJECTED";
+
+  // Chỉ hiển thị nút "Gửi duyệt" nếu course đang ở REJECTED (cần duyệt lại)
+  // Course mới tạo đã ở PENDING, không cần gửi duyệt thêm
+  const canSubmitReview = isRejected;
+
+  const handleSubmitReview = async () => {
+    try {
+      setSaving(true);
+      await submitForReview(editor.course.id);
+      toast.success("Đã gửi khóa học chờ duyệt.");
+      editor.refetch?.();
+    } catch (error) {
+      toast.error(error.message || "Có lỗi xảy ra.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const statusLabels = {
+    PENDING: { label: "Chờ duyệt", color: "#ffc107", icon: "bi-clock-history" },
+    APPROVED: { label: "Đã duyệt", color: "#0d6efd", icon: "bi-check-circle" },
+    REJECTED: { label: "Bị từ chối", color: "#dc3545", icon: "bi-x-circle" },
+    PUBLISHED: { label: "Đã đăng", color: "#198754", icon: "bi-globe" },
+    HIDDEN: { label: "Đã ẩn", color: "#6f42c1", icon: "bi-eye-slash" },
+  };
+
   return (
     <div className="instructor-courses-page">
       <div className="courses-header">
@@ -266,79 +297,134 @@ function InstructorCourseEditPage() {
           <h2>Chỉnh sửa khóa học</h2>
           <p className="text-muted">{editor.course?.title}</p>
         </div>
+        {courseStatus && (
+          <span
+            className="course-status-badge"
+            style={{
+              backgroundColor: (statusLabels[courseStatus]?.color || "#6c757d") + "20",
+              color: statusLabels[courseStatus]?.color || "#6c757d",
+              border: `1px solid ${(statusLabels[courseStatus]?.color || "#6c757d")}40`,
+            }}
+          >
+            <i className={`bi ${statusLabels[courseStatus]?.icon || "bi-question"} me-1`}></i>
+            {statusLabels[courseStatus]?.label || courseStatus}
+          </span>
+        )}
       </div>
 
-      <CourseInfoForm
-        formData={editor.formData}
-        errors={editor.errors}
-        categories={editor.categories}
-        thumbnailPreview={editor.thumbnailPreview}
-        saving={editor.saving}
-        onCourseChange={editor.handleCourseChange}
-        onThumbnailChange={editor.handleThumbnailChange}
-        onSave={editor.handleSaveCourse}
-      />
-
-      <CurriculumBuilder
-        curriculum={builder.curriculum}
-        showChapterForm={builder.showChapterForm}
-        chapterForm={builder.chapterForm}
-        editingChapterId={builder.editingChapterId}
-        onChapterFormChange={(v) => builder.setChapterForm(v)}
-        onSaveChapter={builder.handleSaveChapter}
-        onResetChapterForm={builder.resetChapterForm}
-        onAddChapter={builder.handleAddChapter}
-        onEditChapter={builder.handleEditChapter}
-        onDeleteChapter={builder.handleDeleteChapter}
-        onAddLesson={builder.handleAddLesson}
-        onEditLesson={builder.handleEditLesson}
-        onDeleteLesson={builder.handleDeleteLesson}
-        onAddQuiz={builder.handleAddQuiz}
-        onEditQuiz={builder.handleEditQuiz}
-        onDeleteQuiz={builder.handleDeleteQuiz}
-        onAddQuestion={builder.handleAddQuestion}
-        onEditQuestion={builder.handleEditQuestion}
-        onDeleteQuestion={builder.handleDeleteQuestion}
-      />
-
-      {builder.showLessonForm && (
-        <LessonFormModal
-          lessonForm={builder.lessonForm}
-          editingLessonId={builder.editingLessonId}
-          onChange={(v) => builder.setLessonForm(v)}
-          onSave={builder.handleSaveLesson}
-          onCancel={builder.resetLessonForm}
+      <form onSubmit={editor.handleSaveCourse}>
+        <CourseInfoForm
+          formData={editor.formData}
+          errors={editor.errors}
+          categories={editor.categories}
+          thumbnailPreview={editor.thumbnailPreview}
+          onCourseChange={editor.handleCourseChange}
+          onThumbnailChange={editor.handleThumbnailChange}
         />
-      )}
 
-      {builder.showQuizForm && (
-        <QuizFormModal
-          quizForm={builder.quizForm}
-          editingQuizId={builder.editingQuizId}
-          onChange={(v) => builder.setQuizForm(v)}
-          onSave={builder.handleSaveQuiz}
-          onCancel={builder.resetQuizForm}
+        <CurriculumBuilder
+          curriculum={builder.curriculum}
+          showChapterForm={builder.showChapterForm}
+          chapterForm={builder.chapterForm}
+          editingChapterId={builder.editingChapterId}
+          onChapterFormChange={(v) => builder.setChapterForm(v)}
+          onSaveChapter={builder.handleSaveChapter}
+          onResetChapterForm={builder.resetChapterForm}
+          onAddChapter={builder.handleAddChapter}
+          onEditChapter={builder.handleEditChapter}
+          onDeleteChapter={builder.handleDeleteChapter}
+          onAddLesson={builder.handleAddLesson}
+          onEditLesson={builder.handleEditLesson}
+          onDeleteLesson={builder.handleDeleteLesson}
+          onAddQuiz={builder.handleAddQuiz}
+          onEditQuiz={builder.handleEditQuiz}
+          onDeleteQuiz={builder.handleDeleteQuiz}
+          onAddQuestion={builder.handleAddQuestion}
+          onEditQuestion={builder.handleEditQuestion}
+          onDeleteQuestion={builder.handleDeleteQuestion}
         />
-      )}
 
-      {builder.showQuestionForm && (
-        <QuestionFormModal
-          questionForm={builder.questionForm}
-          editingQuestionId={builder.editingQuestionId}
-          onChange={(v) => builder.setQuestionForm(v)}
-          onSave={builder.handleSaveQuestion}
-          onCancel={builder.resetQuestionForm}
-          onAddOption={builder.addOption}
-          onUpdateOption={builder.updateOption}
-          onRemoveOption={builder.removeOption}
-        />
-      )}
+        {builder.showLessonForm && (
+          <LessonFormModal
+            lessonForm={builder.lessonForm}
+            editingLessonId={builder.editingLessonId}
+            onChange={(v) => builder.setLessonForm(v)}
+            onSave={builder.handleSaveLesson}
+            onCancel={builder.resetLessonForm}
+          />
+        )}
 
-      <div className="course-form-actions mt-4">
-        <button className="course-btn-outline" onClick={() => navigate("/instructor/courses")}>
-          <i className="bi bi-arrow-left me-2"></i>Quay về danh sách
-        </button>
-      </div>
+        {builder.showQuizForm && (
+          <QuizFormModal
+            quizForm={builder.quizForm}
+            editingQuizId={builder.editingQuizId}
+            onChange={(v) => builder.setQuizForm(v)}
+            onSave={builder.handleSaveQuiz}
+            onCancel={builder.resetQuizForm}
+          />
+        )}
+
+        {builder.showQuestionForm && (
+          <QuestionFormModal
+            questionForm={builder.questionForm}
+            editingQuestionId={builder.editingQuestionId}
+            onChange={(v) => builder.setQuestionForm(v)}
+            onSave={builder.handleSaveQuestion}
+            onCancel={builder.resetQuestionForm}
+            onAddOption={builder.addOption}
+            onUpdateOption={builder.updateOption}
+            onRemoveOption={builder.removeOption}
+          />
+        )}
+
+        {/* Footer actions */}
+        <div className="course-form-actions mt-4">
+          <button type="button" className="course-btn-outline" onClick={() => navigate("/instructor/courses")}>
+            <i className="bi bi-arrow-left me-2"></i>Quay về danh sách
+          </button>
+
+          <div className="ms-auto d-flex align-items-center gap-2">
+            {/* Nút "Gửi duyệt" - chỉ hiển thị khi course bị từ chối */}
+            {canSubmitReview && (
+              <button
+                type="button"
+                className="course-btn-warning"
+                onClick={handleSubmitReview}
+                disabled={saving}
+              >
+                {saving ? (
+                  <><span className="spinner-border spinner-border-sm me-2"></span>Đang gửi...</>
+                ) : (
+                  <><i className="bi bi-send me-2"></i>Gửi duyệt lại</>
+                )}
+              </button>
+            )}
+
+            {/* Nút "Lưu thay đổi" - luôn hiển thị */}
+            <button type="submit" className="course-btn-primary" disabled={editor.saving}>
+              {editor.saving ? (
+                <><span className="spinner-border spinner-border-sm me-2"></span>Đang lưu...</>
+              ) : (
+                <><i className="bi bi-check-lg me-2"></i>Lưu thay đổi</>
+              )}
+            </button>
+          </div>
+        </div>
+
+        {/* Ghi chú trạng thái */}
+        {isPublished && (
+          <div className="course-form-note mt-3">
+            <i className="bi bi-info-circle me-2"></i>
+            Khóa học đã được xuất bản. Chỉnh sửa sẽ được lưu trực tiếp, không cần gửi duyệt lại.
+          </div>
+        )}
+        {isApproved && (
+          <div className="course-form-note mt-3">
+            <i className="bi bi-info-circle me-2"></i>
+            Khóa học đã được duyệt. Bạn cần nhấn "Đăng khóa học" ở trang danh sách để xuất bản.
+          </div>
+        )}
+      </form>
     </div>
   );
 }

@@ -131,7 +131,6 @@ export default function useCurriculumBuilder(courseId, isDraft = false) {
             ? { ...ch, title: chapterForm.title.trim(), description: chapterForm.description?.trim() || "" }
             : ch
         );
-        toast.success("Cập nhật chương thành công!");
       } else {
         const newChapter = {
           id: Date.now(),
@@ -140,7 +139,6 @@ export default function useCurriculumBuilder(courseId, isDraft = false) {
           lessons: [],
         };
         newCurriculum = [...curriculum, newChapter];
-        toast.success("Thêm chương thành công!");
       }
       setCurriculum(newCurriculum);
       saveDraft(newCurriculum);
@@ -150,10 +148,8 @@ export default function useCurriculumBuilder(courseId, isDraft = false) {
     try {
       if (editingChapterId) {
         await updateChapter(editingChapterId, chapterForm);
-        toast.success("Cập nhật chương thành công!");
       } else {
         await createChapter(courseId, chapterForm);
-        toast.success("Thêm chương thành công!");
       }
       resetChapterForm();
       loadCurriculum();
@@ -168,12 +164,10 @@ export default function useCurriculumBuilder(courseId, isDraft = false) {
       const newCurriculum = curriculum.filter((ch) => ch.id !== chapterId);
       setCurriculum(newCurriculum);
       saveDraft(newCurriculum);
-      toast.success("Xóa chương thành công!");
       return;
     }
     try {
       await deleteChapter(chapterId);
-      toast.success("Xóa chương thành công!");
       loadCurriculum();
     } catch (error) {
       toast.error(error.message || "Có lỗi xảy ra.");
@@ -239,7 +233,6 @@ export default function useCurriculumBuilder(courseId, isDraft = false) {
       });
       setCurriculum(newCurriculum);
       saveDraft(newCurriculum);
-      toast.success(editingLessonId ? "Cập nhật bài học thành công!" : "Thêm bài học thành công!");
       resetLessonForm();
       return;
     }
@@ -258,10 +251,8 @@ export default function useCurriculumBuilder(courseId, isDraft = false) {
 
       if (editingLessonId) {
         await updateLesson(editingLessonId, form);
-        toast.success("Cập nhật bài học thành công!");
       } else {
         await createLesson(lessonChapterId, form);
-        toast.success("Thêm bài học thành công!");
       }
       resetLessonForm();
       loadCurriculum();
@@ -279,12 +270,10 @@ export default function useCurriculumBuilder(courseId, isDraft = false) {
       }));
       setCurriculum(newCurriculum);
       saveDraft(newCurriculum);
-      toast.success("Xóa bài học thành công!");
       return;
     }
     try {
       await deleteLesson(lessonId);
-      toast.success("Xóa bài học thành công!");
       loadCurriculum();
     } catch (error) {
       toast.error(error.message || "Có lỗi xảy ra.");
@@ -350,7 +339,6 @@ export default function useCurriculumBuilder(courseId, isDraft = false) {
       }));
       setCurriculum(newCurriculum);
       saveDraft(newCurriculum);
-      toast.success(editingQuizId ? "Cập nhật bài tập thành công!" : "Thêm bài tập thành công!");
       resetQuizForm();
       return;
     }
@@ -362,10 +350,8 @@ export default function useCurriculumBuilder(courseId, isDraft = false) {
       };
       if (editingQuizId) {
         await updateQuiz(editingQuizId, payload);
-        toast.success("Cập nhật bài tập thành công!");
       } else {
         await createQuiz(quizLessonId, payload);
-        toast.success("Thêm bài tập thành công!");
       }
       resetQuizForm();
       loadCurriculum();
@@ -386,12 +372,10 @@ export default function useCurriculumBuilder(courseId, isDraft = false) {
       }));
       setCurriculum(newCurriculum);
       saveDraft(newCurriculum);
-      toast.success("Xóa bài tập thành công!");
       return;
     }
     try {
       await deleteQuiz(quizId);
-      toast.success("Xóa bài tập thành công!");
       loadCurriculum();
     } catch (error) {
       toast.error(error.message || "Có lỗi xảy ra.");
@@ -477,7 +461,6 @@ export default function useCurriculumBuilder(courseId, isDraft = false) {
       }));
       setCurriculum(newCurriculum);
       saveDraft(newCurriculum);
-      toast.success(editingQuestionId ? "Cập nhật câu hỏi thành công!" : "Thêm câu hỏi thành công!");
       resetQuestionForm();
       return;
     }
@@ -489,10 +472,8 @@ export default function useCurriculumBuilder(courseId, isDraft = false) {
       };
       if (editingQuestionId) {
         await updateQuestion(editingQuestionId, payload);
-        toast.success("Cập nhật câu hỏi thành công!");
       } else {
         await createQuestion(questionQuizId, payload);
-        toast.success("Thêm câu hỏi thành công!");
       }
       resetQuestionForm();
       loadCurriculum();
@@ -516,12 +497,10 @@ export default function useCurriculumBuilder(courseId, isDraft = false) {
       }));
       setCurriculum(newCurriculum);
       saveDraft(newCurriculum);
-      toast.success("Xóa câu hỏi thành công!");
       return;
     }
     try {
       await deleteQuestion(questionId);
-      toast.success("Xóa câu hỏi thành công!");
       loadCurriculum();
     } catch (error) {
       toast.error(error.message || "Có lỗi xảy ra.");

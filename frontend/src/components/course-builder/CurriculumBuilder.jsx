@@ -29,7 +29,7 @@ export default function CurriculumBuilder({
     <div className="course-form-card">
       <div className="d-flex justify-content-between align-items-center mb-3">
         <h4 className="course-form-section-title mb-0">Xây dựng nội dung</h4>
-        <button className="course-btn-primary btn-sm" onClick={onAddChapter}>
+        <button type="button" className="course-btn-primary btn-sm" onClick={onAddChapter}>
           <i className="bi bi-plus-lg me-1"></i>Thêm chương
         </button>
       </div>

@@ -46,10 +46,10 @@ export default function QuizFormModal({
           </div>
         </div>
         <div className="d-flex gap-2 mt-3">
-          <button className="course-btn-primary btn-sm" onClick={onSave}>
+          <button type="button" className="course-btn-primary btn-sm" onClick={onSave}>
             {editingQuizId ? "Cập nhật" : "Thêm"}
           </button>
-          <button className="course-btn-outline btn-sm" onClick={onCancel}>Hủy</button>
+          <button type="button" className="course-btn-outline btn-sm" onClick={onCancel}>Hủy</button>
         </div>
       </div>
     </div>

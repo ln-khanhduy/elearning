@@ -19,6 +19,23 @@
 @import url('./my-courses.css');
 @import url('./instructor-courses.css');
 
+/* Courses */
+@import url('./courses/courses-page.css');
+
+/* Course Detail */
+@import url('./course-detail/course-detail-page.css');
+
+/* Learning */
+@import url('./learning/learning-page.css');
+
+@import url('./course-detail/course-hero.css');
+@import url('./course-detail/course-progress-card.css');
+@import url('./course-detail/course-content-list.css');
+@import url('./course-detail/course-section-accordion.css');
+@import url('./course-detail/lesson-item.css');
+@import url('./course-detail/instructor-card.css');
+@import url('./course-detail/course-tabs.css');
+
 /* Admin */
 @import url('./admin-dashboard.css');
 @import url('./admin-courses.css');

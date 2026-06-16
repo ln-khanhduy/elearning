@@ -11,6 +11,21 @@ class QuestionOptionSerializer(serializers.ModelSerializer):
         read_only_fields = ["id"]
 
 
+class QuestionPreviewSerializer(serializers.ModelSerializer):
+    """
+    Serializer cho preview câu hỏi - CHỈ trả về thông tin cơ bản.
+    KHÔNG expose is_correct, correct_text_answer.
+    Dùng cho public API (CourseCurriculumAPIView).
+    """
+
+    class Meta:
+        model = Question
+        fields = [
+            "id", "prompt", "points", "order", "question_type",
+        ]
+        read_only_fields = ["id"]
+
+
 class QuestionSerializer(serializers.ModelSerializer):
     """Serializer cho câu hỏi - bao gồm options (nếu là MCQ)."""
 
@@ -23,6 +38,7 @@ class QuestionSerializer(serializers.ModelSerializer):
             "correct_text_answer", "options", "created_at", "updated_at",
         ]
         read_only_fields = ["id", "quiz", "created_at", "updated_at"]
+
 
 
 class QuestionCreateUpdateSerializer(serializers.ModelSerializer):

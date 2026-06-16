@@ -20,6 +20,14 @@ function ProfilePage() {
   const [saving, setSaving] = useState(false);
   const fileInputRef = useRef(null);
 
+  // ===== State cho thông tin thanh toán (chỉ instructor) =====
+  const [bankData, setBankData] = useState({
+    bank_name: "",
+    bank_account_number: "",
+    bank_account_name: "",
+  });
+  const [savingBank, setSavingBank] = useState(false);
+
   // ===== State cho modal đổi mật khẩu =====
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [passwordData, setPasswordData] = useState({
@@ -65,6 +73,12 @@ function ProfilePage() {
         first_name: user.first_name || "",
         last_name: user.last_name || "",
         phone: user.phone || "",
+      });
+      // Đổ thông tin ngân hàng nếu có (chỉ instructor)
+      setBankData({
+        bank_name: user.bank_name || "",
+        bank_account_number: user.bank_account_number || "",
+        bank_account_name: user.bank_account_name || "",
       });
     }
   }, [user]);
@@ -112,6 +126,27 @@ function ProfilePage() {
       toast.error(error.message || "Có lỗi xảy ra khi cập nhật.");
     } finally {
       setSaving(false);
+    }
+  };
+
+  // ===== Xử lý lưu thông tin ngân hàng (chỉ instructor) =====
+  const handleSaveBankInfo = async (e) => {
+    e.preventDefault();
+    setSavingBank(true);
+
+    try {
+      // Gửi dưới dạng JSON object (không phải FormData)
+      await updateProfileApi({
+        bank_name: bankData.bank_name,
+        bank_account_number: bankData.bank_account_number,
+        bank_account_name: bankData.bank_account_name,
+      });
+      await reloadUser();
+      toast.success("Cập nhật thông tin thanh toán thành công!");
+    } catch (error) {
+      toast.error(error.message || "Có lỗi xảy ra khi cập nhật thông tin thanh toán.");
+    } finally {
+      setSavingBank(false);
     }
   };
 
@@ -383,6 +418,56 @@ function ProfilePage() {
               Đổi mật khẩu
             </button>
           </div>
+
+          {/* Card: Thông tin thanh toán (chỉ hiển thị với INSTRUCTOR) */}
+          {roleCode === "INSTRUCTOR" && (
+            <div className="profile-card">
+              <h4 className="profile-card-title">
+                <span className="material-symbols-outlined" style={{ fontSize: 20, color: "var(--primary)" }}>account_balance</span>
+                Thông tin thanh toán
+              </h4>
+              <p className="profile-card-desc">Cập nhật thông tin tài khoản ngân hàng để nhận thanh toán từ khóa học.</p>
+
+              <form className="profile-form" onSubmit={handleSaveBankInfo}>
+                <div className="profile-field">
+                  <label className="profile-label">TÊN NGÂN HÀNG</label>
+                  <input
+                    type="text"
+                    className="profile-input"
+                    value={bankData.bank_name}
+                    onChange={(e) => setBankData({ ...bankData, bank_name: e.target.value })}
+                    placeholder="Ví dụ: Vietcombank, Techcombank, ..."
+                  />
+                </div>
+                <div className="profile-field">
+                  <label className="profile-label">SỐ TÀI KHOẢN</label>
+                  <input
+                    type="text"
+                    className="profile-input"
+                    value={bankData.bank_account_number}
+                    onChange={(e) => setBankData({ ...bankData, bank_account_number: e.target.value })}
+                    placeholder="Ví dụ: 1234567890"
+                  />
+                </div>
+                <div className="profile-field">
+                  <label className="profile-label">CHỦ TÀI KHOẢN</label>
+                  <input
+                    type="text"
+                    className="profile-input"
+                    value={bankData.bank_account_name}
+                    onChange={(e) => setBankData({ ...bankData, bank_account_name: e.target.value })}
+                    placeholder="Ví dụ: NGUYEN VAN A"
+                  />
+                </div>
+
+                <div className="profile-form-actions">
+                  <button type="submit" className="profile-btn-primary" disabled={savingBank}>
+                    {savingBank ? "Đang lưu..." : "Lưu thông tin ngân hàng"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
         </div>
       </div>
 

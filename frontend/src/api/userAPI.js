@@ -14,7 +14,11 @@ export const getCurrentUser = async () => {
 };
 
 export const updateProfileApi = async (data) => {
-  return request(() => apiClient.patch("/api/users/me/update/", data));
+  const isFormData = data instanceof FormData;
+  const config = isFormData
+    ? { headers: { "Content-Type": "multipart/form-data" } }
+    : {};
+  return request(() => apiClient.patch("/api/users/me/update/", data, config));
 };
 
 export const changePasswordApi = async (data) => {

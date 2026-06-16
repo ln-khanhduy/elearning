@@ -2,6 +2,23 @@ from rest_framework import serializers
 from apps.quizzes.models import Quiz
 
 
+class QuizPreviewSerializer(serializers.ModelSerializer):
+    """
+    Serializer cho preview quiz - CHỈ trả về thông tin cơ bản.
+    KHÔNG expose description, time_limit_minutes, passing_score, questions.
+    Dùng cho public API (CourseCurriculumAPIView).
+    """
+    question_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Quiz
+        fields = ["id", "title", "question_count"]
+        read_only_fields = ["id"]
+
+    def get_question_count(self, obj):
+        return obj.questions.count()
+
+
 class QuizSerializer(serializers.ModelSerializer):
     """Serializer cho quiz - bao gồm thông tin lesson và trạng thái."""
 
@@ -12,6 +29,7 @@ class QuizSerializer(serializers.ModelSerializer):
             "passing_score", "status", "created_at", "updated_at",
         ]
         read_only_fields = ["id", "lesson", "created_at", "updated_at"]
+
 
 
 class QuizCreateUpdateSerializer(serializers.ModelSerializer):

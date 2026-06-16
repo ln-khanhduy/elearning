@@ -66,6 +66,26 @@ class Enrollment(models.Model):
 		]
 
 
+class LessonProgress(models.Model):
+	"""
+	Tiến độ chi tiết từng bài học của học viên.
+	Mỗi bản ghi tương ứng 1 học viên đã hoàn thành 1 bài học trong khóa học đã đăng ký.
+	"""
+	enrollment = models.ForeignKey(Enrollment, on_delete=models.CASCADE, related_name='lesson_progresses')
+	lesson = models.ForeignKey('lessons.Lesson', on_delete=models.CASCADE, related_name='student_progresses')
+	completed = models.BooleanField(default=False)
+	completed_at = models.DateTimeField(null=True, blank=True)
+	created_at = models.DateTimeField(auto_now_add=True)
+	updated_at = models.DateTimeField(auto_now=True)
+
+	class Meta:
+		db_table = 'lesson_progress'
+		constraints = [
+			models.UniqueConstraint(fields=['enrollment', 'lesson'], name='unique_enrollment_lesson_progress'),
+		]
+		ordering = ['-updated_at']
+
+
 class CourseProgress(models.Model):
 	"""
 	Bảng tổng hợp tiến độ học tập của học viên cho một khóa học.

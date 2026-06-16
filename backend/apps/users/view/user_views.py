@@ -49,27 +49,63 @@ class UserDetailAPIView(APIView):
 class CurrentUserAPIView(APIView):
     """
     GET /api/users/me/ - Lấy thông tin của người dùng hiện tại (đang đăng nhập).
+    Nếu user là instructor, trả về thêm thông tin ngân hàng.
     """
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        serializer = UserDetailSerializer(request.user)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        user = request.user
+        role_code = user.role.code if user.role else None
+        user_data = UserDetailSerializer(user).data
+
+        # Nếu là instructor, thêm thông tin ngân hàng vào response
+        if role_code == "INSTRUCTOR" and hasattr(user, 'instructor_profile'):
+            profile = user.instructor_profile
+            user_data["bank_name"] = profile.bank_name
+            user_data["bank_account_number"] = profile.bank_account_number
+            user_data["bank_account_name"] = profile.bank_account_name
+
+        return Response(user_data, status=status.HTTP_200_OK)
 
 
 class UpdateProfileAPIView(APIView):
     """
-    PATCH /api/users/me/update/ - Cập nhật thông tin cá nhân (tên, số điện thoại, avatar).
+    PATCH /api/users/me/update/ - Cập nhật thông tin cá nhân (tên, số điện thoại, avatar, thông tin ngân hàng).
+    - Chỉ instructor mới được cập nhật thông tin ngân hàng.
+    - Student/user thường không thấy và không cập nhật được thông tin này.
     """
     permission_classes = [IsAuthenticated]
 
     def patch(self, request):
-        serializer = UpdateProfileSerializer(request.user, data=request.data, partial=True)
+        user = request.user
+        role_code = user.role.code if user.role else None
+
+        # Kiểm tra: nếu có gửi bank fields nhưng không phải instructor -> từ chối
+        bank_fields = {"bank_name", "bank_account_number", "bank_account_name"}
+        has_bank_data = any(k in request.data for k in bank_fields)
+        if has_bank_data and role_code != "INSTRUCTOR":
+            return Response(
+                {"detail": "Chỉ giảng viên mới có thể cập nhật thông tin thanh toán."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        serializer = UpdateProfileSerializer(user, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
-        UserService.update_profile(request.user, serializer.validated_data)
+        UserService.update_profile(user, serializer.validated_data)
+
+        # Lấy thông tin user response
+        user_data = UserDetailSerializer(user).data
+
+        # Nếu là instructor, thêm thông tin ngân hàng vào response
+        if role_code == "INSTRUCTOR" and hasattr(user, 'instructor_profile'):
+            profile = user.instructor_profile
+            user_data["bank_name"] = profile.bank_name
+            user_data["bank_account_number"] = profile.bank_account_number
+            user_data["bank_account_name"] = profile.bank_account_name
+
         return Response({
             "detail": "Cập nhật thông tin cá nhân thành công.",
-            "user": UserDetailSerializer(request.user).data
+            "user": user_data
         }, status=status.HTTP_200_OK)
 
 

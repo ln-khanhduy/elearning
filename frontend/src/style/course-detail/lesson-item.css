@@ -1,0 +1,141 @@
+/* ===== LESSON ITEM ===== */
+.lesson-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 24px 10px 48px;
+  transition: background 0.15s;
+  cursor: default;
+  border-left: 3px solid transparent;
+}
+
+.lesson-item:hover {
+  background: #f8f9fa;
+}
+
+.lesson-item.lesson-completed {
+  border-left-color: var(--course-success);
+  background: #f0faf4;
+}
+
+.lesson-item-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+
+.lesson-index {
+  width: 20px;
+  font-size: 12px;
+  color: var(--course-text-muted);
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.lesson-type-icon {
+  font-size: 16px;
+  color: var(--course-primary);
+  flex-shrink: 0;
+}
+
+.lesson-completed .lesson-type-icon {
+  color: var(--course-success);
+}
+
+.lesson-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.lesson-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--course-text);
+  line-height: 1.4;
+}
+
+.lesson-completed .lesson-title {
+  color: var(--course-success);
+}
+
+.lesson-type-label {
+  font-size: 11px;
+  color: var(--course-text-muted);
+}
+
+.lesson-item-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+  margin-left: 12px;
+}
+
+.lesson-duration {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 11px;
+  color: var(--course-text-muted);
+  white-space: nowrap;
+}
+
+.lesson-duration i {
+  font-size: 12px;
+}
+
+/* Status indicators */
+.lesson-status {
+  display: flex;
+  align-items: center;
+  font-size: 16px;
+}
+
+.status-done {
+  color: var(--course-success);
+}
+
+.status-pending {
+  color: #adb5bd;
+}
+
+.status-locked {
+  color: #ced4da;
+}
+
+/* Quiz item styling */
+.lesson-item.lesson-quiz {
+  padding-left: 60px;
+  background: #fafbff;
+}
+
+.lesson-item.lesson-quiz .lesson-type-icon {
+  color: #6f42c1;
+}
+
+.lesson-item.lesson-quiz .lesson-type-label {
+  color: #6f42c1;
+}
+
+.lesson-item.lesson-quiz.lesson-completed {
+  background: #f0faf4;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+  .lesson-item {
+    padding: 8px 16px 8px 40px;
+  }
+
+  .lesson-title {
+    font-size: 12px;
+  }
+
+  .lesson-duration {
+    display: none;
+  }
+}

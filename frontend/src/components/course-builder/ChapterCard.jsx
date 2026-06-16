@@ -25,10 +25,10 @@ export default function ChapterCard({
           )}
         </div>
         <div className="chapter-actions">
-          <button className="btn btn-sm btn-outline-primary me-1" onClick={() => onEdit(chapter)}>
+          <button type="button" className="btn btn-sm btn-outline-primary me-1" onClick={() => onEdit(chapter)}>
             <i className="bi bi-pencil"></i>
           </button>
-          <button className="btn btn-sm btn-outline-danger" onClick={() => onDelete(chapter.id)}>
+          <button type="button" className="btn btn-sm btn-outline-danger" onClick={() => onDelete(chapter.id)}>
             <i className="bi bi-trash"></i>
           </button>
         </div>
@@ -56,7 +56,7 @@ export default function ChapterCard({
           ))
         )}
 
-        <button className="course-btn-outline btn-sm mt-2" onClick={() => onAddLesson(chapter.id)}>
+        <button type="button" className="course-btn-outline btn-sm mt-2" onClick={() => onAddLesson(chapter.id)}>
           <i className="bi bi-plus-lg me-1"></i>Thêm bài học
         </button>
       </div>

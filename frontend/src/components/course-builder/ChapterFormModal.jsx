@@ -29,10 +29,10 @@ export default function ChapterFormModal({
         </div>
       </div>
       <div className="d-flex gap-2 mt-2">
-        <button className="course-btn-primary btn-sm" onClick={onSave}>
+        <button type="button" className="course-btn-primary btn-sm" onClick={onSave}>
           {editingChapterId ? "Cập nhật" : "Thêm"}
         </button>
-        <button className="course-btn-outline btn-sm" onClick={onCancel}>Hủy</button>
+        <button type="button" className="course-btn-outline btn-sm" onClick={onCancel}>Hủy</button>
       </div>
     </div>
   );

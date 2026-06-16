@@ -16,7 +16,6 @@ class PaymentTransaction(models.Model):
     )
 
     PROVIDER_CHOICES = (
-    ('VNPAY', 'VNPay'),
     ('MOMO', 'MoMo'),
     ('STRIPE', 'Stripe'),
     )

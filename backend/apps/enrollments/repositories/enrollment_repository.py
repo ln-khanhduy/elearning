@@ -22,10 +22,12 @@ class EnrollmentRepository:
 
     @staticmethod
     def get_active_by_user_and_course(user_id, course_id):
-        """Kiểm tra user đã đăng ký khóa học chưa (ACTIVE)."""
+        """Kiểm tra user đã đăng ký khóa học chưa (ACTIVE hoặc COMPLETED)."""
         return Enrollment.objects.filter(
-            student_id=user_id, course_id=course_id, status="ACTIVE"
+            student_id=user_id, course_id=course_id,
+            status__in=["ACTIVE", "COMPLETED"]
         ).first()
+
 
     @staticmethod
     def create(data):

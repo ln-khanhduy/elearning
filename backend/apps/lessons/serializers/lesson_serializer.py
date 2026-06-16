@@ -42,7 +42,22 @@ class LessonSerializer(serializers.ModelSerializer):
         return obj.material_file.url if obj.material_file else None
 
 
+class LessonPreviewSerializer(serializers.ModelSerializer):
+    """
+    Serializer cho preview bài học - CHỈ trả về thông tin cơ bản.
+    KHÔNG expose video_url, material_url.
+    Dùng cho public API (CourseCurriculumAPIView).
+    """
+    class Meta:
+        model = Lesson
+        fields = [
+            "id", "slug", "title", "description", "content_type",
+            "order", "is_free", "status",
+        ]
+
+
 class LessonCreateUpdateSerializer(serializers.ModelSerializer):
+
     """Serializer cho tạo/cập nhật bài học - validate title, order, content_type, video_url, material_file."""
 
     title = serializers.CharField(min_length=3, max_length=50, trim_whitespace=True)

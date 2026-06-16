@@ -111,12 +111,27 @@ class UserService:
     def update_profile(user, validated_data):
         """
         Cập nhật thông tin cá nhân của người dùng.
-        - Duyệt qua các trường được gửi lên và gán giá trị mới
+        - Duyệt qua các trường User được gửi lên và gán giá trị mới
+        - Nếu user là instructor và có gửi thông tin ngân hàng, cập nhật InstructorProfile
         - Lưu thay đổi vào database
         """
-        for attr, value in validated_data.items():
+        # Tách thông tin ngân hàng (thuộc InstructorProfile) khỏi thông tin User
+        bank_fields = {"bank_name", "bank_account_number", "bank_account_name"}
+        bank_data = {k: v for k, v in validated_data.items() if k in bank_fields}
+        user_data = {k: v for k, v in validated_data.items() if k not in bank_fields}
+
+        # Cập nhật thông tin User
+        for attr, value in user_data.items():
             setattr(user, attr, value)
         user.save()
+
+        # Cập nhật thông tin ngân hàng nếu user là instructor và có gửi bank fields
+        if bank_data and hasattr(user, 'instructor_profile'):
+            instructor_profile = user.instructor_profile
+            for attr, value in bank_data.items():
+                setattr(instructor_profile, attr, value)
+            instructor_profile.save(update_fields=list(bank_data.keys()))
+
         return user
 
     @staticmethod

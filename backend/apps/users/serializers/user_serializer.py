@@ -36,11 +36,34 @@ class UserDetailSerializer(serializers.ModelSerializer):
 
 
 class UpdateProfileSerializer(serializers.ModelSerializer):
-    """Serializer cho cập nhật thông tin cá nhân - chỉ cho phép cập nhật tên, số điện thoại và avatar."""
+    """Serializer cho cập nhật thông tin cá nhân - tên, số điện thoại, avatar và thông tin ngân hàng (cho instructor)."""
+
+    # Thông tin ngân hàng (chỉ instructor mới gửi)
+    bank_name = serializers.CharField(required=False, allow_blank=True, max_length=100)
+    bank_account_number = serializers.CharField(required=False, allow_blank=True, max_length=50)
+    bank_account_name = serializers.CharField(required=False, allow_blank=True, max_length=100)
 
     class Meta:
         model = User
-        fields = ["first_name", "last_name", "phone", "avatar"]
+        fields = ["first_name", "last_name", "phone", "avatar", "bank_name", "bank_account_number", "bank_account_name"]
+
+    def validate_bank_account_number(self, value):
+        """Kiểm tra số tài khoản ngân hàng chỉ chứa chữ số nếu có giá trị."""
+        if value and not value.isdigit():
+            raise serializers.ValidationError("Số tài khoản chỉ được chứa chữ số.")
+        return value
+
+    def validate_bank_name(self, value):
+        """Kiểm tra tên ngân hàng không vượt quá 100 ký tự."""
+        if value and len(value) > 100:
+            raise serializers.ValidationError("Tên ngân hàng không được vượt quá 100 ký tự.")
+        return value
+
+    def validate_bank_account_name(self, value):
+        """Kiểm tra tên chủ tài khoản không vượt quá 100 ký tự."""
+        if value and len(value) > 100:
+            raise serializers.ValidationError("Tên chủ tài khoản không được vượt quá 100 ký tự.")
+        return value
 
 
 class ChangeUserRoleSerializer(serializers.Serializer):

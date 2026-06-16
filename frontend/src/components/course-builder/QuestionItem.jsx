@@ -15,10 +15,10 @@ export default function QuestionItem({ question, index, quizId, onEdit, onDelete
           <span className="badge bg-primary ms-1">{question.points} điểm</span>
         </div>
         <div>
-          <button className="btn btn-sm btn-outline-primary me-1" onClick={() => onEdit(question)}>
+          <button type="button" className="btn btn-sm btn-outline-primary me-1" onClick={() => onEdit(question)}>
             <i className="bi bi-pencil"></i>
           </button>
-          <button className="btn btn-sm btn-outline-danger" onClick={() => onDelete(question.id)}>
+          <button type="button" className="btn btn-sm btn-outline-danger" onClick={() => onDelete(question.id)}>
             <i className="bi bi-trash"></i>
           </button>
         </div>

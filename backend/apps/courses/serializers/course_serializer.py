@@ -7,6 +7,7 @@ class CourseListSerializer(serializers.ModelSerializer):
     """Serializer cho danh sách khóa học - bao gồm tên instructor, category và URL thumbnail."""
 
     instructor_name = serializers.CharField(source="instructor.get_full_name", read_only=True)
+    instructor_avatar = serializers.SerializerMethodField()
     category = CategorySerializer(read_only=True)
     thumbnail_url = serializers.SerializerMethodField()
     chapter_count = serializers.SerializerMethodField()
@@ -16,9 +17,13 @@ class CourseListSerializer(serializers.ModelSerializer):
         model = Course
         fields = [
             "id", "title", "slug", "description", "thumbnail_url", "price",
-            "status", "instructor_name", "category",
+            "status", "instructor_name", "instructor_avatar", "category",
             "chapter_count", "lesson_count", "created_at",
         ]
+
+    def get_instructor_avatar(self, obj):
+        """Lấy URL avatar của instructor, trả về None nếu không có."""
+        return obj.instructor.avatar_url if hasattr(obj.instructor, 'avatar_url') else None
 
     def get_thumbnail_url(self, obj):
         """Lấy URL đầy đủ của thumbnail khóa học, trả về None nếu không có."""
@@ -39,6 +44,7 @@ class CourseDetailSerializer(serializers.ModelSerializer):
     """Serializer cho chi tiết khóa học - bao gồm tên instructor, category, URL thumbnail và thông tin duyệt."""
 
     instructor_name = serializers.CharField(source="instructor.get_full_name", read_only=True)
+    instructor_avatar = serializers.SerializerMethodField()
     category = CategorySerializer(read_only=True)
     thumbnail_url = serializers.SerializerMethodField()
     chapter_count = serializers.SerializerMethodField()
@@ -48,9 +54,13 @@ class CourseDetailSerializer(serializers.ModelSerializer):
         model = Course
         fields = [
             "id", "title", "slug", "description", "thumbnail_url", "preview_video_url",
-            "price", "status", "approval_note", "instructor_name", "category",
+            "price", "status", "approval_note", "instructor_name", "instructor_avatar", "category",
             "chapter_count", "lesson_count", "created_at", "updated_at",
         ]
+
+    def get_instructor_avatar(self, obj):
+        """Lấy URL avatar của instructor, trả về None nếu không có."""
+        return obj.instructor.avatar_url if hasattr(obj.instructor, 'avatar_url') else None
 
     def get_thumbnail_url(self, obj):
         """Lấy URL đầy đủ của thumbnail khóa học, trả về None nếu không có."""

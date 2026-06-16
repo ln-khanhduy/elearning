@@ -56,7 +56,9 @@ class CourseService:
         """
         Cập nhật thông tin khóa học.
         - Kiểm tra quyền sở hữu (chỉ instructor hoặc SUPERADMIN mới được sửa)
-        - Nếu khóa học đã được duyệt hoặc published, đưa về trạng thái PENDING để duyệt lại
+        - Nếu khóa học đã APPROVED hoặc PUBLISHED, giữ nguyên trạng thái (không đưa về PENDING)
+        - Chỉ đưa về PENDING nếu khóa học đang ở REJECTED (cần duyệt lại)
+        - Khóa học mới tạo (PENDING) giữ nguyên PENDING
         """
         course = CourseRepository.get_by_id(course_id)
 
@@ -69,7 +71,9 @@ class CourseService:
         if "title" in validated_data:
             course.slug = slugify(validated_data["title"])
 
-        if course.status in ["APPROVED", "PUBLISHED"]:
+        # Chỉ đưa về PENDING nếu khóa học đang bị từ chối (cần duyệt lại)
+        # Không đưa về PENDING nếu đã APPROVED hoặc PUBLISHED
+        if course.status == "REJECTED":
             course.status = "PENDING"
 
         course.save()

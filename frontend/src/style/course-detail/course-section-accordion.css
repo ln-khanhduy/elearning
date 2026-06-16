@@ -1,0 +1,129 @@
+/* ===== COURSE SECTION ACCORDION ===== */
+.course-section {
+  border-bottom: 1px solid var(--course-border-light);
+}
+
+.course-section:last-child {
+  border-bottom: none;
+}
+
+/* Section Header */
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 14px 24px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s;
+  text-align: left;
+  color: var(--course-text);
+}
+
+.section-header:hover {
+  background: #f8f9fa;
+}
+
+.section-header-left {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+
+.section-header-left > .bi {
+  font-size: 14px;
+  color: var(--course-text-muted);
+  margin-top: 3px;
+  flex-shrink: 0;
+  transition: transform 0.2s;
+}
+
+.section-open .section-header-left > .bi {
+  color: var(--course-primary);
+}
+
+.section-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.section-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--course-text);
+  line-height: 1.4;
+}
+
+.section-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--course-text-muted);
+  flex-wrap: wrap;
+}
+
+.section-completed-badge {
+  display: inline-block;
+  padding: 1px 6px;
+  background: var(--course-primary-light);
+  color: var(--course-primary);
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 10px;
+}
+
+.meta-separator {
+  opacity: 0.4;
+}
+
+.section-header-right {
+  flex-shrink: 0;
+  margin-left: 12px;
+}
+
+.section-done-icon {
+  font-size: 18px;
+  color: var(--course-success);
+}
+
+/* Section Body */
+.section-body {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+
+.section-body.body-open {
+  max-height: 2000px;
+}
+
+.lesson-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.section-empty {
+  padding: 12px 24px 16px;
+  font-size: 13px;
+  color: var(--course-text-muted);
+  font-style: italic;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+  .section-header {
+    padding: 12px 16px;
+  }
+
+  .section-title {
+    font-size: 13px;
+  }
+}

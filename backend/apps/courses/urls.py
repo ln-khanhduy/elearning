@@ -5,8 +5,10 @@ from apps.courses.views import (
     CourseSubmitReviewAPIView, PendingCourseListAPIView,
     CourseApproveAPIView, CourseRejectAPIView, CoursePublishAPIView,
     CourseHideAPIView, CourseUnhideAPIView, CourseCurriculumAPIView,
+    CourseCurriculumPreviewAPIView,
     CategoryListAPIView, CategoryCreateAPIView, CategoryUpdateAPIView, CategoryDeleteAPIView,
 )
+
 
 
 urlpatterns = [
@@ -23,8 +25,10 @@ urlpatterns = [
     path("<int:course_id>/hide/", CourseHideAPIView.as_view(), name="course-hide"),
     path("<int:course_id>/unhide/", CourseUnhideAPIView.as_view(), name="course-unhide"),
     path("<int:course_id>/curriculum/", CourseCurriculumAPIView.as_view(), name="course-curriculum"),
+    path("<int:course_id>/curriculum/preview/", CourseCurriculumPreviewAPIView.as_view(), name="course-curriculum-preview"),
 
     # Category
+
     path("categories/", CategoryListAPIView.as_view(), name="category-list"),
     path("categories/create/", CategoryCreateAPIView.as_view(), name="category-create"),
     path("categories/<int:category_id>/update/", CategoryUpdateAPIView.as_view(), name="category-update"),

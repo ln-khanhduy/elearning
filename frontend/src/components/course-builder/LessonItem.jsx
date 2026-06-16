@@ -26,13 +26,13 @@ export default function LessonItem({
           )}
         </div>
         <div className="lesson-actions">
-          <button className="btn btn-sm btn-outline-primary me-1" onClick={() => onEdit(lesson)}>
+          <button type="button" className="btn btn-sm btn-outline-primary me-1" onClick={() => onEdit(lesson)}>
             <i className="bi bi-pencil"></i>
           </button>
-          <button className="btn btn-sm btn-outline-danger me-1" onClick={() => onDelete(lesson.id)}>
+          <button type="button" className="btn btn-sm btn-outline-danger me-1" onClick={() => onDelete(lesson.id)}>
             <i className="bi bi-trash"></i>
           </button>
-          <button className="btn btn-sm btn-outline-success" onClick={() => onAddQuiz(lesson.id)}>
+          <button type="button" className="btn btn-sm btn-outline-success" onClick={() => onAddQuiz(lesson.id)}>
             <i className="bi bi-plus-circle me-1"></i>Bài tập
           </button>
         </div>

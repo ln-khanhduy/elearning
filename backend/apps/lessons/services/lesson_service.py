@@ -1,6 +1,7 @@
 from django.db import transaction
 from django.utils.text import slugify
 from rest_framework.exceptions import PermissionDenied, ValidationError
+from apps.lessons.models import Lesson
 from apps.lessons.repositories.lesson_repository import LessonRepository
 from apps.lessons.repositories.chapter_repository import ChapterRepository
 
@@ -13,6 +14,30 @@ class LessonService:
             return
         if course.instructor_id != user.id:
             raise PermissionDenied("Bạn không có quyền thao tác với khóa học này.")
+
+    @staticmethod
+    def _generate_unique_slug(chapter_id, title, exclude_lesson_id=None):
+        """
+        Tạo slug unique trong phạm vi chapter.
+        - base_slug = slugify(title), fallback 'lesson' nếu rỗng
+        - Nếu slug đã tồn tại, thêm hậu tố -2, -3, ...
+        """
+        base_slug = slugify(title) or "lesson"
+        slug = base_slug
+        counter = 2
+
+        queryset = Lesson.objects.filter(chapter_id=chapter_id, slug=slug)
+        if exclude_lesson_id:
+            queryset = queryset.exclude(id=exclude_lesson_id)
+
+        while queryset.exists():
+            slug = f"{base_slug}-{counter}"
+            counter += 1
+            queryset = Lesson.objects.filter(chapter_id=chapter_id, slug=slug)
+            if exclude_lesson_id:
+                queryset = queryset.exclude(id=exclude_lesson_id)
+
+        return slug
 
     @staticmethod
     def get_lessons_by_chapter(chapter_id):
@@ -30,7 +55,7 @@ class LessonService:
         Tạo bài học mới trong một chương.
         - Kiểm tra quyền sở hữu khóa học
         - Kiểm tra thứ tự bài học không bị trùng
-        - Tạo slug từ title và kiểm tra không bị trùng slug trong cùng chương
+        - Tự sinh slug unique từ title (không raise lỗi nếu trùng slug)
         """
         chapter = ChapterRepository.get_by_id(chapter_id)
         LessonService.check_course_owner(chapter.course, user)
@@ -42,9 +67,7 @@ class LessonService:
         elif LessonRepository.exists_order(chapter_id, order):
             raise ValidationError({"order": "Thứ tự bài học đã tồn tại trong chương này."})
 
-        slug = slugify(data["title"])
-        if LessonRepository.exists_slug(chapter_id, slug):
-            raise ValidationError({"title": "Tên bài học đã tồn tại trong chương này."})
+        slug = LessonService._generate_unique_slug(chapter_id, data["title"])
 
         data["chapter_id"] = chapter_id
         data["slug"] = slug
@@ -56,7 +79,7 @@ class LessonService:
         Cập nhật thông tin bài học.
         - Kiểm tra quyền sở hữu khóa học
         - Kiểm tra thứ tự mới không bị trùng (nếu có thay đổi)
-        - Kiểm tra title mới không bị trùng slug (nếu có thay đổi)
+        - Nếu title thay đổi, tự sinh slug unique (không raise lỗi nếu trùng slug)
         """
         lesson = LessonRepository.get_by_id(lesson_id)
         LessonService.check_course_owner(lesson.chapter.course, user)
@@ -66,9 +89,9 @@ class LessonService:
             raise ValidationError({"order": "Thứ tự bài học đã tồn tại trong chương này."})
 
         if "title" in data:
-            slug = slugify(data["title"])
-            if slug != lesson.slug and LessonRepository.exists_slug(lesson.chapter_id, slug):
-                raise ValidationError({"title": "Tên bài học đã tồn tại trong chương này."})
+            slug = LessonService._generate_unique_slug(
+                lesson.chapter_id, data["title"], exclude_lesson_id=lesson_id
+            )
             lesson.slug = slug
 
         for key, value in data.items():

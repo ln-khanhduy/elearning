@@ -1,0 +1,199 @@
+/* ===== COURSE PROGRESS CARD (Sidebar) ===== */
+.course-progress-card {
+  background: var(--course-card-bg);
+  border-radius: var(--course-radius);
+  border: 1px solid var(--course-border);
+  padding: 20px;
+  box-shadow: var(--course-shadow);
+}
+
+/* Price */
+.progress-card-price {
+  text-align: center;
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--course-border-light);
+}
+
+.progress-card-price .price-current {
+  display: block;
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--course-text);
+}
+
+.progress-card-price .price-original {
+  display: inline-block;
+  font-size: 14px;
+  color: var(--course-text-muted);
+  text-decoration: line-through;
+  margin-top: 4px;
+}
+
+/* Progress */
+.progress-card-progress {
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--course-border-light);
+}
+
+.progress-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--course-text);
+  margin-bottom: 10px;
+}
+
+.progress-header i {
+  color: var(--course-primary);
+  font-size: 16px;
+}
+
+.progress-bar-container {
+  height: 8px;
+  background: #e9ecef;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--course-primary), #1a5fa8);
+  border-radius: 4px;
+  transition: width 0.4s ease;
+}
+
+.progress-stats {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.progress-percent {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--course-primary);
+}
+
+.progress-lessons {
+  font-size: 12px;
+  color: var(--course-text-muted);
+}
+
+/* CTA Button */
+.progress-card-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-bottom: 16px;
+}
+
+.progress-card-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: var(--course-primary);
+  color: #fff;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--course-primary-dark);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(15, 61, 117, 0.3);
+}
+
+.btn-success {
+  background: var(--course-success);
+  color: #fff;
+}
+
+.btn-success:hover:not(:disabled) {
+  background: #157347;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(25, 135, 84, 0.3);
+}
+
+
+/* Info items */
+.progress-card-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.info-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--course-text-muted);
+}
+
+.info-item i {
+  font-size: 14px;
+  color: var(--course-success);
+  width: 18px;
+  text-align: center;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 991px) {
+  .course-progress-card {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    padding: 16px;
+  }
+
+  .progress-card-price {
+    grid-column: 1 / -1;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding-bottom: 12px;
+    margin-bottom: 0;
+    border-bottom: none;
+  }
+
+  .progress-card-price .price-current {
+    font-size: 22px;
+  }
+
+  .progress-card-progress {
+    grid-column: 1 / -1;
+    padding-bottom: 12px;
+    margin-bottom: 0;
+  }
+
+  .progress-card-btn {
+    margin-bottom: 0;
+  }
+
+  .progress-card-info {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+}
+
+@media (max-width: 576px) {
+  .course-progress-card {
+    grid-template-columns: 1fr;
+  }
+}

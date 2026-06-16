@@ -1,0 +1,22 @@
+/* ===== COURSE DETAIL THEME ===== */
+/* Uses the system's existing CSS variables from main.css */
+/* Do NOT override :root variables - only define course-specific tokens */
+
+.course-detail-wrapper {
+  --course-primary: var(--primary, #0f3d75);
+  --course-primary-light: #e8f0fe;
+  --course-primary-dark: #0a2d55;
+  --course-success: #198754;
+  --course-warning: #ffc107;
+  --course-danger: #dc3545;
+  --course-text: #1a1a2e;
+  --course-text-muted: #6c757d;
+  --course-bg: var(--bg, #f5f7fb);
+  --course-card-bg: var(--card, #ffffff);
+  --course-border: #e9ecef;
+  --course-border-light: #f0f0f0;
+  --course-radius: var(--card-radius, 10px);
+  --course-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  --course-shadow-hover: 0 6px 20px rgba(0, 0, 0, 0.1);
+  --course-transition: all 0.2s ease;
+}
