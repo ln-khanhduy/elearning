@@ -76,6 +76,7 @@ class RegisterVerifyOTPView(APIView):
             message = e.detail[0] if isinstance(e.detail, list) else str(e.detail)
             return Response({"detail": str(message)}, status=status.HTTP_400_BAD_REQUEST)
 
+        AuthService.update_last_login(user)
         tokens = AuthService.generate_tokens_for_user(user)
 
         response = Response({"user": UserSerializer(user).data, "access": tokens["access"]}, status=status.HTTP_201_CREATED)
@@ -98,6 +99,7 @@ class AuthLoginView(APIView):
         serializer.is_valid(raise_exception=True)
 
         user = serializer.validated_data["user"]
+        AuthService.update_last_login(user)
         tokens = AuthService.generate_tokens_for_user(user)
 
         response = Response({"user": UserSerializer(user).data, "access": tokens["access"]}, status=status.HTTP_200_OK)
@@ -294,6 +296,7 @@ class GoogleIdTokenLoginView(APIView):
             message = e.detail[0] if isinstance(e.detail, list) else str(e.detail)
             return Response({"detail": str(message)}, status=status.HTTP_400_BAD_REQUEST)
 
+        AuthService.update_last_login(user)
         tokens = AuthService.generate_tokens_for_user(user)
 
         response = Response({

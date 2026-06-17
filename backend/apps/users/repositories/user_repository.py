@@ -1,3 +1,4 @@
+from django.utils import timezone
 from django.shortcuts import get_object_or_404
 from apps.users.models import User, Role, InstructorProfile, InstructorCertificate
 
@@ -36,6 +37,12 @@ class UserRepository:
         user.google_email = google_email
         user.save(update_fields=["google_email"])
         return user
+
+    @staticmethod
+    def update_last_login(user):
+        """Cập nhật thời gian đăng nhập cuối cùng của user."""
+        user.last_login = timezone.now()
+        user.save(update_fields=["last_login"])
 
 
 class InstructorRepository:
