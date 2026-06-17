@@ -76,6 +76,6 @@ class GoogleOAuthService:
         """
         google_info = GoogleOAuthService.verify_google_token(id_token_value)
         user = GoogleOAuthService.get_or_create_google_user(google_info)
-        if not user.is_active or user.account_status != "ACTIVE":
+        if not user.is_active:
             raise ValidationError("Tài khoản không hợp lệ hoặc đã bị khóa.")
         return user

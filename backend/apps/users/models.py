@@ -36,11 +36,6 @@ class User(AbstractUser):
     Tài khoản người dùng mở rộng từ AbstractUser của Django.
     Sử dụng email làm định danh duy nhất để đăng nhập.
     """
-    ACCOUNT_STATUS_CHOICES = (
-        ('ACTIVE', 'Active'),              # Hoạt động bình thường
-        ('SUSPENDED', 'Suspended'),        # Ngừng tạm thời (vẫn có thể khôi phục)
-        ('LOCKED', 'Locked'),              # Bị khóa vĩnh viễn (vi phạm)
-    )
     id = models.UUIDField(primary_key=True, default=uuid7, editable=False)  # ID tự tăng cho mỗi user
     username = models.CharField(max_length=150, blank=True, null=True, unique=False)
     # Email là trường định danh duy nhất để đăng nhập, phải unique
@@ -49,12 +44,10 @@ class User(AbstractUser):
     avatar = models.ImageField(upload_to='avatars/', null=True, blank=True)
     # Số điện thoại liên hệ (tuỳ chọn)
     phone = models.CharField(max_length=15, null=True, blank=True)
-    # Trạng thái tài khoản (ACTIVE / SUSPENDED / LOCKED)
-    account_status = models.CharField(max_length=20, choices=ACCOUNT_STATUS_CHOICES, default='ACTIVE')
+    # Lý do khóa tài khoản
+    account_status_reason = models.TextField(null=True, blank=True)
     # Thời điểm thay đổi trạng thái cuối cùng
     account_status_changed_at = models.DateTimeField(null=True, blank=True)
-    # Lý do thay đổi trạng thái (khóa, tạm ngừng,....)
-    account_status_reason = models.TextField(null=True, blank=True)
     # Admin nào đã thay đổi trạng thái tài khoản này (FK tới chính bảng User)
     account_status_changed_by = models.ForeignKey(
         'self',
@@ -84,7 +77,6 @@ class User(AbstractUser):
     class Meta:
         db_table = 'user_account'
         indexes = [
-            models.Index(fields=['account_status']), # Lọc nhanh tài khoản theo trạng thái
             models.Index(fields=['role']),    
         ]
 

@@ -61,6 +61,10 @@ INSTALLED_APPS = [
 ]
 AUTH_USER_MODEL = 'users.User'
 
+AUTHENTICATION_BACKENDS = [
+    'apps.users.auth_backends.AllowInactiveModelBackend',
+]
+
 # Middleware configuration
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',

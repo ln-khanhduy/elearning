@@ -274,8 +274,8 @@ function ProfilePage() {
               </div>
               <div className="profile-meta-item">
                 <p className="profile-meta-label">TRẠNG THÁI</p>
-                <span className={`profile-status-badge ${user.account_status === "ACTIVE" ? "status-active" : "status-locked"}`}>
-                  {user.account_status === "ACTIVE" ? "ĐANG HOẠT ĐỘNG" : "ĐÃ KHÓA"}
+                <span className={`profile-status-badge ${user.is_active ? "status-active" : "status-locked"}`}>
+                  {user.is_active ? "ĐANG HOẠT ĐỘNG" : "ĐÃ KHÓA"}
                 </span>
               </div>
             </div>

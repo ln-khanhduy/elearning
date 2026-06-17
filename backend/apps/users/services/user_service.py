@@ -8,9 +8,9 @@ from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError as DjangoValidationError
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.token_blacklist.models import OutstandingToken
 
 from apps.common.permissions import HasRequiredPermission
-from apps.system.services.admin_log_service import AdminLogService
 from apps.users.repositories.user_repository import UserRepository, InstructorRepository, InstructorCertificateRepository
 from apps.users.utils.cookies import REFRESH_COOKIE_NAME
 from apps.users.services.google_oauth_service import GoogleOAuthService
@@ -24,12 +24,26 @@ ROLE_HIERARCHY = {
     "USER_MANAGER": 1,
     "FINANCE_ADMIN": 1,
     "INSTRUCTOR": 2,
-    "STUDENT": 3,
+    "STUDENT": 2,
 }
 
 
 class UserService:
     """Service quản lý người dùng - danh sách, chi tiết, khóa/mở khóa, đổi mật khẩu, cập nhật hồ sơ."""
+
+    @staticmethod
+    def _blacklist_user_tokens(user):
+        """
+        Blacklist tất cả refresh token đang hoạt động của user.
+        Điều này buộc user phải đăng nhập lại (hoặc bị logout nếu đang online).
+        """
+        outstanding_tokens = OutstandingToken.objects.filter(user=user)
+        for token in outstanding_tokens:
+            try:
+                refresh = RefreshToken(token.token)
+                refresh.blacklist()
+            except Exception:
+                pass
 
     @staticmethod
     def get_all_users():
@@ -66,7 +80,8 @@ class UserService:
         - Kiểm tra admin không thể tự khóa chính mình
         - Kiểm tra không thể khóa Super Admin
         - Kiểm tra phân cấp: admin chỉ có thể khóa người có cấp bậc thấp hơn
-        - Cập nhật trạng thái tài khoản thành LOCKED kèm lý do và thời gian
+        - Cập nhật is_active=False kèm lý do, thời gian và người khóa
+        - Blacklist tất cả refresh token của user để logout ngay lập tức
         """
         user = UserRepository.get_user_by_id(user_id)
 
@@ -85,26 +100,30 @@ class UserService:
         if admin_level >= target_level:
             raise DRFValidationError({"detail": "Bạn không có quyền khóa tài khoản này."})
 
-        user.account_status = "LOCKED"
+        user.is_active = False
         user.account_status_reason = reason
         user.account_status_changed_at = timezone.now()
         user.account_status_changed_by = admin_user
-        user.save()
+        user.save(update_fields=["is_active", "account_status_reason", "account_status_changed_at", "account_status_changed_by"])
+
+        # Blacklist tất cả refresh token để logout user ngay lập tức
+        UserService._blacklist_user_tokens(user)
+
         return user
 
     @staticmethod
     def unlock_user(user_id, admin_user):
         """
         Mở khóa tài khoản người dùng.
-        - Đặt lại trạng thái tài khoản thành ACTIVE
-        - Xóa lý do khóa và cập nhật thời gian/người thực hiện
+        - Đặt is_active = True
+        - Xóa lý do khóa, thời gian và người khóa
         """
         user = UserRepository.get_user_by_id(user_id)
-        user.account_status = "ACTIVE"
-        user.account_status_reason = ""
-        user.account_status_changed_at = timezone.now()
-        user.account_status_changed_by = admin_user
-        user.save()
+        user.is_active = True
+        user.account_status_reason = None
+        user.account_status_changed_at = None
+        user.account_status_changed_by = None
+        user.save(update_fields=["is_active", "account_status_reason", "account_status_changed_at", "account_status_changed_by"])
         return user
 
     @staticmethod
@@ -197,7 +216,7 @@ class InstructorService:
         - Nếu user chưa có hồ sơ: tạo mới (bọc transaction để tránh race condition)
         """
         # Kiểm tra tài khoản không bị khóa
-        if user.account_status != "ACTIVE":
+        if not user.is_active:
             raise DRFValidationError({
                 "detail": "Tài khoản của bạn đang bị khóa hoặc tạm ngừng."
             })

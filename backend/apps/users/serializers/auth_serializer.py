@@ -14,8 +14,8 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = [
             'id', 'email', 'first_name', 'last_name', 'full_name',
-            'phone', 'role', 'avatar_url', 'account_status', 'date_joined', 'last_login',
-            'google_email',
+            'phone', 'role', 'avatar_url', 'date_joined', 'last_login',
+            'google_email', 'is_active',
         ]
 
     def get_full_name(self, obj):
@@ -47,8 +47,8 @@ class LoginSerializer(serializers.Serializer):
         user = authenticate(username=email_value, password=password)
         if user is None:
             raise serializers.ValidationError('Email hoặc mật khẩu không đúng.')
-        if not user.is_active or user.account_status != 'ACTIVE':
-            raise serializers.ValidationError('Tài khoản không hợp lệ hoặc đã bị khóa.')
+        if not user.is_active:
+            raise serializers.ValidationError('Tài khoản đã bị khóa.')
         attrs['user'] = user
         return attrs
 

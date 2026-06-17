@@ -18,7 +18,7 @@ class UserListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ["id", "email", "first_name", "last_name", "phone", "avatar_url", "account_status", "role"]
+        fields = ["id", "email", "first_name", "last_name", "phone", "avatar_url", "role"]
 
 
 class UserDetailSerializer(serializers.ModelSerializer):
@@ -30,7 +30,8 @@ class UserDetailSerializer(serializers.ModelSerializer):
         model = User
         fields = [
             "id", "email", "first_name", "last_name",
-            "phone", "avatar_url", "account_status", "account_status_reason",
+            "phone", "avatar_url", "is_active",
+            "account_status_reason", "account_status_changed_at", "account_status_changed_by",
             "date_joined", "last_login", "role", "google_email",
         ]
 
