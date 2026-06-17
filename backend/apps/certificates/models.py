@@ -14,7 +14,9 @@ class CourseCertificate(models.Model):
     # Mã chứng chỉ duy nhất, có thể là UUID hoặc một chuỗi định dạng đặc biệt (VD: "CERT-2024-0001")
     certificate_code = models.CharField( max_length=50, unique=True)
     # URL để tải file chứng chỉ PDF 
-    pdf_url = models.URLField()
+    pdf_url = models.URLField(blank=True, default="")
+    # URL ảnh chứng chỉ (PNG) đã upload lên Cloudinary
+    image_url = models.URLField(blank=True, default="")
     # Thời điểm cấp chứng chỉ (tự động ghi khi tạo)
     issued_at = models.DateTimeField(auto_now_add=True)
 

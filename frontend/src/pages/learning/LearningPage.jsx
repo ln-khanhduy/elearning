@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useLearningCourse } from "../../hooks/learning/useLearningCourse";
@@ -25,13 +25,19 @@ function LearningPage() {
     prevLesson,
     nextLesson,
     progress,
+    courseCompleted,
+    certificate,
     goToLesson,
     goToPrev,
     goToNext,
     handleMarkComplete,
     handleSubmitQuiz,
+    handleCompleteCourse,
   } = useLearningCourse(courseId, lessonId);
 
+  // Dùng ref để luôn có nextLesson mới nhất trong setTimeout
+  const nextLessonRef = useRef(nextLesson);
+  nextLessonRef.current = nextLesson;
 
   // Loading state
   if (loading) {
@@ -84,15 +90,41 @@ function LearningPage() {
     );
   }
 
+  // Kiểm tra xem user có enrolled không
+  const isEnrolled = data.enrollment_id != null;
+
+  const handleCompleteCourseWithToast = async () => {
+    try {
+      const result = await handleCompleteCourse();
+      if (result) {
+        toast.success("Hoàn thành khóa học thành công! Chứng chỉ đã được cấp.");
+      } else {
+        toast.error("Không thể hoàn thành khóa học.");
+      }
+    } catch (err) {
+      toast.error(err.message || "Không thể hoàn thành khóa học.");
+    }
+  };
+
   const handleMarkCompleteWithToast = async () => {
     try {
-      await handleMarkComplete();
-      toast.success("Đã đánh dấu hoàn thành bài học!");
-
-      // Tự động chuyển sang bài tiếp theo
-      if (nextLesson) {
-        goToNext();
+      // Gọi API mark complete + cập nhật local state
+      const success = await handleMarkComplete();
+      if (!success) {
+        toast.error("Không thể đánh dấu hoàn thành.");
+        return;
       }
+
+      toast.success("Đã hoàn thành bài học! ");
+
+      // Chờ một chút để user thấy badge "Đã hoàn thành" trước khi chuyển bài
+      // Dùng ref để lấy nextLesson mới nhất (sau khi state đã cập nhật)
+      setTimeout(() => {
+        const next = nextLessonRef.current;
+        if (next) {
+          goToNext();
+        }
+      }, 1200);
     } catch (err) {
       toast.error(err.message || "Không thể đánh dấu hoàn thành.");
     }
@@ -107,11 +139,15 @@ function LearningPage() {
         prevLesson={prevLesson}
         nextLesson={nextLesson}
         progress={progress}
+        courseCompleted={courseCompleted}
+        certificate={certificate}
+        isEnrolled={isEnrolled}
         onSelectLesson={goToLesson}
         onPrev={goToPrev}
         onNext={goToNext}
         onMarkComplete={handleMarkCompleteWithToast}
         onSubmitQuiz={handleSubmitQuiz}
+        onCompleteCourse={handleCompleteCourseWithToast}
       />
     </div>
   );

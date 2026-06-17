@@ -14,18 +14,27 @@ function LearningLayout({
   prevLesson,
   nextLesson,
   progress,
+  courseCompleted,
+  certificate,
+  isEnrolled,
   onSelectLesson,
   onPrev,
   onNext,
   onMarkComplete,
   onSubmitQuiz,
+  onCompleteCourse,
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const toggleSidebar = () => setSidebarOpen((prev) => !prev);
   const closeSidebar = () => setSidebarOpen(false);
 
-  const isCompleted = currentLesson?.completed || false;
+  const isLessonCompleted = (lesson) =>
+    lesson?.completed === true ||
+    lesson?.is_completed === true ||
+    lesson?.isCompleted === true;
+
+  const isCompleted = isLessonCompleted(currentLesson);
 
   return (
     <div className="learning-layout">
@@ -39,10 +48,13 @@ function LearningLayout({
         chapters={chapters}
         currentLessonId={currentLessonId}
         progress={progress}
+        courseCompleted={courseCompleted}
+        certificate={certificate}
         onSelectLesson={(id) => {
           onSelectLesson(id);
           closeSidebar();
         }}
+        onCompleteCourse={onCompleteCourse}
         isOpen={sidebarOpen}
         onClose={closeSidebar}
       />
@@ -59,6 +71,7 @@ function LearningLayout({
             onNext={onNext}
             onMarkComplete={onMarkComplete}
             isCompleted={isCompleted}
+            isEnrolled={isEnrolled}
           />
         )}
       </main>

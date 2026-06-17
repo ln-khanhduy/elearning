@@ -4,7 +4,10 @@ export const sidebarItems = [
   { type: "group", label: "Quản lý học tập" },
   { type: "item", label: "Khóa học", path: "/courses", icon: "bi-mortarboard", roles: ["STUDENT", "COURSE_ADMIN", "SUPERADMIN","INSTRUCTOR","INSTRUCTOR_MANAGER"] },
   { type: "item", label: "Khóa học của tôi", path: "/my-courses", icon: "bi-journal-bookmark", roles: ["STUDENT", "INSTRUCTOR"] },
+  { type: "item", label: "Chứng chỉ của tôi", path: "/my-certificates", icon: "bi-award", roles: ["STUDENT", "INSTRUCTOR"] },
   { type: "item", label: "Quản lý khóa học", path: "/instructor/courses", icon: "bi-tools", roles: ["INSTRUCTOR"] },
+  { type: "item", label: "Doanh thu của tôi", path: "/instructor/revenue", icon: "bi-cash-coin", roles: ["INSTRUCTOR"] },
+
   { type: "item", label: "Khóa học chờ duyệt", path: "/admin/courses/pending", icon: "bi-clipboard-check", roles: ["COURSE_ADMIN","SUPERADMIN"] },
   { type: "item", label: "Danh mục khóa học", path: "/admin/courses/categories", icon: "bi-folder", roles: ["COURSE_ADMIN", "SUPERADMIN"] },
   { type: "item", label: "Bình luận / Đánh giá", path: "/admin/reviews", icon: "bi-chat-square-text", roles: ["COURSE_ADMIN", "SUPERADMIN"] },

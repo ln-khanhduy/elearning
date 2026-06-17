@@ -44,3 +44,11 @@ export const submitQuizApi = async (courseId, quizId, answers) => {
     })
   );
 };
+
+/**
+ * Hoàn thành khóa học và cấp chứng chỉ.
+ * POST /api/learning/courses/{courseId}/complete/
+ */
+export const completeCourseApi = async (courseId) => {
+  return request(() => apiClient.post(`/api/learning/courses/${courseId}/complete/`));
+};

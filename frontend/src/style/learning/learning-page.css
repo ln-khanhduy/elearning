@@ -251,6 +251,35 @@
   flex-shrink: 0;
 }
 
+/* Locked learning item */
+.learning-item--locked {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.learning-item--locked:hover {
+  background: transparent;
+}
+
+.learning-item-lock {
+  color: #ced4da;
+  font-size: 14px;
+}
+
+/* Free notice in navigation */
+.learning-nav-free-notice {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--course-success, #198754);
+  padding: 8px 16px;
+  background: #f0fdf4;
+  border-radius: 8px;
+  border: 1px solid #bbf7d0;
+}
+
 /* ===== MAIN CONTENT ===== */
 .learning-main {
   flex: 1;
@@ -353,6 +382,28 @@
   color: var(--course-text-muted, #6c757d);
   line-height: 1.6;
   margin: 0;
+}
+
+/* Video lesson attached materials */
+.video-lesson-materials {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid var(--course-border, #e9ecef);
+}
+
+.video-lesson-materials-divider {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--course-text, #1a1a2e);
+}
+
+.video-lesson-materials-divider i {
+  color: var(--primary, #0f3d75);
+  font-size: 16px;
 }
 
 /* ===== DOCUMENT LESSON ===== */
@@ -951,4 +1002,143 @@
     width: 280px;
     min-width: 280px;
   }
+}
+
+/* ===== COURSE COMPLETION BOX ===== */
+.learning-completion-box {
+  margin: 16px;
+  padding: 16px;
+  border-radius: 14px;
+  background: var(--bg, #f5f7fb);
+  border: 1px solid var(--course-border, #e5e7eb);
+  text-align: center;
+}
+
+.completion-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--course-text-muted, #6c757d);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+
+.completion-percent {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--primary, #0f3d75);
+  margin-bottom: 12px;
+}
+
+.complete-course-btn {
+  width: 100%;
+  padding: 10px 16px;
+  border-radius: 10px;
+  background: var(--primary, #0f3d75);
+  color: #fff;
+  border: none;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--course-transition, all 0.2s ease);
+}
+
+.complete-course-btn:hover {
+  background: var(--course-primary-dark, #0a2d55);
+}
+
+.complete-course-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.course-completed-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: var(--course-success, #16a34a);
+  font-weight: 700;
+  font-size: 14px;
+  padding: 8px 0;
+}
+
+.course-completed-badge i {
+  font-size: 18px;
+}
+
+.certificate-info {
+  margin-top: 8px;
+  padding: 10px;
+  background: var(--course-card-bg, #ffffff);
+  border-radius: 8px;
+  border: 1px solid var(--course-border, #e5e7eb);
+}
+
+.certificate-code {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--course-text, #1a1a2e);
+  word-break: break-all;
+}
+
+.certificate-code i {
+  color: #f59e0b;
+  font-size: 16px;
+}
+
+.certificate-date {
+  font-size: 11px;
+  color: var(--course-text-muted, #6c757d);
+  margin-top: 4px;
+}
+
+.certificates-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--primary, #0f3d75);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.certificates-link:hover {
+  color: var(--course-primary-dark, #0a2d55);
+  text-decoration: underline;
+}
+
+.certificate-view-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  margin-top: 8px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+  border: none;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--course-transition, all 0.2s ease);
+}
+
+.certificate-view-btn:hover {
+  background: linear-gradient(135deg, #5a6fd6 0%, #6a3f92 100%);
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+}
+
+.certificate-view-btn i {
+  font-size: 16px;
+  color: #ffd700;
 }

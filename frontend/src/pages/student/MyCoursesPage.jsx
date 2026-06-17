@@ -104,11 +104,12 @@ function MyCoursesPage() {
                   <span className="mycourse-date">
                     Đăng ký: {new Date(enr.enrolled_at || enr.created_at).toLocaleDateString("vi-VN")}
                   </span>
-                  {enr.status === "ACTIVE" && (
-                    <Link to={`/learning/${enr.course}`} className="mycourse-btn-study">
-                      Học tiếp
+                  {(enr.status === "ACTIVE" || enr.status === "COMPLETED") && (
+                    <Link to={`/courses/${enr.course}/learn`} className="mycourse-btn-study">
+                      {enr.status === "COMPLETED" ? "Xem lại" : "Học tiếp"}
                     </Link>
                   )}
+
                 </div>
               </div>
             </div>

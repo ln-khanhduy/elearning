@@ -12,6 +12,7 @@ function LearningNavigation({
   onNext,
   onMarkComplete,
   isCompleted,
+  isEnrolled = true,
 }) {
   return (
     <div className="learning-navigation">
@@ -30,16 +31,22 @@ function LearningNavigation({
       </div>
 
       <div className="learning-navigation-center">
-        {currentLesson && !isCompleted && (
+        {isEnrolled && currentLesson && !isCompleted && (
           <button className="learning-nav-btn learning-nav-btn--complete" onClick={onMarkComplete}>
             <i className="bi bi-check-lg"></i>
             Đánh dấu hoàn thành
           </button>
         )}
-        {currentLesson && isCompleted && (
+        {isEnrolled && currentLesson && isCompleted && (
           <span className="learning-nav-completed">
             <i className="bi bi-check-circle-fill"></i>
             Đã hoàn thành
+          </span>
+        )}
+        {!isEnrolled && currentLesson && (
+          <span className="learning-nav-free-notice">
+            <i className="bi bi-unlock"></i>
+            Bài học miễn phí
           </span>
         )}
       </div>

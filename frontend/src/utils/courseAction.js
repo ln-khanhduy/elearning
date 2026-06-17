@@ -33,10 +33,10 @@ export function getCourseAction({
 
   if (progressPercent >= 100) {
     return {
-      label: "Đã hoàn thành",
-      icon: "bi bi-check-circle",
+      label: "Xem lại",
+      icon: "bi bi-eye",
       variant: "success",
-      action: "completed",
+      action: "continue",
     };
   }
 

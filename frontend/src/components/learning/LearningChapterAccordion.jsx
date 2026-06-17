@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import LearningItem from "./LearningItem";
 
 /**
- * LearningChapterAccordion - Một section/chapter trong sidebar.
+ * LearningChapterAccordion - Một chapter trong sidebar.
  * Dạng accordion, click để expand/collapse.
  * Hiển thị danh sách bài học bên trong.
  */
@@ -39,7 +39,7 @@ function LearningChapterAccordion({
             <LearningItem
               key={lesson.id}
               lesson={lesson}
-              isActive={lesson.id === currentLessonId}
+              isActive={Number(lesson.id) === Number(currentLessonId)}
               isCompleted={lesson.completed}
               onClick={onSelectLesson}
             />

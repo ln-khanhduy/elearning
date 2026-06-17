@@ -32,6 +32,8 @@ urlpatterns = [
     # Payments
     path("api/payments/", include("apps.payments.urls")),
 
+    path("api/certificates/", include("apps.certificates.urls")),
+
     path("api/system/", include("apps.system.urls")),
 
 ]

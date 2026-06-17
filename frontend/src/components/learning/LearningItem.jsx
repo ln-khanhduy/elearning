@@ -18,23 +18,34 @@ function LearningItem({ lesson, isActive, isCompleted, onClick }) {
     }
   };
 
+  const isLocked = lesson.is_locked === true;
+
+  const handleClick = () => {
+    if (!isLocked) {
+      onClick(lesson.id);
+    }
+  };
+
   return (
     <button
       className={`learning-item ${isActive ? "learning-item--active" : ""} ${
         isCompleted ? "learning-item--completed" : ""
-      }`}
-      onClick={() => onClick(lesson.id)}
-      title={lesson.title}
+      } ${isLocked ? "learning-item--locked" : ""}`}
+      onClick={handleClick}
+      title={isLocked ? "Bài học này cần đăng ký khóa học" : lesson.title}
+      disabled={isLocked}
     >
       <span className="learning-item-icon">
-        {isCompleted ? (
+        {isLocked ? (
+          <i className="bi bi-lock-fill learning-item-lock"></i>
+        ) : isCompleted ? (
           <i className="bi bi-check-circle-fill learning-item-check"></i>
         ) : (
           <i className={`bi ${getIcon(lesson.content_type)}`}></i>
         )}
       </span>
       <span className="learning-item-title">{lesson.title}</span>
-      {lesson.is_free && <span className="learning-item-free">Miễn phí</span>}
+      {lesson.is_free && !isLocked && <span className="learning-item-free">Miễn phí</span>}
     </button>
   );
 }

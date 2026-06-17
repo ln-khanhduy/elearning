@@ -21,7 +21,7 @@ from apps.lessons.serializers.lesson_serializer import LessonSerializer, LessonP
 from apps.quizzes.repositories.quiz_repository import QuizRepository
 from apps.quizzes.repositories.question_repository import QuestionRepository
 from apps.quizzes.serializers.quiz_serializer import QuizSerializer, QuizPreviewSerializer
-from apps.quizzes.serializers.question_serializer import QuestionSerializer, QuestionPreviewSerializer
+from apps.quizzes.serializers.question_serializer import QuestionPreviewSerializer
 
 
 
@@ -302,9 +302,10 @@ class CourseUnhideAPIView(APIView):
 class CourseCurriculumAPIView(APIView):
     """
     GET /api/courses/{course_id}/curriculum/ - Lấy curriculum preview cho public.
-    CHỈ trả về thông tin preview: chapter title, lesson title, content_type, is_free.
-    KHÔNG trả về video_url, material_url, quiz questions/options/answers.
-    Quiz chỉ trả về: id, title, question_count.
+    Trả về:
+      - Lesson FREE: có video_url, material_url (xem được miễn phí)
+      - Lesson PAID: CHỈ thông tin cơ bản, KHÔNG có video_url, material_url
+      - Quiz: CHỈ id, title, question_count (KHÔNG trả questions)
     """
     permission_classes = [AllowAny]
 
@@ -320,8 +321,12 @@ class CourseCurriculumAPIView(APIView):
             lessons = LessonRepository.get_by_chapter(chapter.id)
             lessons_data = []
             for lesson in lessons:
-                # Dùng LessonPreviewSerializer - KHÔNG expose video_url, material_url
-                lesson_data = LessonPreviewSerializer(lesson).data
+                # FREE lesson: expose video_url, material_url để xem miễn phí
+                # PAID lesson: CHỈ thông tin cơ bản
+                if lesson.is_free:
+                    lesson_data = LessonSerializer(lesson).data
+                else:
+                    lesson_data = LessonPreviewSerializer(lesson).data
 
                 # Public: chỉ trả quiz title + question_count, KHÔNG trả questions
                 quizzes = QuizRepository.get_by_lesson(lesson.id)

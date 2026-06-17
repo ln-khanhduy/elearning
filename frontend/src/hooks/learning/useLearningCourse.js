@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { getLearningCurriculumApi, markLessonCompleteApi, submitQuizApi } from "../../api/learningAPI";
+import { getLearningCurriculumApi, markLessonCompleteApi, submitQuizApi, completeCourseApi } from "../../api/learningAPI";
 
 /**
  * Hook quản lý dữ liệu learning page.
@@ -17,6 +17,8 @@ export function useLearningCourse(courseId, lessonId) {
   const [error, setError] = useState(null);
   const [currentLessonId, setCurrentLessonId] = useState(null);
   const [progress, setProgress] = useState(null);
+  const [courseCompleted, setCourseCompleted] = useState(false);
+  const [certificate, setCertificate] = useState(null);
 
   const fetchCurriculum = useCallback(async () => {
     if (!courseId) return;
@@ -25,12 +27,42 @@ export function useLearningCourse(courseId, lessonId) {
     try {
       const res = await getLearningCurriculumApi(courseId);
       if (res?.success && res?.data) {
-        setData(res.data);
+        // Chuẩn hóa: đảm bảo mọi lesson có đủ 3 field completed
+        const normalizeLesson = (lesson) => ({
+          ...lesson,
+          completed:
+            lesson.completed === true ||
+            lesson.is_completed === true ||
+            lesson.isCompleted === true,
+          is_completed:
+            lesson.completed === true ||
+            lesson.is_completed === true ||
+            lesson.isCompleted === true,
+          isCompleted:
+            lesson.completed === true ||
+            lesson.is_completed === true ||
+            lesson.isCompleted === true,
+        });
+
+        const normalizedData = {
+          ...res.data,
+          chapters: (res.data.chapters || []).map((ch) => ({
+            ...ch,
+            lessons: (ch.lessons || []).map(normalizeLesson),
+          })),
+        };
+
+        setData(normalizedData);
         setProgress(res.data.progress);
+        setCourseCompleted(res.data.course_completed === true);
+        setCertificate(res.data.certificate || null);
+
+        // Kiểm tra xem user có enrolled không (dựa vào enrollment_id)
+        const isEnrolled = res.data.enrollment_id != null;
 
         // Lấy tất cả bài học
         const allLessons = [];
-        for (const ch of res.data.chapters || []) {
+        for (const ch of normalizedData.chapters || []) {
           for (const l of ch.lessons || []) {
             allLessons.push(l);
           }
@@ -38,16 +70,18 @@ export function useLearningCourse(courseId, lessonId) {
 
         // Ưu tiên lessonId từ URL (deep-link)
         if (lessonId) {
-          const targetLesson = allLessons.find((l) => l.id === Number(lessonId));
+          const targetLesson = allLessons.find((l) => Number(l.id) === Number(lessonId));
           if (targetLesson) {
             setCurrentLessonId(targetLesson.id);
             return;
           }
-          // Nếu lessonId không hợp lệ, fallback xuống logic mặc định
         }
 
         // Tự động chọn bài học đầu tiên chưa hoàn thành
-        const firstIncomplete = allLessons.find((l) => !l.completed);
+        const firstIncomplete = allLessons.find((l) => {
+          const completed = l.is_completed === true || l.completed === true || l.isCompleted === true;
+          return !completed;
+        });
         if (firstIncomplete) {
           setCurrentLessonId(firstIncomplete.id);
         } else if (allLessons.length > 0) {
@@ -63,82 +97,92 @@ export function useLearningCourse(courseId, lessonId) {
     }
   }, [courseId, lessonId]);
 
-
   useEffect(() => {
     fetchCurriculum();
   }, [fetchCurriculum]);
 
-  /** Lấy thông tin bài học hiện tại */
-  const currentLesson = useCallback(() => {
-    if (!data?.chapters) return null;
+  // ===== DERIVED VALUES từ data state =====
+
+  /** Lấy tất cả bài học dạng flat */
+  const allLessons = useMemo(() => {
+    if (!data?.chapters) return [];
+    const all = [];
     for (const ch of data.chapters) {
       for (const l of ch.lessons || []) {
-        if (l.id === currentLessonId) return l;
+        all.push(l);
+      }
+    }
+    return all;
+  }, [data]);
+
+  /** Bài học hiện tại */
+  const currentLesson = useMemo(() => {
+    if (!currentLessonId) return null;
+    return allLessons.find((l) => Number(l.id) === Number(currentLessonId)) || null;
+  }, [currentLessonId, allLessons]);
+
+  /** Chapter chứa bài học hiện tại */
+  const currentChapter = useMemo(() => {
+    if (!currentLessonId || !data?.chapters) return null;
+    for (const ch of data.chapters) {
+      for (const l of ch.lessons || []) {
+        if (Number(l.id) === Number(currentLessonId)) return ch;
       }
     }
     return null;
-  }, [data, currentLessonId]);
+  }, [currentLessonId, data]);
 
-  /** Lấy chapter chứa bài học hiện tại */
-  const currentChapter = useCallback(() => {
-    if (!data?.chapters) return null;
-    for (const ch of data.chapters) {
-      for (const l of ch.lessons || []) {
-        if (l.id === currentLessonId) return ch;
-      }
-    }
-    return null;
-  }, [data, currentLessonId]);
-
-  /** Lấy bài học trước đó */
-  const prevLesson = useCallback(() => {
-    if (!data?.chapters) return null;
-    const allLessons = [];
-    for (const ch of data.chapters) {
-      for (const l of ch.lessons || []) {
-        allLessons.push(l);
-      }
-    }
-    const idx = allLessons.findIndex((l) => l.id === currentLessonId);
+  /** Bài trước */
+  const prevLesson = useMemo(() => {
+    const idx = allLessons.findIndex((l) => Number(l.id) === Number(currentLessonId));
     if (idx > 0) return allLessons[idx - 1];
     return null;
-  }, [data, currentLessonId]);
+  }, [currentLessonId, allLessons]);
 
-  /** Lấy bài học tiếp theo */
-  const nextLesson = useCallback(() => {
-    if (!data?.chapters) return null;
-    const allLessons = [];
-    for (const ch of data.chapters) {
-      for (const l of ch.lessons || []) {
-        allLessons.push(l);
-      }
-    }
-    const idx = allLessons.findIndex((l) => l.id === currentLessonId);
+  /** Bài tiếp theo */
+  const nextLesson = useMemo(() => {
+    const idx = allLessons.findIndex((l) => Number(l.id) === Number(currentLessonId));
     if (idx >= 0 && idx < allLessons.length - 1) return allLessons[idx + 1];
     return null;
-  }, [data, currentLessonId]);
+  }, [currentLessonId, allLessons]);
+
+  // ===== ACTIONS =====
 
   /** Đánh dấu hoàn thành bài học */
   const handleMarkComplete = useCallback(async () => {
-    if (!currentLessonId || !courseId) return;
+    if (!currentLessonId || !courseId) {
+      return false;
+    }
     try {
       const res = await markLessonCompleteApi(courseId, currentLessonId);
+
       if (res?.success) {
-        // Cập nhật trạng thái completed trong data
+        // Cập nhật trạng thái completed trong data — dùng functional updater
         setData((prev) => {
           if (!prev) return prev;
-          const newChapters = prev.chapters.map((ch) => ({
-            ...ch,
-            lessons: ch.lessons.map((l) =>
-              l.id === currentLessonId ? { ...l, completed: true } : l
-            ),
-          }));
-          return { ...prev, chapters: newChapters };
+          return {
+            ...prev,
+            chapters: prev.chapters.map((ch) => ({
+              ...ch,
+              lessons: ch.lessons.map((l) =>
+                Number(l.id) === Number(currentLessonId)
+                  ? { ...l, is_completed: true, completed: true, isCompleted: true }
+                  : l
+              ),
+            })),
+          };
         });
-        // Cập nhật progress
+        
+        // Cập nhật progress từ API response
         if (res?.data) {
-          setProgress(res.data);
+          setProgress({
+            completed_lessons_count: res.data.completed_lessons_count ?? 0,
+            total_lessons_count: res.data.total_lessons_count ?? 0,
+            progress_percent: res.data.progress_percent ?? 0,
+            last_completed_lesson_id: res.data.lesson_id ?? null,
+          });
         }
+        
         return true;
       }
       return false;
@@ -164,6 +208,24 @@ export function useLearningCourse(courseId, lessonId) {
     [courseId]
   );
 
+  /** Hoàn thành khóa học và cấp chứng chỉ */
+  const handleCompleteCourse = useCallback(async () => {
+    if (!courseId) return null;
+    try {
+      const res = await completeCourseApi(courseId);
+      if (res?.success && res?.data) {
+        setCourseCompleted(true);
+        setCertificate(res.data.certificate || null);
+        // Refetch curriculum để cập nhật UI (sidebar, progress, certificate)
+        fetchCurriculum();
+        return res.data;
+      }
+      return null;
+    } catch (err) {
+      throw err;
+    }
+  }, [courseId, fetchCurriculum]);
+
   /** Chuyển đến bài học và cập nhật URL */
   const goToLesson = useCallback((lessonId) => {
     setCurrentLessonId(lessonId);
@@ -172,22 +234,19 @@ export function useLearningCourse(courseId, lessonId) {
 
   /** Chuyển đến bài trước */
   const goToPrev = useCallback(() => {
-    const prev = prevLesson();
-    if (prev) {
-      setCurrentLessonId(prev.id);
-      navigate(`/courses/${courseId}/learn/${prev.id}`, { replace: true });
+    if (prevLesson) {
+      setCurrentLessonId(prevLesson.id);
+      navigate(`/courses/${courseId}/learn/${prevLesson.id}`, { replace: true });
     }
   }, [prevLesson, courseId, navigate]);
 
   /** Chuyển đến bài tiếp theo */
   const goToNext = useCallback(() => {
-    const next = nextLesson();
-    if (next) {
-      setCurrentLessonId(next.id);
-      navigate(`/courses/${courseId}/learn/${next.id}`, { replace: true });
+    if (nextLesson) {
+      setCurrentLessonId(nextLesson.id);
+      navigate(`/courses/${courseId}/learn/${nextLesson.id}`, { replace: true });
     }
   }, [nextLesson, courseId, navigate]);
-
 
   return {
     data,
@@ -195,15 +254,18 @@ export function useLearningCourse(courseId, lessonId) {
     error,
     refetch: fetchCurriculum,
     currentLessonId,
-    currentLesson: currentLesson(),
-    currentChapter: currentChapter(),
-    prevLesson: prevLesson(),
-    nextLesson: nextLesson(),
+    currentLesson,
+    currentChapter,
+    prevLesson,
+    nextLesson,
     progress,
+    courseCompleted,
+    certificate,
     goToLesson,
     goToPrev,
     goToNext,
     handleMarkComplete,
     handleSubmitQuiz,
+    handleCompleteCourse,
   };
 }

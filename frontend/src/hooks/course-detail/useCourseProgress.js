@@ -6,11 +6,13 @@ import { checkEnrolled } from "../../services/enrollmentService";
  * Bao gồm: kiểm tra đã đăng ký chưa, tiến độ học tập
  *
  * Backend CheckEnrolledAPIView trả về:
- *   { is_enrolled: bool, enrollment: object|null }
+ *   { is_enrolled: bool, is_owner: bool, can_access: bool, enrollment: object|null }
  */
 export function useCourseProgress(courseId) {
   const [enrollment, setEnrollment] = useState(null);
   const [isEnrolled, setIsEnrolled] = useState(false);
+  const [isOwner, setIsOwner] = useState(false);
+  const [canAccess, setCanAccess] = useState(false);
   const [progressPercent, setProgressPercent] = useState(0);
   const [loading, setLoading] = useState(false);
 
@@ -19,9 +21,10 @@ export function useCourseProgress(courseId) {
     try {
       setLoading(true);
       const data = await checkEnrolled(courseId);
-      // Backend trả về { is_enrolled, enrollment }
-      // API wrapper trả về res.data nên data = { is_enrolled, enrollment }
+      // Backend trả về { is_enrolled, is_owner, can_access, enrollment }
       const isEnrolledFlag = data?.is_enrolled === true;
+      const isOwnerFlag = data?.is_owner === true;
+      const canAccessFlag = data?.can_access === true;
       const enrollmentData = data?.enrollment || null;
 
       // Chỉ coi là enrolled nếu enrollment có status ACTIVE hoặc COMPLETED
@@ -30,13 +33,24 @@ export function useCourseProgress(courseId) {
         enrollmentData &&
         validStatuses.includes(enrollmentData.status);
 
-      if (isEnrolledFlag && enrollmentData && hasValidStatus) {
+      if (canAccessFlag && enrollmentData && hasValidStatus) {
         setEnrollment(enrollmentData);
         setIsEnrolled(true);
+        setIsOwner(isOwnerFlag);
+        setCanAccess(true);
         setProgressPercent(Math.round(enrollmentData.progress_percent || 0));
+      } else if (isOwnerFlag) {
+        // Instructor owner: được quyền truy cập như learner đã enroll
+        setEnrollment(enrollmentData || null);
+        setIsEnrolled(true);  // Coi như đã enroll để UI hiển thị đúng
+        setIsOwner(true);
+        setCanAccess(true);
+        setProgressPercent(0);
       } else {
         setEnrollment(null);
         setIsEnrolled(false);
+        setIsOwner(false);
+        setCanAccess(false);
         setProgressPercent(0);
       }
 
@@ -44,6 +58,8 @@ export function useCourseProgress(courseId) {
       // User chưa đăng nhập hoặc chưa đăng ký -> không enrolled
       setEnrollment(null);
       setIsEnrolled(false);
+      setIsOwner(false);
+      setCanAccess(false);
       setProgressPercent(0);
     } finally {
       setLoading(false);
@@ -87,6 +103,8 @@ export function useCourseProgress(courseId) {
   return {
     enrollment,
     isEnrolled,
+    isOwner,
+    canAccess,
     progressPercent,
     loading: loading,
     refetch: checkEnrollment,

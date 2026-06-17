@@ -41,7 +41,7 @@ function CourseProgressCard({
   });
 
   const handleClick = () => {
-    if (loading || action.action === "completed") return;
+    if (loading) return;
     if (action.action === "enroll") {
       onEnroll?.();
     } else if (action.action === "start") {
@@ -89,7 +89,7 @@ function CourseProgressCard({
       <button
         className={`progress-card-btn btn-${action.variant}`}
         onClick={handleClick}
-        disabled={loading || action.action === "completed"}
+        disabled={loading}
       >
         {loading ? (
           <span className="spinner-border spinner-border-sm" role="status"></span>

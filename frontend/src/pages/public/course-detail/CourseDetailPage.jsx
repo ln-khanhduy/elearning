@@ -91,6 +91,13 @@ function CourseDetailPage() {
     }
   }, [isEnrolled, navigate, courseId, enrollment]);
 
+  /** Xử lý click vào FREE lesson - cho phép xem trước miễn phí */
+  const handleFreeLessonClick = useCallback((lesson) => {
+    if (lesson && lesson.id) {
+      navigate(`/courses/${courseId}/learn/${lesson.id}`);
+    }
+  }, [navigate, courseId]);
+
 
   // Loading state
   if (loading) {
@@ -192,6 +199,7 @@ function CourseDetailPage() {
                   curriculum={curriculum}
                   completedLessons={enrollment?.completed_lessons || []}
                   isEnrolled={isEnrolled}
+                  onFreeLessonClick={handleFreeLessonClick}
                 />
               </TabPanel>
 

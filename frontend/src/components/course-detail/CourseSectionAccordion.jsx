@@ -7,7 +7,7 @@ import "../../style/course-detail/course-section-accordion.css";
  * Hiển thị tiêu đề chương, số bài, thời lượng, và danh sách bài học bên trong
  * Mỗi lesson có thể có quizzes hiển thị như các item con
  */
-function CourseSectionAccordion({ chapter, index, completedLessons, isEnrolled }) {
+function CourseSectionAccordion({ chapter, index, completedLessons, isEnrolled, onFreeLessonClick }) {
   const [isOpen, setIsOpen] = useState(index === 0); // Mở chương đầu tiên mặc định
 
   const lessons = chapter.lessons || [];
@@ -89,6 +89,7 @@ function CourseSectionAccordion({ chapter, index, completedLessons, isEnrolled }
                   isCompleted={completedLessons.has(lesson.id)}
                   isEnrolled={isEnrolled}
                   isQuiz={false}
+                  onFreeLessonClick={onFreeLessonClick}
                 />
               );
               // Render quiz items under this lesson

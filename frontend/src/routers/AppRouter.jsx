@@ -22,6 +22,7 @@ import InstructorCourseEditPage from "../pages/instructor/InstructorCourseEditPa
 import AdminPendingCoursesPage from "../pages/admin/AdminPendingCoursesPage";
 import AdminCategoryPage from "../pages/admin/AdminCategoryPage";
 import MyCoursesPage from "../pages/student/MyCoursesPage";
+import CertificatesPage from "../pages/student/CertificatesPage";
 import LearningPage from "../pages/learning/LearningPage";
 import AdminReviewsPage from "../pages/admin/AdminReviewsPage";
 
@@ -55,6 +56,7 @@ function AppRouter() {
 
           {/* Học tập */}
           <Route path="/my-courses" element={<ProtectedRoute allowedRoles={["STUDENT", "INSTRUCTOR"]}><MyCoursesPage /></ProtectedRoute>} />
+          <Route path="/my-certificates" element={<ProtectedRoute allowedRoles={["STUDENT", "INSTRUCTOR"]}><CertificatesPage /></ProtectedRoute>} />
           <Route path="/courses/:courseId/learn" element={<ProtectedRoute allowedRoles={["STUDENT", "INSTRUCTOR"]}><LearningPage /></ProtectedRoute>} />
           <Route path="/courses/:courseId/learn/:lessonId" element={<ProtectedRoute allowedRoles={["STUDENT", "INSTRUCTOR"]}><LearningPage /></ProtectedRoute>} />
 

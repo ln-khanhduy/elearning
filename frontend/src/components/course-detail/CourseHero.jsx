@@ -1,17 +1,21 @@
-import React from "react";
+import React, { useState } from "react";
 import "../../style/course-detail/course-hero.css";
 
 /**
  * Hero section hiển thị thông tin tổng quan khóa học
  * Gồm: thumbnail, tiêu đề, mô tả, instructor, rating, học viên, cấp độ, thời lượng
+ * Nếu có preview_video_url, hiển thị video giới thiệu thay cho thumbnail
  */
 function CourseHero({ course }) {
+  const [showPreview, setShowPreview] = useState(false);
+
   if (!course) return null;
 
   const {
     title,
     description,
     thumbnail_url,
+    preview_video_url,
     instructor_name,
     instructor_avatar,
     average_rating,
@@ -23,6 +27,15 @@ function CourseHero({ course }) {
     price,
     original_price,
   } = course;
+
+  const getYouTubeEmbedUrl = (url) => {
+    if (!url) return null;
+    const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/);
+    if (match) {
+      return `https://www.youtube.com/embed/${match[1]}?autoplay=1`;
+    }
+    return url;
+  };
 
   const renderStars = (rating) => {
     const stars = [];
@@ -151,19 +164,55 @@ function CourseHero({ course }) {
           </div>
         </div>
 
-        {/* Thumbnail - bọc trong mockup card đẹp */}
+        {/* Thumbnail / Preview Video */}
         <div className="course-hero-thumbnail">
           <div className="course-hero-thumb-mockup">
-            {thumbnail_url ? (
-              <img
-                src={thumbnail_url}
-                alt={title}
-                className="course-hero-thumb-img"
-              />
+            {showPreview && preview_video_url ? (
+              <div className="course-hero-video-wrapper">
+                <iframe
+                  src={getYouTubeEmbedUrl(preview_video_url)}
+                  title="Video giới thiệu khóa học"
+                  className="course-hero-video-iframe"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  frameBorder="0"
+                ></iframe>
+              </div>
+            ) : thumbnail_url ? (
+              <>
+                <img
+                  src={thumbnail_url}
+                  alt={title}
+                  className="course-hero-thumb-img"
+                />
+                {preview_video_url && (
+                  <button
+                    className="course-hero-play-btn"
+                    onClick={() => setShowPreview(true)}
+                    title="Xem video giới thiệu"
+                  >
+                    <i className="bi bi-play-circle-fill"></i>
+                    <span>Xem giới thiệu</span>
+                  </button>
+                )}
+              </>
             ) : (
               <div className="course-hero-thumb-placeholder">
-                <i className="bi bi-play-circle"></i>
-                <span>Xem preview</span>
+                {preview_video_url ? (
+                  <button
+                    className="course-hero-play-btn course-hero-play-btn--center"
+                    onClick={() => setShowPreview(true)}
+                    title="Xem video giới thiệu"
+                  >
+                    <i className="bi bi-play-circle-fill"></i>
+                    <span>Xem giới thiệu</span>
+                  </button>
+                ) : (
+                  <>
+                    <i className="bi bi-play-circle"></i>
+                    <span>Xem preview</span>
+                  </>
+                )}
               </div>
             )}
           </div>

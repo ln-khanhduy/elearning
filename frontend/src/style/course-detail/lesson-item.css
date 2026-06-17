@@ -107,6 +107,36 @@
   color: #ced4da;
 }
 
+.status-free {
+  color: var(--course-primary, #1a5fa8);
+}
+
+/* FREE badge */
+.lesson-free-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  background: #28a745;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Clickable lesson item */
+.lesson-item--clickable {
+  cursor: pointer;
+}
+
+.lesson-item--clickable:hover {
+  background: #e8f4fd;
+}
+
+.lesson-item.lesson-completed.lesson-item--clickable:hover {
+  background: #e0f5e8;
+}
+
 /* Quiz item styling */
 .lesson-item.lesson-quiz {
   padding-left: 60px;

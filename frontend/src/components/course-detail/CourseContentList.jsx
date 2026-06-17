@@ -6,7 +6,7 @@ import "../../style/course-detail/course-content-list.css";
  * Danh sách nội dung khóa học
  * Hiển thị tổng số chương/bài và danh sách accordion các chương
  */
-function CourseContentList({ curriculum, completedLessons, isEnrolled }) {
+function CourseContentList({ curriculum, completedLessons, isEnrolled, onFreeLessonClick }) {
   if (!curriculum || curriculum.length === 0) {
     return (
       <div className="course-content-empty">
@@ -46,6 +46,7 @@ function CourseContentList({ curriculum, completedLessons, isEnrolled }) {
             index={index}
             completedLessons={completedIds}
             isEnrolled={isEnrolled}
+            onFreeLessonClick={onFreeLessonClick}
           />
         ))}
       </div>

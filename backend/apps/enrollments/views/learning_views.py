@@ -2,7 +2,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.views import APIView
-from rest_framework.exceptions import PermissionDenied, NotFound
+from rest_framework.exceptions import PermissionDenied, NotFound, ValidationError
 
 from apps.enrollments.services.learning_service import LearningService
 from apps.enrollments.serializers.learning_serializer import (
@@ -102,5 +102,27 @@ class SubmitQuizAPIView(APIView):
             return error_response(str(e), http_status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             return error_response("Đã xảy ra lỗi khi nộp bài kiểm tra.", http_status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class CompleteCourseAPIView(APIView):
+    """
+    POST /api/learning/courses/{course_id}/complete/
+    Hoàn thành khóa học và cấp chứng chỉ.
+    Yêu cầu: user đã đăng nhập, đã enroll, và progress >= 100%.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, course_id):
+        try:
+            result = LearningService.complete_course(request.user, course_id)
+            return success_response(result, "Hoàn thành khóa học thành công. Chứng chỉ đã được cấp.")
+        except PermissionDenied:
+            return error_response("Bạn cần đăng ký khóa học trước khi học.", http_status=status.HTTP_403_FORBIDDEN)
+        except ValidationError as e:
+            return error_response(str(e), http_status=status.HTTP_400_BAD_REQUEST)
+        except NotFound as e:
+            return error_response(str(e), http_status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return error_response("Đã xảy ra lỗi khi hoàn thành khóa học.", http_status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
