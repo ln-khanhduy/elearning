@@ -1,9 +1,7 @@
 from rest_framework import status
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.views import APIView
 
-from apps.common.permissions import HasRequiredPermission
+from apps.common.base_api_view import BasePermissionAPIView
 from apps.system.services.admin_log_service import AdminLogService
 
 from apps.system.serializers.dashboard_serializer import DashboardDataSerializer
@@ -11,13 +9,12 @@ from apps.system.services.dashboard_service import AdminDashboardService
 
 
 
-class AdminDashboardView(APIView):
+class AdminDashboardView(BasePermissionAPIView):
     """
     GET /api/dashboard/ - Lấy dữ liệu thống kê cho trang dashboard admin.
     Yêu cầu quyền: admin.dashboard.view
     Có thể lọc theo năm: ?year=2026
     """
-    permission_classes = [IsAuthenticated, HasRequiredPermission]
     required_permission = "admin.dashboard.view"
 
     def get(self, request):

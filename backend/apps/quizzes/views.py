@@ -1,9 +1,9 @@
-from rest_framework.views import APIView
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.views import APIView
 
-from apps.common.permissions import HasRequiredPermission
+from apps.common.base_api_view import BasePermissionAPIView
 from apps.system.services.admin_log_service import AdminLogService
 
 from apps.quizzes.services.quiz_service import QuizService
@@ -53,11 +53,10 @@ class QuizDetailAPIView(APIView):
         return success_response(QuizSerializer(quiz).data)
 
 
-class QuizCreateAPIView(APIView):
+class QuizCreateAPIView(BasePermissionAPIView):
     """
     POST /api/lessons/{lesson_id}/quizzes/ - Tạo quiz mới trong bài học.
     """
-    permission_classes = [IsAuthenticated, HasRequiredPermission]
     required_permission = "course.lesson.create"
 
     def post(self, request, lesson_id):
@@ -75,11 +74,10 @@ class QuizCreateAPIView(APIView):
         return success_response(QuizSerializer(quiz).data, "Tạo quiz thành công.", status.HTTP_201_CREATED)
 
 
-class QuizUpdateAPIView(APIView):
+class QuizUpdateAPIView(BasePermissionAPIView):
     """
     PATCH /api/quizzes/{quiz_id}/ - Cập nhật thông tin quiz.
     """
-    permission_classes = [IsAuthenticated, HasRequiredPermission]
     required_permission = "course.lesson.update"
 
     def patch(self, request, quiz_id):
@@ -97,11 +95,10 @@ class QuizUpdateAPIView(APIView):
         return success_response(QuizSerializer(quiz).data, "Cập nhật quiz thành công.")
 
 
-class QuizDeleteAPIView(APIView):
+class QuizDeleteAPIView(BasePermissionAPIView):
     """
     DELETE /api/quizzes/{quiz_id}/ - Xóa quiz.
     """
-    permission_classes = [IsAuthenticated, HasRequiredPermission]
     required_permission = "course.lesson.delete"
 
     def delete(self, request, quiz_id):
@@ -134,11 +131,10 @@ class QuizQuestionListAPIView(APIView):
         return success_response(QuestionSerializer(questions, many=True).data)
 
 
-class QuestionCreateAPIView(APIView):
+class QuestionCreateAPIView(BasePermissionAPIView):
     """
     POST /api/quizzes/{quiz_id}/questions/ - Tạo câu hỏi mới trong quiz.
     """
-    permission_classes = [IsAuthenticated, HasRequiredPermission]
     required_permission = "course.lesson.create"
 
     def post(self, request, quiz_id):
@@ -156,11 +152,10 @@ class QuestionCreateAPIView(APIView):
         return success_response(QuestionSerializer(question).data, "Tạo câu hỏi thành công.", status.HTTP_201_CREATED)
 
 
-class QuestionUpdateAPIView(APIView):
+class QuestionUpdateAPIView(BasePermissionAPIView):
     """
     PATCH /api/questions/{question_id}/ - Cập nhật câu hỏi.
     """
-    permission_classes = [IsAuthenticated, HasRequiredPermission]
     required_permission = "course.lesson.update"
 
     def patch(self, request, question_id):
@@ -178,11 +173,10 @@ class QuestionUpdateAPIView(APIView):
         return success_response(QuestionSerializer(question).data, "Cập nhật câu hỏi thành công.")
 
 
-class QuestionDeleteAPIView(APIView):
+class QuestionDeleteAPIView(BasePermissionAPIView):
     """
     DELETE /api/questions/{question_id}/ - Xóa câu hỏi.
     """
-    permission_classes = [IsAuthenticated, HasRequiredPermission]
     required_permission = "course.lesson.delete"
 
     def delete(self, request, question_id):

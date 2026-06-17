@@ -1,9 +1,10 @@
-from rest_framework.views import APIView
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
 
-from apps.common.permissions import HasRequiredPermission
+from apps.common.base_api_view import BasePermissionAPIView
 from apps.system.services.admin_log_service import AdminLogService
 
 from apps.courses.services.course_service import CourseService
@@ -120,11 +121,10 @@ class CourseCreateAPIView(APIView):
         )
 
 
-class CourseUpdateAPIView(APIView):
+class CourseUpdateAPIView(BasePermissionAPIView):
     """
     PATCH /api/courses/{course_id}/ - Cập nhật thông tin khóa học.
     """
-    permission_classes = [IsAuthenticated, HasRequiredPermission]
     required_permission = "course.course.update"
 
     def patch(self, request, course_id):
@@ -147,11 +147,10 @@ class CourseUpdateAPIView(APIView):
         )
 
 
-class CourseDeleteAPIView(APIView):
+class CourseDeleteAPIView(BasePermissionAPIView):
     """
     DELETE /api/courses/{course_id}/ - Xóa khóa học (xóa mềm).
     """
-    permission_classes = [IsAuthenticated, HasRequiredPermission]
     required_permission = "course.course.delete"
 
     def delete(self, request, course_id):
@@ -170,11 +169,10 @@ class CourseDeleteAPIView(APIView):
         return success_response(None, "Xóa khóa học thành công.")
 
 
-class CourseSubmitReviewAPIView(APIView):
+class CourseSubmitReviewAPIView(BasePermissionAPIView):
     """
     PATCH /api/courses/{course_id}/submit-review/ - Gửi khóa học chờ duyệt.
     """
-    permission_classes = [IsAuthenticated, HasRequiredPermission]
     required_permission = "course.course.update"
 
     def patch(self, request, course_id):
@@ -182,11 +180,10 @@ class CourseSubmitReviewAPIView(APIView):
         return success_response(CourseDetailSerializer(course).data, "Đã gửi khóa học chờ duyệt.")
 
 
-class PendingCourseListAPIView(APIView):
+class PendingCourseListAPIView(BasePermissionAPIView):
     """
     GET /api/courses/pending/ - Lấy danh sách khóa học đang chờ duyệt.
     """
-    permission_classes = [IsAuthenticated, HasRequiredPermission]
     required_permission = "course.course.approve"
 
     def get(self, request):
@@ -195,11 +192,10 @@ class PendingCourseListAPIView(APIView):
         return success_response(serializer.data)
 
 
-class CourseApproveAPIView(APIView):
+class CourseApproveAPIView(BasePermissionAPIView):
     """
     PATCH /api/courses/{course_id}/approve/ - Duyệt khóa học.
     """
-    permission_classes = [IsAuthenticated, HasRequiredPermission]
     required_permission = "course.course.approve"
 
     def patch(self, request, course_id):
@@ -215,11 +211,10 @@ class CourseApproveAPIView(APIView):
         return success_response(CourseDetailSerializer(course).data, "Duyệt khóa học thành công.")
 
 
-class CourseRejectAPIView(APIView):
+class CourseRejectAPIView(BasePermissionAPIView):
     """
     PATCH /api/courses/{course_id}/reject/ - Từ chối khóa học kèm lý do.
     """
-    permission_classes = [IsAuthenticated, HasRequiredPermission]
     required_permission = "course.course.approve"
 
     def patch(self, request, course_id):
@@ -239,11 +234,10 @@ class CourseRejectAPIView(APIView):
         return success_response(CourseDetailSerializer(course).data, "Từ chối khóa học thành công.")
 
 
-class CoursePublishAPIView(APIView):
+class CoursePublishAPIView(BasePermissionAPIView):
     """
     PATCH /api/courses/{course_id}/publish/ - Public khóa học sau khi đã được duyệt.
     """
-    permission_classes = [IsAuthenticated, HasRequiredPermission]
     required_permission = "course.course.update"
 
     def patch(self, request, course_id):
@@ -409,11 +403,10 @@ class CategoryListAPIView(APIView):
         return success_response(serializer.data)
 
 
-class CategoryCreateAPIView(APIView):
+class CategoryCreateAPIView(BasePermissionAPIView):
     """
     POST /api/courses/categories/create/ - Tạo danh mục mới.
     """
-    permission_classes = [IsAuthenticated, HasRequiredPermission]
     required_permission = "course.category.create"
 
     def post(self, request):
@@ -427,11 +420,10 @@ class CategoryCreateAPIView(APIView):
         return success_response(CategorySerializer(category).data, "Tạo danh mục thành công.", status.HTTP_201_CREATED)
 
 
-class CategoryUpdateAPIView(APIView):
+class CategoryUpdateAPIView(BasePermissionAPIView):
     """
     PATCH /api/courses/categories/{category_id}/update/ - Cập nhật danh mục.
     """
-    permission_classes = [IsAuthenticated, HasRequiredPermission]
     required_permission = "course.category.update"
 
     def patch(self, request, category_id):
@@ -448,11 +440,10 @@ class CategoryUpdateAPIView(APIView):
         return success_response(CategorySerializer(category).data, "Cập nhật danh mục thành công.")
 
 
-class CategoryDeleteAPIView(APIView):
+class CategoryDeleteAPIView(BasePermissionAPIView):
     """
     DELETE /api/courses/categories/{category_id}/delete/ - Xóa danh mục.
     """
-    permission_classes = [IsAuthenticated, HasRequiredPermission]
     required_permission = "course.category.delete"
 
     def delete(self, request, category_id):

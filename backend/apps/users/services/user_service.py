@@ -11,7 +11,8 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.token_blacklist.models import OutstandingToken
 
 from apps.common.permissions import HasRequiredPermission
-from apps.users.repositories.user_repository import UserRepository, InstructorRepository, InstructorCertificateRepository
+from apps.users.repositories.user_repository import UserRepository
+from apps.users.repositories.instructor_repository import InstructorRepository, InstructorCertificateRepository
 from apps.users.utils.cookies import REFRESH_COOKIE_NAME
 from apps.users.services.google_oauth_service import GoogleOAuthService
 

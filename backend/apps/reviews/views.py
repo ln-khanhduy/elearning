@@ -3,19 +3,18 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.views import APIView
 
-from apps.common.permissions import HasRequiredPermission
+from apps.common.base_api_view import BasePermissionAPIView
 from apps.reviews.services.review_service import ReviewService
 from apps.reviews.serializers.review_serializer import (
     ReviewSerializer, ReviewCreateSerializer, ReviewStatusSerializer,
 )
 
 
-class ReviewListAPIView(APIView):
+class ReviewListAPIView(BasePermissionAPIView):
     """
     GET /api/reviews/ - Lấy danh sách tất cả đánh giá (cho admin).
     Yêu cầu quyền: course.review.view
     """
-    permission_classes = [IsAuthenticated, HasRequiredPermission]
     required_permission = "course.review.view"
 
     def get(self, request):
@@ -65,12 +64,11 @@ class ReviewCreateAPIView(APIView):
         return Response(ReviewSerializer(review).data, status=status.HTTP_201_CREATED)
 
 
-class ReviewUpdateStatusAPIView(APIView):
+class ReviewUpdateStatusAPIView(BasePermissionAPIView):
     """
     PATCH /api/reviews/{review_id}/update-status/ - Cập nhật trạng thái đánh giá (PUBLISHED/HIDDEN/DELETED).
     Yêu cầu quyền: course.comment.hide
     """
-    permission_classes = [IsAuthenticated, HasRequiredPermission]
     required_permission = "course.comment.hide"
 
     def patch(self, request, review_id):

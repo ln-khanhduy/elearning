@@ -1,10 +1,12 @@
 from django.http import Http404
-from rest_framework.views import APIView
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
-
+from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
 from apps.common.permissions import HasRequiredPermission
+
+
+from apps.common.base_api_view import BasePermissionAPIView
 from apps.system.services.admin_log_service import AdminLogService
 
 from apps.users.services.user_service import UserService, InstructorService
@@ -18,12 +20,11 @@ from apps.users.serializers.user_serializer import (
 
 
 
-class UserListAPIView(APIView):
+class UserListAPIView(BasePermissionAPIView):
     """
     GET /api/users/ - Lấy danh sách tất cả người dùng.
     Yêu cầu quyền: user.user.view
     """
-    permission_classes = [IsAuthenticated, HasRequiredPermission]
     required_permission = "user.user.view"
 
     def get(self, request):
@@ -32,12 +33,11 @@ class UserListAPIView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-class UserDetailAPIView(APIView):
+class UserDetailAPIView(BasePermissionAPIView):
     """
     GET /api/users/{user_id}/ - Lấy thông tin chi tiết của một người dùng.
     Yêu cầu quyền: user.user.view
     """
-    permission_classes = [IsAuthenticated, HasRequiredPermission]
     required_permission = "user.user.view"
 
     def get(self, request, user_id):
@@ -109,12 +109,11 @@ class UpdateProfileAPIView(APIView):
         }, status=status.HTTP_200_OK)
 
 
-class ChangeUserRoleAPIView(APIView):
+class ChangeUserRoleAPIView(BasePermissionAPIView):
     """
     PATCH /api/users/{user_id}/change-role/ - Thay đổi vai trò (role) của người dùng.
     Yêu cầu quyền: admin.admin.change_role
     """
-    permission_classes = [IsAuthenticated, HasRequiredPermission]
     required_permission = "admin.admin.change_role"
 
     def patch(self, request, user_id):
@@ -135,12 +134,11 @@ class ChangeUserRoleAPIView(APIView):
         }, status=status.HTTP_200_OK)
 
 
-class LockUserAPIView(APIView):
+class LockUserAPIView(BasePermissionAPIView):
     """
     PATCH /api/users/{user_id}/lock/ - Khóa tài khoản người dùng.
     Yêu cầu quyền: user.user.lock
     """
-    permission_classes = [IsAuthenticated, HasRequiredPermission]
     required_permission = "user.user.lock"
 
     def patch(self, request, user_id):
@@ -159,12 +157,11 @@ class LockUserAPIView(APIView):
         return Response({"detail": "Khóa tài khoản thành công."}, status=status.HTTP_200_OK)
 
 
-class UnlockUserAPIView(APIView):
+class UnlockUserAPIView(BasePermissionAPIView):
     """
     PATCH /api/users/{user_id}/unlock/ - Mở khóa tài khoản người dùng.
     Yêu cầu quyền: user.user.unlock
     """
-    permission_classes = [IsAuthenticated, HasRequiredPermission]
     required_permission = "user.user.unlock"
 
     def patch(self, request, user_id):
@@ -230,13 +227,12 @@ class MyInstructorApplicationAPIView(APIView):
         return Response({"application": serializer.data}, status=status.HTTP_200_OK)
 
 
-class InstructorApplicationListAPIView(APIView):
+class InstructorApplicationListAPIView(BasePermissionAPIView):
     """
     GET /api/users/instructors/applications/ - Lấy danh sách hồ sơ đăng ký giảng viên.
     Có thể lọc theo trạng thái: ?status=PENDING|APPROVED|REJECTED
     Yêu cầu quyền: user.instructor.view
     """
-    permission_classes = [IsAuthenticated, HasRequiredPermission]
     required_permission = "user.instructor.view"
 
     def get(self, request):
@@ -246,12 +242,11 @@ class InstructorApplicationListAPIView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-class InstructorApplicationDetailAPIView(APIView):
+class InstructorApplicationDetailAPIView(BasePermissionAPIView):
     """
     GET /api/users/instructors/applications/{application_id}/ - Lấy chi tiết một hồ sơ đăng ký.
     Yêu cầu quyền: user.instructor.view
     """
-    permission_classes = [IsAuthenticated, HasRequiredPermission]
     required_permission = "user.instructor.view"
 
     def get(self, request, application_id):

@@ -1,9 +1,7 @@
-from rest_framework.views import APIView
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 
-from apps.common.permissions import HasRequiredPermission
+from apps.common.base_api_view import BasePermissionAPIView
 
 from apps.users.services.instructor_manager_service import InstructorManagerService
 from apps.users.serializers.instructor_manager_serializer import (
@@ -29,12 +27,11 @@ def error_response(message="Error", errors=None, http_status=status.HTTP_400_BAD
     }, status=http_status)
 
 
-class InstructorManageListAPIView(APIView):
+class InstructorManageListAPIView(BasePermissionAPIView):
     """
     GET /api/instructors/manage/ - Lấy danh sách giảng viên (có phân trang, tìm kiếm, lọc).
     Yêu cầu quyền: user.instructor.view
     """
-    permission_classes = [IsAuthenticated, HasRequiredPermission]
     required_permission = "user.instructor.view"
 
     def get(self, request):
@@ -68,13 +65,12 @@ class InstructorManageListAPIView(APIView):
         )
 
 
-class InstructorLockAPIView(APIView):
+class InstructorLockAPIView(BasePermissionAPIView):
     """
     PATCH /api/instructors/manage/<id>/lock/ - Khóa tài khoản giảng viên.
     Yêu cầu quyền: user.instructor.lock
     Body: { "reason": "Lý do khóa tài khoản" }
     """
-    permission_classes = [IsAuthenticated, HasRequiredPermission]
     required_permission = "user.instructor.lock"
 
     def patch(self, request, user_id):
@@ -98,13 +94,12 @@ class InstructorLockAPIView(APIView):
             )
 
 
-class InstructorUnlockAPIView(APIView):
+class InstructorUnlockAPIView(BasePermissionAPIView):
     """
     PATCH /api/instructors/manage/<id>/unlock/ - Mở khóa tài khoản giảng viên.
     Yêu cầu quyền: user.instructor.lock
     Không cần body.
     """
-    permission_classes = [IsAuthenticated, HasRequiredPermission]
     required_permission = "user.instructor.lock"
 
     def patch(self, request, user_id):

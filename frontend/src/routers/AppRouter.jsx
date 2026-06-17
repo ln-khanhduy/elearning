@@ -26,6 +26,7 @@ import CertificatesPage from "../pages/student/CertificatesPage";
 import LearningPage from "../pages/learning/LearningPage";
 import AdminReviewsPage from "../pages/admin/AdminReviewsPage";
 import InstructorListPage from "../pages/admin/InstructorListPage";
+import UserManagementPage from "../pages/admin/UserManagementPage";
 
 // Payment Pages
 import CheckoutPage from "../pages/public/payment/CheckoutPage";
@@ -76,7 +77,7 @@ function AppRouter() {
           <Route path="/admin/reviews" element={<ProtectedRoute allowedRoles={["COURSE_ADMIN", "SUPERADMIN"]}><AdminReviewsPage /></ProtectedRoute>} />
 
           {/* Người dùng & Giảng viên */}
-          <Route path="/admin/users" element={<ProtectedRoute allowedRoles={["USER_MANAGER", "SUPERADMIN"]}><></></ProtectedRoute>} />
+          <Route path="/admin/users" element={<ProtectedRoute allowedRoles={["SUPERADMIN"]}><UserManagementPage /></ProtectedRoute>} />
           <Route path="/instructor/apply" element={<ProtectedRoute allowedRoles={["STUDENT"]}><InstructorApplyPage /></ProtectedRoute>} />
           <Route path="/instructor/application-status" element={<ProtectedRoute allowedRoles={["STUDENT", "INSTRUCTOR"]}><InstructorApplicationStatusPage /></ProtectedRoute>} />
           <Route path="/admin/instructors" element={<ProtectedRoute allowedRoles={["INSTRUCTOR_MANAGER", "SUPERADMIN"]}><InstructorListPage /></ProtectedRoute>} />

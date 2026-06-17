@@ -35,6 +35,8 @@ urlpatterns = [
 
     path("api/certificates/", include("apps.certificates.urls")),
 
+    path("api/admin/", include("apps.users.urls.user_management_urls")),
+
     path("api/system/", include("apps.system.urls")),
 
 ]

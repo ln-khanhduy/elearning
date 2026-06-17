@@ -1,10 +1,13 @@
+from django.core.paginator import Paginator, EmptyPage
+from django.db.models import Q
 from django.utils import timezone
 from django.shortcuts import get_object_or_404
-from apps.users.models import User, Role, InstructorProfile, InstructorCertificate
-
+from apps.users.models import User, Role
 
 
 class UserRepository:
+    """Repository quản lý người dùng chung - danh sách, chi tiết, role, google account."""
+
     @staticmethod
     def get_all_users():
         """Lấy danh sách tất cả người dùng, kèm thông tin role, sắp xếp theo ngày tham gia mới nhất."""
@@ -28,7 +31,6 @@ class UserRepository:
     @staticmethod
     def get_user_by_google_email(google_email):
         """Lấy user theo google_email. Trả về None nếu không tìm thấy."""
-        # Dùng exact lookup vì google_email đã được lower-case trước khi lưu
         return User.objects.filter(google_email=google_email.lower()).first()
 
     @staticmethod
@@ -44,76 +46,58 @@ class UserRepository:
         user.last_login = timezone.now()
         user.save(update_fields=["last_login"])
 
-
-class InstructorRepository:
     @staticmethod
-    def get_all_applications(status_filter=None):
+    def get_managed_users(search=None, role=None, status=None, page=1, page_size=10):
         """
-        Lấy danh sách tất cả hồ sơ đăng ký giảng viên.
-        Có thể lọc theo trạng thái (PENDING, APPROVED, REJECTED) nếu truyền tham số status_filter.
-        Kết quả sắp xếp theo thời gian nộp đơn mới nhất.
+        Lấy danh sách người dùng có thể quản lý (Student, Instructor) có phân trang.
+        Chỉ trả về user có role STUDENT hoặc INSTRUCTOR.
+        - search: tìm kiếm theo họ tên hoặc email
+        - role: 'student' | 'instructor' | None (all)
+        - status: 'active' | 'locked' | None (all)
+        - page: trang hiện tại
+        - page_size: số lượng item mỗi trang
+        Trả về dict gồm: results, total, page, page_size, total_pages
         """
-        qs = InstructorProfile.objects.select_related("user", "user__role", "reviewed_by").all().order_by("-applied_at")
-        if status_filter:
-            qs = qs.filter(status=status_filter.upper())
-        return qs
+        # Chỉ lấy user có role STUDENT hoặc INSTRUCTOR
+        qs = User.objects.select_related("role").filter(
+            role__code__in=["STUDENT", "INSTRUCTOR"]
+        )
 
-    @staticmethod
-    def get_application_by_id(application_id):
-        """Lấy chi tiết một hồ sơ đăng ký giảng viên theo ID, kèm thông tin user và người duyệt. Trả về 404 nếu không tìm thấy."""
-        return get_object_or_404(InstructorProfile.objects.select_related("user", "user__role", "reviewed_by"), id=application_id)
+        # Lọc theo role cụ thể
+        if role and role.upper() in ["STUDENT", "INSTRUCTOR"]:
+            qs = qs.filter(role__code=role.upper())
 
-    @staticmethod
-    def get_application_by_user(user):
-        """
-        Lấy hồ sơ đăng ký giảng viên của một user cụ thể.
-        Trả về None nếu user chưa từng gửi hồ sơ đăng ký.
-        """
+        # Tìm kiếm theo họ tên hoặc email
+        if search:
+            qs = qs.filter(
+                Q(first_name__icontains=search) |
+                Q(last_name__icontains=search) |
+                Q(email__icontains=search)
+            )
+
+        # Lọc theo trạng thái is_active
+        if status == "active":
+            qs = qs.filter(is_active=True)
+        elif status == "locked":
+            qs = qs.filter(is_active=False)
+
+        # Sắp xếp theo ngày tham gia mới nhất
+        qs = qs.order_by("-date_joined")
+
+        # Phân trang
+        paginator = Paginator(qs, page_size)
+        total = paginator.count
+        total_pages = paginator.num_pages
+
         try:
-            return InstructorProfile.objects.select_related("user", "user__role", "reviewed_by").get(user=user)
-        except InstructorProfile.DoesNotExist:
-            return None
+            page_obj = paginator.page(page)
+        except EmptyPage:
+            page_obj = paginator.page(paginator.num_pages)
 
-    @staticmethod
-    def create_application(user, validated_data):
-        """Tạo một hồ sơ đăng ký giảng viên mới với trạng thái PENDING cho user."""
-        return InstructorProfile.objects.create(user=user, status="PENDING", **validated_data)
-
-
-class InstructorCertificateRepository:
-    @staticmethod
-    def create_certificate(application, title, file):
-        """Tạo chứng chỉ mới cho hồ sơ giảng viên."""
-        return InstructorCertificate.objects.create(
-            instructor_profile=application,
-            title=title,
-            file=file,
-        )
-
-    @staticmethod
-    def get_certificates_by_application(application):
-        """Lấy danh sách chứng chỉ của hồ sơ giảng viên, sắp xếp theo thời gian upload mới nhất."""
-        return InstructorCertificate.objects.filter(instructor_profile=application).order_by("-uploaded_at")
-
-    @staticmethod
-    def get_certificate_by_id(application, certificate_id):
-        """Lấy chứng chỉ theo ID, kiểm tra thuộc hồ sơ. Trả về 404 nếu không tìm thấy."""
-        return get_object_or_404(
-            InstructorCertificate,
-            id=certificate_id,
-            instructor_profile=application,
-        )
-
-    @staticmethod
-    def delete_certificate(application, certificate_id):
-
-        """Xóa chứng chỉ của hồ sơ giảng viên. Trả về 404 nếu không tìm thấy."""
-        certificate = get_object_or_404(
-            InstructorCertificate,
-            id=certificate_id,
-            instructor_profile=application,
-        )
-        certificate.file.delete()  # Xóa file trên Cloudinary
-        certificate.delete()
-
-
+        return {
+            "results": list(page_obj.object_list),
+            "total": total,
+            "page": page,
+            "page_size": page_size,
+            "total_pages": total_pages,
+        }

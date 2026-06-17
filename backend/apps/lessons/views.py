@@ -1,9 +1,9 @@
-from rest_framework.views import APIView
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.views import APIView
 
-from apps.common.permissions import HasRequiredPermission
+from apps.common.base_api_view import BasePermissionAPIView
 from apps.system.services.admin_log_service import AdminLogService
 
 from apps.lessons.serializers.chapter_serializer import ChapterSerializer, ChapterCreateUpdateSerializer, ChapterReorderSerializer
@@ -45,11 +45,10 @@ class CourseChapterListAPIView(APIView):
         return success_response(serializer.data)
 
 
-class ChapterCreateAPIView(APIView):
+class ChapterCreateAPIView(BasePermissionAPIView):
     """
     POST /api/courses/{course_id}/chapters/ - Tạo chương học mới trong khóa học.
     """
-    permission_classes = [IsAuthenticated, HasRequiredPermission]
     required_permission = "course.lesson.create"
 
     def post(self, request, course_id):
@@ -67,11 +66,10 @@ class ChapterCreateAPIView(APIView):
         return success_response(ChapterSerializer(chapter).data, "Tạo chương học thành công.", status.HTTP_201_CREATED)
 
 
-class ChapterUpdateAPIView(APIView):
+class ChapterUpdateAPIView(BasePermissionAPIView):
     """
     PATCH /api/chapters/{chapter_id}/ - Cập nhật thông tin chương học.
     """
-    permission_classes = [IsAuthenticated, HasRequiredPermission]
     required_permission = "course.lesson.update"
 
     def patch(self, request, chapter_id):
@@ -89,11 +87,10 @@ class ChapterUpdateAPIView(APIView):
         return success_response(ChapterSerializer(chapter).data, "Cập nhật chương học thành công.")
 
 
-class ChapterDeleteAPIView(APIView):
+class ChapterDeleteAPIView(BasePermissionAPIView):
     """
     DELETE /api/chapters/{chapter_id}/ - Xóa chương học.
     """
-    permission_classes = [IsAuthenticated, HasRequiredPermission]
     required_permission = "course.lesson.delete"
 
     def delete(self, request, chapter_id):
@@ -113,11 +110,10 @@ class ChapterDeleteAPIView(APIView):
         return success_response(None, "Xóa chương học thành công.")
 
 
-class ChapterReorderAPIView(APIView):
+class ChapterReorderAPIView(BasePermissionAPIView):
     """
     PATCH /api/courses/{course_id}/chapters/reorder/ - Sắp xếp lại thứ tự các chương học.
     """
-    permission_classes = [IsAuthenticated, HasRequiredPermission]
     required_permission = "course.lesson.update"
 
     def patch(self, request, course_id):
@@ -159,11 +155,10 @@ class LessonDetailAPIView(APIView):
         return success_response(LessonSerializer(lesson).data)
 
 
-class LessonCreateAPIView(APIView):
+class LessonCreateAPIView(BasePermissionAPIView):
     """
     POST /api/chapters/{chapter_id}/lessons/ - Tạo bài học mới trong chương.
     """
-    permission_classes = [IsAuthenticated, HasRequiredPermission]
     required_permission = "course.lesson.create"
 
     def post(self, request, chapter_id):
@@ -181,11 +176,10 @@ class LessonCreateAPIView(APIView):
         return success_response(LessonSerializer(lesson).data, "Tạo bài học thành công.", status.HTTP_201_CREATED)
 
 
-class LessonUpdateAPIView(APIView):
+class LessonUpdateAPIView(BasePermissionAPIView):
     """
     PATCH /api/lessons/{lesson_id}/ - Cập nhật thông tin bài học.
     """
-    permission_classes = [IsAuthenticated, HasRequiredPermission]
     required_permission = "course.lesson.update"
 
     def patch(self, request, lesson_id):
@@ -203,11 +197,10 @@ class LessonUpdateAPIView(APIView):
         return success_response(LessonSerializer(lesson).data, "Cập nhật bài học thành công.")
 
 
-class LessonDeleteAPIView(APIView):
+class LessonDeleteAPIView(BasePermissionAPIView):
     """
     DELETE /api/lessons/{lesson_id}/ - Xóa bài học.
     """
-    permission_classes = [IsAuthenticated, HasRequiredPermission]
     required_permission = "course.lesson.delete"
 
     def delete(self, request, lesson_id):
@@ -226,11 +219,10 @@ class LessonDeleteAPIView(APIView):
         return success_response(None, "Xóa bài học thành công.")
 
 
-class LessonReorderAPIView(APIView):
+class LessonReorderAPIView(BasePermissionAPIView):
     """
     PATCH /api/chapters/{chapter_id}/lessons/reorder/ - Sắp xếp lại thứ tự các bài học trong chương.
     """
-    permission_classes = [IsAuthenticated, HasRequiredPermission]
     required_permission = "course.lesson.update"
 
     def patch(self, request, chapter_id):
