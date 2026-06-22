@@ -6,7 +6,7 @@ class LessonRepository:
     @staticmethod
     def get_by_id(lesson_id):
         """Lấy chi tiết một bài học theo ID, kèm thông tin chapter, course và instructor. Trả về 404 nếu không tìm thấy."""
-        lesson = Lesson.objects.select_related("chapter", "chapter__course", "chapter__course__instructor").filter(id=lesson_id).first()
+        lesson = Lesson.objects.select_related("chapter", "chapter__course", "chapter__course__assigned_instructor").filter(id=lesson_id).first()
         if not lesson:
             raise NotFound("Không tìm thấy bài học.")
         return lesson

@@ -10,7 +10,7 @@ class PaymentRepository:
     def get_by_id(transaction_id):
         """Lấy transaction theo ID."""
         transaction = PaymentTransaction.objects.select_related(
-            "student", "course", "course__instructor"
+            "student", "course", "course__assigned_instructor"
         ).filter(id=transaction_id).first()
         if not transaction:
             raise NotFound("Không tìm thấy giao dịch.")
@@ -44,7 +44,7 @@ class PaymentRepository:
     def get_all_for_admin(filters=None):
         """Lấy tất cả transaction cho Finance Admin."""
         qs = PaymentTransaction.objects.select_related(
-            "student", "course", "course__instructor"
+            "student", "course", "course__assigned_instructor"
         ).all().order_by("-created_at")
 
         if filters:
@@ -65,9 +65,9 @@ class PaymentRepository:
 
     @staticmethod
     def get_by_instructor(instructor_id):
-        """Lấy transaction của các khóa học do instructor tạo."""
+        """Lấy transaction của các khóa học do instructor phụ trách."""
         return PaymentTransaction.objects.filter(
-            course__instructor_id=instructor_id
+            course__assigned_instructor_id=instructor_id
         ).select_related("student", "course").order_by("-created_at")
 
     @staticmethod

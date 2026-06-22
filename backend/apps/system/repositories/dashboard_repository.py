@@ -100,8 +100,8 @@ class AdminDashboardRepository:
 
     @staticmethod
     def get_recent_courses(limit=5):
-        """Lấy danh sách khóa học mới nhất, kèm thông tin instructor."""
-        return Course.objects.select_related("instructor").order_by("-created_at")[:limit]
+        """Lấy danh sách khóa học mới nhất, kèm thông tin created_by và assigned_instructor."""
+        return Course.objects.select_related("created_by", "assigned_instructor").order_by("-created_at")[:limit]
 
     @staticmethod
     def get_recent_instructor_applications(limit=5):

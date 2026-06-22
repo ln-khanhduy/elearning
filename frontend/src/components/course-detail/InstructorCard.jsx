@@ -9,14 +9,18 @@ function InstructorCard({ course }) {
   if (!course) return null;
 
   const {
-    instructor_name,
-    instructor_avatar,
+    assigned_instructor_name,
+    assigned_instructor_avatar,
     instructor_title,
     instructor_bio,
     instructor_course_count,
     instructor_student_count,
     instructor_rating,
   } = course;
+
+  // Map assigned_instructor fields for display
+  const instructor_name = assigned_instructor_name;
+  const instructor_avatar = assigned_instructor_avatar;
 
   return (
     <div className="instructor-card">

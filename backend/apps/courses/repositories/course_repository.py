@@ -3,25 +3,19 @@ from apps.courses.models import Course
 from apps.lessons.models import Chapter
 
 
-
 class CourseRepository:
     @staticmethod
     def get_all():
-        """Lấy danh sách tất cả khóa học (trừ DELETED), kèm thông tin instructor và category, sắp xếp theo ngày tạo mới nhất."""
-        return Course.objects.select_related("instructor", "category").exclude(status="DELETED").order_by("-created_at")
+        """Lấy danh sách tất cả khóa học (trừ ARCHIVED), kèm thông tin created_by, assigned_instructor và category, sắp xếp theo ngày tạo mới nhất."""
+        return Course.objects.select_related("created_by", "assigned_instructor", "category").exclude(status="ARCHIVED").order_by("-created_at")
 
     @staticmethod
     def get_by_id(course_id):
-        """Lấy chi tiết một khóa học theo ID, kèm thông tin instructor và category. Trả về 404 nếu không tìm thấy."""
-        course = Course.objects.select_related("instructor", "category").filter(id=course_id).first()
+        """Lấy chi tiết một khóa học theo ID, kèm thông tin created_by, assigned_instructor và category. Trả về 404 nếu không tìm thấy."""
+        course = Course.objects.select_related("created_by", "assigned_instructor", "category").filter(id=course_id).first()
         if not course:
             raise NotFound("Không tìm thấy khóa học.")
         return course
-
-    @staticmethod
-    def get_pending_courses():
-        """Lấy danh sách khóa học đang chờ duyệt (status = PENDING), sắp xếp theo thời gian cập nhật."""
-        return Course.objects.select_related("instructor", "category").filter(status="PENDING").order_by("-updated_at")
 
     @staticmethod
     def create(data):
@@ -29,13 +23,14 @@ class CourseRepository:
         return Course.objects.create(**data)
 
     @staticmethod
-    def search(keyword=None, status_value=None, category_id=None, instructor_id=None):
+    def search(keyword=None, status_value=None, category_id=None, instructor_id=None, assigned_instructor_id=None):
         """
         Tìm kiếm khóa học theo từ khóa (title), lọc theo trạng thái và danh mục.
         - keyword: tìm kiếm không phân biệt hoa thường trong title
-        - status_value: lọc theo trạng thái (draft, pending, approved, rejected, published)
+        - status_value: lọc theo trạng thái (draft, published, hidden, archived)
         - category_id: lọc theo danh mục
-        - instructor_id: lọc theo instructor
+        - instructor_id: lọc theo instructor (cũ - instructor_id)
+        - assigned_instructor_id: lọc theo assigned_instructor (mới)
         """
         listcourse = CourseRepository.get_all()
 
@@ -49,7 +44,10 @@ class CourseRepository:
             listcourse = listcourse.filter(category_id=category_id)
 
         if instructor_id:
-            listcourse = listcourse.filter(instructor_id=instructor_id)
+            listcourse = listcourse.filter(assigned_instructor_id=instructor_id)
+
+        if assigned_instructor_id:
+            listcourse = listcourse.filter(assigned_instructor_id=assigned_instructor_id)
 
         return listcourse
 
@@ -60,8 +58,8 @@ class CourseRepository:
 
     @staticmethod
     def get_by_instructor(instructor_id):
-        """Lấy danh sách khóa học của một instructor."""
-        return Course.objects.select_related("instructor", "category").filter(instructor_id=instructor_id).exclude(status="DELETED").order_by("-created_at")
+        """Lấy danh sách khóa học của một instructor (dựa trên assigned_instructor)."""
+        return Course.objects.select_related("created_by", "assigned_instructor", "category").filter(assigned_instructor_id=instructor_id).exclude(status="ARCHIVED").order_by("-created_at")
 
     @staticmethod
     def count_chapters(course_id):

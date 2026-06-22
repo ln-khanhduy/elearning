@@ -30,7 +30,7 @@ class LessonSerializer(serializers.ModelSerializer):
         fields = [
             "id", "chapter", "slug", "title", "description", "content_type",
             "video_url", "material_url", "order",
-            "is_free", "status", "created_at", "updated_at",
+            "status", "created_at", "updated_at",
         ]
 
     def get_video_url(self, obj):
@@ -52,7 +52,7 @@ class LessonPreviewSerializer(serializers.ModelSerializer):
         model = Lesson
         fields = [
             "id", "slug", "title", "description", "content_type",
-            "order", "is_free", "status",
+            "order", "status",
         ]
 
 
@@ -66,7 +66,7 @@ class LessonCreateUpdateSerializer(serializers.ModelSerializer):
         model = Lesson
         fields = [
             "title", "description", "content_type", "video_url",
-            "material_file", "order", "is_free", "status",
+            "material_file", "order", "status",
         ]
 
     def validate_title(self, value):

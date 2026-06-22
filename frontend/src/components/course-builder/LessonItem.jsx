@@ -21,9 +21,6 @@ export default function LessonItem({
           <span className="badge bg-secondary ms-2">
             {lesson.content_type === "VIDEO" ? "Video" : "Tài liệu"}
           </span>
-          {lesson.is_free && (
-            <span className="badge bg-success ms-1">Miễn phí</span>
-          )}
         </div>
         <div className="lesson-actions">
           <button type="button" className="btn btn-sm btn-outline-primary me-1" onClick={() => onEdit(lesson)}>

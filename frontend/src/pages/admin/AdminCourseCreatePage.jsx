@@ -1,11 +1,9 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { getCategories } from "../../services/courseService";
+import { getCategories, createAdminCourse } from "../../services/courseService";
 
-const DRAFT_KEY = "course_draft";
-
-function InstructorCourseCreatePage() {
+function AdminCourseCreatePage() {
   const navigate = useNavigate();
   const [categories, setCategories] = useState([]);
   const [form, setForm] = useState({
@@ -14,6 +12,7 @@ function InstructorCourseCreatePage() {
   });
   const [thumbnail, setThumbnail] = useState(null);
   const [preview, setPreview] = useState("");
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     getCategories()
@@ -34,16 +33,6 @@ function InstructorCourseCreatePage() {
     setPreview(URL.createObjectURL(f));
   };
 
-  // Chuyển File thành base64 để lưu vào localStorage
-  const fileToBase64 = (file) => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
-  };
-
   const validate = () => {
     const errs = {};
     if (!form.title?.trim() || form.title.trim().length < 5) errs.title = "Tiêu đề phải có ít nhất 5 ký tự.";
@@ -57,31 +46,34 @@ function InstructorCourseCreatePage() {
     const errs = validate();
     if (Object.keys(errs).length > 0) { toast.error(Object.values(errs)[0]); return; }
 
-    // Chuyển thumbnail thành base64 để lưu vào localStorage
-    let thumbnailBase64 = null;
-    if (thumbnail) {
-      try {
-        thumbnailBase64 = await fileToBase64(thumbnail);
-      } catch (e) {
-        console.error("Lỗi chuyển thumbnail sang base64:", e);
+    setSaving(true);
+    try {
+      const formData = new FormData();
+      formData.append("title", form.title.trim());
+      formData.append("description", form.description.trim());
+      formData.append("price", form.price);
+      formData.append("category", form.category);
+      if (form.preview_video_url?.trim()) {
+        formData.append("preview_video_url", form.preview_video_url.trim());
       }
+      if (thumbnail) {
+        formData.append("thumbnail", thumbnail);
+      }
+
+      const res = await createAdminCourse(formData);
+      const newCourseId = res?.data?.id || res?.id;
+      if (newCourseId) {
+        toast.success("Tạo khóa học thành công!");
+        navigate(`/admin/courses/${newCourseId}/edit`);
+      } else {
+        toast.success("Tạo khóa học thành công!");
+        navigate("/admin/courses");
+      }
+    } catch (error) {
+      toast.error(error.message || "Có lỗi xảy ra khi tạo khóa học.");
+    } finally {
+      setSaving(false);
     }
-
-    // Lưu vào localStorage (chưa gọi API)
-    const draft = {
-      form: {
-        title: form.title.trim(),
-        description: form.description.trim(),
-        price: form.price,
-        category: form.category,
-        preview_video_url: form.preview_video_url?.trim() || "",
-      },
-      thumbnail: thumbnailBase64,
-      curriculum: [],
-    };
-    localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
-
-    navigate("/instructor/courses/create/edit");
   };
 
   return (
@@ -89,7 +81,7 @@ function InstructorCourseCreatePage() {
       <div className="container">
         <div className="page-header">
           <h2 className="page-title">Tạo khóa học mới</h2>
-          <button className="course-btn-outline" onClick={() => navigate("/instructor/courses")}>
+          <button className="course-btn-outline" onClick={() => navigate("/admin/courses")}>
             <i className="bi bi-arrow-left me-1"></i> Quay lại
           </button>
         </div>
@@ -135,11 +127,15 @@ function InstructorCourseCreatePage() {
         </div>
 
         <div className="course-form-actions">
-          <button className="course-btn-outline" onClick={() => navigate("/instructor/courses")}>
+          <button className="course-btn-outline" onClick={() => navigate("/admin/courses")}>
             <i className="bi bi-chevron-left me-1"></i> Hủy
           </button>
-          <button className="course-btn-primary ms-auto" onClick={handleSubmit}>
-            <i className="bi bi-arrow-right me-1"></i> Tiếp tục
+          <button className="course-btn-primary ms-auto" onClick={handleSubmit} disabled={saving}>
+            {saving ? (
+              <><span className="spinner-border spinner-border-sm me-2"></span>Đang tạo...</>
+            ) : (
+              <><i className="bi bi-check-lg me-1"></i> Tạo khóa học</>
+            )}
           </button>
         </div>
       </div>
@@ -147,4 +143,4 @@ function InstructorCourseCreatePage() {
   );
 }
 
-export default InstructorCourseCreatePage;
+export default AdminCourseCreatePage;

@@ -20,7 +20,7 @@ import {
 const emptyChapter = () => ({ title: "", description: "" });
 const emptyLesson = () => ({
   title: "", description: "", content_type: "VIDEO",
-  is_free: false, material_file: null, video_url: "",
+  material_file: null, video_url: "",
 });
 const emptyQuiz = () => ({
   title: "", description: "", time_limit_minutes: null, passing_score: 0,
@@ -195,7 +195,6 @@ export default function useCurriculumBuilder(courseId, isDraft = false) {
       title: lesson.title || "",
       description: lesson.description || "",
       content_type: lesson.content_type || "VIDEO",
-      is_free: lesson.is_free || false,
       material_file: null,
       video_url: lesson.video_url || "",
     });
@@ -214,7 +213,7 @@ export default function useCurriculumBuilder(courseId, isDraft = false) {
         if (editingLessonId) {
           newLessons = ch.lessons.map((l) =>
             l.id === editingLessonId
-              ? { ...l, title: lessonForm.title.trim(), description: lessonForm.description?.trim() || "", content_type: lessonForm.content_type, is_free: lessonForm.is_free, video_url: lessonForm.video_url || "" }
+              ? { ...l, title: lessonForm.title.trim(), description: lessonForm.description?.trim() || "", content_type: lessonForm.content_type, video_url: lessonForm.video_url || "" }
               : l
           );
         } else {
@@ -223,7 +222,6 @@ export default function useCurriculumBuilder(courseId, isDraft = false) {
             title: lessonForm.title.trim(),
             description: lessonForm.description?.trim() || "",
             content_type: lessonForm.content_type,
-            is_free: lessonForm.is_free,
             video_url: lessonForm.video_url || "",
             quizzes: [],
           };
@@ -241,7 +239,6 @@ export default function useCurriculumBuilder(courseId, isDraft = false) {
       form.append("title", lessonForm.title.trim());
       form.append("description", lessonForm.description.trim());
       form.append("content_type", lessonForm.content_type);
-      form.append("is_free", lessonForm.is_free ? "true" : "false");
       if (lessonForm.content_type === "VIDEO" && lessonForm.video_url) {
         form.append("video_url", lessonForm.video_url.trim());
       }

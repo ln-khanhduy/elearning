@@ -63,7 +63,7 @@ class LessonLearningSerializer(serializers.ModelSerializer):
         model = Lesson
         fields = [
             "id", "slug", "title", "description", "content_type",
-            "video_url", "material_url", "order", "is_free",
+            "video_url", "material_url", "order",
             "quizzes", "completed",
         ]
 

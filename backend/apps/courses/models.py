@@ -19,19 +19,31 @@ class Category(models.Model):
 
 class Course(models.Model):
     """
-    Khóa học
+    Khóa học - được tạo và quản lý bởi COURSE_ADMIN.
+    Instructor chỉ là người được phân công phụ trách giảng dạy.
     """
     STATUS_CHOICES = (
-        ('PENDING', 'Pending'),       # Đã nộp, đang chờ Course Admin duyệt
-        ('APPROVED', 'Approved'),     # Đã duyệt, chưa công bố (giảng viên chưa nhấn publish)
-        ('REJECTED', 'Rejected'),     # Bị từ chối, giảng viên cần chỉnh sửa lại
+        ('DRAFT', 'Draft'),           # Bản nháp, đang xây dựng nội dung
         ('PUBLISHED', 'Published'),   # Đang bán, học viên có thể đăng ký
-        ('HIDDEN', 'Hidden'),         # Tạm ẩn (admin hoặc giảng viên ẩn, không hiện trên store)
-        ('DELETED', 'Deleted'),       # Đã xóa mềm, không thể khôi phục qua UI
+        ('HIDDEN', 'Hidden'),         # Tạm ẩn (admin ẩn, không hiện trên store)
     )
 
-    #  id giảng viên tạo khóa học 
-    instructor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='courses')
+    # Người tạo khóa học (COURSE_ADMIN hoặc SUPERADMIN)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="created_courses"
+    )
+    # Giảng viên được phân công phụ trách giảng dạy
+    assigned_instructor = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="teaching_courses"
+    )
     # id danh mục chính - SET_NULL để không xóa khóa học khi xóa category
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True, related_name='category_courses')
     title = models.CharField(max_length=100)        # Tên khóa học
@@ -44,14 +56,8 @@ class Course(models.Model):
     # Giá gốc (VNĐ)
     price = models.DecimalField(max_digits=10, decimal_places=2,validators=[MinValueValidator(0)])
     # trạng thái khóa học
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
-    # Ghi chú của admin khi duyệt hoặc từ chối (học viên không thấy)
-    approval_note = models.TextField(null=True, blank=True)
-    # Admin đã duyệt khóa học này
-    approved_by = models.ForeignKey(settings.AUTH_USER_MODEL,on_delete=models.SET_NULL,null=True,blank=True,related_name='approved_courses',)
-    # Thời điểm admin duyệt
-    approved_at = models.DateTimeField(null=True, blank=True)
-    # Thời điểm giảng viên nhấn "Publish" để bắt đầu bán
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='DRAFT')
+    # Thời điểm admin publish
     published_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

@@ -30,7 +30,7 @@ class AdminTransactionSerializer(serializers.ModelSerializer):
     course_title = serializers.CharField(source="course.title", read_only=True)
     course_thumbnail = serializers.SerializerMethodField()
     student_name = serializers.CharField(source="student.get_full_name", read_only=True)
-    instructor_name = serializers.CharField(source="course.instructor.get_full_name", read_only=True)
+    instructor_name = serializers.SerializerMethodField()
 
     class Meta:
         model = PaymentTransaction
@@ -47,6 +47,10 @@ class AdminTransactionSerializer(serializers.ModelSerializer):
             "created_at", "updated_at",
         ]
         read_only_fields = fields
+
+    def get_instructor_name(self, obj):
+        instructor = obj.course.assigned_instructor
+        return instructor.get_full_name() if instructor else None
 
     def get_course_thumbnail(self, obj):
         return obj.course.thumbnail.url if obj.course.thumbnail else None

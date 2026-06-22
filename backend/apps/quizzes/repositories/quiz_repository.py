@@ -8,7 +8,7 @@ class QuizRepository:
         """Lấy chi tiết một quiz theo ID, kèm thông tin lesson, chapter, course. Trả về 404 nếu không tìm thấy."""
         quiz = Quiz.objects.select_related(
             "lesson", "lesson__chapter", "lesson__chapter__course",
-            "lesson__chapter__course__instructor"
+            "lesson__chapter__course__assigned_instructor"
         ).filter(id=quiz_id).first()
         if not quiz:
             raise NotFound("Không tìm thấy bài tập.")

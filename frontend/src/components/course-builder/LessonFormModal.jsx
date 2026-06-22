@@ -27,29 +27,16 @@ export default function LessonFormModal({
             onChange={(e) => onChange({ ...lessonForm, description: e.target.value })}
           />
         </div>
-        <div className="course-form-row">
-          <div className="course-form-group">
-            <label className="course-form-label">Loại nội dung</label>
-            <select
-              className="course-form-input"
-              value={lessonForm.content_type}
-              onChange={(e) => onChange({ ...lessonForm, content_type: e.target.value })}
-            >
-              <option value="VIDEO">Video</option>
-              <option value="DOCUMENT">Tài liệu</option>
-            </select>
-          </div>
-          <div className="course-form-group">
-            <label className="course-form-label">Miễn phí</label>
-            <select
-              className="course-form-input"
-              value={lessonForm.is_free ? "true" : "false"}
-              onChange={(e) => onChange({ ...lessonForm, is_free: e.target.value === "true" })}
-            >
-              <option value="false">Không</option>
-              <option value="true">Có</option>
-            </select>
-          </div>
+        <div className="course-form-group">
+          <label className="course-form-label">Loại nội dung</label>
+          <select
+            className="course-form-input"
+            value={lessonForm.content_type}
+            onChange={(e) => onChange({ ...lessonForm, content_type: e.target.value })}
+          >
+            <option value="VIDEO">Video</option>
+            <option value="DOCUMENT">Tài liệu</option>
+          </select>
         </div>
         {lessonForm.content_type === "VIDEO" && (
           <div className="course-form-group">

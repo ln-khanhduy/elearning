@@ -8,7 +8,7 @@ class EnrollmentRepository:
     @staticmethod
     def get_by_user(user_id):
         """Lấy danh sách enrollment của một user (kèm course)."""
-        return Enrollment.objects.select_related("course", "course__instructor").filter(
+        return Enrollment.objects.select_related("course", "course__assigned_instructor").filter(
             student_id=user_id
         ).exclude(status="CANCELLED").order_by("-created_at")
 

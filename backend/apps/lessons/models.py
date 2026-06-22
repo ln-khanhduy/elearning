@@ -51,8 +51,6 @@ class Lesson(models.Model):
     material_file = models.FileField(upload_to="lessons/materials/", null=True, blank=True)
     # Thứ tự trình bày (số nhỏ hơn hiển thị trước)
     order = models.PositiveIntegerField(default=0)
-    # True = bài học miễn phí (không cần đăng ký khóa học)
-    is_free = models.BooleanField(default=False)
     # Trạng thái bài học (DRAFT / PUBLISHED / HIDDEN)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='DRAFT')
     created_at = models.DateTimeField(auto_now_add=True)

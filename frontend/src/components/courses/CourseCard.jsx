@@ -10,8 +10,8 @@ function CourseCard({ course }) {
     id,
     title,
     thumbnail_url,
-    instructor_name,
-    instructor_avatar,
+    assigned_instructor_name,
+    assigned_instructor_avatar,
     category_name,
     level,
     price,
@@ -19,6 +19,10 @@ function CourseCard({ course }) {
     student_count,
     duration,
   } = course;
+
+  // Map assigned_instructor fields to instructor fields for display
+  const instructor_name = assigned_instructor_name;
+  const instructor_avatar = assigned_instructor_avatar;
 
   // Format price
   const formatPrice = (val) => {

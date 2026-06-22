@@ -24,8 +24,8 @@ class LearningService:
         """
         from apps.courses.models import Course
         course = Course.objects.filter(id=course_id).first()
-        if course and course.instructor_id == user.id:
-            # Instructor chủ sở hữu: tạo/tìm enrollment ảo để tracking progress
+        if course and course.assigned_instructor_id == user.id:
+            # Instructor được phân công: tạo/tìm enrollment ảo để tracking progress
             enrollment, _ = Enrollment.objects.get_or_create(
                 student=user,
                 course_id=course_id,
@@ -42,12 +42,11 @@ class LearningService:
         """
         Lấy toàn bộ curriculum cho learning page.
         - Nếu user đã enroll: trả về full curriculum + progress + completed status
-        - Nếu user chưa enroll: chỉ trả về FREE lessons (có video_url, material_url),
-          PAID lessons bị khóa (không có nội dung)
+        - Nếu user chưa enroll: tất cả lessons bị khóa (không có nội dung)
         """
         from apps.courses.models import Course
         course = Course.objects.filter(id=course_id).first()
-        is_owner = course is not None and course.instructor_id == user.id
+        is_owner = course is not None and course.assigned_instructor_id == user.id
 
         # Kiểm tra enrollment
         enrollment = None
@@ -56,7 +55,7 @@ class LearningService:
             enrollment = LearningService.get_enrollment_or_404(user, course_id)
             is_enrolled = True
         except PermissionDenied:
-            # User chưa enroll - chỉ cho xem FREE lessons
+            # User chưa enroll - tất cả lessons đều bị khóa
             pass
 
         chapters = Chapter.objects.filter(course_id=course_id).order_by("order", "id")
@@ -82,8 +81,8 @@ class LearningService:
             for lesson in lessons:
                 is_completed = lesson.id in completed_lesson_ids
 
-                # Nếu chưa enroll và không phải FREE và không phải owner → khóa
-                is_locked = not is_enrolled and not lesson.is_free and not is_owner
+                # Nếu chưa enroll và không phải owner → khóa
+                is_locked = not is_enrolled and not is_owner
 
                 lesson_data = {
                     "id": lesson.id,
@@ -94,7 +93,6 @@ class LearningService:
                     "video_url": lesson.video_url if not is_locked else None,
                     "material_url": lesson.material_file.url if lesson.material_file and not is_locked else None,
                     "order": lesson.order,
-                    "is_free": lesson.is_free,
                     "is_locked": is_locked,
                     "completed": is_completed,
                     "is_completed": is_completed,

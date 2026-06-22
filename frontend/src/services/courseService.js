@@ -1,8 +1,24 @@
-import {getCoursesApi,getCourseDetailApi,createCourseApi,updateCourseApi,deleteCourseApi,submitCourseReviewApi,getPendingCoursesApi,
-  approveCourseApi,rejectCourseApi,publishCourseApi,hideCourseApi,unhideCourseApi,getCurriculumApi,getCategoriesApi,
+import {
+  getCoursesApi,
+  getCourseDetailApi,
+  getAdminCoursesApi,
+  getAdminCourseDetailApi,
+  createAdminCourseApi,
+  updateAdminCourseApi,
+  deleteAdminCourseApi,
+  publishAdminCourseApi,
+  hideAdminCourseApi,
+  assignInstructorApi,
+  getAssignedInstructorApi,
+  getInstructorCoursesApi,
+  getInstructorCourseDetailApi,
+  getInstructorCourseStudentsApi,
+  getInstructorCourseAnalyticsApi,
+  getCurriculumApi,
+  getCategoriesApi,
 } from "../api/courseAPI";
 
-// ==================== COURSES ====================
+// ==================== PUBLIC COURSES ====================
 
 export const getCourses = async (params = {}) => {
   return await getCoursesApi(params);
@@ -12,44 +28,60 @@ export const getCourseDetail = async (courseId) => {
   return await getCourseDetailApi(courseId);
 };
 
-export const createCourse = async (data) => {
-  return await createCourseApi(data);
+// ==================== ADMIN COURSES ====================
+
+export const getAdminCourses = async (params = {}) => {
+  return await getAdminCoursesApi(params);
 };
 
-export const updateCourse = async (courseId, data) => {
-  return await updateCourseApi(courseId, data);
+export const getAdminCourseDetail = async (courseId) => {
+  return await getAdminCourseDetailApi(courseId);
 };
 
-export const deleteCourse = async (courseId) => {
-  return await deleteCourseApi(courseId);
+export const createAdminCourse = async (data) => {
+  return await createAdminCourseApi(data);
 };
 
-export const submitForReview = async (courseId) => {
-  return await submitCourseReviewApi(courseId);
+export const updateAdminCourse = async (courseId, data) => {
+  return await updateAdminCourseApi(courseId, data);
 };
 
-export const getPendingCourses = async () => {
-  return await getPendingCoursesApi();
+export const deleteAdminCourse = async (courseId) => {
+  return await deleteAdminCourseApi(courseId);
 };
 
-export const approveCourse = async (courseId) => {
-  return await approveCourseApi(courseId);
+export const publishAdminCourse = async (courseId) => {
+  return await publishAdminCourseApi(courseId);
 };
 
-export const rejectCourse = async (courseId, note) => {
-  return await rejectCourseApi(courseId, note);
+export const hideAdminCourse = async (courseId) => {
+  return await hideAdminCourseApi(courseId);
 };
 
-export const publishCourse = async (courseId) => {
-  return await publishCourseApi(courseId);
+export const assignInstructor = async (courseId, instructorId) => {
+  return await assignInstructorApi(courseId, instructorId);
 };
 
-export const hideCourse = async (courseId) => {
-  return await hideCourseApi(courseId);
+export const getAssignedInstructor = async (courseId) => {
+  return await getAssignedInstructorApi(courseId);
 };
 
-export const unhideCourse = async (courseId) => {
-  return await unhideCourseApi(courseId);
+// ==================== INSTRUCTOR COURSES ====================
+
+export const getInstructorCourses = async (params = {}) => {
+  return await getInstructorCoursesApi(params);
+};
+
+export const getInstructorCourseDetail = async (courseId) => {
+  return await getInstructorCourseDetailApi(courseId);
+};
+
+export const getInstructorCourseStudents = async (courseId) => {
+  return await getInstructorCourseStudentsApi(courseId);
+};
+
+export const getInstructorCourseAnalytics = async (courseId) => {
+  return await getInstructorCourseAnalyticsApi(courseId);
 };
 
 // ==================== CURRICULUM ====================

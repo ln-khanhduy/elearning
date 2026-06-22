@@ -6,7 +6,7 @@ class EnrollmentSerializer(serializers.ModelSerializer):
     """Serializer cho Enrollment - bao gồm thông tin khóa học và tiến độ."""
     course_title = serializers.CharField(source="course.title", read_only=True)
     course_thumbnail = serializers.SerializerMethodField()
-    instructor_name = serializers.CharField(source="course.instructor.get_full_name", read_only=True)
+    instructor_name = serializers.SerializerMethodField()
     progress_percent = serializers.SerializerMethodField()
     completed_lessons_count = serializers.SerializerMethodField()
     total_lessons_count = serializers.SerializerMethodField()
@@ -20,6 +20,10 @@ class EnrollmentSerializer(serializers.ModelSerializer):
             "completed_lessons_count", "total_lessons_count", "last_completed_lesson",
             "enrolled_at", "completed_at", "created_at",
         ]
+
+    def get_instructor_name(self, obj):
+        instructor = obj.course.assigned_instructor
+        return instructor.get_full_name() if instructor else None
 
     def get_course_thumbnail(self, obj):
         return obj.course.thumbnail.url if obj.course.thumbnail else None

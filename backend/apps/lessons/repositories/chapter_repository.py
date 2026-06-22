@@ -6,7 +6,7 @@ class ChapterRepository:
     @staticmethod
     def get_by_id(chapter_id):
         """Lấy chi tiết một chương học theo ID, kèm thông tin course và instructor. Trả về 404 nếu không tìm thấy."""
-        chapter = Chapter.objects.select_related("course", "course__instructor").filter(id=chapter_id).first()
+        chapter = Chapter.objects.select_related("course", "course__assigned_instructor").filter(id=chapter_id).first()
         if not chapter:
             raise NotFound("Không tìm thấy chương học.")
         return chapter

@@ -4,17 +4,10 @@ from rest_framework.exceptions import PermissionDenied, ValidationError
 from apps.lessons.models import Lesson
 from apps.lessons.repositories.lesson_repository import LessonRepository
 from apps.lessons.repositories.chapter_repository import ChapterRepository
+from apps.courses.services.course_permission_service import CoursePermissionService
 
 
 class LessonService:
-    @staticmethod
-    def check_course_owner(course, user):
-        """Kiểm tra user có phải là chủ sở hữu khóa học không. SUPERADMIN luôn được phép."""
-        if user.role and user.role.code == "SUPERADMIN":
-            return
-        if course.instructor_id != user.id:
-            raise PermissionDenied("Bạn không có quyền thao tác với khóa học này.")
-
     @staticmethod
     def _generate_unique_slug(chapter_id, title, exclude_lesson_id=None):
         """
@@ -53,12 +46,14 @@ class LessonService:
     def create_lesson(chapter_id, user, data):
         """
         Tạo bài học mới trong một chương.
-        - Kiểm tra quyền sở hữu khóa học
+        - Kiểm tra quyền quản lý khóa học (chỉ COURSE_ADMIN/SUPERADMIN)
         - Kiểm tra thứ tự bài học không bị trùng
         - Tự sinh slug unique từ title (không raise lỗi nếu trùng slug)
         """
         chapter = ChapterRepository.get_by_id(chapter_id)
-        LessonService.check_course_owner(chapter.course, user)
+
+        if not CoursePermissionService.can_manage_course(chapter.course, user):
+            raise PermissionDenied("Bạn không có quyền thao tác với khóa học này.")
 
         order = data.get("order")
         if order is None:
@@ -77,12 +72,14 @@ class LessonService:
     def update_lesson(lesson_id, user, data):
         """
         Cập nhật thông tin bài học.
-        - Kiểm tra quyền sở hữu khóa học
+        - Kiểm tra quyền quản lý khóa học (chỉ COURSE_ADMIN/SUPERADMIN)
         - Kiểm tra thứ tự mới không bị trùng (nếu có thay đổi)
         - Nếu title thay đổi, tự sinh slug unique (không raise lỗi nếu trùng slug)
         """
         lesson = LessonRepository.get_by_id(lesson_id)
-        LessonService.check_course_owner(lesson.chapter.course, user)
+
+        if not CoursePermissionService.can_manage_course(lesson.chapter.course, user):
+            raise PermissionDenied("Bạn không có quyền thao tác với khóa học này.")
 
         new_order = data.get("order")
         if new_order is not None and new_order != lesson.order and LessonRepository.exists_order(lesson.chapter_id, new_order):
@@ -104,22 +101,27 @@ class LessonService:
     def delete_lesson(lesson_id, user):
         """
         Xóa bài học.
-        - Kiểm tra quyền sở hữu khóa học trước khi xóa
+        - Kiểm tra quyền quản lý khóa học trước khi xóa (chỉ COURSE_ADMIN/SUPERADMIN)
         """
         lesson = LessonRepository.get_by_id(lesson_id)
-        LessonService.check_course_owner(lesson.chapter.course, user)
+
+        if not CoursePermissionService.can_manage_course(lesson.chapter.course, user):
+            raise PermissionDenied("Bạn không có quyền thao tác với khóa học này.")
+
         LessonRepository.delete(lesson_id)
 
     @staticmethod
     def reorder_lessons(chapter_id, user, lessons_data):
         """
         Sắp xếp lại thứ tự các bài học trong một chương.
-        - Kiểm tra quyền sở hữu khóa học
+        - Kiểm tra quyền quản lý khóa học (chỉ COURSE_ADMIN/SUPERADMIN)
         - Kiểm tra danh sách id và order không bị trùng
         - Cập nhật order cho từng bài học trong một transaction
         """
         chapter = ChapterRepository.get_by_id(chapter_id)
-        LessonService.check_course_owner(chapter.course, user)
+
+        if not CoursePermissionService.can_manage_course(chapter.course, user):
+            raise PermissionDenied("Bạn không có quyền thao tác với khóa học này.")
 
         ids = [item["id"] for item in lessons_data]
         orders = [item["order"] for item in lessons_data]

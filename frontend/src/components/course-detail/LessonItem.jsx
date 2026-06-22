@@ -5,8 +5,6 @@ import "../../style/course-detail/lesson-item.css";
  * Mỗi item bài học trong danh sách
  * Hiển thị: icon loại bài, tiêu đề, thời lượng, trạng thái hoàn thành
  * Hỗ trợ: lesson (content_type: VIDEO/DOCUMENT) và quiz items
- * - FREE lessons: hiển thị badge "Miễn phí", có thể click xem ngay
- * - PAID lessons: hiển thị icon khóa nếu chưa enroll
  */
 function LessonItem({ lesson, index, isCompleted, isEnrolled, isQuiz = false, onFreeLessonClick }) {
   const getLessonIcon = (type) => {
@@ -42,9 +40,8 @@ function LessonItem({ lesson, index, isCompleted, isEnrolled, isQuiz = false, on
     return `${h}:${m.toString().padStart(2, "0")}`;
   };
 
-  // FREE lesson: có thể click xem ngay (kể cả chưa enroll)
-  const isFree = lesson.is_free === true && !isQuiz;
-  const canClick = isEnrolled || isFree;
+  // Chỉ có thể click nếu đã enroll
+  const canClick = isEnrolled;
 
   const handleClick = () => {
     if (canClick && onFreeLessonClick) {
@@ -74,9 +71,6 @@ function LessonItem({ lesson, index, isCompleted, isEnrolled, isQuiz = false, on
             {formatDuration(lesson.duration)}
           </span>
         )}
-        {isFree && !isEnrolled && (
-          <span className="lesson-free-badge">Miễn phí</span>
-        )}
         {isCompleted ? (
           <span className="lesson-status status-done">
             <i className="bi bi-check-circle-fill"></i>
@@ -84,10 +78,6 @@ function LessonItem({ lesson, index, isCompleted, isEnrolled, isQuiz = false, on
         ) : isEnrolled ? (
           <span className="lesson-status status-pending">
             <i className="bi bi-circle"></i>
-          </span>
-        ) : isFree ? (
-          <span className="lesson-status status-free">
-            <i className="bi bi-play-circle"></i>
           </span>
         ) : (
           <span className="lesson-status status-locked">

@@ -1,34 +1,47 @@
 from django.urls import path
 from apps.courses.views import (
-    CourseListAPIView, CourseDetailAPIView, CourseCreateAPIView,
-    CourseUpdateAPIView, CourseDeleteAPIView,
-    CourseSubmitReviewAPIView, PendingCourseListAPIView,
-    CourseApproveAPIView, CourseRejectAPIView, CoursePublishAPIView,
-    CourseHideAPIView, CourseUnhideAPIView, CourseCurriculumAPIView,
-    CourseCurriculumPreviewAPIView,
+    # Public
+    CourseListAPIView, CourseDetailAPIView,
+    CourseCurriculumAPIView, CourseCurriculumPreviewAPIView,
     CategoryListAPIView, CategoryCreateAPIView, CategoryUpdateAPIView, CategoryDeleteAPIView,
+
+    # Admin
+    AdminCourseListAPIView, AdminCourseCreateAPIView, AdminCourseDetailAPIView,
+    AdminCourseUpdateAPIView, AdminCourseDeleteAPIView,
+    AdminCoursePublishAPIView, AdminCourseHideAPIView,
+    AdminCourseAssignInstructorAPIView, AdminCourseAssignedInstructorAPIView,
+
+    # Instructor
+    InstructorCourseListAPIView, InstructorCourseDetailAPIView,
+    InstructorCourseStudentsAPIView, InstructorCourseAnalyticsAPIView,
 )
 
 
-
 urlpatterns = [
+    # ==================== PUBLIC ====================
     path("", CourseListAPIView.as_view(), name="course-list"),
-    path("create/", CourseCreateAPIView.as_view(), name="course-create"),
-    path("pending/", PendingCourseListAPIView.as_view(), name="course-pending"),
     path("<int:course_id>/", CourseDetailAPIView.as_view(), name="course-detail"),
-    path("<int:course_id>/update/", CourseUpdateAPIView.as_view(), name="course-update"),
-    path("<int:course_id>/delete/", CourseDeleteAPIView.as_view(), name="course-delete"),
-    path("<int:course_id>/submit-review/", CourseSubmitReviewAPIView.as_view(), name="course-submit-review"),
-    path("<int:course_id>/approve/", CourseApproveAPIView.as_view(), name="course-approve"),
-    path("<int:course_id>/reject/", CourseRejectAPIView.as_view(), name="course-reject"),
-    path("<int:course_id>/publish/", CoursePublishAPIView.as_view(), name="course-publish"),
-    path("<int:course_id>/hide/", CourseHideAPIView.as_view(), name="course-hide"),
-    path("<int:course_id>/unhide/", CourseUnhideAPIView.as_view(), name="course-unhide"),
     path("<int:course_id>/curriculum/", CourseCurriculumAPIView.as_view(), name="course-curriculum"),
     path("<int:course_id>/curriculum/preview/", CourseCurriculumPreviewAPIView.as_view(), name="course-curriculum-preview"),
 
-    # Category
+    # ==================== ADMIN ====================
+    path("admin/", AdminCourseListAPIView.as_view(), name="admin-course-list"),
+    path("admin/create/", AdminCourseCreateAPIView.as_view(), name="admin-course-create"),
+    path("admin/<int:course_id>/", AdminCourseDetailAPIView.as_view(), name="admin-course-detail"),
+    path("admin/<int:course_id>/update/", AdminCourseUpdateAPIView.as_view(), name="admin-course-update"),
+    path("admin/<int:course_id>/delete/", AdminCourseDeleteAPIView.as_view(), name="admin-course-delete"),
+    path("admin/<int:course_id>/publish/", AdminCoursePublishAPIView.as_view(), name="admin-course-publish"),
+    path("admin/<int:course_id>/hide/", AdminCourseHideAPIView.as_view(), name="admin-course-hide"),
+    path("admin/<int:course_id>/assign-instructor/", AdminCourseAssignInstructorAPIView.as_view(), name="admin-course-assign-instructor"),
+    path("admin/<int:course_id>/assigned-instructor/", AdminCourseAssignedInstructorAPIView.as_view(), name="admin-course-assigned-instructor"),
 
+    # ==================== INSTRUCTOR ====================
+    path("instructor/", InstructorCourseListAPIView.as_view(), name="instructor-course-list"),
+    path("instructor/<int:course_id>/", InstructorCourseDetailAPIView.as_view(), name="instructor-course-detail"),
+    path("instructor/<int:course_id>/students/", InstructorCourseStudentsAPIView.as_view(), name="instructor-course-students"),
+    path("instructor/<int:course_id>/analytics/", InstructorCourseAnalyticsAPIView.as_view(), name="instructor-course-analytics"),
+
+    # ==================== CATEGORY ====================
     path("categories/", CategoryListAPIView.as_view(), name="category-list"),
     path("categories/create/", CategoryCreateAPIView.as_view(), name="category-create"),
     path("categories/<int:category_id>/update/", CategoryUpdateAPIView.as_view(), name="category-update"),

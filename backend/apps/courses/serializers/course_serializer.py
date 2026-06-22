@@ -4,10 +4,12 @@ from apps.courses.serializers.category_tag_serializer import CategorySerializer
 
 
 class CourseListSerializer(serializers.ModelSerializer):
-    """Serializer cho danh sách khóa học - bao gồm tên instructor, category và URL thumbnail."""
+    """Serializer cho danh sách khóa học - bao gồm tên created_by, assigned_instructor, category và URL thumbnail."""
 
-    instructor_name = serializers.CharField(source="instructor.get_full_name", read_only=True)
-    instructor_avatar = serializers.SerializerMethodField()
+    created_by_name = serializers.CharField(source="created_by.get_full_name", read_only=True)
+    created_by_avatar = serializers.SerializerMethodField()
+    assigned_instructor_name = serializers.SerializerMethodField()
+    assigned_instructor_avatar = serializers.SerializerMethodField()
     category = CategorySerializer(read_only=True)
     thumbnail_url = serializers.SerializerMethodField()
     chapter_count = serializers.SerializerMethodField()
@@ -17,13 +19,26 @@ class CourseListSerializer(serializers.ModelSerializer):
         model = Course
         fields = [
             "id", "title", "slug", "description", "thumbnail_url", "price",
-            "status", "instructor_name", "instructor_avatar", "category",
-            "chapter_count", "lesson_count", "created_at",
+            "status", "created_by_name", "created_by_avatar",
+            "assigned_instructor_name", "assigned_instructor_avatar",
+            "category", "chapter_count", "lesson_count", "created_at",
         ]
 
-    def get_instructor_avatar(self, obj):
-        """Lấy URL avatar của instructor, trả về None nếu không có."""
-        return obj.instructor.avatar_url if hasattr(obj.instructor, 'avatar_url') else None
+    def get_created_by_avatar(self, obj):
+        """Lấy URL avatar của người tạo, trả về None nếu không có."""
+        return obj.created_by.avatar_url if hasattr(obj.created_by, 'avatar_url') else None
+
+    def get_assigned_instructor_name(self, obj):
+        """Lấy tên giảng viên được phân công, trả về None nếu chưa có."""
+        if obj.assigned_instructor:
+            return obj.assigned_instructor.get_full_name()
+        return None
+
+    def get_assigned_instructor_avatar(self, obj):
+        """Lấy URL avatar của giảng viên được phân công, trả về None nếu chưa có."""
+        if obj.assigned_instructor and hasattr(obj.assigned_instructor, 'avatar_url'):
+            return obj.assigned_instructor.avatar_url
+        return None
 
     def get_thumbnail_url(self, obj):
         """Lấy URL đầy đủ của thumbnail khóa học, trả về None nếu không có."""
@@ -41,10 +56,13 @@ class CourseListSerializer(serializers.ModelSerializer):
 
 
 class CourseDetailSerializer(serializers.ModelSerializer):
-    """Serializer cho chi tiết khóa học - bao gồm tên instructor, category, URL thumbnail và thông tin duyệt."""
+    """Serializer cho chi tiết khóa học - bao gồm tên created_by, assigned_instructor, category và URL thumbnail."""
 
-    instructor_name = serializers.CharField(source="instructor.get_full_name", read_only=True)
-    instructor_avatar = serializers.SerializerMethodField()
+    created_by_name = serializers.CharField(source="created_by.get_full_name", read_only=True)
+    created_by_avatar = serializers.SerializerMethodField()
+    assigned_instructor_name = serializers.SerializerMethodField()
+    assigned_instructor_avatar = serializers.SerializerMethodField()
+    assigned_instructor_id = serializers.SerializerMethodField()
     category = CategorySerializer(read_only=True)
     thumbnail_url = serializers.SerializerMethodField()
     chapter_count = serializers.SerializerMethodField()
@@ -54,13 +72,31 @@ class CourseDetailSerializer(serializers.ModelSerializer):
         model = Course
         fields = [
             "id", "title", "slug", "description", "thumbnail_url", "preview_video_url",
-            "price", "status", "approval_note", "instructor_name", "instructor_avatar", "category",
-            "chapter_count", "lesson_count", "created_at", "updated_at",
+            "price", "status", "created_by_name", "created_by_avatar",
+            "assigned_instructor_id", "assigned_instructor_name", "assigned_instructor_avatar",
+            "category", "chapter_count", "lesson_count",
+            "published_at", "created_at", "updated_at",
         ]
 
-    def get_instructor_avatar(self, obj):
-        """Lấy URL avatar của instructor, trả về None nếu không có."""
-        return obj.instructor.avatar_url if hasattr(obj.instructor, 'avatar_url') else None
+    def get_created_by_avatar(self, obj):
+        """Lấy URL avatar của người tạo, trả về None nếu không có."""
+        return obj.created_by.avatar_url if hasattr(obj.created_by, 'avatar_url') else None
+
+    def get_assigned_instructor_id(self, obj):
+        """Lấy ID giảng viên được phân công, trả về None nếu chưa có."""
+        return obj.assigned_instructor_id
+
+    def get_assigned_instructor_name(self, obj):
+        """Lấy tên giảng viên được phân công, trả về None nếu chưa có."""
+        if obj.assigned_instructor:
+            return obj.assigned_instructor.get_full_name()
+        return None
+
+    def get_assigned_instructor_avatar(self, obj):
+        """Lấy URL avatar của giảng viên được phân công, trả về None nếu chưa có."""
+        if obj.assigned_instructor and hasattr(obj.assigned_instructor, 'avatar_url'):
+            return obj.assigned_instructor.avatar_url
+        return None
 
     def get_thumbnail_url(self, obj):
         """Lấy URL đầy đủ của thumbnail khóa học, trả về None nếu không có."""
@@ -100,7 +136,9 @@ class CourseCreateUpdateSerializer(serializers.ModelSerializer):
         return value
 
 
-class CourseRejectSerializer(serializers.Serializer):
-    """Serializer cho từ chối khóa học - bắt buộc nhập lý do từ chối (tối đa 500 ký tự)."""
-
-    approval_note = serializers.CharField(required=True, allow_blank=False, max_length=500)
+class CourseAssignInstructorSerializer(serializers.Serializer):
+    """Serializer cho phân công giảng viên.
+    - instructor_id: ID (UUID) của giảng viên.
+    - Để gỡ giảng viên, gửi instructor_id = null.
+    """
+    instructor_id = serializers.CharField(required=False, allow_null=True, allow_blank=True)

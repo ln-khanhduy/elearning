@@ -2,8 +2,8 @@ import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import {
-  getCourseDetail,
-  updateCourse,
+  getAdminCourseDetail,
+  updateAdminCourse,
   getCategories,
 } from "../../services/courseService";
 
@@ -28,7 +28,7 @@ export default function useCourseEditor(courseId) {
       return;
     }
     try {
-      const res = await getCourseDetail(courseId);
+      const res = await getAdminCourseDetail(courseId);
       const data = res?.data || res;
       setCourse(data);
       setFormData({
@@ -41,7 +41,7 @@ export default function useCourseEditor(courseId) {
       setThumbnailPreview(data.thumbnail_url || "");
     } catch {
       toast.error("Không thể tải thông tin khóa học.");
-      navigate("/instructor/courses");
+      navigate("/admin/courses");
     } finally {
       setLoading(false);
     }
@@ -104,7 +104,7 @@ export default function useCourseEditor(courseId) {
       if (formData.category) form.append("category", formData.category);
       if (formData.preview_video_url) form.append("preview_video_url", formData.preview_video_url.trim());
       if (thumbnail) form.append("thumbnail", thumbnail);
-      const result = await updateCourse(courseId, form);
+      const result = await updateAdminCourse(courseId, form);
       const updatedData = result?.data || result;
       if (updatedData) {
         setCourse(updatedData);
@@ -138,6 +138,7 @@ export default function useCourseEditor(courseId) {
     loading,
     saving,
     errors,
+    validateCourse,
     handleCourseChange,
     handleThumbnailChange,
     handleSaveCourse,

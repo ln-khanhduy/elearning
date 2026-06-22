@@ -9,7 +9,7 @@ const request = async (callback) => {
   }
 };
 
-// ==================== COURSES ====================
+// ==================== PUBLIC COURSES ====================
 // BE: /api/courses/
 
 export const getCoursesApi = async (params = {}) => {
@@ -28,55 +28,85 @@ export const getCourseDetailApi = async (courseId) => {
   return request(() => apiClient.get(`/api/courses/${courseId}/`));
 };
 
-export const createCourseApi = async (data) => {
+// ==================== ADMIN COURSES ====================
+// BE: /api/courses/admin/
+
+export const getAdminCoursesApi = async (params = {}) => {
+  const query = new URLSearchParams();
+  if (params.q) query.append("q", params.q);
+  if (params.status) query.append("status", params.status);
+  if (params.category) query.append("category", params.category);
+  if (params.page) query.append("page", params.page);
+  if (params.page_size) query.append("page_size", params.page_size);
+  const qs = query.toString();
+  return request(() => apiClient.get(`/api/courses/admin/${qs ? `?${qs}` : ""}`));
+};
+
+export const getAdminCourseDetailApi = async (courseId) => {
+  return request(() => apiClient.get(`/api/courses/admin/${courseId}/`));
+};
+
+export const createAdminCourseApi = async (data) => {
   return request(() =>
-    apiClient.post("/api/courses/create/", data, {
+    apiClient.post("/api/courses/admin/create/", data, {
       headers: { "Content-Type": "multipart/form-data" },
     })
   );
 };
 
-export const updateCourseApi = async (courseId, data) => {
+export const updateAdminCourseApi = async (courseId, data) => {
   return request(() =>
-    apiClient.patch(`/api/courses/${courseId}/update/`, data, {
+    apiClient.patch(`/api/courses/admin/${courseId}/update/`, data, {
       headers: { "Content-Type": "multipart/form-data" },
     })
   );
 };
 
-export const deleteCourseApi = async (courseId) => {
-  return request(() => apiClient.delete(`/api/courses/${courseId}/delete/`));
+export const deleteAdminCourseApi = async (courseId) => {
+  return request(() => apiClient.delete(`/api/courses/admin/${courseId}/delete/`));
 };
 
-export const submitCourseReviewApi = async (courseId) => {
-  return request(() => apiClient.patch(`/api/courses/${courseId}/submit-review/`));
+export const publishAdminCourseApi = async (courseId) => {
+  return request(() => apiClient.patch(`/api/courses/admin/${courseId}/publish/`));
 };
 
-export const getPendingCoursesApi = async () => {
-  const res = await apiClient.get("/api/courses/pending/");
-  return res.data?.data ?? [];
+export const hideAdminCourseApi = async (courseId) => {
+  return request(() => apiClient.patch(`/api/courses/admin/${courseId}/hide/`));
 };
 
-export const approveCourseApi = async (courseId) => {
-  return request(() => apiClient.patch(`/api/courses/${courseId}/approve/`));
-};
-
-export const rejectCourseApi = async (courseId, approvalNote) => {
+export const assignInstructorApi = async (courseId, instructorId) => {
   return request(() =>
-    apiClient.patch(`/api/courses/${courseId}/reject/`, { approval_note: approvalNote })
+    apiClient.patch(`/api/courses/admin/${courseId}/assign-instructor/`, {
+      instructor_id: instructorId,
+    })
   );
 };
 
-export const publishCourseApi = async (courseId) => {
-  return request(() => apiClient.patch(`/api/courses/${courseId}/publish/`));
+export const getAssignedInstructorApi = async (courseId) => {
+  return request(() => apiClient.get(`/api/courses/admin/${courseId}/assigned-instructor/`));
 };
 
-export const hideCourseApi = async (courseId) => {
-  return request(() => apiClient.patch(`/api/courses/${courseId}/hide/`));
+// ==================== INSTRUCTOR COURSES ====================
+// BE: /api/courses/instructor/
+
+export const getInstructorCoursesApi = async (params = {}) => {
+  const query = new URLSearchParams();
+  if (params.page) query.append("page", params.page);
+  if (params.page_size) query.append("page_size", params.page_size);
+  const qs = query.toString();
+  return request(() => apiClient.get(`/api/courses/instructor/${qs ? `?${qs}` : ""}`));
 };
 
-export const unhideCourseApi = async (courseId) => {
-  return request(() => apiClient.patch(`/api/courses/${courseId}/unhide/`));
+export const getInstructorCourseDetailApi = async (courseId) => {
+  return request(() => apiClient.get(`/api/courses/instructor/${courseId}/`));
+};
+
+export const getInstructorCourseStudentsApi = async (courseId) => {
+  return request(() => apiClient.get(`/api/courses/instructor/${courseId}/students/`));
+};
+
+export const getInstructorCourseAnalyticsApi = async (courseId) => {
+  return request(() => apiClient.get(`/api/courses/instructor/${courseId}/analytics/`));
 };
 
 // ==================== CURRICULUM ====================

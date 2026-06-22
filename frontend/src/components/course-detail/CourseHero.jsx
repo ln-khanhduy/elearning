@@ -16,8 +16,8 @@ function CourseHero({ course }) {
     description,
     thumbnail_url,
     preview_video_url,
-    instructor_name,
-    instructor_avatar,
+    assigned_instructor_name,
+    assigned_instructor_avatar,
     average_rating,
     review_count,
     student_count,
@@ -27,6 +27,10 @@ function CourseHero({ course }) {
     price,
     original_price,
   } = course;
+
+  // Map assigned_instructor fields for display
+  const instructor_name = assigned_instructor_name;
+  const instructor_avatar = assigned_instructor_avatar;
 
   const getYouTubeEmbedUrl = (url) => {
     if (!url) return null;

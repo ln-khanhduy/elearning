@@ -1,17 +1,10 @@
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from apps.quizzes.repositories.quiz_repository import QuizRepository
 from apps.quizzes.repositories.question_repository import QuestionRepository
+from apps.courses.services.course_permission_service import CoursePermissionService
 
 
 class QuestionService:
-    @staticmethod
-    def check_course_owner(course, user):
-        """Kiểm tra user có phải là chủ sở hữu khóa học không. SUPERADMIN luôn được phép."""
-        if user.role and user.role.code == "SUPERADMIN":
-            return
-        if course.instructor_id != user.id:
-            raise PermissionDenied("Bạn không có quyền thao tác với khóa học này.")
-
     @staticmethod
     def get_questions_by_quiz(quiz_id):
         """Lấy danh sách câu hỏi của một quiz (ủy quyền cho Repository truy vấn)."""
@@ -21,13 +14,15 @@ class QuestionService:
     def create_question(quiz_id, user, validated_data):
         """
         Tạo câu hỏi mới trong một quiz.
-        - Kiểm tra quyền sở hữu khóa học
+        - Kiểm tra quyền quản lý khóa học (chỉ COURSE_ADMIN/SUPERADMIN)
         - Kiểm tra points > 0
         - Nếu là MCQ: kiểm tra tối thiểu 2 option, tối thiểu 1 đáp án đúng
         - Nếu là FILL_BLANK: kiểm tra correct_text_answer không được để trống
         """
         quiz = QuizRepository.get_by_id(quiz_id)
-        QuestionService.check_course_owner(quiz.lesson.chapter.course, user)
+
+        if not CoursePermissionService.can_manage_course(quiz.lesson.chapter.course, user):
+            raise PermissionDenied("Bạn không có quyền thao tác với khóa học này.")
 
         points = validated_data.get("points")
         if points is not None and points <= 0:
@@ -64,11 +59,13 @@ class QuestionService:
     def update_question(question_id, user, validated_data):
         """
         Cập nhật câu hỏi.
-        - Kiểm tra quyền sở hữu khóa học
+        - Kiểm tra quyền quản lý khóa học (chỉ COURSE_ADMIN/SUPERADMIN)
         - Nếu là MCQ: cập nhật lại options (xóa cũ, tạo mới)
         """
         question = QuestionRepository.get_by_id(question_id)
-        QuestionService.check_course_owner(question.quiz.lesson.chapter.course, user)
+
+        if not CoursePermissionService.can_manage_course(question.quiz.lesson.chapter.course, user):
+            raise PermissionDenied("Bạn không có quyền thao tác với khóa học này.")
 
         options_data = validated_data.pop("options", None)
 
@@ -98,8 +95,11 @@ class QuestionService:
     def delete_question(question_id, user):
         """
         Xóa câu hỏi.
-        - Kiểm tra quyền sở hữu khóa học trước khi xóa
+        - Kiểm tra quyền quản lý khóa học trước khi xóa (chỉ COURSE_ADMIN/SUPERADMIN)
         """
         question = QuestionRepository.get_by_id(question_id)
-        QuestionService.check_course_owner(question.quiz.lesson.chapter.course, user)
+
+        if not CoursePermissionService.can_manage_course(question.quiz.lesson.chapter.course, user):
+            raise PermissionDenied("Bạn không có quyền thao tác với khóa học này.")
+
         QuestionRepository.delete(question_id)

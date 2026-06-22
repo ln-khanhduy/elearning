@@ -45,7 +45,6 @@ function LearningItem({ lesson, isActive, isCompleted, onClick }) {
         )}
       </span>
       <span className="learning-item-title">{lesson.title}</span>
-      {lesson.is_free && !isLocked && <span className="learning-item-free">Miễn phí</span>}
     </button>
   );
 }
