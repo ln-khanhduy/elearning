@@ -4,6 +4,7 @@ import {
   getCategoriesApi, createCategoryApi, updateCategoryApi, deleteCategoryApi,
   getTagsApi, createTagApi, updateTagApi, deleteTagApi,
 } from "../../api/courseAPI";
+import ConfirmModal from "../../components/common/ConfirmModal";
 
 function AdminCategoryTagPage() {
   const [activeTab, setActiveTab] = useState("categories");
@@ -20,6 +21,22 @@ function AdminCategoryTagPage() {
   const [tagForm, setTagForm] = useState({ name: "" });
   const [editingTag, setEditingTag] = useState(null);
   const [tagLoading, setTagLoading] = useState(false);
+
+  // Confirm modal
+  const [confirmModal, setConfirmModal] = useState({
+    show: false,
+    title: "",
+    message: "",
+    onConfirm: null,
+  });
+
+  const showConfirm = (title, message, onConfirm) => {
+    setConfirmModal({ show: true, title, message, onConfirm });
+  };
+
+  const hideConfirm = () => {
+    setConfirmModal((prev) => ({ ...prev, show: false }));
+  };
 
   const loadCategories = async () => {
     try {
@@ -88,14 +105,19 @@ function AdminCategoryTagPage() {
   };
 
   const handleDeleteCategory = async (catId) => {
-    if (!window.confirm("Xóa danh mục này? Các khóa học thuộc danh mục này sẽ mất danh mục.")) return;
-    try {
-      await deleteCategoryApi(catId);
-      toast.success("Xóa danh mục thành công!");
-      loadCategories();
-    } catch (error) {
-      toast.error(error.message || "Có lỗi xảy ra.");
-    }
+    showConfirm(
+      "Xóa danh mục",
+      "Xóa danh mục này? Các khóa học thuộc danh mục này sẽ mất danh mục.",
+      async () => {
+        try {
+          await deleteCategoryApi(catId);
+          toast.success("Xóa danh mục thành công!");
+          loadCategories();
+        } catch (error) {
+          toast.error(error.message || "Có lỗi xảy ra.");
+        }
+      }
+    );
   };
 
   const handleCancelCatEdit = () => {
@@ -147,14 +169,19 @@ function AdminCategoryTagPage() {
   };
 
   const handleDeleteTag = async (tagId) => {
-    if (!window.confirm("Xóa tag này?")) return;
-    try {
-      await deleteTagApi(tagId);
-      toast.success("Xóa tag thành công!");
-      loadTags();
-    } catch (error) {
-      toast.error(error.message || "Có lỗi xảy ra.");
-    }
+    showConfirm(
+      "Xóa tag",
+      "Xóa tag này?",
+      async () => {
+        try {
+          await deleteTagApi(tagId);
+          toast.success("Xóa tag thành công!");
+          loadTags();
+        } catch (error) {
+          toast.error(error.message || "Có lỗi xảy ra.");
+        }
+      }
+    );
   };
 
   const handleCancelTagEdit = () => {
@@ -334,6 +361,20 @@ function AdminCategoryTagPage() {
           )}
         </div>
       )}
+
+      <ConfirmModal
+        show={confirmModal.show}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        variant="danger"
+        confirmLabel="Xác nhận"
+        cancelLabel="Hủy"
+        onConfirm={() => {
+          confirmModal.onConfirm?.();
+          hideConfirm();
+        }}
+        onCancel={hideConfirm}
+      />
     </div>
   );
 }

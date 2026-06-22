@@ -57,6 +57,29 @@ export default function useCurriculumBuilder(courseId, isDraft = false) {
   const [questionQuizId, setQuestionQuizId] = useState(null);
   const [showQuestionForm, setShowQuestionForm] = useState(false);
 
+  // Confirm modal state
+  const [confirmModal, setConfirmModal] = useState({
+    show: false,
+    title: "",
+    message: "",
+    variant: "danger",
+    onConfirm: null,
+  });
+
+  const showConfirm = (title, message, onConfirm, variant = "danger") => {
+    setConfirmModal({
+      show: true,
+      title,
+      message,
+      variant,
+      onConfirm,
+    });
+  };
+
+  const hideConfirm = () => {
+    setConfirmModal((prev) => ({ ...prev, show: false }));
+  };
+
   // ==================== LOAD ====================
   const loadCurriculum = useCallback(async () => {
     if (isDraft) {
@@ -159,19 +182,24 @@ export default function useCurriculumBuilder(courseId, isDraft = false) {
   };
 
   const handleDeleteChapter = async (chapterId) => {
-    if (!window.confirm("Xóa chương sẽ xóa tất cả bài học bên trong. Bạn có chắc?")) return;
-    if (isDraft) {
-      const newCurriculum = curriculum.filter((ch) => ch.id !== chapterId);
-      setCurriculum(newCurriculum);
-      saveDraft(newCurriculum);
-      return;
-    }
-    try {
-      await deleteChapter(chapterId);
-      loadCurriculum();
-    } catch (error) {
-      toast.error(error.message || "Có lỗi xảy ra.");
-    }
+    showConfirm(
+      "Xóa chương",
+      "Xóa chương sẽ xóa tất cả bài học bên trong. Bạn có chắc?",
+      async () => {
+        if (isDraft) {
+          const newCurriculum = curriculum.filter((ch) => ch.id !== chapterId);
+          setCurriculum(newCurriculum);
+          saveDraft(newCurriculum);
+          return;
+        }
+        try {
+          await deleteChapter(chapterId);
+          loadCurriculum();
+        } catch (error) {
+          toast.error(error.message || "Có lỗi xảy ra.");
+        }
+      }
+    );
   };
 
   // ==================== LESSON ====================
@@ -259,22 +287,27 @@ export default function useCurriculumBuilder(courseId, isDraft = false) {
   };
 
   const handleDeleteLesson = async (lessonId) => {
-    if (!window.confirm("Bạn có chắc muốn xóa bài học này?")) return;
-    if (isDraft) {
-      const newCurriculum = curriculum.map((ch) => ({
-        ...ch,
-        lessons: ch.lessons.filter((l) => l.id !== lessonId),
-      }));
-      setCurriculum(newCurriculum);
-      saveDraft(newCurriculum);
-      return;
-    }
-    try {
-      await deleteLesson(lessonId);
-      loadCurriculum();
-    } catch (error) {
-      toast.error(error.message || "Có lỗi xảy ra.");
-    }
+    showConfirm(
+      "Xóa bài học",
+      "Bạn có chắc muốn xóa bài học này?",
+      async () => {
+        if (isDraft) {
+          const newCurriculum = curriculum.map((ch) => ({
+            ...ch,
+            lessons: ch.lessons.filter((l) => l.id !== lessonId),
+          }));
+          setCurriculum(newCurriculum);
+          saveDraft(newCurriculum);
+          return;
+        }
+        try {
+          await deleteLesson(lessonId);
+          loadCurriculum();
+        } catch (error) {
+          toast.error(error.message || "Có lỗi xảy ra.");
+        }
+      }
+    );
   };
 
   // ==================== QUIZ ====================
@@ -358,25 +391,30 @@ export default function useCurriculumBuilder(courseId, isDraft = false) {
   };
 
   const handleDeleteQuiz = async (quizId) => {
-    if (!window.confirm("Bạn có chắc muốn xóa bài tập này?")) return;
-    if (isDraft) {
-      const newCurriculum = curriculum.map((ch) => ({
-        ...ch,
-        lessons: ch.lessons.map((l) => ({
-          ...l,
-          quizzes: l.quizzes.filter((q) => q.id !== quizId),
-        })),
-      }));
-      setCurriculum(newCurriculum);
-      saveDraft(newCurriculum);
-      return;
-    }
-    try {
-      await deleteQuiz(quizId);
-      loadCurriculum();
-    } catch (error) {
-      toast.error(error.message || "Có lỗi xảy ra.");
-    }
+    showConfirm(
+      "Xóa bài tập",
+      "Bạn có chắc muốn xóa bài tập này?",
+      async () => {
+        if (isDraft) {
+          const newCurriculum = curriculum.map((ch) => ({
+            ...ch,
+            lessons: ch.lessons.map((l) => ({
+              ...l,
+              quizzes: l.quizzes.filter((q) => q.id !== quizId),
+            })),
+          }));
+          setCurriculum(newCurriculum);
+          saveDraft(newCurriculum);
+          return;
+        }
+        try {
+          await deleteQuiz(quizId);
+          loadCurriculum();
+        } catch (error) {
+          toast.error(error.message || "Có lỗi xảy ra.");
+        }
+      }
+    );
   };
 
   // ==================== QUESTION ====================
@@ -480,28 +518,33 @@ export default function useCurriculumBuilder(courseId, isDraft = false) {
   };
 
   const handleDeleteQuestion = async (questionId) => {
-    if (!window.confirm("Bạn có chắc muốn xóa câu hỏi này?")) return;
-    if (isDraft) {
-      const newCurriculum = curriculum.map((ch) => ({
-        ...ch,
-        lessons: ch.lessons.map((l) => ({
-          ...l,
-          quizzes: l.quizzes.map((q) => ({
-            ...q,
-            questions: q.questions.filter((qu) => qu.id !== questionId),
-          })),
-        })),
-      }));
-      setCurriculum(newCurriculum);
-      saveDraft(newCurriculum);
-      return;
-    }
-    try {
-      await deleteQuestion(questionId);
-      loadCurriculum();
-    } catch (error) {
-      toast.error(error.message || "Có lỗi xảy ra.");
-    }
+    showConfirm(
+      "Xóa câu hỏi",
+      "Bạn có chắc muốn xóa câu hỏi này?",
+      async () => {
+        if (isDraft) {
+          const newCurriculum = curriculum.map((ch) => ({
+            ...ch,
+            lessons: ch.lessons.map((l) => ({
+              ...l,
+              quizzes: l.quizzes.map((q) => ({
+                ...q,
+                questions: q.questions.filter((qu) => qu.id !== questionId),
+              })),
+            })),
+          }));
+          setCurriculum(newCurriculum);
+          saveDraft(newCurriculum);
+          return;
+        }
+        try {
+          await deleteQuestion(questionId);
+          loadCurriculum();
+        } catch (error) {
+          toast.error(error.message || "Có lỗi xảy ra.");
+        }
+      }
+    );
   };
 
   // Question option helpers
@@ -572,5 +615,8 @@ export default function useCurriculumBuilder(courseId, isDraft = false) {
     addOption,
     updateOption,
     removeOption,
+    // Confirm modal
+    confirmModal,
+    hideConfirm,
   };
 }

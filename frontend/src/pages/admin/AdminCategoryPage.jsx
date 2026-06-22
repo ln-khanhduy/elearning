@@ -3,6 +3,7 @@ import { toast } from "react-toastify";
 import {
   getCategoriesApi, createCategoryApi, updateCategoryApi, deleteCategoryApi,
 } from "../../api/courseAPI";
+import ConfirmModal from "../../components/common/ConfirmModal";
 
 function AdminCategoryPage() {
   const [categories, setCategories] = useState([]);
@@ -12,6 +13,22 @@ function AdminCategoryPage() {
   const [catForm, setCatForm] = useState({ name: "" });
   const [editingCat, setEditingCat] = useState(null);
   const [catLoading, setCatLoading] = useState(false);
+
+  // Confirm modal
+  const [confirmModal, setConfirmModal] = useState({
+    show: false,
+    title: "",
+    message: "",
+    onConfirm: null,
+  });
+
+  const showConfirm = (title, message, onConfirm) => {
+    setConfirmModal({ show: true, title, message, onConfirm });
+  };
+
+  const hideConfirm = () => {
+    setConfirmModal((prev) => ({ ...prev, show: false }));
+  };
 
   const loadCategories = async () => {
     try {
@@ -71,14 +88,19 @@ function AdminCategoryPage() {
   };
 
   const handleDeleteCategory = async (catId) => {
-    if (!window.confirm("Xóa danh mục này? Các khóa học thuộc danh mục này sẽ mất danh mục.")) return;
-    try {
-      await deleteCategoryApi(catId);
-      toast.success("Xóa danh mục thành công!");
-      loadCategories();
-    } catch (error) {
-      toast.error(error.message || "Có lỗi xảy ra.");
-    }
+    showConfirm(
+      "Xóa danh mục",
+      "Xóa danh mục này? Các khóa học thuộc danh mục này sẽ mất danh mục.",
+      async () => {
+        try {
+          await deleteCategoryApi(catId);
+          toast.success("Xóa danh mục thành công!");
+          loadCategories();
+        } catch (error) {
+          toast.error(error.message || "Có lỗi xảy ra.");
+        }
+      }
+    );
   };
 
   const handleCancelCatEdit = () => {
@@ -169,6 +191,20 @@ function AdminCategoryPage() {
           </table>
         )}
       </div>
+
+      <ConfirmModal
+        show={confirmModal.show}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        variant="danger"
+        confirmLabel="Xác nhận"
+        cancelLabel="Hủy"
+        onConfirm={() => {
+          confirmModal.onConfirm?.();
+          hideConfirm();
+        }}
+        onCancel={hideConfirm}
+      />
     </div>
   );
 }

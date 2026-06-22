@@ -8,6 +8,7 @@ import CurriculumBuilder from "../../components/course-builder/CurriculumBuilder
 import LessonFormModal from "../../components/course-builder/LessonFormModal";
 import QuizFormModal from "../../components/course-builder/QuizFormModal";
 import QuestionFormModal from "../../components/course-builder/QuestionFormModal";
+import ConfirmModal from "../../components/common/ConfirmModal";
 import { updateAdminCourse } from "../../services/courseService";
 
 function AdminCourseEditPage() {
@@ -148,6 +149,20 @@ function AdminCourseEditPage() {
             onRemoveOption={builder.removeOption}
           />
         )}
+
+        <ConfirmModal
+          show={builder.confirmModal.show}
+          title={builder.confirmModal.title}
+          message={builder.confirmModal.message}
+          variant={builder.confirmModal.variant}
+          confirmLabel="Xác nhận"
+          cancelLabel="Hủy"
+          onConfirm={() => {
+            builder.confirmModal.onConfirm?.();
+            builder.hideConfirm();
+          }}
+          onCancel={builder.hideConfirm}
+        />
 
         <div className="course-form-actions mt-4">
           <button type="button" className="course-btn-outline" onClick={() => navigate("/admin/courses")}>

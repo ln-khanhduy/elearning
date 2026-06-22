@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "react-toastify";
 import { getReviews, updateReviewStatus } from "../../services/reviewService";
+import ConfirmModal from "../../components/common/ConfirmModal";
 
 function AdminReviewsPage() {
   const STATUS_MAP = {
@@ -12,6 +13,22 @@ function AdminReviewsPage() {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(null);
   const [statusFilter, setStatusFilter] = useState("");
+
+  // Confirm modal
+  const [confirmModal, setConfirmModal] = useState({
+    show: false,
+    title: "",
+    message: "",
+    onConfirm: null,
+  });
+
+  const showConfirm = (title, message, onConfirm) => {
+    setConfirmModal({ show: true, title, message, onConfirm });
+  };
+
+  const hideConfirm = () => {
+    setConfirmModal((prev) => ({ ...prev, show: false }));
+  };
 
   const loadReviews = useCallback(async () => {
     try {
@@ -31,17 +48,22 @@ function AdminReviewsPage() {
 
   const handleUpdateStatus = async (reviewId, status) => {
     const action = status === "HIDDEN" ? "ẩn" : status === "PUBLISHED" ? "hiện" : "xóa";
-    if (!window.confirm(`Xác nhận ${action} đánh giá này?`)) return;
-    try {
-      setActionLoading(`${status}-${reviewId}`);
-      await updateReviewStatus(reviewId, status);
-      toast.success(`Đã ${action} đánh giá thành công!`);
-      loadReviews();
-    } catch (error) {
-      toast.error(error.message);
-    } finally {
-      setActionLoading(null);
-    }
+    showConfirm(
+      `Xác nhận ${action} đánh giá`,
+      `Xác nhận ${action} đánh giá này?`,
+      async () => {
+        try {
+          setActionLoading(`${status}-${reviewId}`);
+          await updateReviewStatus(reviewId, status);
+          toast.success(`Đã ${action} đánh giá thành công!`);
+          loadReviews();
+        } catch (error) {
+          toast.error(error.message);
+        } finally {
+          setActionLoading(null);
+        }
+      }
+    );
   };
 
   const getStatusBadge = (status) => {
@@ -168,6 +190,20 @@ function AdminReviewsPage() {
           ))}
         </div>
       )}
+
+      <ConfirmModal
+        show={confirmModal.show}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        variant="danger"
+        confirmLabel="Xác nhận"
+        cancelLabel="Hủy"
+        onConfirm={() => {
+          confirmModal.onConfirm?.();
+          hideConfirm();
+        }}
+        onCancel={hideConfirm}
+      />
     </div>
   );
 }
