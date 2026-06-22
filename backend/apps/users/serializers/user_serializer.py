@@ -101,19 +101,27 @@ class ChangePasswordSerializer(serializers.Serializer):
 
 
 class InstructorApplySerializer(serializers.ModelSerializer):
-    """Serializer cho đăng ký giảng viên - nhận thông tin chuyên môn, CV, thông tin ngân hàng và xác nhận điều khoản."""
+    """Serializer cho đăng ký giảng viên (public - không cần đăng nhập)."""
 
+    name = serializers.CharField(required=True, max_length=50)
+    email = serializers.EmailField(required=True, max_length=50)
     cv_file = serializers.FileField(required=True)
     portfolio_link = serializers.CharField(required=False, allow_blank=True, allow_null=True, default='')
     contact_phone = serializers.CharField(required=False, allow_blank=True, allow_null=True, default='')
     bio = serializers.CharField(required=False, allow_blank=True, allow_null=True, default='')
+    certificates = serializers.ListField(
+        child=serializers.FileField(),
+        required=False,
+        allow_empty=True,
+        write_only=True,
+    )
 
     class Meta:
         model = InstructorProfile
         fields = [
-            "bio", "portfolio_link", "cv_file", "contact_phone",
+            "name", "email", "bio", "portfolio_link", "cv_file", "contact_phone",
             "bank_name", "bank_account_number", "bank_account_name",
-            "is_terms_accepted",
+            "is_terms_accepted", "certificates",
         ]
 
     def validate_bank_account_number(self, value):
@@ -149,7 +157,7 @@ class InstructorCertificateSerializer(serializers.ModelSerializer):
 
 
 class InstructorApplicationSerializer(serializers.ModelSerializer):
-    """Serializer cho hồ sơ đăng ký giảng viên - bao gồm thông tin user, trạng thái duyệt và thời gian."""
+    """Serializer cho hồ sơ đăng ký giảng viên - bao gồm thông tin người dùng (nếu đã được duyệt), trạng thái duyệt và thời gian."""
 
     user = UserDetailSerializer(read_only=True)
     certificates = InstructorCertificateSerializer(many=True, read_only=True)
@@ -160,7 +168,7 @@ class InstructorApplicationSerializer(serializers.ModelSerializer):
     class Meta:
         model = InstructorProfile
         fields = [
-            "id", "user", "bio", "portfolio_link", "cv_file", "contact_phone",
+            "id", "user", "name", "email", "bio", "portfolio_link", "cv_file", "contact_phone",
             "bank_name", "bank_account_number", "bank_account_name",
             "is_terms_accepted", "status", "rejection_reason",
             "reviewed_by", "reviewed_by_id", "reviewed_by_email", "reviewed_by_name",

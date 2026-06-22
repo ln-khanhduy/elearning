@@ -23,6 +23,10 @@ function HomeCTA() {
             <Link to="/register" className="home-cta-btn-secondary">
               Đăng ký miễn phí
             </Link>
+            <Link to="/instructor/apply" className="home-cta-btn-outline">
+              <i className="bi bi-mortarboard me-2"></i>
+              Trở thành giảng viên
+            </Link>
           </div>
         </div>
       </div>

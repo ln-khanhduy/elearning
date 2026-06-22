@@ -19,6 +19,24 @@ class UserRepository:
         return get_object_or_404(User.objects.select_related("role"), id=user_id)
 
     @staticmethod
+    def get_user_by_email(email):
+        """Lấy user theo email, không phân biệt hoa thường. Trả về None nếu không tìm thấy."""
+        return User.objects.filter(email__iexact=email).first()
+
+    @staticmethod
+    def create_user(email, password, first_name='', last_name='', role=None, phone=''):
+        """Tạo user mới với thông tin cơ bản và role, sử dụng create_user để hash password tự động."""
+        return User.objects.create_user(
+            username=email,
+            email=email,
+            password=password,
+            first_name=first_name,
+            last_name=last_name,
+            role=role,
+            phone=phone,
+        )
+
+    @staticmethod
     def get_role_by_id(role_id):
         """Lấy thông tin role theo ID. Trả về 404 nếu không tìm thấy."""
         return get_object_or_404(Role, id=role_id)

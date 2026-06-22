@@ -152,25 +152,20 @@ function AdminInstructorApplicationsPage() {
                   <td>
                     <div className="app-user-info">
                       <div className="app-user-avatar">
-                        {app.user?.avatar_url ? (
-                          <img src={app.user.avatar_url} alt="" />
-                        ) : (
-                          <span className="app-user-initial">
-                            {(app.user?.first_name || app.user?.email || "U").charAt(0).toUpperCase()}
-                          </span>
-                        )}
+                        <span className="app-user-initial">
+                          {(app.name || app.email || "U").charAt(0).toUpperCase()}
+                        </span>
                       </div>
                       <div>
                         <div className="app-user-name">
-                          {app.user?.first_name || app.user?.last_name
-                            ? `${app.user.first_name || ""} ${app.user.last_name || ""}`.trim()
-                            : "Chưa cập nhật"}
+                          {app.name || "Chưa cập nhật"}
                         </div>
                         <div className="app-user-phone">{app.contact_phone || "—"}</div>
                       </div>
                     </div>
                   </td>
-                  <td>{app.user?.email || "—"}</td>
+                  <td>{app.email || "—"}</td>
+
                   <td>{app.contact_phone || "—"}</td>
                   <td>{formatDate(app.applied_at)}</td>
                   <td>{getStatusBadge(app.status)}</td>
@@ -316,9 +311,10 @@ function AdminInstructorApplicationsPage() {
             <div className="modal-body">
               <p className="mb-3">
                 {reviewAction === "APPROVED"
-                  ? `Bạn có chắc chắn muốn duyệt hồ sơ của "${selectedApp.user?.first_name || ""} ${selectedApp.user?.last_name || ""}"? Người dùng sẽ được cấp quyền giảng viên.`
-                  : `Bạn có chắc chắn muốn từ chối hồ sơ của "${selectedApp.user?.first_name || ""} ${selectedApp.user?.last_name || ""}"?`}
+                  ? `Bạn có chắc chắn muốn duyệt hồ sơ của "${selectedApp.name || selectedApp.email || ""}"? Người dùng sẽ được cấp quyền giảng viên.`
+                  : `Bạn có chắc chắn muốn từ chối hồ sơ của "${selectedApp.name || selectedApp.email || ""}"?`}
               </p>
+
 
               {reviewAction === "REJECTED" && (
                 <div className="profile-field">

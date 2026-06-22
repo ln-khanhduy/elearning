@@ -1,8 +1,9 @@
+import os
 from django.http import Http404
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.views import APIView
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from apps.common.permissions import HasRequiredPermission
 
 
@@ -197,34 +198,32 @@ class ChangePasswordAPIView(APIView):
 
 class InstructorApplyAPIView(APIView):
     """
-    POST /api/users/instructors/apply/ - Gửi hồ sơ đăng ký trở thành giảng viên.
-    Yêu cầu: bio, cv_file, contact_phone, thông tin ngân hàng và đồng ý điều khoản.
+    POST /api/users/instructors/apply/ - Gửi hồ sơ đăng ký trở thành giảng viên (public, không cần đăng nhập).
+    Yêu cầu: name, email, bio, cv_file, contact_phone, thông tin ngân hàng và đồng ý điều khoản.
+    Có thể kèm chứng chỉ (tùy chọn) qua field 'certificates' (multiple files).
     """
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
     def post(self, request):
         serializer = InstructorApplySerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        profile = InstructorService.apply(request.user, serializer.validated_data)
+
+        validated_data = serializer.validated_data
+        certificates = validated_data.pop('certificates', [])
+
+        profile = InstructorService.apply(validated_data)
+
+        # Xử lý upload chứng chỉ nếu có
+        if certificates:
+            for cert_file in certificates:
+                # Dùng tên file làm title mặc định
+                title = os.path.splitext(cert_file.name)[0]
+                InstructorService.add_certificate(profile, title, cert_file)
+
         return Response({
-            "detail": "Gửi hồ sơ đăng ký giảng viên thành công.",
+            "detail": "Gửi hồ sơ đăng ký giảng viên thành công. Thông tin tài khoản sẽ được gửi qua email sau khi được duyệt.",
             "application": InstructorApplicationSerializer(profile).data
         }, status=status.HTTP_201_CREATED)
-
-
-class MyInstructorApplicationAPIView(APIView):
-    """
-    GET /api/users/instructors/my-application/ - Lấy hồ sơ đăng ký giảng viên của user hiện tại.
-    Trả về null nếu chưa từng gửi hồ sơ.
-    """
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request):
-        application = InstructorService.get_my_application(request.user)
-        if not application:
-            return Response({"application": None}, status=status.HTTP_200_OK)
-        serializer = InstructorApplicationSerializer(application)
-        return Response({"application": serializer.data}, status=status.HTTP_200_OK)
 
 
 class InstructorApplicationListAPIView(BasePermissionAPIView):
@@ -287,10 +286,14 @@ class InstructorApplicationReviewAPIView(APIView):
 
         action = 'INSTRUCTOR_APPROVE' if review_status == 'APPROVED' else 'INSTRUCTOR_REJECT'
         rejection_reason = serializer.validated_data.get("rejection_reason")
+
+        # Log với email từ profile (vì application.user có thể null trước khi duyệt)
+        user_email = application.email
+        user_id = application.user.id if application.user else None
         AdminLogService.log(
             admin=request.user,
             action_type=action,
-            detail=f"Admin {request.user.email} đã {detail.lower()} hồ sơ giảng viên của user {application.user.email} (ID: {application.user.id}){f'. Lý do: {rejection_reason}' if rejection_reason else ''}",
+            detail=f"Admin {request.user.email} đã {detail.lower()} hồ sơ giảng viên của {user_email} (ID: {application.id}){f'. Lý do: {rejection_reason}' if rejection_reason else ''}",
             target_id=str(application.id),
             target_type='InstructorProfile',
         )
@@ -438,8 +441,8 @@ class InstructorCertificateUploadAPIView(APIView):
         except Http404:
             return Response({"detail": "Không tìm thấy hồ sơ đăng ký."}, status=status.HTTP_404_NOT_FOUND)
 
-        # Chỉ chủ sở hữu mới được upload chứng chỉ
-        if application.user != request.user:
+        # Chỉ chủ sở hữu mới được upload chứng chỉ (kiểm tra bằng email)
+        if request.user.email != application.email:
             return Response({"detail": "Bạn không có quyền upload chứng chỉ cho hồ sơ này."}, status=status.HTTP_403_FORBIDDEN)
 
         certificates, errors = InstructorService.process_upload_request(application, request)
@@ -510,7 +513,8 @@ class InstructorCertificateDeleteAPIView(APIView):
         except Http404:
             return Response({"detail": "Không tìm thấy hồ sơ đăng ký."}, status=status.HTTP_404_NOT_FOUND)
 
-        if application.user != request.user:
+        # Kiểm tra chủ sở hữu bằng email
+        if request.user.email != application.email:
             return Response({"detail": "Bạn không có quyền xóa chứng chỉ này."}, status=status.HTTP_403_FORBIDDEN)
 
         InstructorService.delete_certificate(application, certificate_id)

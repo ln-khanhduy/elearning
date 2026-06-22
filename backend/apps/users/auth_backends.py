@@ -4,7 +4,7 @@ from django.contrib.auth.backends import ModelBackend
 class AllowInactiveModelBackend(ModelBackend):
     """
     Custom authentication backend cho phép user bị khóa (is_active=False)
-    vẫn có thể xác thực credentials (email/password).
+    vẫn có thể xác thực (email/password).
 
     Mặc định Django ModelBackend từ chối user không active,
     khiến authenticate() trả về None và không thể phân biệt

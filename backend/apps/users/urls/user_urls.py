@@ -10,7 +10,6 @@ from apps.users.view.user_views import (
     UnlockUserAPIView,
     ChangePasswordAPIView,
     InstructorApplyAPIView,
-    MyInstructorApplicationAPIView,
     InstructorApplicationListAPIView,
     InstructorApplicationDetailAPIView,
     InstructorApplicationReviewAPIView,
@@ -39,7 +38,6 @@ urlpatterns = [
     path("<uuid:user_id>/unlock/", UnlockUserAPIView.as_view(), name="unlock-user"),
 
     path("instructors/apply/", InstructorApplyAPIView.as_view(), name="instructor-apply"),
-    path("instructors/my-application/", MyInstructorApplicationAPIView.as_view(), name="my-instructor-application"),
     path("instructors/applications/",InstructorApplicationListAPIView.as_view(),name="instructor-application-list"),
     path("instructors/applications/<int:application_id>/",InstructorApplicationDetailAPIView.as_view(),name="instructor-application-detail"),
     path("instructors/applications/<int:application_id>/review/",InstructorApplicationReviewAPIView.as_view(),name="instructor-application-review"),
@@ -52,5 +50,3 @@ urlpatterns = [
     path("instructors/applications/<int:application_id>/cv/preview/",PreviewInstructorCVAPIView.as_view(),name="instructor-cv-preview"),
 
 ]
-
-

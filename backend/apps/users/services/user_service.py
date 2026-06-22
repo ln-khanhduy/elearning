@@ -1,8 +1,13 @@
 import os
+import secrets
+import string
 import cloudinary
 from django.db import IntegrityError, transaction
 from django.http import HttpResponseRedirect
 from django.utils import timezone
+from django.utils.crypto import get_random_string
+from django.core.mail import send_mail
+from django.conf import settings
 from rest_framework.exceptions import ValidationError as DRFValidationError
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError as DjangoValidationError
@@ -202,39 +207,87 @@ class UserService:
 
 
 class InstructorService:
-    """Service quản lý hồ sơ đăng ký giảng viên - nộp đơn, xem hồ sơ, duyệt/từ chối, chứng chỉ, tải file."""
-    # TODO: Tách InstructorService thành Application/Certificate/File service khi refactor lớn.
+    """Service quản lý hồ sơ đăng ký giảng viên - nộp đơn, duyệt/từ chối, chứng chỉ, tải file."""
+
+    @staticmethod
+    def _generate_random_password(length=12):
+        """Tạo mật khẩu ngẫu nhiên an toàn, không chứa ký tự dễ nhầm lẫn (0, O, I, l, 1)."""
+        alphabet = 'abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789'
+        return get_random_string(length=length, allowed_chars=alphabet)
+
+    @staticmethod
+    def _send_account_created_email(profile, password):
+        """
+        Gửi email thông báo tài khoản giảng viên đã được tạo.
+        Bao gồm email đăng nhập, mật khẩu tạm thời, hướng dẫn đăng nhập
+        và khuyến nghị đổi mật khẩu sau lần đăng nhập đầu tiên.
+        """
+        subject = "Tài khoản giảng viên LMS Learn của bạn đã được kích hoạt"
+        message = (
+            f"Xin chào {profile.name},\n\n"
+            f"Hồ sơ đăng ký giảng viên của bạn đã được phê duyệt!\n\n"
+            f"Thông tin tài khoản của bạn:\n"
+            f"  - Email đăng nhập: {profile.email}\n"
+            f"  - Mật khẩu tạm thời: {password}\n\n"
+            f"Hướng dẫn đăng nhập:\n"
+            f"  1. Truy cập trang đăng nhập: {settings.FRONTEND_URL}/login\n"
+            f"  2. Nhập email và mật khẩu tạm thời ở trên\n"
+            f"  3. Sau khi đăng nhập thành công, vui lòng đổi mật khẩu ngay\n"
+            f"  4. Bắt đầu tạo khóa học và chia sẻ kiến thức!\n\n"
+            f"Lưu ý: Vui lòng đổi mật khẩu sau lần đăng nhập đầu tiên để bảo vệ tài khoản.\n\n"
+            f"Trân trọng,\n"
+            f"LMS Learn"
+        )
+        send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [profile.email], fail_silently=False)
+
+    @staticmethod
+    def _send_application_rejected_email(profile):
+        """
+        Gửi email thông báo hồ sơ giảng viên bị từ chối.
+        Bao gồm lý do từ chối và hướng dẫn nộp lại hồ sơ sau khi chỉnh sửa.
+        """
+        subject = "Hồ sơ đăng ký giảng viên LMS Learn chưa được phê duyệt"
+        message = (
+            f"Xin chào {profile.name},\n\n"
+            f"Hồ sơ đăng ký giảng viên của bạn hiện chưa được phê duyệt.\n\n"
+            f"Lý do: {profile.rejection_reason}\n\n"
+            f"Bạn có thể chỉnh sửa lại hồ sơ và nộp lại sau.\n"
+            f"Truy cập: {settings.FRONTEND_URL}/instructor/apply\n\n"
+            f"Trân trọng,\n"
+            f"LMS Learn"
+        )
+        send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [profile.email], fail_silently=False)
 
     @staticmethod
     @transaction.atomic
-    def apply(user, validated_data):
+    def apply(validated_data):
         """
-        Xử lý đăng ký trở thành giảng viên.
-        - Kiểm tra tài khoản không bị khóa
-        - Kiểm tra user đã liên kết Google Account chưa
-        - Nếu user đã có hồ sơ PENDING hoặc APPROVED: báo lỗi
-        - Nếu user đã có hồ sơ REJECTED: cập nhật lại hồ sơ cũ thành PENDING
-        - Nếu user chưa có hồ sơ: tạo mới (bọc transaction để tránh race condition)
+        Xử lý đăng ký trở thành giảng viên (public - không cần đăng nhập).
+        - Kiểm tra email đã có tài khoản User chưa
+        - Tìm InstructorProfile theo email (email là unique)
+            - Nếu chưa có: tạo mới (user=None, status=PENDING)
+            - Nếu status == PENDING: báo lỗi
+            - Nếu status == APPROVED: báo lỗi
+            - Nếu status == REJECTED: cập nhật lại thành PENDING
+        - Không tạo User, không tạo JWT, không đăng nhập
         """
-        # Kiểm tra tài khoản không bị khóa
-        if not user.is_active:
+        email = validated_data.get("email", "").lower().strip()
+
+        # Kiểm tra email đã có tài khoản User chưa
+        existing_user = UserRepository.get_user_by_email(email)
+        if existing_user:
             raise DRFValidationError({
-                "detail": "Tài khoản của bạn đang bị khóa hoặc tạm ngừng."
+                "detail": "Email này đã có tài khoản trong hệ thống."
             })
 
-        # Kiểm tra user đã liên kết Google Account chưa
-        if not user.google_email:
-            raise DRFValidationError(
-                {"detail": "Vui lòng liên kết Google Account trước khi đăng ký giảng viên."}
-            )
-
-        existing = InstructorRepository.get_application_by_user(user)
+        # Tìm InstructorProfile theo email (email là unique)
+        existing = InstructorRepository.get_application_by_email(email)
         if existing:
             if existing.status == "PENDING":
-                raise DRFValidationError({"detail": "Bạn đã gửi hồ sơ đăng ký giảng viên và đang chờ xét duyệt."})
+                raise DRFValidationError({"detail": "Bạn đã gửi hồ sơ đăng ký và đang chờ xét duyệt."})
             if existing.status == "APPROVED":
-                raise DRFValidationError({"detail": "Bạn đã là giảng viên. Không thể gửi lại hồ sơ."})
-            # Nếu REJECTED: cập nhật lại hồ sơ cũ
+                raise DRFValidationError({"detail": "Hồ sơ của bạn đã được duyệt."})
+            # Nếu REJECTED: cập nhật lại hồ sơ cũ thành PENDING
             for attr, value in validated_data.items():
                 setattr(existing, attr, value)
             existing.status = "PENDING"
@@ -245,18 +298,17 @@ class InstructorService:
             return existing
 
         try:
-            profile = InstructorRepository.create_application(user, validated_data)
+            profile = InstructorRepository.create_application(validated_data)
             return profile
         except IntegrityError:
             raise DRFValidationError({
-                "detail": "Bạn đã gửi hồ sơ giảng viên rồi."
+                "detail": "Đã có lỗi xảy ra khi gửi hồ sơ. Vui lòng thử lại."
             })
 
-
     @staticmethod
-    def get_my_application(user):
-        """Lấy hồ sơ đăng ký giảng viên của user hiện tại (ủy quyền cho Repository truy vấn)."""
-        return InstructorRepository.get_application_by_user(user)
+    def get_application_by_email(email):
+        """Lấy hồ sơ đăng ký giảng viên theo email."""
+        return InstructorRepository.get_application_by_email(email)
 
     @staticmethod
     def get_all_applications(status_filter=None):
@@ -272,11 +324,12 @@ class InstructorService:
         return InstructorRepository.get_application_by_id(application_id)
 
     @staticmethod
+    @transaction.atomic
     def review_application(application_id, admin_user, review_status, rejection_reason=None):
         """
         Xét duyệt hồ sơ đăng ký giảng viên.
         - Kiểm tra hồ sơ đang ở trạng thái PENDING (chưa được xử lý)
-        - Nếu DUYỆT: chuyển role user thành INSTRUCTOR, xóa lý do từ chối
+        - Nếu DUYỆT: tạo User mới với role INSTRUCTOR, gửi email thông tin tài khoản
         - Nếu TỪ CHỐI: ghi lại lý do từ chối, không thay đổi role
         - Cập nhật người duyệt và thời gian duyệt
         """
@@ -290,16 +343,42 @@ class InstructorService:
         application.reviewed_at = timezone.now()
 
         if review_status == "APPROVED":
+            # Tạo User mới với role INSTRUCTOR
             instructor_role = UserRepository.get_role_by_code("INSTRUCTOR")
-            application.user.role = instructor_role
-            application.user.save(update_fields=["role"])
+            password = InstructorService._generate_random_password()
+
+            # Parse name thành first_name và last_name
+            name_parts = application.name.strip().split(" ", 1)
+            first_name = name_parts[0]
+            last_name = name_parts[1] if len(name_parts) > 1 else ""
+
+            user = UserRepository.create_user(
+                email=application.email,
+                password=password,
+                first_name=first_name,
+                last_name=last_name,
+                role=instructor_role,
+                phone=application.contact_phone or "",
+            )
+
+            # Gán user cho profile
+            application.user = user
             application.rejection_reason = None
+            application.save()
+
+            # Gửi email thông tin tài khoản
+            InstructorService._send_account_created_email(application, password)
+
             detail = "Duyệt hồ sơ giảng viên thành công."
         else:
             application.rejection_reason = rejection_reason
+            application.save()
+
+            # Gửi email thông báo từ chối
+            InstructorService._send_application_rejected_email(application)
+
             detail = "Từ chối hồ sơ giảng viên thành công."
 
-        application.save()
         return application, detail
 
     @staticmethod
@@ -354,7 +433,7 @@ class InstructorService:
     @staticmethod
     def check_application_access(application, request_user, permission_code="user.instructor.view"):
         """
-        Kiểm tra quyền truy cập hồ sơ: admin (có permission) hoặc chủ sở hữu.
+        Kiểm tra quyền truy cập hồ sơ: admin (có permission) hoặc chủ sở hữu (theo email).
         Trả về True nếu có quyền, False nếu không.
         """
         # Tạo một view tạm để kiểm tra permission
@@ -371,7 +450,8 @@ class InstructorService:
             method = "GET"
 
         is_admin = perm_checker.has_permission(FakeRequest(), temp_view)
-        is_owner = application.user == request_user
+        # Kiểm tra chủ sở hữu bằng email (vì application.user có thể null)
+        is_owner = request_user.is_authenticated and request_user.email == application.email
 
         return is_admin or is_owner
 

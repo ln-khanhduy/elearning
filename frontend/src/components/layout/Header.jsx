@@ -73,6 +73,7 @@ function Header({ onToggleSidebar }) {
             </div>
           ) : (
             <>
+              <Link to="/instructor/apply" className="btn btn-outline-warning btn-sm px-3 me-2">Trở thành giảng viên</Link>
               <Link to="/login" className="btn btn-outline-primary btn-sm px-3">Đăng nhập</Link>
               <Link to="/register" className="btn btn-primary btn-sm px-3">Đăng ký</Link>
             </>

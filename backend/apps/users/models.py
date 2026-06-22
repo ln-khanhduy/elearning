@@ -6,7 +6,7 @@ from uuid6 import uuid7
 
 
 class Role(models.Model):
-    # Mã định danh duy nhất cho vai trò (VD: "Supper Admin", "Admin", "Instructor", "Student")
+    # Mã định danh duy nhất cho vai trò (VD: "Supper Admin", "Instructor", "Student",...)
     code = models.CharField(max_length=50, unique=True)
     # Tên hiển thị cho vai trò
     name = models.CharField(max_length=100)
@@ -106,9 +106,11 @@ class InstructorProfile(models.Model):
     Một User  có đúng 1 InstructorProfile.
     """
     # Liên kết 1-1 tới tài khoản user tương ứng
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='instructor_profile')
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='instructor_profile',null=True,blank=True)
 
     # --- Thông tin chuyên môn ---
+    name=models.CharField(max_length=50)
+    email=models.EmailField(unique=True, db_index=True)
     # Giới thiệu bản thân hiển thị trên trang profile công khai
     bio = models.TextField(null=True, blank=True)
     # Link portfolio / GitHub / LinkedIn cá nhân
@@ -150,9 +152,6 @@ class InstructorProfile(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     class Meta:
         db_table = 'instructor_profile'
-        constraints = [
-            models.UniqueConstraint(fields=['user'], name='unique_instructor_profile_user'),
-        ]
         indexes = [
             models.Index(fields=['status', 'applied_at']),              # Admin lọc hồ sơ mới chờ duyệt
         ]

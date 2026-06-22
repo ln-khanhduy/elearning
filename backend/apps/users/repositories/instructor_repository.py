@@ -30,20 +30,20 @@ class InstructorRepository:
         return get_object_or_404(InstructorProfile.objects.select_related("user", "user__role", "reviewed_by"), id=application_id)
 
     @staticmethod
-    def get_application_by_user(user):
+    def get_application_by_email(email):
         """
-        Lấy hồ sơ đăng ký giảng viên của một user cụ thể.
-        Trả về None nếu user chưa từng gửi hồ sơ đăng ký.
+        Lấy hồ sơ đăng ký giảng viên theo email (email là unique).
+        Trả về None nếu email chưa từng gửi hồ sơ đăng ký.
         """
         try:
-            return InstructorProfile.objects.select_related("user", "user__role", "reviewed_by").get(user=user)
+            return InstructorProfile.objects.select_related("user", "user__role", "reviewed_by").get(email=email)
         except InstructorProfile.DoesNotExist:
             return None
 
     @staticmethod
-    def create_application(user, validated_data):
-        """Tạo một hồ sơ đăng ký giảng viên mới với trạng thái PENDING cho user."""
-        return InstructorProfile.objects.create(user=user, status="PENDING", **validated_data)
+    def create_application(validated_data):
+        """Tạo một hồ sơ đăng ký giảng viên mới với trạng thái PENDING, không gắn với user nào."""
+        return InstructorProfile.objects.create(user=None, status="PENDING", **validated_data)
 
 
 class InstructorCertificateRepository:

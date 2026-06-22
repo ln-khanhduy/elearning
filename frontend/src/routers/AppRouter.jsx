@@ -14,7 +14,6 @@ import CourseDetailPage from "../pages/public/course-detail/CourseDetailPage";
 import AdminDashboardPage from "../pages/admin/AdminDashboardPage";
 import ProfilePage from "../pages/public/ProfilePage";
 import InstructorApplyPage from "../pages/instructor/InstructorApplyPage";
-import InstructorApplicationStatusPage from "../pages/instructor/InstructorApplicationStatusPage";
 import AdminInstructorApplicationsPage from "../pages/admin/AdminInstructorApplicationsPage";
 import InstructorCoursesPage from "../pages/instructor/InstructorCoursesPage";
 import InstructorCourseCreatePage from "../pages/instructor/InstructorCourseCreatePage";
@@ -51,6 +50,8 @@ function AppRouter() {
           <Route path="/verify-otp" element={<VerifyotpPage />} />
           <Route path="/register/verify-otp" element={<VerifyotpPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
+          {/* Public instructor apply - không cần đăng nhập */}
+          <Route path="/instructor/apply" element={<InstructorApplyPage />} />
         </Route>
         <Route element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
           {/* Dashboard - chỉ SUPERADMIN mới có thể xem */}
@@ -78,8 +79,6 @@ function AppRouter() {
 
           {/* Người dùng & Giảng viên */}
           <Route path="/admin/users" element={<ProtectedRoute allowedRoles={["SUPERADMIN"]}><UserManagementPage /></ProtectedRoute>} />
-          <Route path="/instructor/apply" element={<ProtectedRoute allowedRoles={["STUDENT"]}><InstructorApplyPage /></ProtectedRoute>} />
-          <Route path="/instructor/application-status" element={<ProtectedRoute allowedRoles={["STUDENT", "INSTRUCTOR"]}><InstructorApplicationStatusPage /></ProtectedRoute>} />
           <Route path="/admin/instructors" element={<ProtectedRoute allowedRoles={["INSTRUCTOR_MANAGER", "SUPERADMIN"]}><InstructorListPage /></ProtectedRoute>} />
           <Route path="/admin/instructor-support" element={<ProtectedRoute allowedRoles={["INSTRUCTOR_MANAGER"]}><></></ProtectedRoute>} />
           <Route path="/admin/register-instructor" element={<ProtectedRoute allowedRoles={["INSTRUCTOR_MANAGER", "SUPERADMIN"]}><AdminInstructorApplicationsPage /></ProtectedRoute>} />
