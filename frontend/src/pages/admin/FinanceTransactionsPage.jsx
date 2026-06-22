@@ -141,7 +141,6 @@ function FinanceTransactionsPage() {
         >
           <option value="">Tất cả phương thức</option>
           <option value="STRIPE">Stripe</option>
-          <option value="MOMO">MoMo</option>
         </select>
 
         <input

@@ -2,8 +2,10 @@ from decimal import Decimal, ROUND_HALF_UP
 from django.conf import settings
 from django.utils import timezone
 from apps.payments.repositories.payment_repository import PaymentRepository
+from apps.payments.models import PaymentTransaction
 from apps.enrollments.models import Enrollment, CourseProgress
 from apps.lessons.models import Lesson
+from apps.courses.models import Course
 
 
 class PaymentService:
@@ -71,7 +73,7 @@ class PaymentService:
             "provider": provider,
             "provider_transaction_id": None,
             **fees,
-            "status": "PENDING",
+            "status": PaymentTransaction.Status.PENDING,
         })
         return transaction
 
@@ -88,7 +90,7 @@ class PaymentService:
 
         return PaymentRepository.update(
             transaction,
-            status="HOLD",
+            status=PaymentTransaction.Status.HOLD,
             paid_at=now,
             hold_time=hold_time,
         )
@@ -107,7 +109,7 @@ class PaymentService:
             student=student,
             course=course,
             defaults={
-                "status": "ACTIVE",
+                "status": Enrollment.Status.ACTIVE,
                 "payment_transaction": transaction,
                 "enrolled_at": timezone.now(),
                 "access_granted_at": timezone.now(),
@@ -115,8 +117,8 @@ class PaymentService:
         )
 
         # Nếu enrollment đã tồn tại nhưng chưa ACTIVE
-        if not created and enrollment.status not in ["ACTIVE", "COMPLETED"]:
-            enrollment.status = "ACTIVE"
+        if not created and enrollment.status not in [Enrollment.Status.ACTIVE, Enrollment.Status.COMPLETED]:
+            enrollment.status = Enrollment.Status.ACTIVE
             enrollment.payment_transaction = transaction
             enrollment.enrolled_at = timezone.now()
             enrollment.access_granted_at = timezone.now()
@@ -143,7 +145,7 @@ class PaymentService:
         Kiểm tra course có thể thanh toán không.
         Trả về tuple (is_valid, error_message).
         """
-        if course.status != "PUBLISHED":
+        if course.status != Course.Status.PUBLISHED:
             return False, "Khóa học chưa được công bố."
 
         if course.price <= 0:
@@ -153,7 +155,7 @@ class PaymentService:
         existing = Enrollment.objects.filter(
             student=user,
             course=course,
-            status__in=["ACTIVE", "COMPLETED"]
+            status__in=[Enrollment.Status.ACTIVE, Enrollment.Status.COMPLETED]
         ).first()
         if existing:
             return False, "Bạn đã đăng ký khóa học này."
@@ -173,7 +175,7 @@ class PaymentService:
         result_transactions = []
 
         for t in transactions:
-            if t.status in ["FAILED", "CANCELLED"]:
+            if t.status in [PaymentTransaction.Status.FAILED, PaymentTransaction.Status.CANCELLED]:
                 continue
 
             item = {
@@ -190,14 +192,14 @@ class PaymentService:
             }
             result_transactions.append(item)
 
-            if t.status == "REFUNDED":
+            if t.status == PaymentTransaction.Status.REFUNDED:
                 total_refunded += t.instructor_share_amount
-            elif t.status == "HOLD":
+            elif t.status == PaymentTransaction.Status.HOLD:
                 if t.hold_time and t.hold_time > now:
                     total_hold += t.instructor_share_amount
                 else:
                     total_available += t.instructor_share_amount
-            elif t.status == "PAID":
+            elif t.status == PaymentTransaction.Status.PAID:
                 total_available += t.instructor_share_amount
 
         return {

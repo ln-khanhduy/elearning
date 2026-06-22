@@ -22,11 +22,10 @@ class Course(models.Model):
     Khóa học - được tạo và quản lý bởi COURSE_ADMIN.
     Instructor chỉ là người được phân công phụ trách giảng dạy.
     """
-    STATUS_CHOICES = (
-        ('DRAFT', 'Draft'),           # Bản nháp, đang xây dựng nội dung
-        ('PUBLISHED', 'Published'),   # Đang bán, học viên có thể đăng ký
-        ('HIDDEN', 'Hidden'),         # Tạm ẩn (admin ẩn, không hiện trên store)
-    )
+    class Status(models.TextChoices):
+        DRAFT = 'DRAFT', 'Draft'
+        PUBLISHED = 'PUBLISHED', 'Published'
+        HIDDEN = 'HIDDEN', 'Hidden'
 
     # Người tạo khóa học (COURSE_ADMIN hoặc SUPERADMIN)
     created_by = models.ForeignKey(
@@ -56,7 +55,7 @@ class Course(models.Model):
     # Giá gốc (VNĐ)
     price = models.DecimalField(max_digits=10, decimal_places=2,validators=[MinValueValidator(0)])
     # trạng thái khóa học
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='DRAFT')
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.DRAFT)
     # Thời điểm admin publish
     published_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)

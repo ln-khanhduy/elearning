@@ -5,6 +5,7 @@ from django.utils import timezone
 from apps.users.models import User, Role, InstructorProfile
 from apps.courses.models import Course
 from apps.payments.models import PaymentTransaction
+from apps.payments.models import PaymentTransaction as PaymentTransactionModel
 
 
 class AdminDashboardRepository:
@@ -71,13 +72,13 @@ class AdminDashboardRepository:
     @staticmethod
     def count_pending_instructor_applications():
         """Đếm số lượng hồ sơ đăng ký giảng viên đang chờ duyệt."""
-        return InstructorProfile.objects.filter(status="PENDING").count()
+        return InstructorProfile.objects.filter(status=InstructorProfile.Status.PENDING).count()
 
     @staticmethod
     def get_total_revenue():
         """Tính tổng doanh thu từ tất cả giao dịch đã thanh toán (PAID, HOLD)."""
         result = PaymentTransaction.objects.filter(
-            status__in=["PAID", "HOLD"]
+            status__in=[PaymentTransactionModel.Status.PAID, PaymentTransactionModel.Status.HOLD]
         ).aggregate(total=Sum("net_amount"))
         return result["total"] or 0
 
@@ -86,7 +87,7 @@ class AdminDashboardRepository:
         """Lấy doanh thu theo từng năm từ các giao dịch đã thanh toán."""
         return (
             PaymentTransaction.objects
-            .filter(status__in=["PAID", "HOLD"])
+            .filter(status__in=[PaymentTransactionModel.Status.PAID, PaymentTransactionModel.Status.HOLD])
             .annotate(year=TruncYear("paid_at"))
             .values("year")
             .annotate(total=Sum("net_amount"))

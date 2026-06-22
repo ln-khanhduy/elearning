@@ -1,6 +1,7 @@
 from django.utils import timezone
 from django.shortcuts import get_object_or_404
 from apps.users.models import InstructorProfile, InstructorCertificate
+from apps.users.models import InstructorProfile as InstructorProfileModel
 
 
 class InstructorRepository:
@@ -43,7 +44,7 @@ class InstructorRepository:
     @staticmethod
     def create_application(validated_data):
         """Tạo một hồ sơ đăng ký giảng viên mới với trạng thái PENDING, không gắn với user nào."""
-        return InstructorProfile.objects.create(user=None, status="PENDING", **validated_data)
+        return InstructorProfile.objects.create(user=None, status=InstructorProfileModel.Status.PENDING, **validated_data)
 
 
 class InstructorCertificateRepository:

@@ -313,20 +313,15 @@ class AdminCourseAssignedInstructorAPIView(BasePermissionAPIView):
 # ==================== INSTRUCTOR COURSE API ====================
 
 
-class InstructorCourseListAPIView(APIView):
+class InstructorCourseListAPIView(BasePermissionAPIView):
     """
     GET /api/instructor/courses/ - Lấy danh sách khóa học được phân công.
     Instructor chỉ xem được khóa học được giao.
     """
-    permission_classes = [IsAuthenticated]
+    required_permission = "course.course.view"
 
     def get(self, request):
         user = request.user
-        role_code = user.role.code if user.role else None
-
-        if role_code not in ("INSTRUCTOR", "SUPERADMIN", "COURSE_ADMIN"):
-            return error_response("Bạn không có quyền xem danh sách này.", http_status=status.HTTP_403_FORBIDDEN)
-
         courses = CourseAssignmentService.get_assigned_courses(user)
         serializer = CourseListSerializer(courses, many=True)
         return success_response(serializer.data)
@@ -364,7 +359,7 @@ class InstructorCourseStudentsAPIView(APIView):
         from apps.enrollments.models import Enrollment
         enrollments = Enrollment.objects.filter(
             course_id=course_id,
-            status='ACTIVE'
+            status=Enrollment.Status.ACTIVE
         ).select_related('user')
 
         students_data = []
@@ -397,8 +392,8 @@ class InstructorCourseAnalyticsAPIView(APIView):
         from apps.enrollments.models import Enrollment
         from django.db.models import Count, Avg
 
-        total_students = Enrollment.objects.filter(course_id=course_id, status='ACTIVE').count()
-        avg_progress = Enrollment.objects.filter(course_id=course_id, status='ACTIVE').aggregate(
+        total_students = Enrollment.objects.filter(course_id=course_id, status=Enrollment.Status.ACTIVE).count()
+        avg_progress = Enrollment.objects.filter(course_id=course_id, status=Enrollment.Status.ACTIVE).aggregate(
             avg_progress=Avg('progress_percentage')
         )['avg_progress'] or 0
 

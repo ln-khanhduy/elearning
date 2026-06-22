@@ -2,20 +2,14 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useCourseDetail } from "../../../hooks/course-detail/useCourseDetail";
-import {
-  createStripeCheckoutApi,
-  createMomoCheckoutApi,
-} from "../../../api/paymentAPI";
+import { createStripeCheckoutApi } from "../../../api/paymentAPI";
 import "../../../style/payment/payment.css";
 
 function CheckoutPage() {
   const { courseId } = useParams();
   const navigate = useNavigate();
   const { course, loading, error } = useCourseDetail(courseId);
-  const [paymentMethod, setPaymentMethod] = useState("stripe");
   const [processing, setProcessing] = useState(false);
-  const [qrCodeUrl, setQrCodeUrl] = useState(null);
-  const [momoPayUrl, setMomoPayUrl] = useState(null);
 
   // Redirect if course is free
   useEffect(() => {
@@ -33,33 +27,14 @@ function CheckoutPage() {
   const handlePayment = async () => {
     if (!course) return;
     setProcessing(true);
-    setQrCodeUrl(null);
-    setMomoPayUrl(null);
 
     try {
-      if (paymentMethod === "stripe") {
-        const result = await createStripeCheckoutApi(courseId);
-        const checkoutUrl = result?.data?.checkout_url;
-        if (checkoutUrl) {
-          window.location.href = checkoutUrl;
-        } else {
-          throw new Error("Không nhận được đường dẫn thanh toán.");
-        }
-      } else if (paymentMethod === "momo") {
-        const result = await createMomoCheckoutApi(courseId);
-        const payUrl = result?.data?.pay_url;
-        const qrUrl = result?.data?.qr_code_url;
-
-        if (payUrl) {
-          setMomoPayUrl(payUrl);
-          // Auto redirect to MoMo
-          window.location.href = payUrl;
-        } else if (qrUrl) {
-          setQrCodeUrl(qrUrl);
-          toast.info("Vui lòng quét mã QR để thanh toán qua MoMo.");
-        } else {
-          throw new Error("Không nhận được thông tin thanh toán MoMo.");
-        }
+      const result = await createStripeCheckoutApi(courseId);
+      const checkoutUrl = result?.data?.checkout_url;
+      if (checkoutUrl) {
+        window.location.href = checkoutUrl;
+      } else {
+        throw new Error("Không nhận được đường dẫn thanh toán.");
       }
     } catch (err) {
       toast.error(err.message || "Tạo thanh toán thất bại. Vui lòng thử lại.");
@@ -119,22 +94,10 @@ function CheckoutPage() {
           {/* Left: Payment Methods */}
           <div>
             <div className="payment-methods">
-              <h3>Chọn phương thức thanh toán</h3>
+              <h3>Phương thức thanh toán</h3>
 
               {/* Stripe */}
-              <div
-                className={`payment-method-option ${
-                  paymentMethod === "stripe" ? "selected" : ""
-                }`}
-                onClick={() => setPaymentMethod("stripe")}
-              >
-                <input
-                  type="radio"
-                  name="paymentMethod"
-                  value="stripe"
-                  checked={paymentMethod === "stripe"}
-                  onChange={() => setPaymentMethod("stripe")}
-                />
+              <div className="payment-method-option selected">
                 <div className="payment-method-icon stripe">
                   <i className="bi bi-credit-card"></i>
                 </div>
@@ -142,31 +105,6 @@ function CheckoutPage() {
                   <div className="payment-method-name">Thẻ tín dụng / Thẻ ghi nợ</div>
                   <div className="payment-method-desc">
                     Thanh toán qua Stripe - Visa, Mastercard, JCB
-                  </div>
-                </div>
-              </div>
-
-              {/* MoMo */}
-              <div
-                className={`payment-method-option ${
-                  paymentMethod === "momo" ? "selected" : ""
-                }`}
-                onClick={() => setPaymentMethod("momo")}
-              >
-                <input
-                  type="radio"
-                  name="paymentMethod"
-                  value="momo"
-                  checked={paymentMethod === "momo"}
-                  onChange={() => setPaymentMethod("momo")}
-                />
-                <div className="payment-method-icon momo">
-                  <i className="bi bi-wallet2"></i>
-                </div>
-                <div className="payment-method-info">
-                  <div className="payment-method-name">Ví MoMo</div>
-                  <div className="payment-method-desc">
-                    Thanh toán nhanh chóng qua ứng dụng MoMo
                   </div>
                 </div>
               </div>
@@ -193,32 +131,6 @@ function CheckoutPage() {
                 )}
               </button>
             </div>
-
-            {/* QR Code Section (MoMo) */}
-            {qrCodeUrl && (
-              <div className="qr-section">
-                <h4>Quét mã QR bằng ứng dụng MoMo</h4>
-                <img
-                  src={qrCodeUrl}
-                  alt="MoMo QR Code"
-                  className="qr-code-img"
-                />
-                <p className="text-muted mb-3">
-                  Hoặc mở ứng dụng MoMo để thanh toán
-                </p>
-                {momoPayUrl && (
-                  <a
-                    href={momoPayUrl}
-                    className="btn btn-primary"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <i className="bi bi-box-arrow-up-right"></i>
-                    Mở MoMo
-                  </a>
-                )}
-              </div>
-            )}
           </div>
 
           {/* Right: Course Summary */}

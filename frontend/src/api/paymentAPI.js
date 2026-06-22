@@ -23,22 +23,6 @@ export const verifyStripePaymentApi = async (sessionId) => {
   );
 };
 
-// ==================== MOMO ====================
-
-export const createMomoCheckoutApi = async (courseId) => {
-  return request(() =>
-    apiClient.post(`/api/payments/momo/courses/${courseId}/checkout/`)
-  );
-};
-
-export const verifyMomoPaymentApi = async (transactionId) => {
-  return request(() =>
-    apiClient.post("/api/payments/momo/verify/", {
-      transaction_id: transactionId,
-    })
-  );
-};
-
 // ==================== TRANSACTIONS ====================
 
 export const getTransactionDetailApi = async (transactionId) => {

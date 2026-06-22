@@ -4,7 +4,6 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from apps.common.permissions import HasRequiredPermission
 
 
 from apps.common.base_api_view import BasePermissionAPIView
@@ -254,28 +253,32 @@ class InstructorApplicationDetailAPIView(BasePermissionAPIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-class InstructorApplicationReviewAPIView(APIView):
+class InstructorApplicationReviewAPIView(BasePermissionAPIView):
     """
     PATCH /api/users/instructors/applications/{application_id}/review/ - Duyệt hoặc từ chối hồ sơ.
     Body: { "status": "APPROVED"|"REJECTED", "rejection_reason": "..." (bắt buộc nếu từ chối) }
     Yêu cầu quyền động: user.instructor.approve (nếu duyệt) hoặc user.instructor.reject (nếu từ chối)
     """
-    permission_classes = [IsAuthenticated]
+
+    def get_required_permission(self, request):
+        """Xác định quyền dựa trên hành động trong body request."""
+        status_value = request.data.get("status")
+        if status_value == "APPROVED":
+            return "user.instructor.approve"
+        elif status_value == "REJECTED":
+            return "user.instructor.reject"
+        return None
+
+    def initial(self, request, *args, **kwargs):
+        """Override initial để set required_permission động trước khi permission check."""
+        self.required_permission = self.get_required_permission(request)
+        super().initial(request, *args, **kwargs)
 
     def patch(self, request, application_id):
         serializer = InstructorReviewSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
         review_status = serializer.validated_data["status"]
-        required_perm = "user.instructor.approve" if review_status == "APPROVED" else "user.instructor.reject"
-
-        # Kiểm tra quyền thủ công dựa trên hành động (duyệt hoặc từ chối)
-        # Phải check permission TRƯỚC khi gọi Service để tránh bypass
-        self.required_permission = required_perm
-        perm_checker = HasRequiredPermission()
-        if not perm_checker.has_permission(request, self):
-            from rest_framework.exceptions import PermissionDenied
-            raise PermissionDenied("Bạn không có quyền thực hiện hành động này.")
 
         application, detail = InstructorService.review_application(
             application_id,

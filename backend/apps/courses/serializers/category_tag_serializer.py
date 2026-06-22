@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from apps.courses.models import Category
+from apps.courses.models import Course
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -12,7 +13,7 @@ class CategorySerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "slug"]
 
     def get_course_count(self, obj):
-        return obj.category_courses.filter(status="PUBLISHED").count()
+        return obj.category_courses.filter(status=Course.Status.PUBLISHED).count()
 
 
     def validate_name(self, value):

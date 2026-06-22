@@ -1,6 +1,7 @@
 from django.utils import timezone
 from django.utils.text import slugify
 from rest_framework.exceptions import PermissionDenied, ValidationError
+from apps.courses.models import Course
 from apps.courses.repositories.course_repository import CourseRepository
 from apps.courses.services.course_permission_service import CoursePermissionService
 
@@ -41,7 +42,7 @@ class CourseService:
             slug = f"{base_slug}-{counter}"
             counter += 1
         validated_data["slug"] = slug
-        validated_data["status"] = "DRAFT"
+        validated_data["status"] = Course.Status.DRAFT
         return CourseRepository.create(validated_data)
 
     @staticmethod
@@ -89,10 +90,10 @@ class CourseService:
         if not CoursePermissionService.can_publish_course(course, user):
             raise PermissionDenied("Bạn không có quyền public khóa học này.")
 
-        if course.status not in ["DRAFT", "HIDDEN"]:
+        if course.status not in [Course.Status.DRAFT, Course.Status.HIDDEN]:
             raise ValidationError({"status": "Chỉ khóa học ở trạng thái DRAFT hoặc HIDDEN mới được public."})
 
-        course.status = "PUBLISHED"
+        course.status = Course.Status.PUBLISHED
         course.published_at = timezone.now()
         course.save(update_fields=["status", "published_at", "updated_at"])
         return course
@@ -109,9 +110,9 @@ class CourseService:
         if not CoursePermissionService.can_publish_course(course, user):
             raise PermissionDenied("Bạn không có quyền ẩn khóa học này.")
 
-        if course.status != "PUBLISHED":
+        if course.status != Course.Status.PUBLISHED:
             raise ValidationError({"status": "Chỉ khóa học đã public mới có thể ẩn."})
 
-        course.status = "HIDDEN"
+        course.status = Course.Status.HIDDEN
         course.save(update_fields=["status", "updated_at"])
         return course

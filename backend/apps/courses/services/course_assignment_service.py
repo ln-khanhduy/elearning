@@ -77,7 +77,7 @@ class CourseAssignmentService:
         return Course.objects.filter(
             assigned_instructor=instructor
         ).exclude(
-            status="DRAFT"
+            status=Course.Status.DRAFT
         ).select_related(
             "category", "created_by"
         ).order_by("-created_at")

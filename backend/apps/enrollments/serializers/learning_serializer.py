@@ -2,6 +2,7 @@ from rest_framework import serializers
 from apps.enrollments.models import LessonProgress, CourseProgress
 from apps.lessons.models import Chapter, Lesson
 from apps.quizzes.models import Quiz, Question, QuestionOption
+from apps.lessons.models import Lesson as LessonModel
 
 
 class LessonProgressSerializer(serializers.ModelSerializer):
@@ -78,7 +79,7 @@ class ChapterLearningSerializer(serializers.ModelSerializer):
 
     def get_lessons(self, obj):
         """Lấy danh sách bài học, chỉ lấy PUBLISHED."""
-        lessons = obj.lessons.filter(status="PUBLISHED").order_by("order", "id")
+        lessons = obj.lessons.filter(status=LessonModel.Status.PUBLISHED).order_by("order", "id")
         return LessonLearningSerializer(lessons, many=True).data
 
 

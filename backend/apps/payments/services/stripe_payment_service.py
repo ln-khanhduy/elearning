@@ -3,6 +3,7 @@ from django.conf import settings
 from django.urls import reverse
 from apps.payments.repositories.payment_repository import PaymentRepository
 from apps.payments.services.payment_service import PaymentService
+from apps.payments.models import PaymentTransaction
 
 
 class StripePaymentService:
@@ -89,7 +90,7 @@ class StripePaymentService:
             raise ValueError("Không tìm thấy giao dịch tương ứng.")
 
         # Idempotent: nếu đã HOLD/PAID thì không xử lý lại
-        if transaction.status in ["HOLD", "PAID"]:
+        if transaction.status in [PaymentTransaction.Status.HOLD, PaymentTransaction.Status.PAID]:
             return transaction
 
         # Chuyển sang HOLD

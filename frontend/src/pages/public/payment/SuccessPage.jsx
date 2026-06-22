@@ -1,10 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import {
-  verifyStripePaymentApi,
-  verifyMomoPaymentApi,
-} from "../../../api/paymentAPI";
+import { verifyStripePaymentApi } from "../../../api/paymentAPI";
 import "../../../style/payment/payment.css";
 
 function SuccessPage() {
@@ -17,8 +14,6 @@ function SuccessPage() {
   useEffect(() => {
     const verifyPayment = async () => {
       const sessionId = searchParams.get("session_id");
-      const transactionId =
-        searchParams.get("transaction_id") || searchParams.get("orderId");
 
       try {
         if (sessionId) {
@@ -32,21 +27,6 @@ function SuccessPage() {
           setStatus("success");
 
           // Auto redirect after 2 seconds
-          if (redirectUrl) {
-            setTimeout(() => {
-              navigate(redirectUrl, { replace: true });
-            }, 2000);
-          }
-        } else if (transactionId) {
-          // MoMo
-          const result = await verifyMomoPaymentApi(transactionId);
-          const redirectUrl = result?.data?.redirect_url;
-          const cid = redirectUrl?.split("/")[2];
-          if (cid) setCourseId(cid);
-
-          toast.success("Thanh toán thành công! Bạn đã được mở quyền học.");
-          setStatus("success");
-
           if (redirectUrl) {
             setTimeout(() => {
               navigate(redirectUrl, { replace: true });

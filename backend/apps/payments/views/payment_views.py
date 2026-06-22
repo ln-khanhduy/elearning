@@ -1,18 +1,16 @@
-import json
 from decimal import Decimal
 
-from django.conf import settings
 from django.utils import timezone
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.views import APIView
 
+from apps.common.base_api_view import BasePermissionAPIView
 from apps.payments.models import PaymentTransaction
 from apps.payments.repositories.payment_repository import PaymentRepository
 from apps.payments.services.payment_service import PaymentService
 from apps.payments.services.stripe_payment_service import StripePaymentService
-from apps.payments.services.momo_payment_service import MoMoPaymentService
 from apps.payments.serializers.payment_serializer import (
     PaymentTransactionSerializer,
     AdminTransactionSerializer,
@@ -21,16 +19,13 @@ from apps.payments.serializers.payment_serializer import (
 from apps.courses.models import Course
 from apps.enrollments.models import Enrollment, CourseProgress
 from apps.lessons.models import Lesson
+from apps.payments.models import PaymentTransaction
 
 
 def _is_finance_admin(user):
     """Kiểm tra user có role FINANCE_ADMIN hoặc SUPERADMIN không."""
     return user.role and user.role.code in ["FINANCE_ADMIN", "SUPERADMIN"]
 
-
-def _is_instructor(user):
-    """Kiểm tra user có role INSTRUCTOR hoặc SUPERADMIN không."""
-    return user.role and user.role.code in ["INSTRUCTOR", "SUPERADMIN"]
 
 
 # ==================== FREE ENROLLMENT ====================
@@ -44,7 +39,7 @@ class FreeEnrollAPIView(APIView):
 
     def post(self, request, course_id):
         try:
-            course = Course.objects.get(id=course_id, status="PUBLISHED")
+            course = Course.objects.get(id=course_id, status=Course.Status.PUBLISHED)
         except Course.DoesNotExist:
             return Response(
                 {"success": False, "message": "Không tìm thấy khóa học."},
@@ -61,7 +56,7 @@ class FreeEnrollAPIView(APIView):
         existing = Enrollment.objects.filter(
             student=request.user,
             course=course,
-            status__in=["ACTIVE", "COMPLETED"],
+            status__in=[Enrollment.Status.ACTIVE, Enrollment.Status.COMPLETED],
         ).first()
         if existing:
             return Response(
@@ -73,7 +68,7 @@ class FreeEnrollAPIView(APIView):
         enrollment = Enrollment.objects.create(
             student=request.user,
             course=course,
-            status="ACTIVE",
+            status=Enrollment.Status.ACTIVE,
             enrolled_at=timezone.now(),
             access_granted_at=timezone.now(),
         )
@@ -109,7 +104,7 @@ class StripeCheckoutAPIView(APIView):
 
     def post(self, request, course_id):
         try:
-            course = Course.objects.get(id=course_id, status="PUBLISHED")
+            course = Course.objects.get(id=course_id, status=Course.Status.PUBLISHED)
         except Course.DoesNotExist:
             return Response(
                 {"success": False, "message": "Không tìm thấy khóa học."},
@@ -190,95 +185,6 @@ class StripeVerifyAPIView(APIView):
             )
 
 
-# ==================== MOMO ====================
-
-class MoMoCheckoutAPIView(APIView):
-    """
-    POST /api/payments/momo/courses/{course_id}/checkout/
-    Tạo giao dịch MoMo.
-    """
-    permission_classes = [IsAuthenticated]
-
-    def post(self, request, course_id):
-        try:
-            course = Course.objects.get(id=course_id, status="PUBLISHED")
-        except Course.DoesNotExist:
-            return Response(
-                {"success": False, "message": "Không tìm thấy khóa học."},
-                status=status.HTTP_404_NOT_FOUND,
-            )
-
-        if course.price <= 0:
-            return Response(
-                {"success": False, "message": "Khóa học miễn phí. Vui lòng sử dụng đăng ký miễn phí."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        try:
-            result = MoMoPaymentService.create_payment(request.user, course)
-            return Response({
-                "success": True,
-                "message": "Tạo giao dịch MoMo thành công.",
-                "data": result,
-            }, status=status.HTTP_201_CREATED)
-        except ValueError as e:
-            return Response(
-                {"success": False, "message": str(e)},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-
-class MoMoIPNAPIView(APIView):
-    """
-    POST /api/payments/momo/ipn/
-    Xử lý MoMo IPN callback.
-    """
-    permission_classes = [AllowAny]
-    authentication_classes = []
-
-    def post(self, request):
-        try:
-            result = MoMoPaymentService.handle_ipn(request.data)
-            return Response(result, status=status.HTTP_200_OK)
-        except ValueError as e:
-            return Response(
-                {"error": str(e)},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-
-class MoMoVerifyAPIView(APIView):
-    """
-    POST /api/payments/momo/verify/
-    Verify giao dịch MoMo (fallback cho dev/demo).
-    """
-    permission_classes = [IsAuthenticated]
-
-    def post(self, request):
-        transaction_id = request.data.get("transaction_id")
-        if not transaction_id:
-            return Response(
-                {"success": False, "message": "Thiếu transaction_id."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        try:
-            transaction = MoMoPaymentService.verify_payment(transaction_id)
-            return Response({
-                "success": True,
-                "message": "Thanh toán thành công. Bạn đã được mở quyền học.",
-                "data": {
-                    "transaction_id": transaction.id,
-                    "redirect_url": f"/courses/{transaction.course.id}/learn",
-                },
-            }, status=status.HTTP_200_OK)
-        except ValueError as e:
-            return Response(
-                {"success": False, "message": str(e)},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-
 # ==================== TRANSACTION DETAIL ====================
 
 class TransactionDetailAPIView(APIView):
@@ -318,21 +224,15 @@ class TransactionDetailAPIView(APIView):
 
 # ==================== ADMIN TRANSACTIONS ====================
 
-class AdminTransactionListAPIView(APIView):
+class AdminTransactionListAPIView(BasePermissionAPIView):
     """
     GET /api/payments/admin/transactions/
     Danh sách giao dịch cho Finance Admin.
     Filter: status, provider, course, student, date_from, date_to
     """
-    permission_classes = [IsAuthenticated]
+    required_permission = "finance.finance.revenue_view"
 
     def get(self, request):
-        if not _is_finance_admin(request.user):
-            return Response(
-                {"success": False, "message": "Bạn không có quyền truy cập."},
-                status=status.HTTP_403_FORBIDDEN,
-            )
-
         filters = {}
         for key in ["status", "provider", "course", "student", "date_from", "date_to"]:
             val = request.query_params.get(key)
@@ -347,20 +247,14 @@ class AdminTransactionListAPIView(APIView):
         }, status=status.HTTP_200_OK)
 
 
-class MarkTransactionPaidAPIView(APIView):
+class MarkTransactionPaidAPIView(BasePermissionAPIView):
     """
     POST /api/payments/admin/transactions/{transaction_id}/mark-paid/
     Finance Admin đánh dấu transaction đã thanh toán cho instructor.
     """
-    permission_classes = [IsAuthenticated]
+    required_permission = "finance.finance.revenue_view"
 
     def post(self, request, transaction_id):
-        if not _is_finance_admin(request.user):
-            return Response(
-                {"success": False, "message": "Bạn không có quyền truy cập."},
-                status=status.HTTP_403_FORBIDDEN,
-            )
-
         try:
             transaction = PaymentRepository.get_by_id(transaction_id)
         except Exception:
@@ -369,7 +263,7 @@ class MarkTransactionPaidAPIView(APIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        if transaction.status != "HOLD":
+        if transaction.status != PaymentTransaction.Status.HOLD:
             return Response(
                 {"success": False, "message": "Chỉ có thể đánh dấu thanh toán cho giao dịch đang giữ tiền."},
                 status=status.HTTP_400_BAD_REQUEST,
@@ -381,7 +275,7 @@ class MarkTransactionPaidAPIView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        PaymentRepository.update(transaction, status="PAID")
+        PaymentRepository.update(transaction, status=PaymentTransaction.Status.PAID)
         return Response({
             "success": True,
             "message": "Đã đánh dấu giao dịch đã thanh toán cho giảng viên.",
@@ -390,20 +284,14 @@ class MarkTransactionPaidAPIView(APIView):
 
 # ==================== INSTRUCTOR REVENUE ====================
 
-class InstructorRevenueAPIView(APIView):
+class InstructorRevenueAPIView(BasePermissionAPIView):
     """
     GET /api/payments/instructor/revenue/
     Xem doanh thu của instructor hiện tại.
     """
-    permission_classes = [IsAuthenticated]
+    required_permission = "user.instructor.sales_history"
 
     def get(self, request):
-        if not _is_instructor(request.user):
-            return Response(
-                {"success": False, "message": "Bạn không có quyền truy cập."},
-                status=status.HTTP_403_FORBIDDEN,
-            )
-
         revenue = PaymentService.get_instructor_revenue(request.user.id)
         serializer = InstructorRevenueSerializer(revenue)
         return Response({

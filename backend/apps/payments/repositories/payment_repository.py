@@ -1,6 +1,7 @@
 from django.utils import timezone
 from rest_framework.exceptions import NotFound
 from apps.payments.models import PaymentTransaction
+from apps.payments.models import PaymentTransaction as PaymentTransactionModel
 
 
 class PaymentRepository:
@@ -30,7 +31,7 @@ class PaymentRepository:
         return PaymentTransaction.objects.filter(
             student_id=user_id,
             course_id=course_id,
-            status="PENDING"
+            status=PaymentTransactionModel.Status.PENDING
         ).first()
 
     @staticmethod
@@ -87,6 +88,6 @@ class PaymentRepository:
     def get_held_transactions_expired():
         """Lấy các transaction HOLD đã hết hạn giữ tiền."""
         return PaymentTransaction.objects.filter(
-            status="HOLD",
+            status=PaymentTransactionModel.Status.HOLD,
             hold_time__lte=timezone.now()
         )

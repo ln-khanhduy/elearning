@@ -1,5 +1,6 @@
 from rest_framework.exceptions import NotFound
 from apps.reviews.models import Review
+from apps.reviews.models import Review as ReviewModel
 
 
 class ReviewRepository:
@@ -8,7 +9,7 @@ class ReviewRepository:
     @staticmethod
     def get_all():
         """Lấy tất cả review (trừ DELETED), kèm user và course."""
-        return Review.objects.select_related("user", "course").exclude(status="DELETED").order_by("-created_at")
+        return Review.objects.select_related("user", "course").exclude(status=ReviewModel.Status.DELETED).order_by("-created_at")
 
     @staticmethod
     def get_by_id(review_id):
@@ -22,13 +23,13 @@ class ReviewRepository:
     def get_by_course(course_id):
         """Lấy danh sách review của một khóa học (chỉ PUBLISHED)."""
         return Review.objects.select_related("user").filter(
-            course_id=course_id, status="PUBLISHED", parent__isnull=True
+            course_id=course_id, status=ReviewModel.Status.PUBLISHED, parent__isnull=True
         ).order_by("-created_at")
 
     @staticmethod
     def get_replies(review_id):
         """Lấy các phản hồi của một review."""
-        return Review.objects.select_related("user").filter(parent_id=review_id, status="PUBLISHED").order_by("created_at")
+        return Review.objects.select_related("user").filter(parent_id=review_id, status=ReviewModel.Status.PUBLISHED).order_by("created_at")
 
     @staticmethod
     def create(data):

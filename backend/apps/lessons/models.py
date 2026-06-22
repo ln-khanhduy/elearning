@@ -1,68 +1,55 @@
 from django.db import models
+from django.conf import settings
 
 
 class Chapter(models.Model):
-    """ Phần (Chapter) trong một khóa học, dùng để nhóm các bài học lại với nhau."""
-    course = models.ForeignKey('courses.Course',on_delete=models.CASCADE,related_name='chapters')
-    # tên phần
-    title = models.CharField(max_length=50)
-    # mô tả ngắn về phần này
-    description = models.TextField(null=True, blank=True)
-    # thứ tự hiển thị phần trong khóa học
-    order = models.PositiveIntegerField(default=0)
+    """
+    Chương học (Section) - nhóm các bài học trong khóa học.
+    Mỗi khóa học có nhiều chương, mỗi chương có nhiều bài học.
+    """
+    course = models.ForeignKey('courses.Course', on_delete=models.CASCADE, related_name='chapters')
+    title = models.CharField(max_length=100)        # Tên chương (VD: "Chương 1: Giới thiệu")
+    description = models.TextField(null=True, blank=True)  # Mô tả chương
+    order = models.IntegerField(default=0)           # Thứ tự hiển thị
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         db_table = 'course_chapter'
-        ordering = ['order', 'id']   # Sắp xếp theo thứ tự 
-        indexes = [
-            models.Index(fields=['course', 'order']),  # Load nhanh
-        ]
+        ordering = ['order', 'id']
+        unique_together = ('course', 'order')  # Không trùng thứ tự trong cùng khóa học
+
 
 class Lesson(models.Model):
     """
-    Bài học trong một khóa học.
-    Mỗi bài học thuộc 1 course .
+    Bài học - đơn vị nhỏ nhất của nội dung khóa học.
+    Mỗi bài học thuộc một chương và có thể chứa quiz.
     """
-    CONTENT_TYPE_CHOICES = (
-        ('VIDEO', 'Video'),        # Bài học dạng video (phổ biến nhất)
-        ('DOCUMENT', 'Document'),  # Bài học dạng tài liệu PDF/Word
-    )
+    class ContentType(models.TextChoices):
+        VIDEO = 'VIDEO', 'Video'
+        DOCUMENT = 'DOCUMENT', 'Document'
 
-    STATUS_CHOICES = (
-        ('DRAFT', 'Draft'),           # Bản nháp, chưa publish
-        ('HIDDEN', 'Hidden'),         # Không publish
-        ('PUBLISHED', 'Published'),   # Đã publish, học viên thấy
-    )
+    class Status(models.TextChoices):
+        DRAFT = 'DRAFT', 'Draft'
+        HIDDEN = 'HIDDEN', 'Hidden'
+        PUBLISHED = 'PUBLISHED', 'Published'
 
-    #id phần chứa bài học này
-    chapter = models.ForeignKey(Chapter,on_delete=models.CASCADE,related_name='lessons')
-    # URL dùng trong đường dẫn (VD: /courses/python-co-ban/bai-1-gioi-thieu)
-    slug = models.SlugField(max_length=100)
-    # Tên bài học
-    title = models.CharField(max_length=50)
-    # Mô tả ngắn hiển thị trước khi vào bài           
-    description = models.TextField(null=True, blank=True) 
-    content_type = models.CharField(max_length=20, choices=CONTENT_TYPE_CHOICES, default='VIDEO')
+    chapter = models.ForeignKey(Chapter, on_delete=models.CASCADE, related_name='lessons')
+    slug = models.SlugField()                        # URL friendly (unique trong chapter)
+    title = models.CharField(max_length=100)          # Tên bài học
+    description = models.TextField(null=True, blank=True)
+    content_type = models.CharField(max_length=20, choices=ContentType.choices, default=ContentType.VIDEO)
     # URL video (YouTube)
-    video_url = models.URLField(max_length=500, null=True, blank=True)
-    # URL tài liệu đính kèm (PDF/Word), nếu có
-    material_file = models.FileField(upload_to="lessons/materials/", null=True, blank=True)
-    # Thứ tự trình bày (số nhỏ hơn hiển thị trước)
-    order = models.PositiveIntegerField(default=0)
+    video_url = models.URLField(null=True, blank=True)
+    # File tài liệu (PDF, Word,...)
+    material_file = models.FileField(upload_to='lesson_materials/', null=True, blank=True)
+    order = models.IntegerField(default=0)            # Thứ tự trong chương
     # Trạng thái bài học (DRAFT / PUBLISHED / HIDDEN)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='DRAFT')
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.DRAFT)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         db_table = 'lesson'
-        ordering = ['order', 'id']   # Sắp xếp theo thứ tự 
-        indexes = [
-            models.Index(fields=['chapter', 'order']),  # Load nhanh
-        ]
-        constraints = [
-            models.UniqueConstraint(fields=["chapter", "slug"],name="unique_chapter_lesson_slug"),            # Mỗi bài học trong cùng một phần phải có slug duy nhất
-            models.UniqueConstraint(fields=["chapter", "order"],name="unique_lesson_order_in_chapter")       # Mỗi bài học trong cùng một phần phải có thứ tự duy nhất
-        ]    
+        ordering = ['order', 'id']
+        unique_together = ('chapter', 'order')  # Không trùng thứ tự trong cùng chương

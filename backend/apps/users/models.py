@@ -1,72 +1,49 @@
-from django.conf import settings
-from django.db import models
-from django.contrib.auth.models import AbstractUser
-from uuid6 import uuid7
+import uuid6
 
+from django.contrib.auth.models import AbstractUser
+from django.db import models
 
 
 class Role(models.Model):
-    # Mã định danh duy nhất cho vai trò (VD: "Supper Admin", "Instructor", "Student",...)
-    code = models.CharField(max_length=50, unique=True)
-    # Tên hiển thị cho vai trò
-    name = models.CharField(max_length=100)
-
+    """
+    Vai trò người dùng - phân quyền chi tiết theo từng module.
+    Mỗi user có 1 role duy nhất.
+    VD: SUPERADMIN, COURSE_ADMIN, INSTRUCTOR_MANAGER, USER_MANAGER, FINANCE_ADMIN, INSTRUCTOR, STUDENT
+    """
+    code = models.CharField(max_length=50, unique=True)  # Mã role (VD: "SUPERADMIN")
+    name = models.CharField(max_length=100)               # Tên hiển thị (VD: "Super Admin")
 
     class Meta:
-        db_table = "role"
+        db_table = 'role'
 
     def __str__(self):
         return self.name
-    
-class RolePermission(models.Model):
-    role = models.ForeignKey(Role,on_delete=models.CASCADE,related_name="permissions", null=True,blank=True)
-    # Mã định danh duy nhất cho quyền 
-    code = models.CharField(max_length=100)
-    # Tên hiển thị cho quyền
-    name = models.CharField(max_length=150)
-    class Meta:
-        db_table = "role_permission"
-        constraints = [models.UniqueConstraint(fields=["role","code"],name="unique_role_permission")]
 
-    def __str__(self):
-        return self.name
 
 class User(AbstractUser):
     """
-    Tài khoản người dùng mở rộng từ AbstractUser của Django.
-    Sử dụng email làm định danh duy nhất để đăng nhập.
+    Model người dùng tùy chỉnh - kế thừa AbstractUser.
+    Sử dụng email làm username (USERNAME_FIELD = 'email').
     """
-    id = models.UUIDField(primary_key=True, default=uuid7, editable=False)  # ID tự tăng cho mỗi user
-    username = models.CharField(max_length=150, blank=True, null=True, unique=False)
-    # Email là trường định danh duy nhất để đăng nhập, phải unique
-    email = models.EmailField(unique=True)
-    # Ảnh đại diện, lưu vào thư mục avatars/
-    avatar = models.ImageField(upload_to='avatars/', null=True, blank=True)
-    # Số điện thoại liên hệ (tuỳ chọn)
-    phone = models.CharField(max_length=15, null=True, blank=True)
-    # Lý do khóa tài khoản
-    account_status_reason = models.TextField(null=True, blank=True)
-    # Thời điểm thay đổi trạng thái cuối cùng
-    account_status_changed_at = models.DateTimeField(null=True, blank=True)
-    # Admin nào đã thay đổi trạng thái tài khoản này (FK tới chính bảng User)
+
+    id = models.UUIDField(primary_key=True, default=uuid6.uuid7, editable=False)
+    role = models.ForeignKey(Role, on_delete=models.SET_NULL, null=True, blank=True)
+    email = models.EmailField(unique=True)                # Email đăng nhập
+    phone = models.CharField(max_length=15, null=True, blank=True)  # Số điện thoại
+    avatar = models.ImageField(upload_to='avatars/', null=True, blank=True)  # Ảnh đại diện
+    # Liên kết Google Account
+    google_email = models.EmailField(null=True, blank=True, unique=True)
+    account_status_reason = models.TextField(null=True, blank=True)  # Lý do khóa
+    account_status_changed_at = models.DateTimeField(null=True, blank=True)  # Thời gian khóa/mở
     account_status_changed_by = models.ForeignKey(
-        'self',
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='changed_user_statuses',
-    )
-    # Email Google đã liên kết (dùng để xác thực Instructor)
-    google_email = models.EmailField(unique=True, null=True, blank=True)
-    #  M2M groups để đặt tên bảng nối rõ ràng
-    role = models.ForeignKey(
-    Role,
-    on_delete=models.PROTECT,
-    related_name="users"
-    )
+        'self', on_delete=models.SET_NULL, null=True, blank=True
+    )  # Ai khóa/mở
 
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = []
+    REQUIRED_FIELDS = []  # Mặc định email + password
+
+    class Meta:
+        db_table = 'user_account'
 
     @property
     def avatar_url(self):
@@ -74,84 +51,52 @@ class User(AbstractUser):
             return self.avatar.url
         return None
 
-    class Meta:
-        db_table = 'user_account'
-        indexes = [
-            models.Index(fields=['role']),    
-        ]
-
-class InstructorCertificate(models.Model):
-    """
-    Chứng chỉ / bằng cấp của giảng viên.
-    Một giảng viên có thể upload nhiều file chứng chỉ.
-    """
-    # Liên kết tới hồ sơ giảng viên tương ứng
-    instructor_profile = models.ForeignKey(
-        'users.InstructorProfile',
-        on_delete=models.CASCADE,
-        related_name='certificates'
-    )
-    # Tên chứng chỉ (VD: "Bằng Thạc sĩ CNTT")
-    title = models.CharField(max_length=255)  
-    # File chứng chỉ (PDF, ảnh bằng cấp, chứng nhận chuyên môn, v.v.)
-    file = models.FileField(upload_to='instructor_certificates/')
-    uploaded_at = models.DateTimeField(auto_now_add=True)
-    class Meta:
-        db_table = 'instructor_certificate'
-        ordering = ['-uploaded_at']
 
 class InstructorProfile(models.Model):
     """
-    Hồ sơ đăng ký trở thành giảng viên.
-    Một User  có đúng 1 InstructorProfile.
+    Hồ sơ giảng viên - lưu thông tin đăng ký và xét duyệt.
+    Khi user đăng ký làm giảng viên, tạo một InstructorProfile.
+    Sau khi duyệt, tạo User mới và liên kết với profile này.
     """
-    # Liên kết 1-1 tới tài khoản user tương ứng
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='instructor_profile',null=True,blank=True)
+    class Status(models.TextChoices):
+        PENDING = 'PENDING', 'Pending'
+        APPROVED = 'APPROVED', 'Approved'
+        REJECTED = 'REJECTED', 'Rejected'
 
-    # --- Thông tin chuyên môn ---
-    name=models.CharField(max_length=50)
-    email=models.EmailField(unique=True, db_index=True)
-    # Giới thiệu bản thân hiển thị trên trang profile công khai
-    bio = models.TextField(null=True, blank=True)
-    # Link portfolio / GitHub / LinkedIn cá nhân
-    portfolio_link = models.URLField(null=True, blank=True)
-    # File CV / hồ sơ năng lực dạng PDF
-    cv_file = models.FileField(upload_to='instructor_cvs/')
-    # SĐT liên hệ riêng cho giảng viên (có thể khác SĐT tài khoản)
-    contact_phone = models.CharField(max_length=15, null=True, blank=True)
-
-    # --- Thông tin ngân hàng để Finance Admin chuyển tiền ---
-    bank_name = models.CharField(max_length=100)           # Tên ngân hàng (VD: Vietcombank)
-    bank_account_number = models.CharField(max_length=50)  # Số tài khoản
-    bank_account_name = models.CharField(max_length=100)   # Tên chủ tài khoản (phải khớp ngân hàng)
-
-    # --- Quy trình phê duyệt ---
-    # Giảng viên đã đọc và đồng ý điều khoản hợp tác chưa (bắt buộc trước khi nộp)
-    is_terms_accepted = models.BooleanField(default=False)
-    # Thời điểm nộp hồ sơ (tự động ghi khi tạo)
-    applied_at = models.DateTimeField(auto_now_add=True)
-    status = models.CharField(
-        max_length=10,
-        choices=(('PENDING', 'pending'), ('APPROVED', 'approved'), ('REJECTED', 'rejected')),
-        default='PENDING'
-    )
-    # Lý do từ chối - bắt buộc điền khi status = REJECTED
-    rejection_reason = models.TextField(null=True, blank=True)
-    # Admin nào đã duyệt / từ chối hồ sơ này
-    reviewed_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='reviewed_instructor_profiles',
-    )
-    # Thời điểm admin thực hiện duyệt / từ chối
+    user = models.OneToOneField(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='instructor_profile')
+    name = models.CharField(max_length=100)               # Họ tên đầy đủ
+    email = models.EmailField(unique=True)                 # Email liên hệ
+    bio = models.TextField(null=True, blank=True)          # Giới thiệu bản thân
+    portfolio_link = models.URLField(null=True, blank=True)  # Link portfolio
+    cv_file = models.FileField(upload_to='instructor_cvs/', null=True, blank=True)  # File CV
+    contact_phone = models.CharField(max_length=15, null=True, blank=True)  # Số điện thoại
+    # Thông tin ngân hàng
+    bank_name = models.CharField(max_length=100, null=True, blank=True)
+    bank_account_number = models.CharField(max_length=50, null=True, blank=True)
+    bank_account_name = models.CharField(max_length=100, null=True, blank=True)
+    is_terms_accepted = models.BooleanField(default=False)  # Đồng ý điều khoản
+    # Trạng thái duyệt
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING)
+    rejection_reason = models.TextField(null=True, blank=True)  # Lý do từ chối
+    reviewed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='reviewed_applications')
     reviewed_at = models.DateTimeField(null=True, blank=True)
-
+    applied_at = models.DateTimeField(auto_now_add=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
     class Meta:
         db_table = 'instructor_profile'
-        indexes = [
-            models.Index(fields=['status', 'applied_at']),              # Admin lọc hồ sơ mới chờ duyệt
-        ]
+
+
+class InstructorCertificate(models.Model):
+    """
+    Chứng chỉ giảng viên - file chứng minh năng lực.
+    Mỗi giảng viên có thể có nhiều chứng chỉ.
+    """
+    profile = models.ForeignKey(InstructorProfile, on_delete=models.CASCADE, related_name='certificates')
+    title = models.CharField(max_length=200)               # Tên chứng chỉ
+    file = models.FileField(upload_to='instructor_certificates/')  # File chứng chỉ
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'instructor_certificate'

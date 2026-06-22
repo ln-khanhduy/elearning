@@ -16,6 +16,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.token_blacklist.models import OutstandingToken
 
 from apps.common.permissions import HasRequiredPermission
+from apps.users.models import InstructorProfile
 from apps.users.repositories.user_repository import UserRepository
 from apps.users.repositories.instructor_repository import InstructorRepository, InstructorCertificateRepository
 from apps.users.utils.cookies import REFRESH_COOKIE_NAME
@@ -283,14 +284,14 @@ class InstructorService:
         # Tìm InstructorProfile theo email (email là unique)
         existing = InstructorRepository.get_application_by_email(email)
         if existing:
-            if existing.status == "PENDING":
+            if existing.status == InstructorProfile.Status.PENDING:
                 raise DRFValidationError({"detail": "Bạn đã gửi hồ sơ đăng ký và đang chờ xét duyệt."})
-            if existing.status == "APPROVED":
+            if existing.status == InstructorProfile.Status.APPROVED:
                 raise DRFValidationError({"detail": "Hồ sơ của bạn đã được duyệt."})
             # Nếu REJECTED: cập nhật lại hồ sơ cũ thành PENDING
             for attr, value in validated_data.items():
                 setattr(existing, attr, value)
-            existing.status = "PENDING"
+            existing.status = InstructorProfile.Status.PENDING
             existing.rejection_reason = None
             existing.reviewed_by = None
             existing.reviewed_at = None
@@ -335,14 +336,14 @@ class InstructorService:
         """
         application = InstructorRepository.get_application_by_id(application_id)
 
-        if application.status != "PENDING":
+        if application.status != InstructorProfile.Status.PENDING:
             raise DRFValidationError({"detail": "Hồ sơ này đã được xử lý."})
 
         application.status = review_status
         application.reviewed_by = admin_user
         application.reviewed_at = timezone.now()
 
-        if review_status == "APPROVED":
+        if review_status == InstructorProfile.Status.APPROVED:
             # Tạo User mới với role INSTRUCTOR
             instructor_role = UserRepository.get_role_by_code("INSTRUCTOR")
             password = InstructorService._generate_random_password()

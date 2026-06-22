@@ -1,5 +1,6 @@
 from rest_framework.exceptions import NotFound
 from apps.enrollments.models import Enrollment
+from apps.enrollments.models import Enrollment as EnrollmentModel
 
 
 class EnrollmentRepository:
@@ -10,7 +11,7 @@ class EnrollmentRepository:
         """Lấy danh sách enrollment của một user (kèm course)."""
         return Enrollment.objects.select_related("course", "course__assigned_instructor").filter(
             student_id=user_id
-        ).exclude(status="CANCELLED").order_by("-created_at")
+        ).exclude(status=EnrollmentModel.Status.CANCELLED).order_by("-created_at")
 
     @staticmethod
     def get_by_id(enrollment_id):
@@ -25,7 +26,7 @@ class EnrollmentRepository:
         """Kiểm tra user đã đăng ký khóa học chưa (ACTIVE hoặc COMPLETED)."""
         return Enrollment.objects.filter(
             student_id=user_id, course_id=course_id,
-            status__in=["ACTIVE", "COMPLETED"]
+            status__in=[EnrollmentModel.Status.ACTIVE, EnrollmentModel.Status.COMPLETED]
         ).first()
 
 

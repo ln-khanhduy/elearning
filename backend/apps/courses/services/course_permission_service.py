@@ -36,16 +36,18 @@ class CoursePermissionService:
         - INSTRUCTOR: chỉ xem khóa học được phân công
         - STUDENT/public: chỉ xem khóa học PUBLISHED
         """
+        from apps.courses.models import Course
+
         if not user or not user.is_authenticated:
-            return course.status == "PUBLISHED"
+            return course.status == Course.Status.PUBLISHED
 
         if user.role and user.role.code == "SUPERADMIN":
             return True
         if user.role and user.role.code == "COURSE_ADMIN":
             return True
         if user.role and user.role.code == "INSTRUCTOR":
-            return course.assigned_instructor_id == user.id or course.status == "PUBLISHED"
-        return course.status == "PUBLISHED"
+            return course.assigned_instructor_id == user.id or course.status == Course.Status.PUBLISHED
+        return course.status == Course.Status.PUBLISHED
 
     @staticmethod
     def can_publish_course(course, user):
