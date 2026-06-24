@@ -27,3 +27,28 @@ export const updateQuestionApi = async (questionId, data) => {
 export const deleteQuestionApi = async (questionId) => {
   return request(() => apiClient.delete(`/api/quizzes/questions/${questionId}/delete/`));
 };
+
+// ==================== QUESTION IMPORT ====================
+// BE: /api/quizzes/quizzes/{quiz_id}/questions/import/
+
+export const importPreviewApi = async (quizId, file) => {
+  const formData = new FormData();
+  formData.append("file", file);
+  return request(() => apiClient.post(`/api/quizzes/quizzes/${quizId}/questions/import/preview/`, formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  }));
+};
+
+export const importExecuteApi = async (quizId, rows) => {
+  return request(() => apiClient.post(`/api/quizzes/quizzes/${quizId}/questions/import/execute/`, { rows }));
+};
+
+export const importTemplateApi = async (format = "csv") => {
+  const res = await apiClient.get(`/api/quizzes/questions/import/template/`, {
+    params: { file_format: format },
+    responseType: "blob",
+  });
+  return res.data;
+};
+
+

@@ -1,7 +1,8 @@
 import {getChaptersApi,createChapterApi,updateChapterApi,deleteChapterApi,reorderChaptersApi,} from "../api/chapterAPI";
 import {getLessonsApi,getLessonDetailApi,createLessonApi,updateLessonApi,deleteLessonApi,reorderLessonsApi,} from "../api/lessonAPI";
 import {getQuizzesApi,getQuizDetailApi,createQuizApi,updateQuizApi,deleteQuizApi,} from "../api/quizAPI";
-import {getQuestionsApi, createQuestionApi, updateQuestionApi, deleteQuestionApi,} from "../api/questionAPI";
+import {getQuestionsApi, createQuestionApi, updateQuestionApi, deleteQuestionApi, importPreviewApi, importExecuteApi, importTemplateApi,} from "../api/questionAPI";
+
 import { getCurriculumApi } from "../api/courseAPI";
 
 // ==================== CURRICULUM (full tree) ====================
@@ -97,3 +98,19 @@ export const updateQuestion = async (questionId, data) => {
 export const deleteQuestion = async (questionId) => {
   return await deleteQuestionApi(questionId);
 };
+
+// ==================== QUESTION IMPORT ====================
+
+export const importPreview = async (quizId, file) => {
+  return await importPreviewApi(quizId, file);
+};
+
+export const importExecute = async (quizId, rows) => {
+  return await importExecuteApi(quizId, rows);
+};
+
+export const importTemplate = async (format = "csv") => {
+  return await importTemplateApi(format);
+};
+
+

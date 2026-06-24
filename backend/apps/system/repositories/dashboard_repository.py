@@ -39,7 +39,7 @@ class AdminDashboardRepository:
         """Lấy số lượng người dùng nhóm theo từng role."""
         return (
             Role.objects
-            .annotate(total=Count("users"))
+            .annotate(total=Count("user"))
             .values("id", "code", "name", "total")
             .order_by("id")
         )

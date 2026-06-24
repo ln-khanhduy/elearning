@@ -29,6 +29,7 @@ class QuizService:
 
         validated_data["lesson"] = lesson
         validated_data.setdefault("status", "IN_PROCESS")
+        validated_data.setdefault("quiz_type", "MCQ")
         return QuizRepository.create(validated_data)
 
     @staticmethod

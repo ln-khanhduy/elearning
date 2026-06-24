@@ -15,9 +15,11 @@ class Quiz(models.Model):
     title = models.CharField(max_length=100)
     description = models.TextField(null=True, blank=True)
     time_limit_minutes = models.IntegerField(default=0)  # 0 = không giới hạn
-    passing_score = models.DecimalField(max_digits=3, decimal_places=2, default=0)  # Điểm đạt yêu cầu (VD: 5.0)
+    passing_score = models.DecimalField(max_digits=5, decimal_places=2, default=0)  # Điểm đạt yêu cầu (VD: 5.0)
     # True = học viên có thể làm bài; False = đang ẩn (giảng viên chưa mở)
     is_active = models.BooleanField(default=False)
+    # Loại bài tập: Trắc nghiệm, Tự luận, Điền khuyết
+    quiz_type = models.CharField(max_length=20, choices=[('MCQ', 'Trắc nghiệm'), ('ESSAY', 'Tự luận'), ('FILL_BLANK', 'Điền khuyết')], default='MCQ')
     # Trạng thái quiz
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.IN_PROCESS)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -31,26 +33,25 @@ class Question(models.Model):
     """
     Câu hỏi - thuộc về một quiz.
     """
+    class Difficulty(models.TextChoices):
+        EASY = 'EASY', 'Easy'
+        MEDIUM = 'MEDIUM', 'Medium'
+        HARD = 'HARD', 'Hard'
+
     class QuestionType(models.TextChoices):
         MCQ = 'MCQ', 'Multiple choice'
         FILL_BLANK = 'FILL_BLANK', 'Fill blank'
         ESSAY = 'ESSAY', 'Essay'
 
-    class Status(models.TextChoices):
-        IN_PROGRESS = 'IN_PROGRESS', 'In progress'
-        SUBMITTED = 'SUBMITTED', 'Submitted'
-        GRADED = 'GRADED', 'Graded'
-
     quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE, related_name='questions')
     prompt = models.TextField()  # Nội dung câu hỏi
+    difficulty = models.CharField(max_length=10, choices=Difficulty.choices, default=Difficulty.EASY)
     points = models.DecimalField(max_digits=5, decimal_places=2, default=1)  # Điểm tối đa
     order = models.IntegerField(default=0)  # Thứ tự câu hỏi trong quiz
     # Loại câu hỏi
     question_type = models.CharField(max_length=20, choices=QuestionType.choices, default=QuestionType.MCQ)
     # Đáp án đúng cho FILL_BLANK
     correct_text_answer = models.TextField(null=True, blank=True)
-    # Trạng thái câu hỏi
-    status = models.CharField(max_length=20, choices=Status.choices, default=Status.IN_PROGRESS)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -87,7 +88,7 @@ class QuizAttempt(models.Model):
     student = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='quiz_attempts')
     quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE, related_name='attempts')
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.IN_PROGRESS)
-    score = models.DecimalField(max_digits=3, decimal_places=2, default=0)  # Điểm sau khi chấm
+    score = models.DecimalField(max_digits=5, decimal_places=2, default=0)  # Điểm sau khi chấm
     started_at = models.DateTimeField(auto_now_add=True)
     submitted_at = models.DateTimeField(null=True, blank=True)
     graded_at = models.DateTimeField(null=True, blank=True)

@@ -101,7 +101,7 @@ class LearningService:
                 }
 
                 # Lấy quizzes cho lesson (không filter status, giống view cũ)
-                quizzes = Quiz.objects.filter(lesson=lesson).order_by("-created_at")
+                quizzes = Quiz.objects.filter(lesson=lesson).order_by("created_at")
                 quiz_list = []
                 for quiz in quizzes:
                     questions = quiz.questions.all().order_by("order", "id")
@@ -404,8 +404,6 @@ class LearningService:
         - Chấm MCQ tự động
         - Trả về kết quả
         """
-        enrollment = LearningService.get_enrollment_or_404(user, course_id)
-
         quiz = Quiz.objects.filter(id=quiz_id, lesson__chapter__course_id=course_id).first()
         if not quiz:
             raise NotFound("Không tìm thấy bài kiểm tra.")

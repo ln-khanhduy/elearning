@@ -17,7 +17,7 @@ class QuizRepository:
     @staticmethod
     def get_by_lesson(lesson_id):
         """Lấy danh sách quiz của một bài học."""
-        return Quiz.objects.filter(lesson_id=lesson_id).order_by("-created_at")
+        return Quiz.objects.filter(lesson_id=lesson_id).order_by("created_at")
 
     @staticmethod
     def create(data):

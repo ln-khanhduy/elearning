@@ -24,9 +24,17 @@ class QuestionService:
         if not CoursePermissionService.can_manage_course(quiz.lesson.chapter.course, user):
             raise PermissionDenied("Bạn không có quyền thao tác với khóa học này.")
 
-        points = validated_data.get("points")
-        if points is not None and points <= 0:
-            raise ValidationError({"points": "Điểm số phải lớn hơn 0."})
+        # Auto-calculate points: tổng 10 điểm chia đều cho tất cả câu hỏi
+        existing_count = QuestionRepository.get_question_count_by_quiz(quiz_id)
+        total_questions = existing_count + 1
+        points_per_question = round(10 / total_questions, 2) if total_questions > 0 else 1
+
+        # Update points for existing questions
+        if existing_count > 0:
+            from apps.quizzes.models import Question
+            Question.objects.filter(quiz_id=quiz_id).update(points=points_per_question)
+
+        validated_data["points"] = points_per_question
 
         question_type = validated_data.get("question_type")
         options_data = validated_data.pop("options", [])
@@ -36,11 +44,11 @@ class QuestionService:
 
         if question_type == "MCQ":
             if len(options_data) < 2:
-                raise ValidationError({"options": "Câu hỏi MCQ phải có tối thiểu 2 đáp án."})
+                raise ValidationError({"options": "Câu hỏi trắc nghiệm phải có tối thiểu 2 đáp án."})
 
             correct_count = sum(1 for opt in options_data if opt.get("is_correct"))
             if correct_count < 1:
-                raise ValidationError({"options": "Câu hỏi MCQ phải có tối thiểu 1 đáp án đúng."})
+                raise ValidationError({"options": "Câu hỏi trắc nghiệm phải có tối thiểu 1 đáp án đúng."})
 
             for opt_data in options_data:
                 opt_data["question"] = question
@@ -77,11 +85,11 @@ class QuestionService:
         # Nếu có options mới và là MCQ, cập nhật lại options
         if options_data is not None and question.question_type == "MCQ":
             if len(options_data) < 2:
-                raise ValidationError({"options": "Câu hỏi MCQ phải có tối thiểu 2 đáp án."})
+                raise ValidationError({"options": "Câu hỏi trắc nghiệm phải có tối thiểu 2 đáp án."})
 
             correct_count = sum(1 for opt in options_data if opt.get("is_correct"))
             if correct_count < 1:
-                raise ValidationError({"options": "Câu hỏi MCQ phải có tối thiểu 1 đáp án đúng."})
+                raise ValidationError({"options": "Câu hỏi trắc nghiệm phải có tối thiểu 1 đáp án đúng."})
 
             # Xóa options cũ, tạo options mới
             QuestionRepository.delete_options_by_question(question_id)
@@ -96,10 +104,19 @@ class QuestionService:
         """
         Xóa câu hỏi.
         - Kiểm tra quyền quản lý khóa học trước khi xóa (chỉ COURSE_ADMIN/SUPERADMIN)
+        - Sau khi xóa, tự động chia lại 10 điểm cho các câu hỏi còn lại
         """
         question = QuestionRepository.get_by_id(question_id)
+        quiz_id = question.quiz_id
 
         if not CoursePermissionService.can_manage_course(question.quiz.lesson.chapter.course, user):
             raise PermissionDenied("Bạn không có quyền thao tác với khóa học này.")
 
         QuestionRepository.delete(question_id)
+
+        # Recalculate points for remaining questions
+        remaining_count = QuestionRepository.get_question_count_by_quiz(quiz_id)
+        if remaining_count > 0:
+            from apps.quizzes.models import Question
+            points_per_question = round(10 / remaining_count, 2)
+            Question.objects.filter(quiz_id=quiz_id).update(points=points_per_question)

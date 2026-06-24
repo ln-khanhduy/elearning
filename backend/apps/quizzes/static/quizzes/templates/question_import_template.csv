@@ -1,0 +1,5 @@
+﻿question,difficulty,option_a,option_b,option_c,option_d,correct
+Java là gì?,EASY,Ngôn ngữ lập trình,Hệ điều hành,Database,Framework,A
+Spring Boot dùng để?,MEDIUM,Frontend,Backend,Game,OS,B
+Python là ngôn ngữ gì?,EASY,Biên dịch,Thông dịch,Cả hai,Không phải,B
+Django là gì?,MEDIUM,Thư viện,Framework,Ngôn ngữ,Cơ sở dữ liệu,B

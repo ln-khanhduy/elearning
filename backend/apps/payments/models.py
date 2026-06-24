@@ -1,3 +1,4 @@
+import uuid6
 from django.conf import settings
 from django.db import models
 
@@ -6,6 +7,8 @@ class PaymentTransaction(models.Model):
     """
     Giao dịch thanh toán - ghi nhận mỗi lần học viên thanh toán khóa học.
     """
+    id = models.UUIDField(primary_key=True, default=uuid6.uuid7, editable=False)
+
     class Status(models.TextChoices):
         PENDING = 'PENDING', 'Pending'
         HOLD = 'HOLD', 'Hold'
@@ -17,7 +20,6 @@ class PaymentTransaction(models.Model):
         REFUNDED = 'REFUNDED', 'Refunded'
 
     class Provider(models.TextChoices):
-        MOMO = 'MOMO', 'MoMo'
         STRIPE = 'STRIPE', 'Stripe'
 
     student = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='payments')

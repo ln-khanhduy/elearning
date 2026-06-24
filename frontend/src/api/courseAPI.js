@@ -113,7 +113,7 @@ export const getInstructorCourseAnalyticsApi = async (courseId) => {
 // BE: /api/courses/{course_id}/curriculum/
 
 export const getCurriculumApi = async (courseId) => {
-  return request(() => apiClient.get(`/api/courses/${courseId}/curriculum/`));
+  return request(() => apiClient.get(`/api/courses/${courseId}/curriculum/preview/`));
 };
 
 // ==================== CATEGORIES ====================

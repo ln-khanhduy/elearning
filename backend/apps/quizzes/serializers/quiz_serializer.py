@@ -21,25 +21,30 @@ class QuizPreviewSerializer(serializers.ModelSerializer):
 
 class QuizSerializer(serializers.ModelSerializer):
     """Serializer cho quiz - bao gồm thông tin lesson và trạng thái."""
+    question_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Quiz
         fields = [
             "id", "lesson", "title", "description", "time_limit_minutes",
-            "passing_score", "status", "created_at", "updated_at",
+            "passing_score", "quiz_type", "status", "question_count",
+            "created_at", "updated_at",
         ]
         read_only_fields = ["id", "lesson", "created_at", "updated_at"]
+
+    def get_question_count(self, obj):
+        return obj.questions.count()
 
 
 
 class QuizCreateUpdateSerializer(serializers.ModelSerializer):
-    """Serializer cho tạo/cập nhật quiz - validate title, passing_score và status."""
+    """Serializer cho tạo/cập nhật quiz - validate title, passing_score, quiz_type và status."""
 
     title = serializers.CharField(min_length=3, max_length=100, trim_whitespace=True)
 
     class Meta:
         model = Quiz
-        fields = ["title", "description", "time_limit_minutes", "passing_score", "status"]
+        fields = ["title", "description", "time_limit_minutes", "passing_score", "quiz_type", "status"]
 
     def validate_passing_score(self, value):
         """Kiểm tra passing_score >= 0."""

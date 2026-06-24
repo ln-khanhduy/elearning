@@ -20,11 +20,10 @@ function CourseCard({ course }) {
     duration,
   } = course;
 
-  // Map assigned_instructor fields to instructor fields for display
   const instructor_name = assigned_instructor_name;
   const instructor_avatar = assigned_instructor_avatar;
 
-  // Format price
+  // Format giá
   const formatPrice = (val) => {
     if (val === undefined || val === null) return null;
     const num = Number(val);
@@ -32,7 +31,7 @@ function CourseCard({ course }) {
     return `${num.toLocaleString("vi-VN")}₫`;
   };
 
-  // Format rating
+  // Format đánh giá
   const displayRating = rating ? Number(rating).toFixed(1) : null;
 
   // Level badge color

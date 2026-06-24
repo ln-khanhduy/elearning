@@ -22,17 +22,13 @@ export const getLessonDetailApi = async (lessonId) => {
 
 export const createLessonApi = async (chapterId, data) => {
   return request(() =>
-    apiClient.post(`/api/lessons/chapters/${chapterId}/lessons/create/`, data, {
-      headers: { "Content-Type": "multipart/form-data" },
-    })
+    apiClient.post(`/api/lessons/chapters/${chapterId}/lessons/create/`, data)
   );
 };
 
 export const updateLessonApi = async (lessonId, data) => {
   return request(() =>
-    apiClient.patch(`/api/lessons/lessons/${lessonId}/update/`, data, {
-      headers: { "Content-Type": "multipart/form-data" },
-    })
+    apiClient.patch(`/api/lessons/lessons/${lessonId}/update/`, data)
   );
 };
 

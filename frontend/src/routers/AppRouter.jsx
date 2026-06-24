@@ -20,8 +20,7 @@ import InstructorCourseDetailPage from "../pages/instructor/InstructorCourseDeta
 import InstructorCourseStudentsPage from "../pages/instructor/InstructorCourseStudentsPage";
 import InstructorCourseAnalyticsPage from "../pages/instructor/InstructorCourseAnalyticsPage";
 import AdminCourseListPage from "../pages/admin/AdminCourseListPage";
-import AdminCourseCreatePage from "../pages/admin/AdminCourseCreatePage";
-import AdminCourseEditPage from "../pages/admin/AdminCourseEditPage";
+import CourseBuilderPage from "../pages/course-builder/CourseBuilderPage";
 import AdminCourseAssignPage from "../pages/admin/AdminCourseAssignPage";
 import AdminCategoryPage from "../pages/admin/AdminCategoryPage";
 import MyCoursesPage from "../pages/student/MyCoursesPage";
@@ -74,8 +73,8 @@ function AppRouter() {
 
           {/* ==================== ADMIN COURSES ==================== */}
           <Route path="/admin/courses" element={<ProtectedRoute allowedRoles={["COURSE_ADMIN", "SUPERADMIN"]}><AdminCourseListPage /></ProtectedRoute>} />
-          <Route path="/admin/courses/create" element={<ProtectedRoute allowedRoles={["COURSE_ADMIN", "SUPERADMIN"]}><AdminCourseCreatePage /></ProtectedRoute>} />
-          <Route path="/admin/courses/:courseId/edit" element={<ProtectedRoute allowedRoles={["COURSE_ADMIN", "SUPERADMIN"]}><AdminCourseEditPage /></ProtectedRoute>} />
+          <Route path="/admin/courses/create" element={<ProtectedRoute allowedRoles={["COURSE_ADMIN", "SUPERADMIN"]}><CourseBuilderPage mode="create" /></ProtectedRoute>} />
+          <Route path="/admin/courses/:courseId/edit" element={<ProtectedRoute allowedRoles={["COURSE_ADMIN", "SUPERADMIN"]}><CourseBuilderPage mode="edit" /></ProtectedRoute>} />
           <Route path="/admin/courses/:courseId/assign" element={<ProtectedRoute allowedRoles={["COURSE_ADMIN", "SUPERADMIN"]}><AdminCourseAssignPage /></ProtectedRoute>} />
           <Route path="/admin/courses/categories" element={<ProtectedRoute allowedRoles={["COURSE_ADMIN", "SUPERADMIN"]}><AdminCategoryPage /></ProtectedRoute>} />
           <Route path="/admin/reviews" element={<ProtectedRoute allowedRoles={["COURSE_ADMIN", "SUPERADMIN"]}><AdminReviewsPage /></ProtectedRoute>} />
