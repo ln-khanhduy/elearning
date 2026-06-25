@@ -32,6 +32,11 @@ class QuestionRepository:
         return Question.objects.filter(quiz_id=quiz_id).count()
 
     @staticmethod
+    def get_question_count_by_quiz_and_type(quiz_id, question_type):
+        """Đếm số câu hỏi của một quiz theo loại câu hỏi."""
+        return Question.objects.filter(quiz_id=quiz_id, question_type=question_type).count()
+
+    @staticmethod
     def create(validated_data):
         """Tạo câu hỏi mới (dùng cho service hiện tại)."""
         return Question.objects.create(**validated_data)

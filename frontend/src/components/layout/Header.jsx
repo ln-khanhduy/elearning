@@ -37,6 +37,7 @@ function Header({ onToggleSidebar }) {
             <Link to="/courses">Khóa học</Link>
             <Link to="/instructors">Giảng viên</Link>
             <Link to="/contact">Liên hệ</Link>
+            <Link to="/profile">Hồ sơ</Link>
           </nav>
         </div>
         <div className="header-right">

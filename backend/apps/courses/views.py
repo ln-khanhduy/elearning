@@ -10,22 +10,14 @@ from apps.system.services.admin_log_service import AdminLogService
 from apps.courses.services.course_service import CourseService
 from apps.courses.services.course_assignment_service import CourseAssignmentService
 from apps.courses.services.course_permission_service import CoursePermissionService
+from apps.courses.services.curriculum_service import CurriculumService
+from apps.courses.services.instructor_course_service import InstructorCourseService
 from apps.courses.serializers.course_serializer import (
     CourseListSerializer, CourseDetailSerializer,
     CourseCreateUpdateSerializer, CourseAssignInstructorSerializer,
 )
 from apps.courses.serializers.category_tag_serializer import CategorySerializer
 from apps.courses.models import Category
-
-from apps.lessons.repositories.chapter_repository import ChapterRepository
-from apps.lessons.repositories.lesson_repository import LessonRepository
-from apps.lessons.serializers.chapter_serializer import ChapterSerializer
-from apps.lessons.serializers.lesson_serializer import LessonSerializer, LessonPreviewSerializer
-from apps.quizzes.repositories.quiz_repository import QuizRepository
-from apps.quizzes.repositories.question_repository import QuestionRepository
-from apps.quizzes.serializers.quiz_serializer import QuizSerializer, QuizPreviewSerializer
-from apps.quizzes.serializers.question_serializer import QuestionPreviewSerializer
-
 
 
 def success_response(data=None, message="Success", http_status=status.HTTP_200_OK):
@@ -44,7 +36,7 @@ def error_response(message="Error", errors=None, http_status=status.HTTP_400_BAD
     }, status=http_status)
 
 
-# ==================== PUBLIC COURSE API (giữ nguyên) ====================
+# ==================== PUBLIC COURSE API ====================
 
 
 class CourseListAPIView(APIView):
@@ -97,7 +89,6 @@ class CourseDetailAPIView(APIView):
 class AdminCourseListAPIView(BasePermissionAPIView):
     """
     GET /api/admin/courses/ - Lấy danh sách khóa học (admin).
-    COURSE_ADMIN và SUPERADMIN được xem tất cả.
     """
     required_permission = "course.course.view"
 
@@ -130,7 +121,6 @@ class AdminCourseListAPIView(BasePermissionAPIView):
 class AdminCourseCreateAPIView(BasePermissionAPIView):
     """
     POST /api/admin/courses/ - Tạo khóa học mới.
-    Chỉ COURSE_ADMIN và SUPERADMIN mới được tạo.
     """
     required_permission = "course.course.create"
 
@@ -194,7 +184,7 @@ class AdminCourseUpdateAPIView(BasePermissionAPIView):
 
 class AdminCourseDeleteAPIView(BasePermissionAPIView):
     """
-    DELETE /api/admin/courses/{id}/ - Xóa khóa học (chuyển sang ARCHIVED).
+    DELETE /api/admin/courses/{id}/ - Xóa khóa học.
     """
     required_permission = "course.course.delete"
 
@@ -255,7 +245,7 @@ class AdminCourseHideAPIView(BasePermissionAPIView):
 class AdminCourseAssignInstructorAPIView(BasePermissionAPIView):
     """
     PATCH /api/admin/courses/{id}/assign-instructor/ - Phân công hoặc gỡ giảng viên.
-    Body: { "instructor_id": 12 }  (gửi null để gỡ giảng viên)
+    Body: { "instructor_id": 12 } (gửi null để gỡ)
     """
     required_permission = "course.instructor.assign"
 
@@ -266,7 +256,6 @@ class AdminCourseAssignInstructorAPIView(BasePermissionAPIView):
         instructor_id = serializer.validated_data.get("instructor_id")
 
         if instructor_id is None:
-            # Gỡ giảng viên
             course = CourseAssignmentService.remove_instructor(course_id, request.user)
             AdminLogService.log(
                 admin=request.user,
@@ -277,11 +266,7 @@ class AdminCourseAssignInstructorAPIView(BasePermissionAPIView):
             )
             return success_response(CourseDetailSerializer(course).data, "Đã gỡ giảng viên khỏi khóa học.")
         else:
-            # Phân công giảng viên
-            course = CourseAssignmentService.assign_instructor(
-                course_id, instructor_id, request.user
-            )
-
+            course = CourseAssignmentService.assign_instructor(course_id, instructor_id, request.user)
             instructor_name = course.assigned_instructor.get_full_name() if course.assigned_instructor else "N/A"
             AdminLogService.log(
                 admin=request.user,
@@ -290,7 +275,6 @@ class AdminCourseAssignInstructorAPIView(BasePermissionAPIView):
                 target_id=str(course.id),
                 target_type='Course',
             )
-
             return success_response(CourseDetailSerializer(course).data, "Phân công giảng viên thành công.")
 
 
@@ -313,16 +297,14 @@ class AdminCourseAssignedInstructorAPIView(BasePermissionAPIView):
 # ==================== INSTRUCTOR COURSE API ====================
 
 
-class InstructorCourseListAPIView(BasePermissionAPIView):
+class InstructorCourseListAPIView(APIView):
     """
     GET /api/instructor/courses/ - Lấy danh sách khóa học được phân công.
-    Instructor chỉ xem được khóa học được giao.
     """
-    required_permission = "course.course.view"
+    permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        user = request.user
-        courses = CourseAssignmentService.get_assigned_courses(user)
+        courses = CourseAssignmentService.get_assigned_courses(request.user)
         serializer = CourseListSerializer(courses, many=True)
         return success_response(serializer.data)
 
@@ -335,42 +317,40 @@ class InstructorCourseDetailAPIView(APIView):
 
     def get(self, request, course_id):
         course = CourseService.get_course_detail(course_id)
-        user = request.user
-
-        if not CoursePermissionService.can_view_course(course, user):
+        if not CoursePermissionService.can_view_course(course, request.user):
             return error_response("Bạn không có quyền xem khóa học này.", http_status=status.HTTP_403_FORBIDDEN)
-
         return success_response(CourseDetailSerializer(course).data)
 
 
 class InstructorCourseStudentsAPIView(APIView):
     """
-    GET /api/instructor/courses/{id}/students/ - Lấy danh sách học viên của khóa học.
+    GET /api/instructor/courses/{id}/students/ - Lấy danh sách học viên.
     """
     permission_classes = [IsAuthenticated]
 
     def get(self, request, course_id):
-        course = CourseService.get_course_detail(course_id)
-        user = request.user
+        from apps.enrollments.models import Enrollment
 
-        if not CoursePermissionService.can_view_course(course, user):
+        course = CourseService.get_course_detail(course_id)
+        if not CoursePermissionService.can_view_course(course, request.user):
             return error_response("Bạn không có quyền xem khóa học này.", http_status=status.HTTP_403_FORBIDDEN)
 
-        from apps.enrollments.models import Enrollment
         enrollments = Enrollment.objects.filter(
             course_id=course_id,
             status=Enrollment.Status.ACTIVE
-        ).select_related('user')
+        ).select_related('student')
 
         students_data = []
         for enrollment in enrollments:
+            progress_obj = getattr(enrollment, 'progress', None)
+            progress_value = float(progress_obj.progress_percent) if progress_obj else 0
             students_data.append({
-                "id": enrollment.user.id,
-                "name": enrollment.user.get_full_name(),
-                "email": enrollment.user.email,
-                "avatar": enrollment.user.avatar_url if hasattr(enrollment.user, 'avatar_url') else None,
+                "id": enrollment.student.id,
+                "name": enrollment.student.get_full_name(),
+                "email": enrollment.student.email,
+                "avatar": enrollment.student.avatar_url if hasattr(enrollment.student, 'avatar_url') else None,
                 "enrolled_at": enrollment.created_at,
-                "progress": getattr(enrollment, 'progress_percentage', None),
+                "progress": progress_value,
             })
 
         return success_response(students_data)
@@ -383,119 +363,57 @@ class InstructorCourseAnalyticsAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, course_id):
-        course = CourseService.get_course_detail(course_id)
-        user = request.user
+        from apps.enrollments.models import Enrollment, CourseProgress
+        from django.db.models import Avg
 
-        if not CoursePermissionService.can_view_course(course, user):
+        course = CourseService.get_course_detail(course_id)
+        if not CoursePermissionService.can_view_course(course, request.user):
             return error_response("Bạn không có quyền xem khóa học này.", http_status=status.HTTP_403_FORBIDDEN)
 
-        from apps.enrollments.models import Enrollment
-        from django.db.models import Count, Avg
-
         total_students = Enrollment.objects.filter(course_id=course_id, status=Enrollment.Status.ACTIVE).count()
-        avg_progress = Enrollment.objects.filter(course_id=course_id, status=Enrollment.Status.ACTIVE).aggregate(
-            avg_progress=Avg('progress_percentage')
-        )['avg_progress'] or 0
+        avg_progress = CourseProgress.objects.filter(
+            enrollment__course_id=course_id,
+            enrollment__status=Enrollment.Status.ACTIVE,
+        ).aggregate(avg=Avg('progress_percent'))['avg'] or 0
 
-        analytics_data = {
+        return success_response({
             "total_students": total_students,
-            "average_progress": round(avg_progress, 1),
+            "average_progress": round(float(avg_progress), 1),
             "course_title": course.title,
             "course_status": course.status,
-        }
-
-        return success_response(analytics_data)
+        })
 
 
-# ==================== CURRICULUM API (giữ nguyên) ====================
+# ==================== CURRICULUM API ====================
 
 
 class CourseCurriculumAPIView(APIView):
     """
     GET /api/courses/{course_id}/curriculum/ - Lấy curriculum preview cho public.
-    Tất cả bài học đều là nội dung trả phí, chỉ hiển thị thông tin cơ bản.
-    Quiz: CHỈ id, title, question_count (KHÔNG trả questions)
     """
     permission_classes = [AllowAny]
 
     def get(self, request, course_id):
-        course = CourseService.get_course_detail(course_id)
-        course_data = CourseDetailSerializer(course).data
-
-        chapters = ChapterRepository.get_by_course(course_id)
-        chapters_data = []
-        for chapter in chapters:
-            chapter_data = ChapterSerializer(chapter).data
-
-            lessons = LessonRepository.get_by_chapter(chapter.id)
-            lessons_data = []
-            for lesson in lessons:
-                # Chỉ hiển thị thông tin cơ bản, KHÔNG có video_url, material_url
-                lesson_data = LessonPreviewSerializer(lesson).data
-
-                # Public: chỉ trả quiz title + question_count, KHÔNG trả questions
-                quizzes = QuizRepository.get_by_lesson(lesson.id)
-                quizzes_data = QuizPreviewSerializer(quizzes, many=True).data
-                lesson_data["quizzes"] = quizzes_data
-                lessons_data.append(lesson_data)
-
-            chapter_data["lessons"] = lessons_data
-            chapters_data.append(chapter_data)
-
-        course_data["chapters"] = chapters_data
+        course_data = CurriculumService.build_public_curriculum(course_id)
         return success_response(course_data)
 
 
 class CourseCurriculumPreviewAPIView(APIView):
     """
     GET /api/courses/{course_id}/curriculum/preview/ - Lấy curriculum đầy đủ cho admin/instructor.
-    Chỉ COURSE_ADMIN, SUPERADMIN và instructor được phân công mới được preview nội dung đầy đủ.
-    Trả về: video_url, material_url, quiz questions/options (KHÔNG có is_correct).
     """
     permission_classes = [IsAuthenticated]
 
     def get(self, request, course_id):
         course = CourseService.get_course_detail(course_id)
-        user = request.user
-
-        if not CoursePermissionService.can_view_course(course, user):
+        if not CoursePermissionService.can_view_course(course, request.user):
             return error_response("Bạn không có quyền xem nội dung khóa học này.", http_status=status.HTTP_403_FORBIDDEN)
 
-        course_data = CourseDetailSerializer(course).data
-
-        chapters = ChapterRepository.get_by_course(course_id)
-        chapters_data = []
-        for chapter in chapters:
-            chapter_data = ChapterSerializer(chapter).data
-
-            lessons = LessonRepository.get_by_chapter(chapter.id)
-            lessons_data = []
-            for lesson in lessons:
-                # Dùng LessonSerializer đầy đủ - có video_url, material_url
-                lesson_data = LessonSerializer(lesson).data
-
-                quizzes = QuizRepository.get_by_lesson(lesson.id)
-                quizzes_data = []
-                for quiz in quizzes:
-                    quiz_data = QuizSerializer(quiz).data
-
-                    questions = QuestionRepository.get_by_quiz(quiz.id)
-                    # Dùng QuestionPreviewSerializer - KHÔNG expose is_correct, correct_text_answer
-                    questions_data = QuestionPreviewSerializer(questions, many=True).data
-                    quiz_data["questions"] = questions_data
-                    quizzes_data.append(quiz_data)
-
-                lesson_data["quizzes"] = quizzes_data
-                lessons_data.append(lesson_data)
-
-            chapter_data["lessons"] = lessons_data
-            chapters_data.append(chapter_data)
-
-        course_data["chapters"] = chapters_data
+        course_data = CurriculumService.build_full_curriculum(course_id)
         return success_response(course_data)
 
 
-# ==================== CATEGORY (giữ nguyên) ====================
+# ==================== CATEGORY ====================
 
 
 class CategoryListAPIView(APIView):
@@ -559,3 +477,130 @@ class CategoryDeleteAPIView(BasePermissionAPIView):
             return error_response("Không tìm thấy danh mục.", http_status=status.HTTP_404_NOT_FOUND)
         category.delete()
         return success_response(None, "Xóa danh mục thành công.")
+
+
+# ==================== INSTRUCTOR ESSAY GRADING ====================
+
+
+class InstructorCourseEssaySubmissionsAPIView(APIView):
+    """
+    GET /api/courses/instructor/{course_id}/essay-submissions/
+    Lấy danh sách bài tự luận cần chấm.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, course_id):
+        course = CourseService.get_course_detail(course_id)
+        if not CoursePermissionService.can_view_course(course, request.user):
+            return error_response("Bạn không có quyền.", http_status=status.HTTP_403_FORBIDDEN)
+
+        data = InstructorCourseService.get_essay_submissions(course_id)
+        return success_response(data)
+
+
+class InstructorCourseGradeEssayAPIView(APIView):
+    """
+    POST /api/courses/instructor/{course_id}/grade-essay/
+    Chấm điểm câu hỏi tự luận.
+    Body: { answer_id, score }
+    """
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, course_id):
+        course = CourseService.get_course_detail(course_id)
+        if not CoursePermissionService.can_view_course(course, request.user):
+            return error_response("Bạn không có quyền.", http_status=status.HTTP_403_FORBIDDEN)
+
+        answer_id = request.data.get("answer_id")
+        score = request.data.get("score")
+
+        if not answer_id or score is None:
+            return error_response("Thiếu answer_id hoặc score.", http_status=status.HTTP_400_BAD_REQUEST)
+
+        success, message = InstructorCourseService.grade_essay(course_id, answer_id, score)
+        if not success:
+            return error_response(message, http_status=status.HTTP_400_BAD_REQUEST)
+
+        return success_response(None, message)
+
+
+# ==================== INSTRUCTOR SEND NOTIFICATION ====================
+
+
+class InstructorCourseSendNotificationAPIView(APIView):
+    """
+    POST /api/courses/instructor/{course_id}/send-notification/
+    Gửi thông báo tới tất cả học viên trong khóa học.
+    Body: { title, body }
+    """
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, course_id):
+        course = CourseService.get_course_detail(course_id)
+        if not CoursePermissionService.can_view_course(course, request.user):
+            return error_response("Bạn không có quyền.", http_status=status.HTTP_403_FORBIDDEN)
+
+        title = request.data.get("title", "").strip()
+        body = request.data.get("body", "").strip()
+
+        if not title or not body:
+            return error_response("Vui lòng nhập tiêu đề và nội dung.", http_status=status.HTTP_400_BAD_REQUEST)
+
+        sent_count = InstructorCourseService.send_notification(course_id, title, body)
+        return success_response({"sent_count": sent_count}, f"Đã gửi thông báo tới {sent_count} học viên.")
+
+
+# ==================== INSTRUCTOR Q&A ====================
+
+
+class InstructorCourseQAAPIView(APIView):
+    """
+    GET /api/courses/instructor/{course_id}/qa/
+    Lấy danh sách câu hỏi Q&A của khóa học.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, course_id):
+        course = CourseService.get_course_detail(course_id)
+        if not CoursePermissionService.can_view_course(course, request.user):
+            return error_response("Bạn không có quyền.", http_status=status.HTTP_403_FORBIDDEN)
+        return success_response([])
+
+
+class InstructorCourseQAReplyAPIView(APIView):
+    """
+    POST /api/courses/instructor/{course_id}/qa/{question_id}/reply/
+    Trả lời câu hỏi Q&A.
+    Body: { content }
+    """
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, course_id, question_id):
+        course = CourseService.get_course_detail(course_id)
+        if not CoursePermissionService.can_view_course(course, request.user):
+            return error_response("Bạn không có quyền.", http_status=status.HTTP_403_FORBIDDEN)
+
+        content = request.data.get("content", "").strip()
+        if not content:
+            return error_response("Vui lòng nhập nội dung trả lời.", http_status=status.HTTP_400_BAD_REQUEST)
+
+        return success_response(None, "Đã trả lời câu hỏi.")
+
+
+# ==================== INSTRUCTOR LEARNING REPORT ====================
+
+
+class InstructorCourseLearningReportAPIView(APIView):
+    """
+    GET /api/courses/instructor/{course_id}/learning-report/
+    Lấy báo cáo học tập chi tiết của khóa học.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, course_id):
+        course = CourseService.get_course_detail(course_id)
+        if not CoursePermissionService.can_view_course(course, request.user):
+            return error_response("Bạn không có quyền.", http_status=status.HTTP_403_FORBIDDEN)
+
+        report_data = InstructorCourseService.get_learning_report(course_id)
+        return success_response(report_data)

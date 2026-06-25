@@ -14,6 +14,7 @@ class CourseListSerializer(serializers.ModelSerializer):
     thumbnail_url = serializers.SerializerMethodField()
     chapter_count = serializers.SerializerMethodField()
     lesson_count = serializers.SerializerMethodField()
+    student_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Course
@@ -21,7 +22,7 @@ class CourseListSerializer(serializers.ModelSerializer):
             "id", "title", "slug", "description", "thumbnail_url", "price",
             "status", "created_by_name", "created_by_avatar",
             "assigned_instructor_name", "assigned_instructor_avatar",
-            "category", "chapter_count", "lesson_count", "created_at",
+            "category", "chapter_count", "lesson_count", "student_count", "created_at",
         ]
 
     def get_created_by_avatar(self, obj):
@@ -53,6 +54,11 @@ class CourseListSerializer(serializers.ModelSerializer):
         """Đếm số bài học của khóa học."""
         from apps.courses.repositories.course_repository import CourseRepository
         return CourseRepository.count_lessons(obj.id)
+
+    def get_student_count(self, obj):
+        """Đếm số học viên đang active của khóa học."""
+        from apps.courses.repositories.course_repository import CourseRepository
+        return CourseRepository.count_students(obj.id)
 
 
 class CourseDetailSerializer(serializers.ModelSerializer):

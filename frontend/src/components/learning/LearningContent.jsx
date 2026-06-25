@@ -1,14 +1,15 @@
 import React from "react";
 import VideoLesson from "./VideoLesson";
 import DocumentLesson from "./DocumentLesson";
-import QuizLesson from "./QuizLesson";
+import QuizList from "./QuizList";
 
 /**
  * LearningContent - Khu vực hiển thị nội dung bài học chính.
  * Tự động chọn component phù hợp dựa trên content_type.
- * Nếu bài học có quiz, hiển thị quiz bên dưới.
+ * Bài tập (quiz) được hiển thị dưới dạng danh sách với nút "Vào làm"
+ * chuyển đến trang làm bài riêng biệt.
  */
-function LearningContent({ lesson, onSubmitQuiz }) {
+function LearningContent({ lesson }) {
   if (!lesson) {
     return (
       <div className="learning-content-empty">
@@ -25,16 +26,9 @@ function LearningContent({ lesson, onSubmitQuiz }) {
       {lesson.content_type === "VIDEO" && <VideoLesson lesson={lesson} />}
       {lesson.content_type === "DOCUMENT" && <DocumentLesson lesson={lesson} />}
 
-      {/* Render quizzes if any */}
+      {/* Render quizzes as a list with "Vào làm" buttons */}
       {lesson.quizzes?.length > 0 && (
-        <div className="learning-content-quizzes">
-          <div className="learning-content-quizzes-divider">
-            <span>Bài kiểm tra</span>
-          </div>
-          {lesson.quizzes.map((quiz) => (
-            <QuizLesson key={quiz.id} quiz={quiz} onSubmitQuiz={onSubmitQuiz} />
-          ))}
-        </div>
+        <QuizList quizzes={lesson.quizzes} />
       )}
     </div>
   );

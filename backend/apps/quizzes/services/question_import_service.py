@@ -273,7 +273,6 @@ class QuestionImportService:
         """
         try:
             with transaction.atomic():
-                # First, validate all rows
                 all_errors = []
                 valid_rows = []
 
@@ -289,48 +288,38 @@ class QuestionImportService:
                     else:
                         valid_rows.append(row)
 
-                # If there are any errors, rollback (transaction.atomic will handle this)
                 if all_errors:
                     return 0, all_errors
 
-                # Get the max order for existing questions in this quiz
                 max_order = Question.objects.filter(quiz=quiz).aggregate(
                     max_order=models.Max('order')
                 )['max_order'] or 0
 
-                # Calculate points: tổng 10 điểm chia đều cho tất cả câu hỏi
-                # Sử dụng Decimal để tránh mất precision do floating point
+                # Import chỉ hỗ trợ MCQ: tự động chia đều 10 điểm cho tất cả câu hỏi MCQ
                 from decimal import Decimal, ROUND_HALF_UP
                 
-                existing_count = Question.objects.filter(quiz=quiz).count()
+                existing_count = Question.objects.filter(quiz=quiz, question_type=Question.QuestionType.MCQ).count()
                 total_questions = existing_count + len(valid_rows)
                 
                 if total_questions > 0:
-                    # Tính điểm cơ bản cho mỗi câu hỏi (làm tròn xuống 2 chữ số)
                     base_points = Decimal(str(10 / total_questions)).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
-                    # Tính tổng điểm nếu tất cả đều được base_points
                     total_base = base_points * total_questions
-                    # Điều chỉnh chênh lệch để tổng luôn bằng 10
                     diff = Decimal('10') - total_base
-                    # Câu hỏi cuối cùng sẽ nhận thêm phần chênh lệch
                     last_question_extra = diff
                 else:
                     base_points = Decimal('1')
                     last_question_extra = Decimal('0')
 
-                # Update points for existing questions to redistribute evenly
+                # Update points for existing MCQ questions
                 if existing_count > 0:
-                    # Lấy danh sách existing questions để gán điểm
-                    existing_questions = list(Question.objects.filter(quiz=quiz).order_by('order', 'id'))
+                    existing_questions = list(Question.objects.filter(quiz=quiz, question_type=Question.QuestionType.MCQ).order_by('order', 'id'))
                     for i, eq in enumerate(existing_questions):
                         if i == total_questions - 1:
-                            # Câu hỏi cuối cùng (trong tổng số) nhận thêm phần chênh lệch
                             eq.points = base_points + last_question_extra
                         else:
                             eq.points = base_points
                         eq.save()
 
-                # Prepare questions for bulk_create
                 questions_to_create = []
                 for idx, row in enumerate(valid_rows):
                     difficulty = row.get('difficulty', '').strip().upper()
@@ -339,10 +328,8 @@ class QuestionImportService:
 
                     max_order += 1
                     
-                    # Xác định điểm cho câu hỏi này
-                    question_index = existing_count + idx  # Index trong tổng số questions
+                    question_index = existing_count + idx
                     if question_index == total_questions - 1:
-                        # Câu hỏi cuối cùng nhận thêm phần chênh lệch
                         points = base_points + last_question_extra
                     else:
                         points = base_points
@@ -356,10 +343,8 @@ class QuestionImportService:
                         order=max_order,
                     ))
 
-                # Bulk create questions with batch_size
                 created_questions = Question.objects.bulk_create(questions_to_create, batch_size=500)
 
-                # Prepare options for bulk_create
                 options_to_create = []
                 for question, row in zip(created_questions, valid_rows):
                     correct = row.get('correct', '').strip().upper()
@@ -381,18 +366,10 @@ class QuestionImportService:
                             order=order,
                         ))
 
-                # Bulk create options with batch_size
                 QuestionOption.objects.bulk_create(options_to_create, batch_size=500)
 
                 return len(created_questions), []
         except ValueError as e:
-            # Catch validation errors from parsing
             return 0, [{"row": 0, "message": str(e)}]
         except Exception as e:
-            # Catch any unexpected errors (DB constraint, etc.)
             return 0, [{"row": 0, "message": f"Lỗi hệ thống: {str(e)}"}]
-
-    # Template files are stored as static files at:
-    # apps/quizzes/static/quizzes/templates/question_import_template.csv
-    # apps/quizzes/static/quizzes/templates/question_import_template.xlsx
-    # See QuestionImportTemplateAPIView in views.py

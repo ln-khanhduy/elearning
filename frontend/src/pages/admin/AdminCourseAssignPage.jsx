@@ -58,13 +58,11 @@ function AdminCourseAssignPage() {
           setSelectedInstructorId(data.assigned_instructor_id.toString());
         }
       } catch {
-        // No assigned instructor
       }
     };
     loadAssigned();
   }, [courseId]);
 
-  // Filter instructors when search term changes
   useEffect(() => {
     if (!searchTerm.trim()) {
       setFilteredInstructors(instructors);

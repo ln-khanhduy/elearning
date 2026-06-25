@@ -31,3 +31,4 @@ export const updateQuizApi = async (quizId, data) => {
 export const deleteQuizApi = async (quizId) => {
   return request(() => apiClient.delete(`/api/quizzes/quizzes/${quizId}/delete/`));
 };
+

@@ -121,13 +121,28 @@ class LearningService:
                             "options": options_data,
                         })
 
+                    # Lấy kết quả bài làm gần nhất của học viên (nếu có)
+                    latest_attempt = None
+                    if enrollment:
+                        latest_attempt = QuizAttempt.objects.filter(
+                            quiz=quiz,
+                            student=user,
+                            status="GRADED",
+                        ).order_by("-submitted_at").first()
+
                     quiz_list.append({
                         "id": quiz.id,
                         "title": quiz.title,
                         "description": quiz.description,
                         "time_limit_minutes": quiz.time_limit_minutes,
                         "passing_score": float(quiz.passing_score),
+                        "quiz_type": quiz.quiz_type,
                         "questions": questions_data,
+                        "latest_attempt": {
+                            "score": float(latest_attempt.score) if latest_attempt else None,
+                            "max_score": float(sum(float(q.points) for q in questions)) if latest_attempt else None,
+                            "passed": float(latest_attempt.score) >= float(quiz.passing_score) if latest_attempt else None,
+                        } if latest_attempt else None,
                     })
 
                 lesson_data["quizzes"] = quiz_list

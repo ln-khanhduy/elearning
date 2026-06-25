@@ -69,7 +69,7 @@ function InstructorCourseStudentsPage() {
               {students.map((student, index) => (
                 <tr key={student.id || index}>
                   <td>{index + 1}</td>
-                  <td>{student.get_full_name || student.username || student.email || "N/A"}</td>
+                  <td>{student.name || student.email || "N/A"}</td>
                   <td>{student.email || "N/A"}</td>
                   <td>
                     {student.enrolled_at

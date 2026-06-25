@@ -1053,3 +1053,137 @@
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+/* ===== INSTRUCTOR COURSE DETAIL TABS ===== */
+.nav-tabs-instructor {
+  border-bottom: 2px solid #e9ecef;
+  gap: 2px;
+}
+
+.nav-tabs-instructor .nav-link {
+  border: none;
+  color: #6c757d;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 10px 16px;
+  border-radius: 8px 8px 0 0;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.nav-tabs-instructor .nav-link:hover {
+  color: #0d6efd;
+  background: #f0f4ff;
+}
+
+.nav-tabs-instructor .nav-link.active {
+  color: #0d6efd;
+  background: #fff;
+  border-bottom: 2px solid #0d6efd;
+  margin-bottom: -2px;
+}
+
+.tab-content-instructor {
+  background: #fff;
+  border: 1px solid #e9ecef;
+  border-radius: 0 8px 8px 8px;
+  padding: 20px;
+  min-height: 300px;
+}
+
+/* Course Content Tab - Flat List (no accordion) */
+.curriculum-flat-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.chapter-block {
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.chapter-block-header {
+  display: flex;
+  align-items: center;
+  padding: 10px 14px;
+  background: #f8f9fa;
+  border-bottom: 1px solid #e9ecef;
+  font-size: 14px;
+  color: #1a1a2e;
+}
+
+.chapter-block-body {
+  padding: 8px 0;
+}
+
+.lesson-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.lesson-item {
+  display: flex;
+  align-items: center;
+  padding: 8px 14px;
+  font-size: 13px;
+  color: #495057;
+  transition: background 0.15s;
+}
+
+.lesson-item:hover {
+  background: #f8faff;
+}
+
+.lesson-item + .lesson-item {
+  border-top: 1px solid #f0f0f0;
+}
+
+.lesson-title {
+  flex: 1;
+}
+
+/* Student Progress Tab */
+.student-progress-tab .table th {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.student-progress-tab .table td {
+  font-size: 13px;
+  vertical-align: middle;
+}
+
+/* Essay Grading Tab */
+.essay-grading-tab .card {
+  border-radius: 8px;
+}
+
+.essay-grading-tab .card-body {
+  padding: 16px;
+}
+
+/* Send Notification Tab */
+.send-notification-tab .card {
+  border-radius: 8px;
+  max-width: 600px;
+}
+
+/* QA Tab */
+.qa-tab .card {
+  border-radius: 8px;
+}
+
+/* Learning Report Tab */
+.learning-report-tab .card {
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.learning-report-tab .card h3 {
+  font-size: 28px;
+  font-weight: 700;
+}

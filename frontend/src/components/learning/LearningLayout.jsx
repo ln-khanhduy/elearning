@@ -21,7 +21,6 @@ function LearningLayout({
   onPrev,
   onNext,
   onMarkComplete,
-  onSubmitQuiz,
   onCompleteCourse,
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -60,7 +59,7 @@ function LearningLayout({
       />
 
       <main className="learning-main">
-        <LearningContent lesson={currentLesson} onSubmitQuiz={onSubmitQuiz} />
+        <LearningContent lesson={currentLesson} />
 
         {currentLesson && (
           <LearningNavigation

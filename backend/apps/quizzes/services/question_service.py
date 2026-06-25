@@ -24,22 +24,28 @@ class QuestionService:
         if not CoursePermissionService.can_manage_course(quiz.lesson.chapter.course, user):
             raise PermissionDenied("Bạn không có quyền thao tác với khóa học này.")
 
-        # Auto-calculate points: tổng 10 điểm chia đều cho tất cả câu hỏi
-        existing_count = QuestionRepository.get_question_count_by_quiz(quiz_id)
-        total_questions = existing_count + 1
-        points_per_question = round(10 / total_questions, 2) if total_questions > 0 else 1
-
-        # Update points for existing questions
-        if existing_count > 0:
-            from apps.quizzes.models import Question
-            Question.objects.filter(quiz_id=quiz_id).update(points=points_per_question)
-
-        validated_data["points"] = points_per_question
-
         question_type = validated_data.get("question_type")
         options_data = validated_data.pop("options", [])
 
         validated_data["quiz"] = quiz
+
+        # Auto-calculate points cho MCQ và FILL_BLANK, ESSAY dùng điểm do người dùng nhập
+        if question_type in ("MCQ", "FILL_BLANK"):
+            existing_count = QuestionRepository.get_question_count_by_quiz_and_type(quiz_id, question_type)
+            total_questions = existing_count + 1
+            points_per_question = round(10 / total_questions, 2) if total_questions > 0 else 1
+
+            # Update points for existing questions cùng loại
+            if existing_count > 0:
+                from apps.quizzes.models import Question
+                Question.objects.filter(quiz_id=quiz_id, question_type=question_type).update(points=points_per_question)
+
+            validated_data["points"] = points_per_question
+        else:
+            # ESSAY: dùng points do người dùng nhập
+            if "points" not in validated_data or validated_data["points"] is None:
+                validated_data["points"] = 1
+
         question = QuestionRepository.create(validated_data)
 
         if question_type == "MCQ":
@@ -112,11 +118,14 @@ class QuestionService:
         if not CoursePermissionService.can_manage_course(question.quiz.lesson.chapter.course, user):
             raise PermissionDenied("Bạn không có quyền thao tác với khóa học này.")
 
+        question_type = question.question_type
+
         QuestionRepository.delete(question_id)
 
-        # Recalculate points for remaining questions
-        remaining_count = QuestionRepository.get_question_count_by_quiz(quiz_id)
-        if remaining_count > 0:
-            from apps.quizzes.models import Question
-            points_per_question = round(10 / remaining_count, 2)
-            Question.objects.filter(quiz_id=quiz_id).update(points=points_per_question)
+        # Nếu là MCQ hoặc FILL_BLANK, chia lại 10 điểm cho các câu hỏi cùng loại còn lại
+        if question_type in ("MCQ", "FILL_BLANK"):
+            remaining_count = QuestionRepository.get_question_count_by_quiz_and_type(quiz_id, question_type)
+            if remaining_count > 0:
+                from apps.quizzes.models import Question
+                points_per_question = round(10 / remaining_count, 2)
+                Question.objects.filter(quiz_id=quiz_id, question_type=question_type).update(points=points_per_question)

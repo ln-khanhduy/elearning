@@ -75,9 +75,6 @@ function QuizLesson({ quiz, onSubmitQuiz }) {
             <span className="quiz-result-score-divider">/</span>
             <span className="quiz-result-score-max">{result.max_score}</span>
           </div>
-          <p className="quiz-result-passing">
-            Điểm đạt: {result.passing_score}
-          </p>
           <button
             className="quiz-result-retry"
             onClick={() => {
@@ -102,15 +99,13 @@ function QuizLesson({ quiz, onSubmitQuiz }) {
           <span>
             <i className="bi bi-clock"></i> {quiz.time_limit_minutes || "Không giới hạn"} phút
           </span>
-          <span>
-            <i className="bi bi-check-circle"></i> Đạt {quiz.passing_score} điểm
-          </span>
-          <span>
-            <i className="bi bi-question-circle"></i> {quiz.questions?.length || 0} câu hỏi
-          </span>
+          {quiz.quiz_type === "MCQ" && (
+            <span>
+              <i className="bi bi-question-circle"></i> {quiz.questions?.length || 0} câu hỏi
+            </span>
+          )}
         </div>
       </div>
-
       <div className="quiz-lesson-questions">
         {quiz.questions?.map((question, index) => (
           <div key={question.id} className="quiz-question">

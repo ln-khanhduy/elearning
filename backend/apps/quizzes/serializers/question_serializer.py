@@ -3,26 +3,11 @@ from apps.quizzes.models import Question, QuestionOption
 
 
 class QuestionOptionSerializer(serializers.ModelSerializer):
-    """Serializer cho đáp án của câu hỏi MCQ."""
+    """Serializer cho đáp án của câu hỏi MCQ - có is_correct (dùng cho admin)."""
 
     class Meta:
         model = QuestionOption
         fields = ["id", "text", "is_correct", "order"]
-        read_only_fields = ["id"]
-
-
-class QuestionPreviewSerializer(serializers.ModelSerializer):
-    """
-    Serializer cho preview câu hỏi - CHỈ trả về thông tin cơ bản.
-    KHÔNG expose is_correct, correct_text_answer.
-    Dùng cho public API (CourseCurriculumAPIView).
-    """
-
-    class Meta:
-        model = Question
-        fields = [
-            "id", "prompt", "points", "order", "question_type",
-        ]
         read_only_fields = ["id"]
 
 

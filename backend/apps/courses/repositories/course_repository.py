@@ -71,3 +71,9 @@ class CourseRepository:
         """Đếm số lesson của một khóa học."""
         from apps.lessons.models import Lesson
         return Lesson.objects.filter(chapter__course_id=course_id).count()
+
+    @staticmethod
+    def count_students(course_id):
+        """Đếm số học viên đang active của một khóa học."""
+        from apps.enrollments.models import Enrollment
+        return Enrollment.objects.filter(course_id=course_id, status=Enrollment.Status.ACTIVE).count()

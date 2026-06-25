@@ -18,7 +18,7 @@ function InstructorCoursesPage() {
     try {
       setLoading(true);
       const data = await getInstructorCourses({});
-      setCourses(data?.data?.items || data || []);
+      setCourses(data?.data || []);
     } catch (error) {
       toast.error("Không thể tải danh sách khóa học.");
     } finally {
