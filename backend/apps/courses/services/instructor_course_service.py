@@ -28,6 +28,11 @@ class InstructorCourseService:
 
         data = []
         for ans in answers:
+            # Với câu hỏi tự luận, max_score mặc định là 10
+            # (question.points thường là 1 - default - không phù hợp cho tự luận)
+            question_points = float(ans.question.points) if ans.question.points else 10
+            max_score = max(question_points, 10)
+
             data.append({
                 "answer_id": ans.id,
                 "student_name": ans.attempt.student.get_full_name() or ans.attempt.student.email,
@@ -35,7 +40,7 @@ class InstructorCourseService:
                 "question_prompt": ans.question.prompt,
                 "answer_text": ans.answer_text or "",
                 "score": float(ans.score) if ans.score else 0,
-                "max_score": float(ans.question.points) if ans.question.points else 10,
+                "max_score": max_score,
                 "status": ans.status,
                 "submitted_at": ans.attempt.started_at,
             })
@@ -59,7 +64,10 @@ class InstructorCourseService:
         except QuizAttemptAnswer.DoesNotExist:
             return False, "Không tìm thấy câu trả lời."
 
-        max_score = float(answer.question.points or 10)
+        # Với câu hỏi tự luận, max_score mặc định là 10
+        # (question.points thường là 1 - default - không phù hợp cho tự luận)
+        question_points = float(answer.question.points) if answer.question.points else 10
+        max_score = max(question_points, 10)
         score = float(score)
         if score < 0 or score > max_score:
             return False, f"Điểm phải từ 0 đến {max_score}."
@@ -69,6 +77,24 @@ class InstructorCourseService:
         answer.status = QuizAttemptAnswer.Status.GRADED
         answer.graded_at = timezone.now()
         answer.save()
+
+        # Cập nhật điểm tổng của attempt
+        attempt = answer.attempt
+        total_score = sum(
+            float(a.score) for a in attempt.answers.all()
+        )
+        attempt.score = total_score
+
+        # Kiểm tra nếu tất cả câu hỏi trong attempt đã được chấm
+        all_graded = not attempt.answers.filter(
+            question__question_type=Question.QuestionType.ESSAY,
+            status=QuizAttemptAnswer.Status.SUBMITTED,
+        ).exists()
+        if all_graded:
+            attempt.status = QuizAttempt.Status.GRADED
+            attempt.graded_at = timezone.now()
+
+        attempt.save()
 
         return True, "Chấm điểm thành công."
 

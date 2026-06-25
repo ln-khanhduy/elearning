@@ -2,6 +2,32 @@ import React, { useState, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { submitQuizApi } from "../../api/learningAPI";
+import "../../style/learning/quiz-taking.css";
+
+/**
+ * Parse prompt để tìm các placeholder {{...}} và render input fields.
+ * Trả về mảng các phần: text thường và placeholder.
+ */
+function parseFillBlankPrompt(prompt) {
+  const parts = [];
+  let lastIndex = 0;
+  const regex = /\{\{(.+?)\}\}/g;
+  let match;
+  while ((match = regex.exec(prompt)) !== null) {
+    // Text trước placeholder
+    if (match.index > lastIndex) {
+      parts.push({ type: "text", value: prompt.slice(lastIndex, match.index) });
+    }
+    // Placeholder
+    parts.push({ type: "blank", value: match[1], index: parts.length });
+    lastIndex = regex.lastIndex;
+  }
+  // Text còn lại sau placeholder cuối cùng
+  if (lastIndex < prompt.length) {
+    parts.push({ type: "text", value: prompt.slice(lastIndex) });
+  }
+  return parts;
+}
 
 /**
  * QuizList - Hiển thị danh sách bài tập của bài học.
@@ -17,6 +43,20 @@ function QuizList({ quizzes }) {
   const handleStartQuiz = (quizId) => {
     setActiveQuizId(quizId);
     setAnswers({});
+    // Nếu quiz đã có attempt trước đó, hiển thị kết quả luôn
+    const quiz = quizzes.find(q => q.id === quizId);
+    if (quiz?.latest_attempt) {
+      const attempt = quiz.latest_attempt;
+      setResults((prev) => ({
+        ...prev,
+        [quizId]: {
+          score: attempt.score,
+          max_score: attempt.max_score,
+          passed: attempt.passed,
+          status: attempt.status,
+        },
+      }));
+    }
   };
 
   const handleSelectOption = useCallback((questionId, optionId) => {
@@ -27,8 +67,28 @@ function QuizList({ quizzes }) {
     setAnswers((prev) => ({ ...prev, [questionId]: { answer_text: text } }));
   }, []);
 
+  // Xử lý FILL_BLANK: lưu từng blank riêng, key là "blank_{questionId}_{blankIndex}"
+  const handleFillBlankInput = useCallback((questionId, blankIndex, value) => {
+    setAnswers((prev) => {
+      const current = prev[questionId] || {};
+      const blanks = current.blanks || {};
+      return { ...prev, [questionId]: { ...current, blanks: { ...blanks, [blankIndex]: value } } };
+    });
+  }, []);
+
   const handleSubmit = useCallback(async (quiz) => {
-    const unanswered = quiz.questions.filter((q) => !answers[q.id]);
+    // Kiểm tra unanswered cho MCQ/ESSAY
+    const unanswered = quiz.questions.filter((q) => {
+      if (q.question_type === "FILL_BLANK") {
+        // FILL_BLANK: kiểm tra tất cả blanks đã được điền
+        const ans = answers[q.id];
+        if (!ans || !ans.blanks) return true;
+        const parts = parseFillBlankPrompt(q.prompt);
+        const blankParts = parts.filter((p) => p.type === "blank");
+        return blankParts.some((bp) => !ans.blanks[bp.index] || !ans.blanks[bp.index].trim());
+      }
+      return !answers[q.id];
+    });
     if (unanswered.length > 0) {
       toast.warning(`Vui lòng trả lời tất cả câu hỏi (còn ${unanswered.length} câu).`);
       return;
@@ -38,21 +98,34 @@ function QuizList({ quizzes }) {
     try {
       const formattedAnswers = quiz.questions.map((q) => {
         const ans = answers[q.id] || {};
+        let answerText = ans.answer_text || null;
+        // FILL_BLANK: combine các blank answers thành một string, phân cách bằng |
+        if (q.question_type === "FILL_BLANK" && ans.blanks) {
+          const parts = parseFillBlankPrompt(q.prompt);
+          const blankParts = parts.filter((p) => p.type === "blank");
+          answerText = blankParts.map((bp) => ans.blanks[bp.index] || "").join("|");
+        }
         return {
           question_id: q.id,
           selected_option_id: ans.selected_option_id || null,
-          answer_text: ans.answer_text || null,
+          answer_text: answerText,
         };
       });
 
       const res = await submitQuizApi(courseId, quiz.id, formattedAnswers);
       if (res?.success && res?.data) {
         setResults((prev) => ({ ...prev, [quiz.id]: res.data }));
-        toast.success(
-          res.data.passed
-            ? "Chúc mừng! Bạn đã vượt qua bài kiểm tra."
-            : "Bạn chưa đạt yêu cầu. Hãy thử lại!"
-        );
+
+        // ESSAY quiz: không hiển thị điểm ngay, chờ giảng viên chấm
+        if (res.data.status === "SUBMITTED") {
+          toast.success("Đã gửi bài tự luận thành công. Vui lòng chờ giảng viên chấm điểm.");
+        } else {
+          toast.success(
+            res.data.passed
+              ? "Chúc mừng! Bạn đã vượt qua bài kiểm tra."
+              : "Bạn chưa đạt yêu cầu. Hãy thử lại!"
+          );
+        }
       }
     } catch (err) {
       toast.error(err.message || "Có lỗi xảy ra khi nộp bài.");
@@ -68,6 +141,10 @@ function QuizList({ quizzes }) {
       return next;
     });
     setAnswers({});
+  };
+
+  const isEssayQuiz = (quiz) => {
+    return quiz?.quiz_type === "ESSAY" || quiz?.questions?.some(q => q.question_type === "ESSAY");
   };
 
   const handleBack = () => {
@@ -92,8 +169,8 @@ function QuizList({ quizzes }) {
             // Đang làm bài tập này
             if (activeQuizId === quiz.id) {
               return (
-                <div key={quiz.id} className="quiz-taking-inline">
-                  <div className="quiz-taking-inline-header">
+                <div key={quiz.id} className="quiz-taking-view">
+                  <div className="quiz-taking-header">
                     <button className="quiz-back-btn" onClick={handleBack}>
                       <i className="bi bi-arrow-left"></i> Quay lại danh sách
                     </button>
@@ -107,7 +184,21 @@ function QuizList({ quizzes }) {
                   </div>
 
                   {/* Kết quả */}
-                  {result && (
+                  {result && result.status === "SUBMITTED" && (
+                    <div className="quiz-result quiz-result--submitted">
+                      <div className="quiz-result-icon">
+                        <i className="bi bi-send-check"></i>
+                      </div>
+                      <h3>Đã gửi bài</h3>
+                      <p className="quiz-result-waiting">
+                        Bài tự luận đã được gửi đến giảng viên để chấm điểm.
+                        Vui lòng quay lại sau để xem kết quả.
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Kết quả đã chấm (MCQ, FILL_BLANK, hoặc ESSAY đã được giảng viên chấm) */}
+                  {result && result.status !== "SUBMITTED" && (
                     <div className={`quiz-result ${result.passed ? "quiz-result--passed" : "quiz-result--failed"}`}>
                       <div className="quiz-result-icon">
                         <i className={`bi ${result.passed ? "bi-check-circle-fill" : "bi-x-circle-fill"}`}></i>
@@ -115,12 +206,13 @@ function QuizList({ quizzes }) {
                       <h3>{result.passed ? "Đạt yêu cầu" : "Chưa đạt"}</h3>
                       <div className="quiz-result-score">
                         <span className="quiz-result-score-value">{result.score}</span>
-                        <span className="quiz-result-score-divider">/</span>
-                        <span className="quiz-result-score-max">{result.max_score}</span>
+                        <span className="quiz-result-score-unit">điểm</span>
                       </div>
-                      <button className="quiz-result-retry" onClick={() => handleRetry(quiz.id)}>
-                        <i className="bi bi-arrow-counterclockwise"></i> Làm lại
-                      </button>
+                      {!isEssayQuiz(quiz) && (
+                        <button className="quiz-result-retry" onClick={() => handleRetry(quiz.id)}>
+                          <i className="bi bi-arrow-counterclockwise"></i> Làm lại
+                        </button>
+                      )}
                     </div>
                   )}
 
@@ -134,7 +226,9 @@ function QuizList({ quizzes }) {
                               <span className="quiz-question-number">Câu {index + 1}</span>
                               <span className="quiz-question-points">{question.points} điểm</span>
                             </div>
-                            <p className="quiz-question-prompt">{question.prompt}</p>
+                            {question.question_type !== "FILL_BLANK" && (
+                              <p className="quiz-question-prompt">{question.prompt}</p>
+                            )}
 
                             {question.question_type === "MCQ" && (
                               <div className="quiz-question-options">
@@ -148,8 +242,27 @@ function QuizList({ quizzes }) {
                             )}
 
                             {question.question_type === "FILL_BLANK" && (
-                              <div className="quiz-question-input">
-                                <input type="text" className="quiz-input" placeholder="Nhập câu trả lời..." value={answers[question.id]?.answer_text || ""} onChange={(e) => handleTextAnswer(question.id, e.target.value)} />
+                              <div className="quiz-question-fill-blank">
+                                {(() => {
+                                  const parts = parseFillBlankPrompt(question.prompt);
+                                  const ans = answers[question.id] || {};
+                                  const blanks = ans.blanks || {};
+                                  return parts.map((part, pIdx) => {
+                                    if (part.type === "text") {
+                                      return <span key={pIdx} className="quiz-fill-text">{part.value}</span>;
+                                    }
+                                    return (
+                                      <input
+                                        key={pIdx}
+                                        type="text"
+                                        className="quiz-fill-input"
+                                        placeholder="..."
+                                        value={blanks[part.index] || ""}
+                                        onChange={(e) => handleFillBlankInput(question.id, part.index, e.target.value)}
+                                      />
+                                    );
+                                  });
+                                })()}
                               </div>
                             )}
 
@@ -180,6 +293,7 @@ function QuizList({ quizzes }) {
 
             // Danh sách quiz
             const attempt = quiz.latest_attempt;
+            const isEssaySubmitted = attempt?.status === "SUBMITTED";
             return (
               <div key={quiz.id} className="quiz-list-item">
                 <div className="quiz-list-item-info">
@@ -191,16 +305,21 @@ function QuizList({ quizzes }) {
                     <div className="quiz-list-item-meta">
                       {quiz.quiz_type === "MCQ" && <span><i className="bi bi-question-circle"></i> {quiz.questions?.length || 0} câu</span>}
                       <span><i className="bi bi-tag"></i> {quiz.quiz_type === "MCQ" ? "Trắc nghiệm" : quiz.quiz_type === "ESSAY" ? "Tự luận" : "Điền khuyết"}</span>
-                      {attempt && (
+                      {attempt && attempt.status === "GRADED" && (
                         <span className={`quiz-list-item-score ${attempt.passed ? "text-success" : "text-danger"}`}>
-                          <i className="bi bi-check-circle-fill"></i> {attempt.score}/{attempt.max_score}
+                          <i className={`bi ${attempt.passed ? "bi-check-circle-fill" : "bi-x-circle-fill"}`}></i> {attempt.score} điểm
+                        </span>
+                      )}
+                      {isEssaySubmitted && (
+                        <span className="quiz-list-item-score text-muted">
+                          <i className="bi bi-hourglass-split"></i> Đã nộp, chờ chấm
                         </span>
                       )}
                     </div>
                   </div>
                 </div>
                 <button className="quiz-start-btn" onClick={() => handleStartQuiz(quiz.id)}>
-                  {attempt ? "Làm lại" : "Vào làm"} <i className="bi bi-arrow-right"></i>
+                  {attempt && attempt.status === "GRADED" && !isEssayQuiz(quiz) ? "Làm lại" : (attempt && (attempt.status === "GRADED" || isEssaySubmitted)) ? "Xem lại" : "Vào làm"} <i className="bi bi-arrow-right"></i>
                 </button>
               </div>
             );

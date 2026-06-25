@@ -34,6 +34,9 @@ import {
   createQuiz,
   updateQuiz,
   deleteQuiz,
+  createQuestion,
+  updateQuestion,
+  getQuestions,
 } from "../../services/curriculumService";
 
 import "../../style/course-wizard.css";
@@ -448,7 +451,12 @@ export default function CourseBuilderPage({ mode = "create" }) {
         if (payload.question_type && !payload.quiz_type) {
           payload.quiz_type = payload.question_type;
         }
+        // Lưu prompt và correct_text_answer riêng để tạo Question sau (cho ESSAY/FILL_BLANK)
+        const prompt = payload.prompt || "";
+        const correctTextAnswer = payload.correct_text_answer || "";
         delete payload.question_type;
+        delete payload.prompt;
+        delete payload.correct_text_answer;
         delete payload.section_id;
         delete payload.lesson_id;
         delete payload.id;
@@ -459,13 +467,35 @@ export default function CourseBuilderPage({ mode = "create" }) {
           // New quiz - create on backend
           const res = await createQuiz(quizData.lesson_id, payload);
           const newQuiz = res?.data || res;
+          const newQuizId = newQuiz?.id;
+
+          // Nếu là ESSAY hoặc FILL_BLANK và có prompt, tạo Question tương ứng
+          if (newQuizId && prompt && (payload.quiz_type === "ESSAY" || payload.quiz_type === "FILL_BLANK")) {
+            try {
+              const questionPayload = {
+                prompt: prompt,
+                points: 10,
+                order: 1,
+                question_type: payload.quiz_type,
+              };
+              // FILL_BLANK cần có correct_text_answer
+              if (payload.quiz_type === "FILL_BLANK" && correctTextAnswer) {
+                questionPayload.correct_text_answer = correctTextAnswer;
+              }
+              await createQuestion(newQuizId, questionPayload);
+            } catch (questionErr) {
+              // Không throw lỗi ở đây - quiz đã được tạo thành công
+              console.error("Không thể tạo câu hỏi cho quiz:", questionErr);
+            }
+          }
+
           setCurriculum((prev) =>
             prev.map((s) =>
               s.id === quizData.section_id
                 ? {
                     ...s,
                     lessons: (s.lessons || []).map((l) =>
-                      l.id === quizData.lesson_id
+                      l.id === (quizData.lesson_id || quizData.lesson)
                         ? {
                             ...l,
                             quizzes: (l.quizzes || []).map((q) =>
@@ -484,13 +514,42 @@ export default function CourseBuilderPage({ mode = "create" }) {
         } else if (quizData.id) {
           // Existing quiz - update on backend
           await updateQuiz(quizData.id, payload);
+
+          // Nếu là ESSAY hoặc FILL_BLANK và có prompt, cập nhật hoặc tạo Question
+          if (prompt && (payload.quiz_type === "ESSAY" || payload.quiz_type === "FILL_BLANK")) {
+            try {
+              // Lấy danh sách questions hiện tại
+              const questionsRes = await getQuestions(quizData.id);
+              const existingQuestions = questionsRes?.data || questionsRes || [];
+              const questionPayload = {
+                prompt: prompt,
+                points: 10,
+                order: 1,
+                question_type: payload.quiz_type,
+              };
+              // FILL_BLANK cần có correct_text_answer
+              if (payload.quiz_type === "FILL_BLANK" && correctTextAnswer) {
+                questionPayload.correct_text_answer = correctTextAnswer;
+              }
+              if (existingQuestions.length > 0) {
+                // Cập nhật question đầu tiên
+                await updateQuestion(existingQuestions[0].id, questionPayload);
+              } else {
+                // Tạo question mới
+                await createQuestion(quizData.id, questionPayload);
+              }
+            } catch (questionErr) {
+              console.error("Không thể cập nhật/tạo câu hỏi cho quiz:", questionErr);
+            }
+          }
+
           setCurriculum((prev) =>
             prev.map((s) =>
               s.id === quizData.section_id
                 ? {
                     ...s,
                     lessons: (s.lessons || []).map((l) =>
-                      l.id === quizData.lesson_id
+                      l.id === (quizData.lesson_id || quizData.lesson)
                         ? {
                             ...l,
                             quizzes: (l.quizzes || []).map((q) =>

@@ -46,7 +46,7 @@ class Question(models.Model):
     quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE, related_name='questions')
     prompt = models.TextField()  # Nội dung câu hỏi
     difficulty = models.CharField(max_length=10, choices=Difficulty.choices, default=Difficulty.EASY)
-    points = models.DecimalField(max_digits=5, decimal_places=2, default=1)  # Điểm tối đa
+    points = models.DecimalField(max_digits=5, decimal_places=2, default=10)  # Điểm tối đa
     order = models.IntegerField(default=0)  # Thứ tự câu hỏi trong quiz
     # Loại câu hỏi
     question_type = models.CharField(max_length=20, choices=QuestionType.choices, default=QuestionType.MCQ)

@@ -12,9 +12,6 @@ function SectionCard({
   onAddQuiz,
   onDeleteLesson,
   onDeleteQuiz,
-  onDragStart,
-  onDragOver,
-  onDrop,
 }) {
   const [expanded, setExpanded] = useState(true);
   const [editingTitle, setEditingTitle] = useState(false);
@@ -76,33 +73,8 @@ function SectionCard({
     }
   }, [handleSaveTitle]);
 
-  const handleDragStart = useCallback(
-    (e) => {
-      e.dataTransfer.setData("text/plain", `section:${section.id}`);
-      onDragStart?.(section.id);
-    },
-    [section.id, onDragStart]
-  );
-
-  const handleDropOnSection = useCallback(
-    (e) => {
-      e.preventDefault();
-      onDrop?.(e, section.id);
-    },
-    [section.id, onDrop]
-  );
-
   return (
-    <div
-      className="cw-section"
-      draggable
-      onDragStart={handleDragStart}
-      onDragOver={(e) => {
-        e.preventDefault();
-        onDragOver?.(section.id);
-      }}
-      onDrop={handleDropOnSection}
-    >
+    <div className="cw-section">
       {/* Section Header */}
       <div className="cw-section-header" onClick={() => setExpanded(!expanded)}>
         <span className="cw-section-drag-handle" onClick={(e) => e.stopPropagation()}>

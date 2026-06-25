@@ -1,4 +1,4 @@
-import { memo, useCallback } from "react";
+import { memo } from "react";
 import SectionCard from "./SectionCard";
 
 function CurriculumSidebar({
@@ -13,9 +13,6 @@ function CurriculumSidebar({
   onAddQuiz,
   onDeleteLesson,
   onDeleteQuiz,
-  onDragStart,
-  onDragOver,
-  onDrop,
 }) {
   const totalLessons = curriculum.reduce(
     (sum, s) => sum + (s.lessons?.length || 0) + (s.quizzes?.length || 0),
@@ -68,9 +65,6 @@ function CurriculumSidebar({
               onAddQuiz={onAddQuiz}
               onDeleteLesson={onDeleteLesson}
               onDeleteQuiz={onDeleteQuiz}
-              onDragStart={onDragStart}
-              onDragOver={onDragOver}
-              onDrop={onDrop}
             />
           ))
         )}

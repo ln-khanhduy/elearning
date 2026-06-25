@@ -240,21 +240,38 @@ function EssayGradingTab({ courseId }) {
   const handleGrade = async (answerId) => {
     try {
       const score = gradingData[answerId];
-      if (score === undefined || score === "") {
-        toast.warning("Vui lòng nhập điểm.");
+      // Tìm submission để lấy max_score thực tế
+      const submission = submissions.find(s => s.answer_id === answerId);
+      const maxScore = submission?.max_score || 10;
+      
+      if (score === undefined || score === "" || score < 0 || score > maxScore) {
+        toast.warning(`Vui lòng nhập điểm hợp lệ (0 đến ${maxScore}).`);
         return;
       }
       const apiClient = (await import("../../api/apiClient")).default;
-      await apiClient.post(`/api/courses/instructor/${courseId}/grade-essay/`, {
+      const res = await apiClient.post(`/api/courses/instructor/${courseId}/grade-essay/`, {
         answer_id: answerId,
         score: parseFloat(score),
       });
-      toast.success("Chấm điểm thành công!");
-      setSubmissions(prev => prev.map(s =>
-        s.answer_id === answerId ? { ...s, status: "GRADED", score: parseFloat(score) } : s
-      ));
+      // Kiểm tra response từ backend
+      if (res.data?.success) {
+        toast.success(res.data?.message || "Chấm điểm thành công!");
+        setSubmissions(prev => prev.map(s =>
+          s.answer_id === answerId ? { ...s, status: "GRADED", score: parseFloat(score) } : s
+        ));
+        // Xóa dữ liệu điểm đã nhập
+        setGradingData(prev => {
+          const newData = { ...prev };
+          delete newData[answerId];
+          return newData;
+        });
+      } else {
+        toast.error(res.data?.message || "Không thể chấm điểm. Vui lòng thử lại.");
+      }
     } catch (error) {
-      toast.error("Không thể chấm điểm. Vui lòng thử lại.");
+      // Hiển thị lỗi chi tiết từ backend nếu có
+      const errorMessage = error.response?.data?.message || error.message || "Không thể chấm điểm. Vui lòng thử lại.";
+      toast.error(errorMessage);
     }
   };
 
@@ -311,7 +328,7 @@ function EssayGradingTab({ courseId }) {
                   />
                   <span className="text-muted small">/ {sub.max_score || 10}</span>
                   <button
-                    className="btn btn-success btn-sm"
+                    className="course-action-btn btn-submit"
                     onClick={() => handleGrade(sub.answer_id)}
                   >
                     <i className="bi bi-check-lg me-1"></i>Chấm điểm

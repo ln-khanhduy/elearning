@@ -11,6 +11,18 @@ function QuizLesson({ quiz, onSubmitQuiz }) {
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState(null);
 
+  // Kiểm tra nếu quiz tự luận đã được nộp trước đó
+  const isEssay = quiz?.quiz_type === "ESSAY" || quiz?.questions?.some(q => q.question_type === "ESSAY");
+  const hasExistingAttempt = quiz?.latest_attempt?.status === "SUBMITTED" || quiz?.latest_attempt?.status === "GRADED";
+
+  // Nếu là essay và đã có attempt trước đó, hiển thị kết quả luôn
+  const initialResult = (isEssay && hasExistingAttempt && quiz?.latest_attempt) ? {
+    score: quiz.latest_attempt.score,
+    max_score: quiz.latest_attempt.max_score,
+    passed: quiz.latest_attempt.passed,
+    status: quiz.latest_attempt.status,
+  } : null;
+
   const handleSelectOption = useCallback((questionId, optionId) => {
     setAnswers((prev) => ({ ...prev, [questionId]: { selected_option_id: optionId } }));
   }, []);
@@ -56,8 +68,9 @@ function QuizLesson({ quiz, onSubmitQuiz }) {
 
   if (!quiz) return null;
 
-  // Nếu đã có kết quả, hiển thị kết quả
-  if (result) {
+  // Nếu đã có kết quả (vừa nộp hoặc đã nộp trước đó), hiển thị kết quả
+  const displayResult = result || initialResult;
+  if (displayResult) {
     return (
       <div className="quiz-lesson">
         <div className="quiz-lesson-header">
@@ -65,26 +78,33 @@ function QuizLesson({ quiz, onSubmitQuiz }) {
           {quiz.description && <p className="quiz-lesson-description">{quiz.description}</p>}
         </div>
 
-        <div className={`quiz-result ${result.passed ? "quiz-result--passed" : "quiz-result--failed"}`}>
+        <div className={`quiz-result ${displayResult.passed ? "quiz-result--passed" : "quiz-result--failed"}`}>
           <div className="quiz-result-icon">
-            <i className={`bi ${result.passed ? "bi-check-circle-fill" : "bi-x-circle-fill"}`}></i>
+            <i className={`bi ${displayResult.passed ? "bi-check-circle-fill" : "bi-x-circle-fill"}`}></i>
           </div>
-          <h3>{result.passed ? "Đạt yêu cầu" : "Chưa đạt"}</h3>
+          <h3>{displayResult.passed ? "Đạt yêu cầu" : "Chưa đạt"}</h3>
           <div className="quiz-result-score">
-            <span className="quiz-result-score-value">{result.score}</span>
+            <span className="quiz-result-score-value">{displayResult.score}</span>
             <span className="quiz-result-score-divider">/</span>
-            <span className="quiz-result-score-max">{result.max_score}</span>
+            <span className="quiz-result-score-max">{displayResult.max_score}</span>
           </div>
-          <button
-            className="quiz-result-retry"
-            onClick={() => {
-              setResult(null);
-              setAnswers({});
-            }}
-          >
-            <i className="bi bi-arrow-counterclockwise"></i>
-            Làm lại
-          </button>
+          {displayResult.status === "SUBMITTED" && (
+            <p className="text-muted" style={{ fontSize: 13, marginTop: 8 }}>
+              <i className="bi bi-hourglass-split"></i> Đang chờ giảng viên chấm điểm
+            </p>
+          )}
+          {!isEssay && (
+            <button
+              className="quiz-result-retry"
+              onClick={() => {
+                setResult(null);
+                setAnswers({});
+              }}
+            >
+              <i className="bi bi-arrow-counterclockwise"></i>
+              Làm lại
+            </button>
+          )}
         </div>
       </div>
     );

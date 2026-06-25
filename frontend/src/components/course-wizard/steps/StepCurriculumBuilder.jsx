@@ -1,4 +1,4 @@
-import { memo, useCallback } from "react";
+import { memo } from "react";
 import CurriculumSidebar from "../curriculum/CurriculumSidebar";
 import LessonEditorPanel from "../curriculum/LessonEditorPanel";
 import QuizEditorPanel from "../curriculum/QuizEditorPanel";
@@ -24,9 +24,6 @@ function StepCurriculumBuilder({
   onDeleteLesson,
   onDeleteQuiz,
   onImportQuestions,
-  onDragStart,
-  onDragOver,
-  onDrop,
 }) {
   const hasSelection = drawerOpen && editingItem;
 
@@ -44,9 +41,6 @@ function StepCurriculumBuilder({
         onAddQuiz={onAddQuiz}
         onDeleteLesson={onDeleteLesson}
         onDeleteQuiz={onDeleteQuiz}
-        onDragStart={onDragStart}
-        onDragOver={onDragOver}
-        onDrop={onDrop}
       />
 
       {/* Right side - Editor Panel */}

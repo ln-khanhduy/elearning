@@ -22,18 +22,23 @@ function QuizEditorPanel({
     passing_score: "",
     question_type: "MCQ",
     prompt: "",
+    correct_text_answer: "",
   });
   const [dirty, setDirty] = useState(false);
 
   useEffect(() => {
     if (quiz) {
+      // Lấy prompt từ question đầu tiên (cho ESSAY/FILL_BLANK)
+      const firstQuestion = quiz.questions?.[0];
+      const promptValue = quiz.prompt || firstQuestion?.prompt || "";
       setForm({
         title: quiz.title || "",
         description: quiz.description || "",
         time_limit_minutes: quiz.time_limit_minutes || "",
         passing_score: quiz.passing_score || "",
         question_type: quiz.quiz_type || quiz.question_type || "MCQ",
-        prompt: quiz.prompt || "",
+        prompt: promptValue,
+        correct_text_answer: firstQuestion?.correct_text_answer || "",
       });
       setDirty(false);
     }
@@ -64,7 +69,7 @@ function QuizEditorPanel({
       return;
     }
 
-    onSave?.({ ...form, id: quiz?.id, section_id: sectionId, lesson_id: quiz?.lesson_id });
+    onSave?.({ ...form, id: quiz?.id, section_id: sectionId, lesson_id: quiz?.lesson_id || quiz?.lesson });
     setDirty(false);
   }, [form, quiz, sectionId, onSave]);
 
@@ -114,6 +119,7 @@ function QuizEditorPanel({
             value={form.title}
             onChange={handleChange}
             placeholder="VD: Bài tập về biến và kiểu dữ liệu"
+            
           />
         </div>
 
@@ -153,7 +159,7 @@ function QuizEditorPanel({
         <div className="cw-form-group">
           <label className="cw-form-label">
             <span className="cw-form-label-text">
-              Điểm tối đa <span className="text-danger">*</span>
+              Điểm đạt <span className="text-danger">*</span>
             </span>
           </label>
           <input
@@ -164,6 +170,7 @@ function QuizEditorPanel({
             onChange={handleChange}
             placeholder="VD: 10"
             min="1"
+            max="10"
             required
           />
           <p className="cw-form-help-text">
@@ -192,27 +199,46 @@ function QuizEditorPanel({
 
         {/* FILL_BLANK: textarea nhập câu hỏi */}
         {isFillBlank && (
-          <div className="cw-form-group">
-            <label className="cw-form-label">
-              <span className="cw-form-label-text">
-                Nội dung câu hỏi <span className="text-danger">*</span>
-              </span>
-            </label>
-            <textarea
-              name="prompt"
-              className="cw-textarea"
-              value={form.prompt}
-              onChange={handleChange}
-              rows={5}
-              placeholder='VD: Python là {{ngôn ngữ lập trình}} được phát triển bởi {{Guido van Rossum}}.'
-            />
-            <p className="cw-form-help-text">
-              Dùng <code>{`{{đáp án}}`}</code> để tạo chỗ trống. Nhiều đáp án: <code>{`{{đáp án 1|đáp án 2}}`}</code>
-            </p>
-          </div>
+          <>
+            <div className="cw-form-group">
+              <label className="cw-form-label">
+                <span className="cw-form-label-text">
+                  Nội dung câu hỏi <span className="text-danger">*</span>
+                </span>
+              </label>
+              <textarea
+                name="prompt"
+                className="cw-textarea"
+                value={form.prompt}
+                onChange={handleChange}
+                rows={5}
+                placeholder='VD: Python là {{ngôn ngữ lập trình}} được phát triển bởi {{Guido van Rossum}}.'
+              />
+              <p className="cw-form-help-text">
+                Dùng <code>{`{{đáp án}}`}</code> để tạo chỗ trống. Nhiều đáp án: <code>{`{{đáp án 1|đáp án 2}}`}</code>
+              </p>
+            </div>
+            <div className="cw-form-group">
+              <label className="cw-form-label">
+                <span className="cw-form-label-text">
+                  Đáp án đúng <span className="text-danger">*</span>
+                </span>
+              </label>
+              <input
+                type="text"
+                name="correct_text_answer"
+                className="cw-input"
+                value={form.correct_text_answer}
+                onChange={handleChange}
+                placeholder="VD: ngôn ngữ lập trình"
+              />
+              <p className="cw-form-help-text">
+                Nhập đáp án đúng cho câu hỏi điền khuyết.
+              </p>
+            </div>
+          </>
         )}
 
-        {/* Import questions section - only show for MCQ quizzes that have been saved (real ID, not temp) */}
         {isMCQ && quiz?.id && !String(quiz.id).startsWith("temp_") && (
           <div className="cw-form-group" style={{ marginTop: 24, paddingTop: 24, borderTop: "1px solid var(--cw-border)" }}>
             <label className="cw-form-label">

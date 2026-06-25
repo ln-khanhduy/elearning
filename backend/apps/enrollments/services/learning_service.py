@@ -127,7 +127,7 @@ class LearningService:
                         latest_attempt = QuizAttempt.objects.filter(
                             quiz=quiz,
                             student=user,
-                            status="GRADED",
+                            status__in=["SUBMITTED", "GRADED"],
                         ).order_by("-submitted_at").first()
 
                     quiz_list.append({
@@ -142,6 +142,7 @@ class LearningService:
                             "score": float(latest_attempt.score) if latest_attempt else None,
                             "max_score": float(sum(float(q.points) for q in questions)) if latest_attempt else None,
                             "passed": float(latest_attempt.score) >= float(quiz.passing_score) if latest_attempt else None,
+                            "status": latest_attempt.status if latest_attempt else None,
                         } if latest_attempt else None,
                     })
 
@@ -423,6 +424,17 @@ class LearningService:
         if not quiz:
             raise NotFound("Không tìm thấy bài kiểm tra.")
 
+        # Kiểm tra nếu quiz có câu hỏi tự luận (ESSAY) - chỉ được làm 1 lần
+        has_essay = quiz.questions.filter(question_type="ESSAY").exists()
+        if has_essay:
+            existing_attempt = QuizAttempt.objects.filter(
+                quiz=quiz,
+                student=user,
+                status__in=["SUBMITTED", "GRADED"],
+            ).exists()
+            if existing_attempt:
+                raise ValidationError("Bài tập tự luận chỉ được làm 1 lần.")
+
         with transaction.atomic():
             attempt = QuizAttempt.objects.create(
                 student=user,
@@ -495,8 +507,15 @@ class LearningService:
 
             # Cập nhật điểm
             attempt.score = total_score
-            attempt.status = "GRADED"
-            attempt.graded_at = timezone.now()
+
+            # Nếu quiz có câu hỏi ESSAY, giữ trạng thái SUBMITTED (chờ giảng viên chấm)
+            has_essay = quiz.questions.filter(question_type="ESSAY").exists()
+            if has_essay:
+                attempt.status = "SUBMITTED"
+            else:
+                attempt.status = "GRADED"
+                attempt.graded_at = timezone.now()
+
             attempt.save()
 
         return {
@@ -506,4 +525,5 @@ class LearningService:
             "passed": total_score >= float(quiz.passing_score),
             "passing_score": float(quiz.passing_score),
             "results": results,
+            "status": attempt.status,
         }

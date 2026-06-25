@@ -20,7 +20,8 @@ class CurriculumService:
     @staticmethod
     def build_question_data(questions):
         """
-        Build data câu hỏi - KHÔNG expose is_correct, correct_text_answer.
+        Build data câu hỏi - KHÔNG expose is_correct.
+        Chỉ expose correct_text_answer cho FILL_BLANK (cần cho instructor panel).
         """
         questions_data = []
         for q in questions:
@@ -29,14 +30,18 @@ class CurriculumService:
                 {"id": opt.id, "text": opt.text, "order": opt.order}
                 for opt in options
             ]
-            questions_data.append({
+            question_data = {
                 "id": q.id,
                 "prompt": q.prompt,
                 "points": float(q.points),
                 "order": q.order,
                 "question_type": q.question_type,
                 "options": options_data,
-            })
+            }
+            # Chỉ expose correct_text_answer cho FILL_BLANK (cần cho instructor panel)
+            if q.question_type == "FILL_BLANK":
+                question_data["correct_text_answer"] = q.correct_text_answer or ""
+            questions_data.append(question_data)
         return questions_data
 
     @staticmethod
