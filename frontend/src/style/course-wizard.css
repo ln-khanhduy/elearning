@@ -551,6 +551,7 @@
   gap: 0;
   min-height: calc(100vh - 200px);
   margin: -24px;
+  width: calc(100% + 48px);
   background: #fff;
   border-radius: 0;
 }
@@ -1178,6 +1179,27 @@
   gap: 8px;
 }
 
+.cw-editor-panel-header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cw-save-dot {
+  font-size: 8px;
+}
+
+.cw-import-section {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid var(--cw-border);
+}
+
+.cw-import-desc {
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+
 /* File preview in editor panel */
 .cw-file-preview {
   display: flex;
@@ -1563,6 +1585,212 @@
   gap: 8px;
 }
 
+/* Import modal - inline styles converted to classes */
+.cw-import-info-text {
+  color: #856404;
+  margin-top: 4px;
+}
+
+.cw-import-flex-row {
+  display: flex;
+  gap: 8px;
+}
+
+.cw-import-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.cw-import-stat {
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.cw-import-error-count {
+  color: #dc3545;
+  margin-left: 8px;
+  font-size: 13px;
+}
+
+.cw-import-error-box {
+  background: #fff5f5;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin-bottom: 12px;
+}
+
+.cw-import-error-title {
+  font-size: 12px;
+  color: #dc3545;
+}
+
+.cw-import-error-list {
+  margin: 4px 0 0;
+  padding-left: 20px;
+  font-size: 12px;
+  color: #dc3545;
+}
+
+.cw-import-table-wrap {
+  max-height: 400px;
+  overflow-y: auto;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+}
+
+.cw-import-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.cw-import-table thead tr {
+  background: #f8f9fc;
+  position: sticky;
+  top: 0;
+}
+
+.cw-import-table th {
+  padding: 8px 10px;
+  border-bottom: 1px solid #e9ecef;
+  text-align: left;
+  font-weight: 600;
+  color: #495057;
+}
+
+.cw-import-table th.cw-import-th-check {
+  width: 40px;
+  text-align: center;
+}
+
+.cw-import-table th.cw-import-th-num {
+  width: 50px;
+}
+
+.cw-import-table th.cw-import-th-sm {
+  width: 100px;
+}
+
+.cw-import-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.cw-import-table td.cw-import-td-center {
+  text-align: center;
+}
+
+.cw-import-table td.cw-import-td-num {
+  color: #6c757d;
+}
+
+.cw-import-table tr.cw-import-row-selected {
+  background: #f0f4ff;
+}
+
+.cw-import-checkbox {
+  cursor: pointer;
+}
+
+.cw-import-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.cw-import-badge-easy {
+  background: #d1e7dd;
+  color: #0f5132;
+}
+
+.cw-import-badge-medium {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.cw-import-badge-hard {
+  background: #f8d7da;
+  color: #842029;
+}
+
+.cw-import-code {
+  background: #f0f0f0;
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-size: 12px;
+}
+
+.cw-import-spinner-wrap {
+  text-align: center;
+  padding: 40px 0;
+}
+
+.cw-import-spinner {
+  width: 32px;
+  height: 32px;
+  color: #0f3d75;
+  margin-bottom: 12px;
+}
+
+.cw-import-spinner-text {
+  margin: 0;
+  font-size: 14px;
+  color: #495057;
+}
+
+.cw-import-done-wrap {
+  text-align: center;
+  padding: 24px 0;
+}
+
+.cw-import-done-icon {
+  margin-bottom: 12px;
+}
+
+.cw-import-done-icon i {
+  font-size: 3rem;
+  color: #198754;
+}
+
+.cw-import-done-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1a1a2e;
+  margin: 0 0 8px;
+}
+
+.cw-import-done-text {
+  margin: 0 0 4px;
+  font-size: 14px;
+  color: #495057;
+}
+
+.cw-import-warn-box {
+  background: #fffdf0;
+  border: 1px solid #ffeeba;
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin-top: 12px;
+  text-align: left;
+}
+
+.cw-import-warn-title {
+  font-size: 12px;
+  color: #856404;
+}
+
+.cw-import-warn-list {
+  margin: 4px 0 0;
+  padding-left: 20px;
+  font-size: 12px;
+  color: #856404;
+}
+
 /* ==================== SKELETON ==================== */
 .cw-skeleton {
   background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
@@ -1646,6 +1874,7 @@
   .cw-curriculum-layout {
     flex-direction: column;
     margin: -16px;
+    width: auto;
   }
 
   .cw-curriculum-sidebar {

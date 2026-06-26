@@ -40,14 +40,15 @@
 
 /* ===== SIDEBAR ===== */
 .learning-sidebar {
-  width: 340px;
-  min-width: 340px;
+  width: 200px;
+  min-width: 200px;
   background: var(--course-card-bg, #ffffff);
-  border-right: 1px solid var(--course-border, #e9ecef);
+  border-left: 1px solid var(--course-border, #e9ecef);
   display: flex;
   flex-direction: column;
   overflow: hidden;
   transition: var(--course-transition, all 0.2s ease);
+  order: 2;
 }
 
 .learning-sidebar-header {
@@ -209,7 +210,7 @@
 
 .learning-item--active {
   background: var(--course-primary-light, #e8f0fe);
-  border-left: 3px solid var(--primary, #0f3d75);
+  border-right: 3px solid var(--primary, #0f3d75);
   font-weight: 500;
 }
 
@@ -927,16 +928,16 @@
   .learning-sidebar {
     position: fixed;
     top: var(--header-height, 60px);
-    left: -340px;
+    right: -340px;
     width: 300px;
     min-width: 300px;
     height: calc(100vh - var(--header-height, 60px));
     z-index: 1050;
-    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.1);
+    box-shadow: -4px 0 20px rgba(0, 0, 0, 0.1);
   }
 
   .learning-sidebar--open {
-    left: 0;
+    right: 0;
   }
 
   .learning-sidebar-overlay {

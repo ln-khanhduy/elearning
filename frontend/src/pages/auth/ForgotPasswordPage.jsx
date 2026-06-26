@@ -1,4 +1,4 @@
-import InputField from "../../components/auth/InputField";
+import InputField from "../../components/common/InputField";
 
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";

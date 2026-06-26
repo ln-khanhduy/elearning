@@ -57,3 +57,18 @@ export const linkGoogleAccountApi = async (idToken) => {
     id_token: idToken,
   }));
 };
+
+// ===== Instructor Profile Management =====
+
+export const uploadInstructorCertificateApi = async (data) => {
+  const config = { headers: { "Content-Type": "multipart/form-data" } };
+  return request(() => apiClient.post("/api/users/instructors/certificates/", data, config));
+};
+
+export const deleteInstructorCertificateApi = async (certificateId) => {
+  return request(() => apiClient.delete(`/api/users/instructors/certificates/${certificateId}/`));
+};
+
+export const getInstructorCertificatesApi = async () => {
+  return request(() => apiClient.get("/api/users/instructors/certificates/"));
+};

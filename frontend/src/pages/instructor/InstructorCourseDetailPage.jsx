@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { getInstructorCourseDetail } from "../../services/courseService";
+import { getInstructorCourseDetailApi } from "../../api/courseAPI";
 
 // ==================== TAB 1: NỘI DUNG KHÓA HỌC ====================
 function CourseContentTab({ courseId }) {
@@ -11,8 +11,8 @@ function CourseContentTab({ courseId }) {
   useEffect(() => {
     const load = async () => {
       try {
-        const { getCurriculum } = await import("../../services/curriculumService");
-        const res = await getCurriculum(courseId);
+        const { getCurriculumApi } = await import("../../api/courseAPI");
+        const res = await getCurriculumApi(courseId);
         setCurriculum(res?.data || res);
       } catch (error) {
         toast.error("Không thể tải nội dung khóa học.");
@@ -85,8 +85,8 @@ function StudentProgressTab({ courseId }) {
   useEffect(() => {
     const load = async () => {
       try {
-        const { getInstructorCourseStudents } = await import("../../services/courseService");
-        const res = await getInstructorCourseStudents(courseId);
+        const { getInstructorCourseStudentsApi } = await import("../../api/courseAPI");
+        const res = await getInstructorCourseStudentsApi(courseId);
         setStudents(res?.data || res || []);
       } catch (error) {
         toast.error("Không thể tải danh sách học viên.");
@@ -684,7 +684,7 @@ function InstructorCourseDetailPage() {
   useEffect(() => {
     const load = async () => {
       try {
-        const res = await getInstructorCourseDetail(courseId);
+        const res = await getInstructorCourseDetailApi(courseId);
         setCourse(res?.data || res);
       } catch (error) {
         toast.error("Không thể tải thông tin khóa học.");

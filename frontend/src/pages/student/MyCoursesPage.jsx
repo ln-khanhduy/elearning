@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
-import { getMyCourses } from "../../services/enrollmentService";
+import { getMyCoursesApi } from "../../api/enrollmentAPI";
 
 function MyCoursesPage() {
   const STATUS_MAP = {
@@ -16,7 +16,7 @@ function MyCoursesPage() {
   const loadMyCourses = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await getMyCourses();
+      const data = await getMyCoursesApi();
       setEnrollments(data || []);
     } catch (error) {
       toast.error("Không thể tải danh sách khóa học của bạn.");

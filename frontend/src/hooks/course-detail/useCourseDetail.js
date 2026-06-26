@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { getCourseDetail } from "../../services/courseService";
-import { getCurriculum } from "../../services/curriculumService";
+import { getCourseDetailApi, getCurriculumApi } from "../../api/courseAPI";
 import { getCourseReviewsApi } from "../../api/reviewAPI";
 
 /**
@@ -21,8 +20,8 @@ export function useCourseDetail(courseId) {
       setError(null);
 
       const [courseData, curriculumData, reviewsData] = await Promise.all([
-        getCourseDetail(courseId),
-        getCurriculum(courseId).catch(() => []),
+        getCourseDetailApi(courseId),
+        getCurriculumApi(courseId).catch(() => []),
         getCourseReviewsApi(courseId).catch(() => []),
       ]);
 

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
-import { getCategories } from "../../services/courseService";
+import { getCategoriesApi } from "../../api/courseAPI";
 
 /**
  * Hook quản lý filters cho trang danh sách khóa học
@@ -20,7 +20,7 @@ export function useCourseFilters() {
     const loadCategories = async () => {
       try {
         setCategoriesLoading(true);
-        const data = await getCategories();
+        const data = await getCategoriesApi();
         setCategories(data?.data || data || []);
       } catch (err) {
         console.error("Lỗi tải danh mục:", err);

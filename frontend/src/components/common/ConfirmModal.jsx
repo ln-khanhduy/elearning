@@ -1,26 +1,13 @@
 import React from "react";
 
 /**
- * ConfirmModal - Modal xác nhận thay thế window.confirm().
- * Props:
- *   show: boolean - hiển thị modal
- *   title: string - tiêu đề
- *   message: string - nội dung
- *   confirmLabel: string - nhãn nút xác nhận (mặc định "Xác nhận")
- *   cancelLabel: string - nhãn nút hủy (mặc định "Hủy")
- *   variant: string - màu nút xác nhận (danger, primary, warning)
- *   onConfirm: function - callback khi xác nhận
- *   onCancel: function - callback khi hủy
+ * ConfirmModal - Modal xác nhận thay thế window.confirm()
+ * Props: show, title, message, confirmLabel, cancelLabel, variant, onConfirm, onCancel
  */
 export default function ConfirmModal({
-  show,
-  title = "Xác nhận",
-  message = "Bạn có chắc chắn?",
-  confirmLabel = "Xác nhận",
-  cancelLabel = "Hủy",
-  variant = "primary",
-  onConfirm,
-  onCancel,
+  show, title = "Xác nhận", message = "Bạn có chắc chắn?",
+  confirmLabel = "Xác nhận", cancelLabel = "Hủy", variant = "primary",
+  onConfirm, onCancel,
 }) {
   if (!show) return null;
 
@@ -30,20 +17,8 @@ export default function ConfirmModal({
         <h5 className="fw-bold mb-3">{title}</h5>
         <p className="text-muted mb-4">{message}</p>
         <div className="d-flex gap-2 justify-content-end">
-          <button
-            type="button"
-            className="course-btn-outline"
-            onClick={onCancel}
-          >
-            {cancelLabel}
-          </button>
-          <button
-            type="button"
-            className={`course-btn-${variant}`}
-            onClick={onConfirm}
-          >
-            {confirmLabel}
-          </button>
+          <button type="button" className="course-btn-outline" onClick={onCancel}>{cancelLabel}</button>
+          <button type="button" className={`course-btn-${variant}`} onClick={onConfirm}>{confirmLabel}</button>
         </div>
       </div>
     </div>

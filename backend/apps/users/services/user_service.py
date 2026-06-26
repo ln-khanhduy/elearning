@@ -138,25 +138,25 @@ class UserService:
         """
         Cập nhật thông tin cá nhân của người dùng.
         - Duyệt qua các trường User được gửi lên và gán giá trị mới
-        - Nếu user là instructor và có gửi thông tin ngân hàng, cập nhật InstructorProfile
+        - Nếu user là instructor và có gửi thông tin ngân hàng/hồ sơ, cập nhật InstructorProfile
         - Lưu thay đổi vào database
         """
-        # Tách thông tin ngân hàng (thuộc InstructorProfile) khỏi thông tin User
-        bank_fields = {"bank_name", "bank_account_number", "bank_account_name"}
-        bank_data = {k: v for k, v in validated_data.items() if k in bank_fields}
-        user_data = {k: v for k, v in validated_data.items() if k not in bank_fields}
+        # Các trường thuộc InstructorProfile (chỉ instructor mới có)
+        instructor_profile_fields = {"bank_name", "bank_account_number", "bank_account_name", "bio", "portfolio_link", "cv_file"}
+        profile_data = {k: v for k, v in validated_data.items() if k in instructor_profile_fields}
+        user_data = {k: v for k, v in validated_data.items() if k not in instructor_profile_fields}
 
         # Cập nhật thông tin User
         for attr, value in user_data.items():
             setattr(user, attr, value)
         user.save()
 
-        # Cập nhật thông tin ngân hàng nếu user là instructor và có gửi bank fields
-        if bank_data and hasattr(user, 'instructor_profile'):
+        # Cập nhật thông tin InstructorProfile nếu user là instructor và có gửi dữ liệu
+        if profile_data and hasattr(user, 'instructor_profile'):
             instructor_profile = user.instructor_profile
-            for attr, value in bank_data.items():
+            for attr, value in profile_data.items():
                 setattr(instructor_profile, attr, value)
-            instructor_profile.save(update_fields=list(bank_data.keys()))
+            instructor_profile.save(update_fields=list(profile_data.keys()))
 
         return user
 

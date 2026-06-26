@@ -68,6 +68,7 @@ class CourseDetailSerializer(serializers.ModelSerializer):
     created_by_avatar = serializers.SerializerMethodField()
     assigned_instructor_name = serializers.SerializerMethodField()
     assigned_instructor_avatar = serializers.SerializerMethodField()
+    assigned_instructor_bio = serializers.SerializerMethodField()
     assigned_instructor_id = serializers.SerializerMethodField()
     category = CategorySerializer(read_only=True)
     thumbnail_url = serializers.SerializerMethodField()
@@ -79,7 +80,7 @@ class CourseDetailSerializer(serializers.ModelSerializer):
         fields = [
             "id", "title", "slug", "description", "thumbnail_url", "preview_video_url",
             "price", "status", "created_by_name", "created_by_avatar",
-            "assigned_instructor_id", "assigned_instructor_name", "assigned_instructor_avatar",
+            "assigned_instructor_id", "assigned_instructor_name", "assigned_instructor_avatar", "assigned_instructor_bio",
             "category", "chapter_count", "lesson_count",
             "published_at", "created_at", "updated_at",
         ]
@@ -104,6 +105,12 @@ class CourseDetailSerializer(serializers.ModelSerializer):
             return obj.assigned_instructor.avatar_url
         return None
 
+    def get_assigned_instructor_bio(self, obj):
+        """Lấy mô tả giảng viên từ InstructorProfile, trả về None nếu chưa có."""
+        if obj.assigned_instructor and hasattr(obj.assigned_instructor, 'instructor_profile'):
+            return obj.assigned_instructor.instructor_profile.bio
+        return None
+
     def get_thumbnail_url(self, obj):
         """Lấy URL đầy đủ của thumbnail khóa học, trả về None nếu không có."""
         return obj.thumbnail.url if obj.thumbnail else None
@@ -122,7 +129,7 @@ class CourseDetailSerializer(serializers.ModelSerializer):
 class CourseCreateUpdateSerializer(serializers.ModelSerializer):
     """Serializer cho tạo/cập nhật khóa học - validate title, thumbnail, price, category."""
 
-    title = serializers.CharField(min_length=5, max_length=50, trim_whitespace=True)
+    title = serializers.CharField(min_length=5, max_length=100, trim_whitespace=True)
     thumbnail = serializers.FileField(allow_null=True, required=False)
 
     class Meta:

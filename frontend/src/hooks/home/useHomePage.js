@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { getCourses, getCategories } from "../../services/courseService";
+import { getCoursesApi, getCategoriesApi } from "../../api/courseAPI";
 
 /**
  * Hook quản lý dữ liệu HomePage.
@@ -17,8 +17,8 @@ function useHomePage() {
     setError(null);
     try {
       const [coursesData, categoriesData] = await Promise.all([
-        getCourses({ status: "PUBLISHED", page_size: 12 }),
-        getCategories(),
+        getCoursesApi({ status: "PUBLISHED", page_size: 12 }),
+        getCategoriesApi(),
       ]);
       // API trả về { success, data: { items, total, ... } }
       const courseList =

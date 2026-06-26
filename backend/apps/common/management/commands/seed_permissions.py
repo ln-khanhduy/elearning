@@ -25,10 +25,24 @@ PERMISSIONS = {
 
     # Course
     "course.course.view": "Xem danh sách khóa học",
+    "course.course.create": "Tạo khóa học",
+    "course.course.update": "Cập nhật khóa học",
     "course.course.delete": "Xóa khóa học",
+    "course.course.publish": "Xuất bản/Ẩn khóa học",
     "course.course.hide": "Ẩn khóa học",
     "course.course.approve": "Duyệt khóa học",
     "course.course.feedback_instructor": "Gửi phản hồi cho instructor",
+    "course.instructor.assign": "Phân công giảng viên",
+
+    # Lesson
+    "course.lesson.create": "Tạo bài học",
+    "course.lesson.update": "Cập nhật bài học",
+    "course.lesson.delete": "Xóa bài học",
+
+    # Quiz
+    "course.quiz.create": "Tạo quiz",
+    "course.quiz.update": "Cập nhật quiz",
+    "course.quiz.delete": "Xóa quiz",
 
     # Category
     "course.category.create": "Tạo danh mục",
@@ -44,6 +58,7 @@ PERMISSIONS = {
 
     # Review
     "course.review.view": "Xem đánh giá",
+    "course.review.create": "Tạo đánh giá",
 
     # Instructor
     "user.instructor.view": "Xem danh sách instructor",
@@ -51,8 +66,8 @@ PERMISSIONS = {
     "user.instructor.support": "Hỗ trợ instructor",
     "user.instructor.approve": "Duyệt hồ sơ instructor",
     "user.instructor.reject": "Từ chối hồ sơ instructor",
-    "user.instructor.withdraw_request": "Gửi yêu cầu rút tiền",
     "user.instructor.sales_history": "Xem lịch sử bán hàng",
+    "user.instructor.withdraw_request": "Yêu cầu rút tiền",
 
     # User
     "user.user.view": "Xem thông tin user",
@@ -68,6 +83,7 @@ PERMISSIONS = {
     "finance.finance.discount_config": "Cấu hình giảm giá",
     "finance.finance.fee_config": "Cấu hình thu phí",
     "finance.finance.report_export": "Xuất báo cáo tài chính",
+    "finance.finance.refund": "Duyệt yêu cầu hoàn tiền",
 
     # Student permissions
     "student.course.search": "Tìm kiếm khóa học",
@@ -78,22 +94,108 @@ PERMISSIONS = {
     "student.assignment.submit": "Làm bài tập",
     "student.profile.manage": "Quản lý thông tin cá nhân",
     "student.my_course.view": "Xem khóa học đã mua",
+    "student.wallet.deposit": "Yêu cầu hoàn tiền",
 
     # Instructor finance
     "instructor.wallet.view_balance": "Xem số dư ví",
-    "instructor.course.discount_self": "Tự giảm giá khóa học",
 }
 
 
+
 ROLE_PERMISSIONS = {
-    "SUPERADMIN": list(PERMISSIONS.keys()),
+    "SUPERADMIN": [
+        "admin.admin.create",
+        "admin.admin.assign_role",
+        "admin.admin.change_role",
+        "admin.admin.lock",
+        "admin.admin.delete",
+        "admin.admin.view",
+
+        "admin.role.create",
+        "admin.role.update",
+        "admin.role.delete",
+        "admin.role.view",
+        "admin.role.view_permissions",
+        "admin.role.assign_permission",
+        "admin.role.revoke_permission",
+
+        "admin.dashboard.view",
+
+        "course.course.view",
+        "course.course.create",
+        "course.course.update",
+        "course.course.delete",
+        "course.course.publish",
+        "course.course.hide",
+        "course.course.feedback_instructor",
+        "course.instructor.assign",
+
+        "course.lesson.create",
+        "course.lesson.update",
+        "course.lesson.delete",
+
+        "course.quiz.create",
+        "course.quiz.update",
+        "course.quiz.delete",
+
+        "course.category.create",
+        "course.category.update",
+        "course.category.delete",
+        "course.category.view",
+
+        "course.comment.create",
+        "course.comment.reply",
+        "course.comment.hide",
+        "course.comment.delete",
+
+        "course.review.view",
+
+        "user.instructor.view",
+        "user.instructor.lock",
+        "user.instructor.support",
+        "user.instructor.approve",
+        "user.instructor.reject",
+        "user.instructor.sales_history",
+
+        "user.user.view",
+        "user.user.update",
+        "user.user.lock",
+        "user.user.unlock",
+        "user.user.notify",
+        "user.user.complaint_resolve",
+
+        "finance.finance.revenue_view",
+        "finance.finance.discount_config",
+        "finance.finance.fee_config",
+
+        "student.course.search",
+        "student.course.preview",
+        "student.course.buy",
+        "student.payment.create",
+        "student.learning.view",
+        "student.assignment.submit",
+        "student.profile.manage",
+        "student.my_course.view",
+    ],
 
     "COURSE_ADMIN": [
+
         "course.course.view",
-        "course.course.approve",
+        "course.course.create",
+        "course.course.update",
+        "course.course.publish",
         "course.course.hide",
         "course.course.delete",
         "course.course.feedback_instructor",
+        "course.instructor.assign",
+
+        "course.lesson.create",
+        "course.lesson.update",
+        "course.lesson.delete",
+
+        "course.quiz.create",
+        "course.quiz.update",
+        "course.quiz.delete",
 
         "course.category.create",
         "course.category.update",
@@ -102,9 +204,12 @@ ROLE_PERMISSIONS = {
 
         "course.comment.hide",
         "course.comment.delete",
+
+        "course.review.view",
     ],
 
     "INSTRUCTOR_MANAGER": [
+
         "user.instructor.view",
         "user.instructor.lock",
         "user.instructor.support",
@@ -127,14 +232,16 @@ ROLE_PERMISSIONS = {
         "finance.finance.discount_config",
         "finance.finance.fee_config",
         "finance.finance.report_export",
+        "finance.finance.refund",
     ],
 
+
     "INSTRUCTOR": [
+        "course.course.view",
         "course.course.create",
         "course.course.update",
         "course.course.delete",
         "course.course.hide",
-        "instructor.course.discount_self",
 
         "course.lesson.create",
         "course.lesson.update",
@@ -150,6 +257,7 @@ ROLE_PERMISSIONS = {
 
         "course.comment.reply",
     ],
+
 
     "STUDENT": [
         "student.course.search",
@@ -183,7 +291,7 @@ class Command(BaseCommand):
 
             if not role:
                 self.stdout.write(
-                    self.style.WARNING(f"Không tìm thấy role: {role_code}")
+                    self.style.WARNING(f"Role not found: {role_code}")
                 )
                 continue
 
@@ -197,5 +305,5 @@ class Command(BaseCommand):
                 )
 
             self.stdout.write(
-                self.style.SUCCESS(f"Đã gán quyền cho role: {role_code}")
+                self.style.SUCCESS(f"Permissions assigned to role: {role_code}")
             )

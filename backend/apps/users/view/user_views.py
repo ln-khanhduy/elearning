@@ -49,7 +49,7 @@ class UserDetailAPIView(BasePermissionAPIView):
 class CurrentUserAPIView(APIView):
     """
     GET /api/users/me/ - Lấy thông tin của người dùng hiện tại (đang đăng nhập).
-    Nếu user là instructor, trả về thêm thông tin ngân hàng.
+    Nếu user là instructor, trả về thêm thông tin ngân hàng và hồ sơ giảng viên.
     """
     permission_classes = [IsAuthenticated]
 
@@ -58,20 +58,27 @@ class CurrentUserAPIView(APIView):
         role_code = user.role.code if user.role else None
         user_data = UserDetailSerializer(user).data
 
-        # Nếu là instructor, thêm thông tin ngân hàng vào response
+        # Nếu là instructor, thêm thông tin ngân hàng và hồ sơ giảng viên vào response
         if role_code == "INSTRUCTOR" and hasattr(user, 'instructor_profile'):
             profile = user.instructor_profile
             user_data["bank_name"] = profile.bank_name
             user_data["bank_account_number"] = profile.bank_account_number
             user_data["bank_account_name"] = profile.bank_account_name
+            user_data["bio"] = profile.bio
+            user_data["portfolio_link"] = profile.portfolio_link
+            user_data["cv_file"] = profile.cv_file.url if profile.cv_file else None
+            # Lấy danh sách chứng chỉ
+            certificates = profile.certificates.all()
+            from apps.users.serializers.user_serializer import InstructorCertificateSerializer
+            user_data["certificates"] = InstructorCertificateSerializer(certificates, many=True).data
 
         return Response(user_data, status=status.HTTP_200_OK)
 
 
 class UpdateProfileAPIView(APIView):
     """
-    PATCH /api/users/me/update/ - Cập nhật thông tin cá nhân (tên, số điện thoại, avatar, thông tin ngân hàng).
-    - Chỉ instructor mới được cập nhật thông tin ngân hàng.
+    PATCH /api/users/me/update/ - Cập nhật thông tin cá nhân (tên, số điện thoại, avatar, thông tin ngân hàng, hồ sơ giảng viên).
+    - Chỉ instructor mới được cập nhật thông tin ngân hàng và hồ sơ giảng viên (bio, portfolio_link, cv_file).
     - Student/user thường không thấy và không cập nhật được thông tin này.
     """
     permission_classes = [IsAuthenticated]
@@ -80,12 +87,12 @@ class UpdateProfileAPIView(APIView):
         user = request.user
         role_code = user.role.code if user.role else None
 
-        # Kiểm tra: nếu có gửi bank fields nhưng không phải instructor -> từ chối
-        bank_fields = {"bank_name", "bank_account_number", "bank_account_name"}
-        has_bank_data = any(k in request.data for k in bank_fields)
-        if has_bank_data and role_code != "INSTRUCTOR":
+        # Các trường chỉ dành cho instructor
+        instructor_only_fields = {"bank_name", "bank_account_number", "bank_account_name", "bio", "portfolio_link", "cv_file"}
+        has_instructor_data = any(k in request.data for k in instructor_only_fields)
+        if has_instructor_data and role_code != "INSTRUCTOR":
             return Response(
-                {"detail": "Chỉ giảng viên mới có thể cập nhật thông tin thanh toán."},
+                {"detail": "Chỉ giảng viên mới có thể cập nhật thông tin này."},
                 status=status.HTTP_403_FORBIDDEN
             )
 
@@ -96,12 +103,17 @@ class UpdateProfileAPIView(APIView):
         # Lấy thông tin user response
         user_data = UserDetailSerializer(user).data
 
-        # Nếu là instructor, thêm thông tin ngân hàng vào response
+        # Nếu là instructor, thêm thông tin ngân hàng và hồ sơ giảng viên vào response
         if role_code == "INSTRUCTOR" and hasattr(user, 'instructor_profile'):
             profile = user.instructor_profile
             user_data["bank_name"] = profile.bank_name
             user_data["bank_account_number"] = profile.bank_account_number
             user_data["bank_account_name"] = profile.bank_account_name
+            user_data["bio"] = profile.bio
+            user_data["portfolio_link"] = profile.portfolio_link
+            user_data["cv_file"] = profile.cv_file.url if profile.cv_file else None
+            certificates = profile.certificates.all()
+            user_data["certificates"] = InstructorCertificateSerializer(certificates, many=True).data
 
         return Response({
             "detail": "Cập nhật thông tin cá nhân thành công.",
@@ -521,4 +533,80 @@ class InstructorCertificateDeleteAPIView(APIView):
             return Response({"detail": "Bạn không có quyền xóa chứng chỉ này."}, status=status.HTTP_403_FORBIDDEN)
 
         InstructorService.delete_certificate(application, certificate_id)
+        return Response({"detail": "Xóa chứng chỉ thành công."}, status=status.HTTP_200_OK)
+
+
+class MyInstructorCertificateUploadAPIView(APIView):
+    """
+    POST /api/users/instructors/certificates/ - Upload chứng chỉ cho instructor đang đăng nhập.
+    Body: multipart/form-data { title: string, file: File }
+    Chỉ instructor mới được upload.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        user = request.user
+        role_code = user.role.code if user.role else None
+
+        if role_code != "INSTRUCTOR":
+            return Response({"detail": "Chỉ giảng viên mới có thể upload chứng chỉ."}, status=status.HTTP_403_FORBIDDEN)
+
+        if not hasattr(user, 'instructor_profile'):
+            return Response({"detail": "Không tìm thấy hồ sơ giảng viên."}, status=status.HTTP_404_NOT_FOUND)
+
+        profile = user.instructor_profile
+        certificates, errors = InstructorService.process_upload_request(profile, request)
+
+        if not certificates:
+            return Response({"detail": "Không thể tải lên chứng chỉ nào.", "errors": errors}, status=status.HTTP_400_BAD_REQUEST)
+
+        serializer = InstructorCertificateSerializer(certificates, many=True)
+        result = {"certificates": serializer.data, "detail": f"Đã tải lên {len(certificates)} chứng chỉ thành công."}
+        if errors:
+            result["errors"] = errors
+        return Response(result, status=status.HTTP_201_CREATED)
+
+
+class MyInstructorCertificateListAPIView(APIView):
+    """
+    GET /api/users/instructors/certificates/ - Lấy danh sách chứng chỉ của instructor đang đăng nhập.
+    Chỉ instructor mới có thể xem.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        role_code = user.role.code if user.role else None
+
+        if role_code != "INSTRUCTOR":
+            return Response({"detail": "Chỉ giảng viên mới có thể xem chứng chỉ."}, status=status.HTTP_403_FORBIDDEN)
+
+        if not hasattr(user, 'instructor_profile'):
+            return Response({"detail": "Không tìm thấy hồ sơ giảng viên."}, status=status.HTTP_404_NOT_FOUND)
+
+        profile = user.instructor_profile
+        certificates = InstructorService.get_certificates(profile)
+        serializer = InstructorCertificateSerializer(certificates, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class MyInstructorCertificateDeleteAPIView(APIView):
+    """
+    DELETE /api/users/instructors/certificates/{certificate_id}/ - Xóa chứng chỉ của instructor đang đăng nhập.
+    Chỉ instructor mới có thể xóa chứng chỉ của mình.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, certificate_id):
+        user = request.user
+        role_code = user.role.code if user.role else None
+
+        if role_code != "INSTRUCTOR":
+            return Response({"detail": "Chỉ giảng viên mới có thể xóa chứng chỉ."}, status=status.HTTP_403_FORBIDDEN)
+
+        if not hasattr(user, 'instructor_profile'):
+            return Response({"detail": "Không tìm thấy hồ sơ giảng viên."}, status=status.HTTP_404_NOT_FOUND)
+
+        profile = user.instructor_profile
+        InstructorService.delete_certificate(profile, certificate_id)
         return Response({"detail": "Xóa chứng chỉ thành công."}, status=status.HTTP_200_OK)

@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import {
-  getApplications,
-  reviewApplication,
-  getPreviewCertificateUrl,
-  getPreviewCvUrl,
-} from "../../services/adminInstructorService";
+  getInstructorApplicationsApi,
+  reviewInstructorApplicationApi,
+  previewCertificateApi,
+  previewCvApi,
+} from "../../api/userAPI";
 
 function AdminInstructorApplicationsPage() {
   const [applications, setApplications] = useState([]);
@@ -24,7 +24,7 @@ function AdminInstructorApplicationsPage() {
   const fetchApplications = async () => {
     setLoading(true);
     try {
-      const data = await getApplications(statusFilter);
+      const data = await getInstructorApplicationsApi(statusFilter);
       setApplications(data);
     } catch (error) {
       toast.error(error.message || "Không thể tải danh sách hồ sơ.");
@@ -64,7 +64,7 @@ function AdminInstructorApplicationsPage() {
     setProcessing(true);
 
     try {
-      await reviewApplication(selectedApp.id, {
+      await reviewInstructorApplicationApi(selectedApp.id, {
         status: reviewAction,
         rejection_reason: reviewAction === "REJECTED" ? rejectionReason : "",
       });

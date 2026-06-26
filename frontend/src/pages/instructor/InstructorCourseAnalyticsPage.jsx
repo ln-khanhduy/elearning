@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { getInstructorCourseAnalytics } from "../../services/courseService";
+import { getInstructorCourseAnalyticsApi } from "../../api/courseAPI";
 
 function InstructorCourseAnalyticsPage() {
   const { courseId } = useParams();
@@ -12,7 +12,7 @@ function InstructorCourseAnalyticsPage() {
   useEffect(() => {
     const load = async () => {
       try {
-        const res = await getInstructorCourseAnalytics(courseId);
+        const res = await getInstructorCourseAnalyticsApi(courseId);
         setAnalytics(res?.data || res);
       } catch (error) {
         toast.error("Không thể tải dữ liệu phân tích.");

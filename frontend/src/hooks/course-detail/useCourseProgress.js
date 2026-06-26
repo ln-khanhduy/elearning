@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { checkEnrolled } from "../../services/enrollmentService";
+import { checkEnrolledApi } from "../../api/enrollmentAPI";
 
 /**
  * Hook quản lý trạng thái học tập của user đối với khóa học
@@ -20,7 +20,7 @@ export function useCourseProgress(courseId) {
     if (!courseId) return;
     try {
       setLoading(true);
-      const data = await checkEnrolled(courseId);
+      const data = await checkEnrolledApi(courseId);
       // Backend trả về { is_enrolled, is_owner, can_access, enrollment }
       const isEnrolledFlag = data?.is_enrolled === true;
       const isOwnerFlag = data?.is_owner === true;

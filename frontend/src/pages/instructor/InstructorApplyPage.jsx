@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
-import { submitApplication } from "../../services/instructorService";
+import { applyInstructorApi } from "../../api/userAPI";
 
 function InstructorApplyPage() {
   const navigate = useNavigate();
@@ -102,7 +102,7 @@ function InstructorApplyPage() {
         formData.append("certificates", cert);
       });
 
-      await submitApplication(formData);
+      await applyInstructorApi(formData);
 
       // Hiển thị thông báo thành công
       setSubmitted(true);

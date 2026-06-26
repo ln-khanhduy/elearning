@@ -2,10 +2,10 @@ import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import {
-  getAdminCourseDetail,
-  assignInstructor,
-  getAssignedInstructor,
-} from "../../services/courseService";
+  getAdminCourseDetailApi,
+  assignInstructorApi,
+  getAssignedInstructorApi,
+} from "../../api/courseAPI";
 import { getManagedInstructorsApi } from "../../api/instructorManagerAPI";
 
 function AdminCourseAssignPage() {
@@ -27,7 +27,7 @@ function AdminCourseAssignPage() {
       try {
         setLoading(true);
         const [courseRes, instructorRes] = await Promise.all([
-          getAdminCourseDetail(courseId),
+          getAdminCourseDetailApi(courseId),
           getManagedInstructorsApi({ page_size: 100 }),
         ]);
         setCourse(courseRes?.data || courseRes);
@@ -47,7 +47,7 @@ function AdminCourseAssignPage() {
   useEffect(() => {
     const loadAssigned = async () => {
       try {
-        const res = await getAssignedInstructor(courseId);
+      const res = await getAssignedInstructorApi(courseId);
         const data = res?.data || res;
         if (data?.assigned_instructor_id) {
           setCurrentInstructor({
@@ -87,10 +87,10 @@ function AdminCourseAssignPage() {
     }
     setSaving(true);
     try {
-      await assignInstructor(courseId, selectedInstructorId);
+      await assignInstructorApi(courseId, selectedInstructorId);
       toast.success("Phân công giảng viên thành công!");
       // Reload assigned instructor
-      const res = await getAssignedInstructor(courseId);
+      const res = await getAssignedInstructorApi(courseId);
       const data = res?.data || res;
       if (data?.assigned_instructor_id) {
         setCurrentInstructor({
@@ -109,7 +109,7 @@ function AdminCourseAssignPage() {
   const handleRemove = async () => {
     setRemoving(true);
     try {
-      await assignInstructor(courseId, null);
+      await assignInstructorApi(courseId, null);
       toast.success("Đã gỡ giảng viên khỏi khóa học.");
       setCurrentInstructor(null);
       setSelectedInstructorId("");

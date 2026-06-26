@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { getCourses } from "../../services/courseService";
+import { getCoursesApi } from "../../api/courseAPI";
 
 /**
  * Hook quản lý danh sách khóa học public
@@ -21,7 +21,7 @@ export function usePublicCourses({ page, categoryFilter, searchQuery }) {
       if (categoryFilter) params.category = categoryFilter;
       if (searchQuery) params.q = searchQuery;
 
-      const data = await getCourses(params);
+      const data = await getCoursesApi(params);
       const result = data?.data || data;
       const rawItems = result?.items || [];
 

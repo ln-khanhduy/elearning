@@ -20,6 +20,25 @@ class Role(models.Model):
         return self.name
 
 
+class RolePermission(models.Model):
+    """
+    Permission chi tiết cho từng role.
+    Mỗi role có thể có nhiều permission.
+    VD code: "course.course.create", "user.user.lock"
+    """
+    role = models.ForeignKey(Role, on_delete=models.CASCADE, related_name='permissions')
+    code = models.CharField(max_length=100)  # Mã permission (VD: "course.course.create")
+    name = models.CharField(max_length=255)  # Tên hiển thị (VD: "Tạo khóa học")
+
+    class Meta:
+        db_table = 'role_permission'
+        unique_together = ('role', 'code')
+
+    def __str__(self):
+        return f"{self.role.code}: {self.code}"
+
+
+
 class User(AbstractUser):
     """
     Model người dùng tùy chỉnh - kế thừa AbstractUser.

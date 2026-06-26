@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { getInstructorCourses } from "../../services/courseService";
+import { getInstructorCoursesApi } from "../../api/courseAPI";
 
 const STATUS_MAP = {
   DRAFT: { label: "Bản nháp", color: "#6c757d", icon: "bi-pencil" },
@@ -17,7 +17,7 @@ function InstructorCoursesPage() {
   const loadCourses = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await getInstructorCourses({});
+      const data = await getInstructorCoursesApi({});
       setCourses(data?.data || []);
     } catch (error) {
       toast.error("Không thể tải danh sách khóa học.");

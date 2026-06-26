@@ -1,226 +1,55 @@
-import React, { useState } from "react";
+import React from "react";
+import { formatPrice } from "../../utils/formatPrice";
 import "../../style/course-detail/course-hero.css";
+import CourseRating from "./CourseRating";
+import CourseInstructor from "./CourseInstructor";
+import CourseHeroMedia from "./CourseHeroMedia";
 
 /**
- * Hero section hiển thị thông tin tổng quan khóa học
- * Gồm: thumbnail, tiêu đề, mô tả, instructor, rating, học viên, cấp độ, thời lượng
- * Nếu có preview_video_url, hiển thị video giới thiệu thay cho thumbnail
+ * CourseHero - Hero section hiển thị thông tin tổng quan khóa học
+ * Gồm: breadcrumb, tiêu đề, mô tả, đánh giá, giảng viên, giá, ảnh bìa/video
  */
 function CourseHero({ course }) {
-  const [showPreview, setShowPreview] = useState(false);
-
   if (!course) return null;
 
-  const {
-    title,
-    description,
-    thumbnail_url,
-    preview_video_url,
-    assigned_instructor_name,
-    assigned_instructor_avatar,
-    average_rating,
-    review_count,
-    student_count,
-    level,
-    duration,
-    category_name,
-    price,
-    original_price,
-  } = course;
-
-  // Map assigned_instructor fields for display
-  const instructor_name = assigned_instructor_name;
-  const instructor_avatar = assigned_instructor_avatar;
-
-  const getYouTubeEmbedUrl = (url) => {
-    if (!url) return null;
-    const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/);
-    if (match) {
-      return `https://www.youtube.com/embed/${match[1]}?autoplay=1`;
-    }
-    return url;
-  };
-
-  const renderStars = (rating) => {
-    const stars = [];
-    const fullStars = Math.floor(rating || 0);
-    const hasHalf = (rating || 0) - fullStars >= 0.5;
-
-    for (let i = 0; i < 5; i++) {
-      if (i < fullStars) {
-        stars.push(<i key={i} className="bi bi-star-fill"></i>);
-      } else if (i === fullStars && hasHalf) {
-        stars.push(<i key={i} className="bi bi-star-half"></i>);
-      } else {
-        stars.push(<i key={i} className="bi bi-star"></i>);
-      }
-    }
-    return stars;
-  };
-
-  const levelLabels = {
-    BEGINNER: "Cơ bản",
-    INTERMEDIATE: "Trung cấp",
-    ADVANCED: "Nâng cao",
-    ALL: "Tất cả trình độ",
-  };
-
-  const formatPrice = (val) => {
-    if (!val && val !== 0) return null;
-    return Number(val).toLocaleString("vi-VN") + "₫";
-  };
-
-  const hasDiscount = original_price && Number(original_price) > Number(price);
-  const discountPercent = hasDiscount
-    ? Math.round(
-        ((Number(original_price) - Number(price)) / Number(original_price)) * 100
-      )
-    : 0;
+  // Giải nén dữ liệu khóa học
+  const { title, description, thumbnail_url, preview_video_url, assigned_instructor_name, assigned_instructor_avatar,
+    average_rating, review_count, student_count, price, category_name } = course;
 
   return (
     <section className="course-hero">
       <div className="course-hero-bg"></div>
       <div className="course-hero-container">
         <div className="course-hero-content">
-          {/* Breadcrumb */}
+          {/* Breadcrumb: đường dẫn đến khóa học */}
           <div className="course-hero-breadcrumb">
             <a href="/courses">Khóa học</a>
             <i className="bi bi-chevron-right"></i>
             <span>{category_name || "Đa năng"}</span>
           </div>
 
-          {/* Title */}
+          {/* Hiển thị tiêu đề khóa học */}
           <h1 className="course-hero-title">{title}</h1>
 
-          {/* Description */}
+          {/* Hiển thị mô tả khóa học */}
           <p className="course-hero-desc">{description}</p>
 
-          {/* Rating */}
-          <div className="course-hero-rating">
-            <span className="rating-stars">{renderStars(average_rating)}</span>
-            <span className="rating-value">
-              {average_rating ? Number(average_rating).toFixed(1) : "0.0"}
-            </span>
-            <span className="rating-count">
-              ({review_count || 0} đánh giá)
-            </span>
-            <span className="rating-separator">|</span>
-            <span className="student-count">
-              <i className="bi bi-people"></i>{" "}
-              {(student_count || 0).toLocaleString("vi-VN")} học viên
-            </span>
-          </div>
+          {/* Hiển thị đánh giá sao, số lượng đánh giá và học viên */}
+          <CourseRating rating={average_rating} reviewCount={review_count} studentCount={student_count} />
 
-          {/* Meta info */}
-          <div className="course-hero-meta">
-            {level && (
-              <span className="meta-item">
-                <i className="bi bi-bar-chart"></i>
-                {levelLabels[level] || level}
-              </span>
-            )}
-            {duration && (
-              <span className="meta-item">
-                <i className="bi bi-clock"></i>
-                {duration}
-              </span>
-            )}
-            {category_name && (
-              <span className="meta-item">
-                <i className="bi bi-tag"></i>
-                {category_name}
-              </span>
-            )}
-          </div>
+          {/* Hiển thị thông tin giảng viên: avatar + tên */}
+          <CourseInstructor name={assigned_instructor_name} avatar={assigned_instructor_avatar} />
 
-          {/* Instructor */}
-          <div className="course-hero-instructor">
-            {instructor_avatar ? (
-              <img
-                src={instructor_avatar}
-                alt={instructor_name}
-                className="instructor-avatar"
-              />
-            ) : (
-              <div className="instructor-avatar-placeholder">
-                {(instructor_name || "G")[0].toUpperCase()}
-              </div>
-            )}
-            <div className="instructor-info">
-              <span className="instructor-label">Giảng viên</span>
-              <span className="instructor-name">{instructor_name || "Giảng viên"}</span>
-            </div>
-          </div>
-
-          {/* Price (mobile) */}
+          {/* Hiển thị giá khóa học trên mobile */}
           <div className="course-hero-price-mobile">
             {price !== null && price !== undefined && (
-              <>
-                <span className="price-current">{formatPrice(price)}</span>
-                {hasDiscount && (
-                  <>
-                    <span className="price-original">{formatPrice(original_price)}</span>
-                    <span className="price-badge">-{discountPercent}%</span>
-                  </>
-                )}
-              </>
+              <span className="price-current">{formatPrice(price)}</span>
             )}
           </div>
         </div>
 
-        {/* Thumbnail / Preview Video */}
-        <div className="course-hero-thumbnail">
-          <div className="course-hero-thumb-mockup">
-            {showPreview && preview_video_url ? (
-              <div className="course-hero-video-wrapper">
-                <iframe
-                  src={getYouTubeEmbedUrl(preview_video_url)}
-                  title="Video giới thiệu khóa học"
-                  className="course-hero-video-iframe"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                  frameBorder="0"
-                ></iframe>
-              </div>
-            ) : thumbnail_url ? (
-              <>
-                <img
-                  src={thumbnail_url}
-                  alt={title}
-                  className="course-hero-thumb-img"
-                />
-                {preview_video_url && (
-                  <button
-                    className="course-hero-play-btn"
-                    onClick={() => setShowPreview(true)}
-                    title="Xem video giới thiệu"
-                  >
-                    <i className="bi bi-play-circle-fill"></i>
-                    <span>Xem giới thiệu</span>
-                  </button>
-                )}
-              </>
-            ) : (
-              <div className="course-hero-thumb-placeholder">
-                {preview_video_url ? (
-                  <button
-                    className="course-hero-play-btn course-hero-play-btn--center"
-                    onClick={() => setShowPreview(true)}
-                    title="Xem video giới thiệu"
-                  >
-                    <i className="bi bi-play-circle-fill"></i>
-                    <span>Xem giới thiệu</span>
-                  </button>
-                ) : (
-                  <>
-                    <i className="bi bi-play-circle"></i>
-                    <span>Xem preview</span>
-                  </>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
+        {/* Hiển thị ảnh bìa hoặc video giới thiệu */}
+        <CourseHeroMedia title={title} thumbnailUrl={thumbnail_url} previewVideoUrl={preview_video_url} />
       </div>
     </section>
   );

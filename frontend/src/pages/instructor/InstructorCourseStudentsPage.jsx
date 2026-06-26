@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { getInstructorCourseStudents } from "../../services/courseService";
+import { getInstructorCourseStudentsApi } from "../../api/courseAPI";
 
 function InstructorCourseStudentsPage() {
   const { courseId } = useParams();
@@ -12,7 +12,7 @@ function InstructorCourseStudentsPage() {
   useEffect(() => {
     const load = async () => {
       try {
-        const res = await getInstructorCourseStudents(courseId);
+        const res = await getInstructorCourseStudentsApi(courseId);
         setStudents(res?.data?.items || res?.data || res || []);
       } catch (error) {
         toast.error("Không thể tải danh sách học viên.");

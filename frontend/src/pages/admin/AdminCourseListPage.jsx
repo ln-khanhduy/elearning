@@ -2,11 +2,11 @@ import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import {
-  getAdminCourses,
-  deleteAdminCourse,
-  publishAdminCourse,
-  hideAdminCourse,
-} from "../../services/courseService";
+  getAdminCoursesApi,
+  deleteAdminCourseApi,
+  publishAdminCourseApi,
+  hideAdminCourseApi,
+} from "../../api/courseAPI";
 import ConfirmModal from "../../components/common/ConfirmModal";
 
 const STATUS_MAP = {
@@ -42,7 +42,7 @@ function AdminCourseListPage() {
   const loadCourses = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await getAdminCourses({});
+      const data = await getAdminCoursesApi({});
       setCourses(data?.data?.items || data || []);
     } catch (error) {
       toast.error("Không thể tải danh sách khóa học.");
@@ -65,7 +65,7 @@ function AdminCourseListPage() {
         hideConfirm();
         try {
           setActionLoading(`delete-${courseId}`);
-          await deleteAdminCourse(courseId);
+          await deleteAdminCourseApi(courseId);
           toast.success("Xóa khóa học thành công.");
           loadCourses();
         } catch (error) {
@@ -80,7 +80,7 @@ function AdminCourseListPage() {
   const handlePublish = async (courseId) => {
     try {
       setActionLoading(`publish-${courseId}`);
-      await publishAdminCourse(courseId);
+      await publishAdminCourseApi(courseId);
       toast.success("Đã đăng khóa học thành công.");
       loadCourses();
     } catch (error) {
@@ -93,7 +93,7 @@ function AdminCourseListPage() {
   const handleHide = async (courseId) => {
     try {
       setActionLoading(`hide-${courseId}`);
-      await hideAdminCourse(courseId);
+      await hideAdminCourseApi(courseId);
       toast.success("Đã ẩn khóa học.");
       loadCourses();
     } catch (error) {

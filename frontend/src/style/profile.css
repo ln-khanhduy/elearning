@@ -67,7 +67,7 @@
 
 @media (min-width: 1024px) {
   .profile-grid {
-    grid-template-columns: 1fr 2fr;
+    grid-template-columns: 2fr 3fr;
   }
 }
 
@@ -471,6 +471,136 @@
   text-align: center;
   margin: 0;
   font-family: Inter, sans-serif;
+}
+
+/* ===== TEXTAREA ===== */
+.profile-textarea {
+  min-height: 100px;
+  resize: vertical;
+  height: auto;
+  line-height: 1.5;
+}
+
+/* ===== FILE UPLOAD ===== */
+.profile-file-upload {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.profile-btn-file {
+  flex: 1;
+  justify-content: flex-start;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profile-btn-icon {
+  width: 36px;
+  height: 36px;
+  border: 1px solid #c3c6d0;
+  border-radius: 8px;
+  background: transparent;
+  color: #43474f;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, color 0.2s;
+  flex-shrink: 0;
+}
+
+.profile-btn-icon:hover {
+  background: #f1f4f6;
+  color: #ba1a1a;
+}
+
+.profile-btn-icon:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.profile-btn-delete:hover {
+  background: #fef2f2;
+  color: #ba1a1a;
+}
+
+.profile-input-file {
+  padding: 6px 12px;
+  height: auto;
+  min-height: 40px;
+}
+
+/* ===== CHỨNG CHỈ LIST ===== */
+.profile-cert-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.profile-cert-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border: 1px solid #e0e3e5;
+  border-radius: 8px;
+  background: #f9fafb;
+  transition: border-color 0.2s;
+}
+
+.profile-cert-item:hover {
+  border-color: #c3c6d0;
+}
+
+.profile-cert-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.profile-cert-icon {
+  font-size: 24px;
+  color: #0e3b69;
+  flex-shrink: 0;
+}
+
+.profile-cert-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #181c1e;
+  margin: 0 0 2px;
+  font-family: Inter, sans-serif;
+}
+
+.profile-cert-link {
+  font-size: 11px;
+  color: #0e3b69;
+  text-decoration: none;
+  font-weight: 600;
+  font-family: Inter, sans-serif;
+}
+
+.profile-cert-link:hover {
+  text-decoration: underline;
+}
+
+.profile-empty-text {
+  font-size: 12px;
+  color: #737780;
+  text-align: center;
+  padding: 16px 0;
+  margin: 0;
+  font-family: Inter, sans-serif;
+}
+
+.profile-cert-add-form {
+  border-top: 1px solid #e0e3e5;
+  padding-top: 14px;
+  margin-top: 4px;
 }
 
 /* ===== RESPONSIVE ===== */

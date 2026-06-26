@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useUser } from "../../context/UserContext";
-import { updateProfileApi, changePasswordApi } from "../../api/userAPI";
+import { updateProfileApi, changePasswordApi, uploadInstructorCertificateApi, deleteInstructorCertificateApi } from "../../api/userAPI";
 
 function ProfilePage() {
   const navigate = useNavigate();
@@ -27,6 +27,23 @@ function ProfilePage() {
   });
   const [savingBank, setSavingBank] = useState(false);
 
+  // ===== State cho hồ sơ giảng viên (chỉ instructor) =====
+  const [instructorData, setInstructorData] = useState({
+    bio: "",
+    portfolio_link: "",
+  });
+  const [cvFile, setCvFile] = useState(null);
+  const [cvFileName, setCvFileName] = useState("");
+  const [savingInstructor, setSavingInstructor] = useState(false);
+  const cvFileInputRef = useRef(null);
+
+  // ===== State cho chứng chỉ (chỉ instructor) =====
+  const [certificates, setCertificates] = useState([]);
+  const [newCertTitle, setNewCertTitle] = useState("");
+  const [newCertFile, setNewCertFile] = useState(null);
+  const [uploadingCert, setUploadingCert] = useState(false);
+  const [deletingCertId, setDeletingCertId] = useState(null);
+
   // ===== State cho modal đổi mật khẩu =====
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [passwordData, setPasswordData] = useState({
@@ -50,6 +67,16 @@ function ProfilePage() {
         bank_account_number: user.bank_account_number || "",
         bank_account_name: user.bank_account_name || "",
       });
+      // Đổ thông tin hồ sơ giảng viên nếu có (chỉ instructor)
+      setInstructorData({
+        bio: user.bio || "",
+        portfolio_link: user.portfolio_link || "",
+      });
+      setCvFileName(user.cv_file ? user.cv_file.split("/").pop() : "");
+      // Đổ danh sách chứng chỉ nếu có
+      if (user.certificates && Array.isArray(user.certificates)) {
+        setCertificates(user.certificates);
+      }
     }
   }, [user]);
 
@@ -117,6 +144,80 @@ function ProfilePage() {
       toast.error(error.message || "Có lỗi xảy ra khi cập nhật thông tin thanh toán.");
     } finally {
       setSavingBank(false);
+    }
+  };
+
+  // ===== Xử lý chọn file CV =====
+  const handleCvFileChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setCvFile(file);
+  };
+
+  // ===== Xử lý lưu hồ sơ giảng viên (chỉ instructor) =====
+  const handleSaveInstructorProfile = async (e) => {
+    e.preventDefault();
+    setSavingInstructor(true);
+
+    try {
+      const formPayload = new FormData();
+      formPayload.append("bio", instructorData.bio);
+      formPayload.append("portfolio_link", instructorData.portfolio_link);
+      if (cvFile) {
+        formPayload.append("cv_file", cvFile);
+      }
+
+      await updateProfileApi(formPayload);
+      await reloadUser();
+      setCvFile(null);
+      if (cvFileInputRef.current) cvFileInputRef.current.value = "";
+      toast.success("Cập nhật hồ sơ giảng viên thành công!");
+    } catch (error) {
+      toast.error(error.message || "Có lỗi xảy ra khi cập nhật hồ sơ giảng viên.");
+    } finally {
+      setSavingInstructor(false);
+    }
+  };
+
+  // ===== Xử lý upload chứng chỉ =====
+  const handleUploadCertificate = async () => {
+    if (!newCertTitle || !newCertFile) {
+      toast.error("Vui lòng nhập tên và chọn file chứng chỉ.");
+      return;
+    }
+
+    setUploadingCert(true);
+    try {
+      const formData = new FormData();
+      formData.append("title", newCertTitle);
+      formData.append("file", newCertFile);
+
+      const result = await uploadInstructorCertificateApi(formData);
+      // Reload user để cập nhật danh sách chứng chỉ
+      await reloadUser();
+      setNewCertTitle("");
+      setNewCertFile(null);
+      toast.success(result.detail || "Tải lên chứng chỉ thành công!");
+    } catch (error) {
+      toast.error(error.message || "Có lỗi xảy ra khi tải lên chứng chỉ.");
+    } finally {
+      setUploadingCert(false);
+    }
+  };
+
+  // ===== Xử lý xóa chứng chỉ =====
+  const handleDeleteCertificate = async (certId) => {
+    if (!window.confirm("Bạn có chắc chắn muốn xóa chứng chỉ này?")) return;
+
+    setDeletingCertId(certId);
+    try {
+      await deleteInstructorCertificateApi(certId);
+      await reloadUser();
+      toast.success("Xóa chứng chỉ thành công!");
+    } catch (error) {
+      toast.error(error.message || "Có lỗi xảy ra khi xóa chứng chỉ.");
+    } finally {
+      setDeletingCertId(null);
     }
   };
 
@@ -251,9 +352,91 @@ function ProfilePage() {
             </div>
           </div>
 
+          {/* Card: Hồ sơ giảng viên (chỉ hiển thị với INSTRUCTOR) */}
+          {roleCode === "INSTRUCTOR" && (
+            <div className="profile-card">
+              <h4 className="profile-card-title">
+                <span className="material-symbols-outlined" style={{ fontSize: 20, color: "var(--primary)" }}>badge</span>
+                Hồ sơ giảng viên
+              </h4>
+              <p className="profile-card-desc">Cập nhật thông tin hồ sơ giảng viên của bạn để hiển thị trên trang khóa học.</p>
+
+              <form className="profile-form" onSubmit={handleSaveInstructorProfile}>
+                <div className="profile-field">
+                  <label className="profile-label">MÔ TẢ (BIO)</label>
+                  <textarea
+                    className="profile-input profile-textarea"
+                    value={instructorData.bio}
+                    onChange={(e) => setInstructorData({ ...instructorData, bio: e.target.value })}
+                    placeholder="Giới thiệu ngắn về bản thân, kinh nghiệm giảng dạy..."
+                    rows={4}
+                  />
+                </div>
+                <div className="profile-field">
+                  <label className="profile-label">LINK PORTFOLIO</label>
+                  <input
+                    type="url"
+                    className="profile-input"
+                    value={instructorData.portfolio_link}
+                    onChange={(e) => setInstructorData({ ...instructorData, portfolio_link: e.target.value })}
+                    placeholder="https://your-portfolio.com"
+                  />
+                </div>
+                <div className="profile-field">
+                  <label className="profile-label">CV / SƠ YẾU LÝ LỊCH</label>
+                  <div className="profile-file-upload">
+                    <input
+                      ref={cvFileInputRef}
+                      type="file"
+                      accept=".pdf,.doc,.docx"
+                      className="d-none"
+                      onChange={handleCvFileChange}
+                    />
+                    <button
+                      type="button"
+                      className="profile-btn-outline profile-btn-file"
+                      onClick={() => cvFileInputRef.current?.click()}
+                    >
+                      <span className="material-symbols-outlined" style={{ fontSize: 18 }}>upload_file</span>
+                      {cvFile ? cvFile.name : (cvFileName || "Chọn file CV")}
+                    </button>
+                    {(cvFile || cvFileName) && (
+                      <button
+                        type="button"
+                        className="profile-btn-icon"
+                        onClick={() => { setCvFile(null); setCvFileName(""); if (cvFileInputRef.current) cvFileInputRef.current.value = ""; }}
+                        title="Xóa file"
+                      >
+                        <span className="material-symbols-outlined" style={{ fontSize: 16 }}>close</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                <div className="profile-form-actions">
+                  <button type="submit" className="profile-btn-primary" disabled={savingInstructor}>
+                    {savingInstructor ? "Đang lưu..." : "Lưu hồ sơ giảng viên"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
+
+          {/* Card: Bảo mật */}
+          <div className="profile-card">
+            <h4 className="profile-card-title">
+              <span className="material-symbols-outlined" style={{ fontSize: 20, color: "var(--primary)" }}>security</span>
+              Bảo mật
+            </h4>
+            <p className="profile-card-desc">Mật khẩu của bạn nên được cập nhật định kỳ để đảm bảo an toàn cho tài khoản.</p>
+            <button className="profile-btn-outline" onClick={() => setShowPasswordModal(true)}>
+              <span className="material-symbols-outlined" style={{ fontSize: 18 }}>lock_reset</span>
+              Đổi mật khẩu
+            </button>
+          </div>
         </div>
 
-        {/* === CỘT PHẢI: Form chi tiết cá nhân + Bảo mật === */}
+        {/* === CỘT PHẢI: Form chi tiết cá nhân + Thanh toán + Chứng chỉ === */}
         <div className="profile-right">
           <div className="profile-card">
             <h4 className="profile-card-title">Chi tiết cá nhân</h4>
@@ -308,19 +491,6 @@ function ProfilePage() {
             </form>
           </div>
 
-          {/* Card: Bảo mật */}
-          <div className="profile-card">
-            <h4 className="profile-card-title">
-              <span className="material-symbols-outlined" style={{ fontSize: 20, color: "var(--primary)" }}>security</span>
-              Bảo mật
-            </h4>
-            <p className="profile-card-desc">Mật khẩu của bạn nên được cập nhật định kỳ để đảm bảo an toàn cho tài khoản.</p>
-            <button className="profile-btn-outline" onClick={() => setShowPasswordModal(true)}>
-              <span className="material-symbols-outlined" style={{ fontSize: 18 }}>lock_reset</span>
-              Đổi mật khẩu
-            </button>
-          </div>
-
           {/* Card: Thông tin thanh toán (chỉ hiển thị với INSTRUCTOR) */}
           {roleCode === "INSTRUCTOR" && (
             <div className="profile-card">
@@ -368,6 +538,92 @@ function ProfilePage() {
                   </button>
                 </div>
               </form>
+            </div>
+          )}
+
+          {/* Card: Chứng chỉ (chỉ hiển thị với INSTRUCTOR) */}
+          {roleCode === "INSTRUCTOR" && (
+            <div className="profile-card">
+              <h4 className="profile-card-title">
+                <span className="material-symbols-outlined" style={{ fontSize: 20, color: "var(--primary)" }}>verified</span>
+                Chứng chỉ
+              </h4>
+              <p className="profile-card-desc">Quản lý các chứng chỉ chuyên môn của bạn.</p>
+
+              {/* Danh sách chứng chỉ */}
+              {certificates.length > 0 && (
+                <div className="profile-cert-list">
+                  {certificates.map((cert) => (
+                    <div key={cert.id} className="profile-cert-item">
+                      <div className="profile-cert-info">
+                        <span className="material-symbols-outlined profile-cert-icon">description</span>
+                        <div>
+                          <p className="profile-cert-title">{cert.title}</p>
+                          {cert.file_url && (
+                            <a
+                              href={cert.file_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="profile-cert-link"
+                            >
+                              Xem chứng chỉ
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                      <button
+                        className="profile-btn-icon profile-btn-delete"
+                        onClick={() => handleDeleteCertificate(cert.id)}
+                        disabled={deletingCertId === cert.id}
+                        title="Xóa chứng chỉ"
+                      >
+                        <span className="material-symbols-outlined" style={{ fontSize: 18 }}>
+                          {deletingCertId === cert.id ? "hourglass_top" : "delete"}
+                        </span>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {certificates.length === 0 && (
+                <p className="profile-empty-text">Chưa có chứng chỉ nào.</p>
+              )}
+
+              {/* Form thêm chứng chỉ mới */}
+              <div className="profile-cert-add-form">
+                <div className="profile-form-row">
+                  <div className="profile-field">
+                    <label className="profile-label">TÊN CHỨNG CHỈ</label>
+                    <input
+                      type="text"
+                      className="profile-input"
+                      value={newCertTitle}
+                      onChange={(e) => setNewCertTitle(e.target.value)}
+                      placeholder="Ví dụ: Chứng chỉ IELTS 8.0"
+                    />
+                  </div>
+                  <div className="profile-field">
+                    <label className="profile-label">FILE CHỨNG CHỈ</label>
+                    <input
+                      type="file"
+                      accept=".pdf,.jpg,.jpeg,.png"
+                      onChange={(e) => setNewCertFile(e.target.files[0])}
+                      className="profile-input profile-input-file"
+                    />
+                  </div>
+                </div>
+                <div className="profile-form-actions">
+                  <button
+                    type="button"
+                    className="profile-btn-primary"
+                    onClick={handleUploadCertificate}
+                    disabled={uploadingCert || !newCertTitle || !newCertFile}
+                  >
+                    {uploadingCert ? "Đang tải lên..." : "Thêm chứng chỉ"}
+                  </button>
+                </div>
+              </div>
             </div>
           )}
         </div>

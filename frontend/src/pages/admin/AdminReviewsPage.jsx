@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "react-toastify";
-import { getReviews, updateReviewStatus } from "../../services/reviewService";
+import { getReviewsApi, updateReviewStatusApi } from "../../api/reviewAPI";
 import ConfirmModal from "../../components/common/ConfirmModal";
 
 function AdminReviewsPage() {
@@ -33,7 +33,7 @@ function AdminReviewsPage() {
   const loadReviews = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await getReviews();
+      const data = await getReviewsApi();
       setReviews(data || []);
     } catch (error) {
       toast.error("Không thể tải danh sách đánh giá.");
@@ -54,7 +54,7 @@ function AdminReviewsPage() {
       async () => {
         try {
           setActionLoading(`${status}-${reviewId}`);
-          await updateReviewStatus(reviewId, status);
+          await updateReviewStatusApi(reviewId, status);
           toast.success(`Đã ${action} đánh giá thành công!`);
           loadReviews();
         } catch (error) {

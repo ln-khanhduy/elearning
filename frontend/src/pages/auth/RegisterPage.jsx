@@ -1,6 +1,6 @@
 ﻿import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
-import InputField from "../../components/auth/InputField";
+import InputField from "../../components/common/InputField";
 import { sendRegisterOtp } from "../../services/authService";
 
 function RegisterPage() {

@@ -16,28 +16,33 @@ import StepReview from "../../components/course-wizard/steps/StepReview";
 import StepPublish from "../../components/course-wizard/steps/StepPublish";
 
 import {
-  getAdminCourseDetail,
-  createAdminCourse,
-  updateAdminCourse,
-  publishAdminCourse,
-  getCategories,
-} from "../../services/courseService";
-
+  getAdminCourseDetailApi,
+  createAdminCourseApi,
+  updateAdminCourseApi,
+  publishAdminCourseApi,
+  getCategoriesApi,
+  getCurriculumApi,
+} from "../../api/courseAPI";
 import {
-  getCurriculum,
-  createChapter,
-  updateChapter,
-  deleteChapter,
-  createLesson,
-  updateLesson,
-  deleteLesson,
-  createQuiz,
-  updateQuiz,
-  deleteQuiz,
-  createQuestion,
-  updateQuestion,
-  getQuestions,
-} from "../../services/curriculumService";
+  createChapterApi,
+  updateChapterApi,
+  deleteChapterApi,
+} from "../../api/chapterAPI";
+import {
+  createLessonApi,
+  updateLessonApi,
+  deleteLessonApi,
+} from "../../api/lessonAPI";
+import {
+  createQuizApi,
+  updateQuizApi,
+  deleteQuizApi,
+} from "../../api/quizAPI";
+import {
+  createQuestionApi,
+  updateQuestionApi,
+  getQuestionsApi,
+} from "../../api/questionAPI";
 
 import "../../style/course-wizard.css";
 
@@ -94,7 +99,7 @@ export default function CourseBuilderPage({ mode = "create" }) {
   useEffect(() => {
     const fetchMeta = async () => {
       try {
-        const cats = await getCategories();
+        const cats = await getCategoriesApi();
         setCategories(cats?.data || cats || []);
       } catch {
         // ignore
@@ -113,7 +118,7 @@ export default function CourseBuilderPage({ mode = "create" }) {
 
   const loadCourse = async () => {
     try {
-      const res = await getAdminCourseDetail(courseId);
+      const res = await getAdminCourseDetailApi(courseId);
       const data = res?.data || res;
       setCourse(data);
       setFormData({
@@ -129,7 +134,7 @@ export default function CourseBuilderPage({ mode = "create" }) {
 
       // Load curriculum
       try {
-        const curRes = await getCurriculum(courseId);
+        const curRes = await getCurriculumApi(courseId);
         // Response structure: { success: true, data: { id, title, ..., chapters: [...] } }
         const curData = curRes?.data?.chapters || curRes?.chapters || [];
         setCurriculum(Array.isArray(curData) ? curData : []);
@@ -161,7 +166,7 @@ export default function CourseBuilderPage({ mode = "create" }) {
         form.append("discount_price", formData.discount_price);
       if (thumbnail) form.append("thumbnail", thumbnail);
 
-      const result = await updateAdminCourse(courseId, form);
+      const result = await updateAdminCourseApi(courseId, form);
       const updatedData = result?.data || result;
       if (updatedData) {
         setCourse(updatedData);
@@ -232,7 +237,7 @@ export default function CourseBuilderPage({ mode = "create" }) {
       return;
     }
     try {
-      const res = await createChapter(courseId, {
+      const res = await createChapterApi(courseId, {
         title: `Chương ${curriculum.length + 1}`,
       });
       const newChapter = res?.data || res;
@@ -247,7 +252,7 @@ export default function CourseBuilderPage({ mode = "create" }) {
     async (sectionId, newTitle) => {
       if (!newTitle) return;
       try {
-        await updateChapter(sectionId, { title: newTitle });
+        await updateChapterApi(sectionId, { title: newTitle });
         setCurriculum((prev) =>
           prev.map((s) =>
             s.id === sectionId ? { ...s, title: newTitle } : s
@@ -271,7 +276,7 @@ export default function CourseBuilderPage({ mode = "create" }) {
       onConfirm: async () => {
         setConfirmModal((prev) => ({ ...prev, show: false }));
         try {
-          await deleteChapter(sectionId);
+          await deleteChapterApi(sectionId);
           setCurriculum((prev) => prev.filter((s) => s.id !== sectionId));
           toast.success("Đã xóa chương.");
         } catch (error) {
@@ -292,7 +297,7 @@ export default function CourseBuilderPage({ mode = "create" }) {
       };
       if (isEdit) {
         try {
-          const res = await createLesson(sectionId, {
+          const res = await createLessonApi(sectionId, {
             title: "Bài học mới",
           });
           newLesson.id = res?.data?.id || res?.id || newLesson.id;
@@ -335,7 +340,7 @@ export default function CourseBuilderPage({ mode = "create" }) {
         }
 
         if (lessonData.id) {
-          await updateLesson(lessonData.id, payload);
+          await updateLessonApi(lessonData.id, payload);
           setCurriculum((prev) =>
             prev.map((s) =>
               s.id === lessonData.section_id
@@ -349,7 +354,7 @@ export default function CourseBuilderPage({ mode = "create" }) {
             )
           );
         } else {
-          const res = await createLesson(lessonData.section_id, payload);
+          const res = await createLessonApi(lessonData.section_id, payload);
           const newLesson = res?.data || res;
           setCurriculum((prev) =>
             prev.map((s) =>
@@ -379,7 +384,7 @@ export default function CourseBuilderPage({ mode = "create" }) {
       onConfirm: async () => {
         setConfirmModal((prev) => ({ ...prev, show: false }));
         try {
-          await deleteLesson(lessonId);
+          await deleteLessonApi(lessonId);
           setCurriculum((prev) =>
             prev.map((s) =>
               s.id === sectionId
@@ -465,7 +470,7 @@ export default function CourseBuilderPage({ mode = "create" }) {
         const isTempId = typeof quizData.id === "string" && quizData.id.startsWith("temp_");
         if (isTempId) {
           // New quiz - create on backend
-          const res = await createQuiz(quizData.lesson_id, payload);
+          const res = await createQuizApi(quizData.lesson_id, payload);
           const newQuiz = res?.data || res;
           const newQuizId = newQuiz?.id;
 
@@ -482,7 +487,7 @@ export default function CourseBuilderPage({ mode = "create" }) {
               if (payload.quiz_type === "FILL_BLANK" && correctTextAnswer) {
                 questionPayload.correct_text_answer = correctTextAnswer;
               }
-              await createQuestion(newQuizId, questionPayload);
+              await createQuestionApi(newQuizId, questionPayload);
             } catch (questionErr) {
               // Không throw lỗi ở đây - quiz đã được tạo thành công
               console.error("Không thể tạo câu hỏi cho quiz:", questionErr);
@@ -513,13 +518,13 @@ export default function CourseBuilderPage({ mode = "create" }) {
           setSelectedItem((prev) => prev?.id === quizData.id ? { ...prev, id: newQuiz.id } : prev);
         } else if (quizData.id) {
           // Existing quiz - update on backend
-          await updateQuiz(quizData.id, payload);
+          await updateQuizApi(quizData.id, payload);
 
           // Nếu là ESSAY hoặc FILL_BLANK và có prompt, cập nhật hoặc tạo Question
           if (prompt && (payload.quiz_type === "ESSAY" || payload.quiz_type === "FILL_BLANK")) {
             try {
               // Lấy danh sách questions hiện tại
-              const questionsRes = await getQuestions(quizData.id);
+              const questionsRes = await getQuestionsApi(quizData.id);
               const existingQuestions = questionsRes?.data || questionsRes || [];
               const questionPayload = {
                 prompt: prompt,
@@ -533,10 +538,10 @@ export default function CourseBuilderPage({ mode = "create" }) {
               }
               if (existingQuestions.length > 0) {
                 // Cập nhật question đầu tiên
-                await updateQuestion(existingQuestions[0].id, questionPayload);
+                await updateQuestionApi(existingQuestions[0].id, questionPayload);
               } else {
                 // Tạo question mới
-                await createQuestion(quizData.id, questionPayload);
+                await createQuestionApi(quizData.id, questionPayload);
               }
             } catch (questionErr) {
               console.error("Không thể cập nhật/tạo câu hỏi cho quiz:", questionErr);
@@ -583,7 +588,7 @@ export default function CourseBuilderPage({ mode = "create" }) {
       onConfirm: async () => {
         setConfirmModal((prev) => ({ ...prev, show: false }));
         try {
-          await deleteQuiz(quizId);
+          await deleteQuizApi(quizId);
           setCurriculum((prev) =>
             prev.map((s) =>
               s.id === sectionId
@@ -667,7 +672,7 @@ export default function CourseBuilderPage({ mode = "create" }) {
         form.append("preview_video_url", formData.preview_video_url.trim());
       if (thumbnail) form.append("thumbnail", thumbnail);
 
-      const res = await createAdminCourse(form);
+      const res = await createAdminCourseApi(form);
       const newCourseId = res?.data?.id || res?.id;
       if (newCourseId) {
         toast.success("Tạo khóa học thành công!");
@@ -690,7 +695,7 @@ export default function CourseBuilderPage({ mode = "create" }) {
       if (course?.status === "PUBLISHED") {
         toast.success("Khóa học đã được cập nhật!");
       } else {
-        await publishAdminCourse(courseId);
+        await publishAdminCourseApi(courseId);
         toast.success("Khóa học đã được xuất bản!");
       }
       navigate("/admin/courses");
@@ -853,7 +858,7 @@ export default function CourseBuilderPage({ mode = "create" }) {
           onImportSuccess={async () => {
             if (isEdit) {
               try {
-                const res = await getCurriculum(courseId);
+                const res = await getCurriculumApi(courseId);
                 const curData = res?.data?.chapters || res?.chapters || [];
                 setCurriculum(Array.isArray(curData) ? curData : []);
                 // Update editingItem with fresh data from backend

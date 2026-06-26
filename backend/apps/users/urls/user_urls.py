@@ -21,6 +21,9 @@ from apps.users.view.user_views import (
     DownloadInstructorCertificateAPIView,
     PreviewInstructorCertificateAPIView,
     LinkGoogleAPIView,
+    MyInstructorCertificateUploadAPIView,
+    MyInstructorCertificateListAPIView,
+    MyInstructorCertificateDeleteAPIView,
 )
 
 urlpatterns = [
@@ -49,4 +52,8 @@ urlpatterns = [
     path("instructors/applications/<int:application_id>/certificates/<int:certificate_id>/preview/",PreviewInstructorCertificateAPIView.as_view(),name="instructor-certificate-preview"),
     path("instructors/applications/<int:application_id>/cv/preview/",PreviewInstructorCVAPIView.as_view(),name="instructor-cv-preview"),
 
+    # API cho instructor đã đăng nhập quản lý chứng chỉ của mình
+    path("instructors/certificates/", MyInstructorCertificateUploadAPIView.as_view(), name="my-instructor-certificate-upload"),
+    path("instructors/certificates/list/", MyInstructorCertificateListAPIView.as_view(), name="my-instructor-certificate-list"),
+    path("instructors/certificates/<int:certificate_id>/", MyInstructorCertificateDeleteAPIView.as_view(), name="my-instructor-certificate-delete"),
 ]

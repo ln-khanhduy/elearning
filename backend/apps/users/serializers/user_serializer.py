@@ -44,9 +44,18 @@ class UpdateProfileSerializer(serializers.ModelSerializer):
     bank_account_number = serializers.CharField(required=False, allow_blank=True, max_length=50)
     bank_account_name = serializers.CharField(required=False, allow_blank=True, max_length=100)
 
+    # Thông tin hồ sơ giảng viên (chỉ instructor mới gửi)
+    bio = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    portfolio_link = serializers.URLField(required=False, allow_blank=True, allow_null=True)
+    cv_file = serializers.FileField(required=False, allow_null=True)
+
     class Meta:
         model = User
-        fields = ["first_name", "last_name", "phone", "avatar", "bank_name", "bank_account_number", "bank_account_name"]
+        fields = [
+            "first_name", "last_name", "phone", "avatar",
+            "bank_name", "bank_account_number", "bank_account_name",
+            "bio", "portfolio_link", "cv_file",
+        ]
 
     def validate_bank_account_number(self, value):
         """Kiểm tra số tài khoản ngân hàng chỉ chứa chữ số nếu có giá trị."""
