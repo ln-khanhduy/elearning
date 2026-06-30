@@ -17,6 +17,11 @@ from apps.courses.views import (
     InstructorCourseEssaySubmissionsAPIView, InstructorCourseGradeEssayAPIView,
     InstructorCourseSendNotificationAPIView, InstructorCourseQAAPIView,
     InstructorCourseQAReplyAPIView, InstructorCourseLearningReportAPIView,
+
+    # Student Q&A
+    StudentCourseQuestionListAPIView, StudentCourseQuestionCreateAPIView,
+    StudentCourseQuestionDetailAPIView, StudentCourseQuestionReplyAPIView,
+    StudentCourseQuestionCloseAPIView,
 )
 
 
@@ -49,6 +54,13 @@ urlpatterns = [
     path("instructor/<int:course_id>/qa/", InstructorCourseQAAPIView.as_view(), name="instructor-course-qa"),
     path("instructor/<int:course_id>/qa/<int:question_id>/reply/", InstructorCourseQAReplyAPIView.as_view(), name="instructor-course-qa-reply"),
     path("instructor/<int:course_id>/learning-report/", InstructorCourseLearningReportAPIView.as_view(), name="instructor-course-learning-report"),
+
+    # ==================== STUDENT Q&A ====================
+    path("<int:course_id>/student/qa/", StudentCourseQuestionListAPIView.as_view(), name="student-course-qa-list"),
+    path("<int:course_id>/student/qa/create/", StudentCourseQuestionCreateAPIView.as_view(), name="student-course-qa-create"),
+    path("<int:course_id>/student/qa/<int:question_id>/", StudentCourseQuestionDetailAPIView.as_view(), name="student-course-qa-detail"),
+    path("<int:course_id>/student/qa/<int:question_id>/reply/", StudentCourseQuestionReplyAPIView.as_view(), name="student-course-qa-reply"),
+    path("<int:course_id>/student/qa/<int:question_id>/close/", StudentCourseQuestionCloseAPIView.as_view(), name="student-course-qa-close"),
 
     # ==================== CATEGORY ====================
     path("categories/", CategoryListAPIView.as_view(), name="category-list"),

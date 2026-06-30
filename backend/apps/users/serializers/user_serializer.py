@@ -22,9 +22,10 @@ class UserListSerializer(serializers.ModelSerializer):
 
 
 class UserDetailSerializer(serializers.ModelSerializer):
-    """Serializer cho chi tiết người dùng - bao gồm thông tin role, trạng thái và thời gian."""
+    """Serializer cho chi tiết người dùng - bao gồm thông tin role, trạng thái, thời gian và danh sách permissions."""
 
     role = RoleSerializer(read_only=True)
+    permissions = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -33,7 +34,13 @@ class UserDetailSerializer(serializers.ModelSerializer):
             "phone", "avatar_url", "is_active",
             "account_status_reason", "account_status_changed_at", "account_status_changed_by",
             "date_joined", "last_login", "role", "google_email",
+            "permissions",
         ]
+
+    def get_permissions(self, obj):
+        if obj.role:
+            return list(obj.role.permissions.values_list('code', flat=True))
+        return []
 
 
 class UpdateProfileSerializer(serializers.ModelSerializer):

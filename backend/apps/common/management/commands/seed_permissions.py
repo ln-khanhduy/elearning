@@ -98,6 +98,10 @@ PERMISSIONS = {
 
     # Instructor finance
     "instructor.wallet.view_balance": "Xem số dư ví",
+
+    # Instructor course management
+    "instructor.course.view_own": "Xem khóa học giảng dạy",
+    "instructor.course.manage_own": "Quản lý khóa học giảng dạy",
 }
 
 
@@ -237,25 +241,12 @@ ROLE_PERMISSIONS = {
 
 
     "INSTRUCTOR": [
-        "course.course.view",
-        "course.course.create",
-        "course.course.update",
-        "course.course.delete",
-        "course.course.hide",
-
-        "course.lesson.create",
-        "course.lesson.update",
-        "course.lesson.delete",
-
-        "course.quiz.create",
-        "course.quiz.update",
-        "course.quiz.delete",
-
+        "instructor.course.view_own",
         "instructor.wallet.view_balance",
         "user.instructor.sales_history",
         "user.instructor.withdraw_request",
-
         "course.comment.reply",
+        "student.profile.manage",
     ],
 
 

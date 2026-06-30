@@ -468,7 +468,7 @@ function QATab({ courseId }) {
       try {
         const apiClient = (await import("../../api/apiClient")).default;
         const res = await apiClient.get(`/api/courses/instructor/${courseId}/qa/`);
-        setQuestions(res.data?.data || []);
+        setQuestions(res.data?.data?.questions || []);
       } catch (error) {
         setQuestions([]);
       } finally {
@@ -494,7 +494,7 @@ function QATab({ courseId }) {
       setReplyText(prev => ({ ...prev, [questionId]: "" }));
       // Refresh
       const res = await apiClient.get(`/api/courses/instructor/${courseId}/qa/`);
-      setQuestions(res.data?.data || []);
+      setQuestions(res.data?.data?.questions || []);
     } catch (error) {
       toast.error("Không thể gửi câu trả lời.");
     } finally {

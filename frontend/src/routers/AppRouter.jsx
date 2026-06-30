@@ -19,12 +19,14 @@ import InstructorCoursesPage from "../pages/instructor/InstructorCoursesPage";
 import InstructorCourseDetailPage from "../pages/instructor/InstructorCourseDetailPage";
 import InstructorCourseStudentsPage from "../pages/instructor/InstructorCourseStudentsPage";
 import InstructorCourseAnalyticsPage from "../pages/instructor/InstructorCourseAnalyticsPage";
+import InstructorCourseQAPage from "../pages/instructor/InstructorCourseQAPage";
 import AdminCourseListPage from "../pages/admin/AdminCourseListPage";
 import CourseBuilderPage from "../pages/course-builder/CourseBuilderPage";
 import AdminCourseAssignPage from "../pages/admin/AdminCourseAssignPage";
 import AdminCategoryPage from "../pages/admin/AdminCategoryPage";
 import MyCoursesPage from "../pages/student/MyCoursesPage";
 import CertificatesPage from "../pages/student/CertificatesPage";
+import StudentCourseQAPage from "../pages/student/StudentCourseQAPage";
 import LearningPage from "../pages/learning/LearningPage";
 import AdminReviewsPage from "../pages/admin/AdminReviewsPage";
 import InstructorListPage from "../pages/admin/InstructorListPage";
@@ -65,6 +67,7 @@ function AppRouter() {
           <Route path="/my-certificates" element={<ProtectedRoute allowedRoles={["STUDENT", "INSTRUCTOR"]}><CertificatesPage /></ProtectedRoute>} />
           <Route path="/courses/:courseId/learn" element={<ProtectedRoute allowedRoles={["STUDENT", "INSTRUCTOR"]}><LearningPage /></ProtectedRoute>} />
           <Route path="/courses/:courseId/learn/:lessonId" element={<ProtectedRoute allowedRoles={["STUDENT", "INSTRUCTOR"]}><LearningPage /></ProtectedRoute>} />
+          <Route path="/courses/:courseId/qa" element={<ProtectedRoute allowedRoles={["STUDENT", "INSTRUCTOR"]}><StudentCourseQAPage /></ProtectedRoute>} />
 
           {/* Thanh toán */}
           <Route path="/courses/:courseId/checkout" element={<ProtectedRoute allowedRoles={["STUDENT", "INSTRUCTOR"]}><CheckoutPage /></ProtectedRoute>} />
@@ -84,6 +87,7 @@ function AppRouter() {
           <Route path="/instructor/courses/:courseId" element={<ProtectedRoute allowedRoles={["INSTRUCTOR", "SUPERADMIN"]}><InstructorCourseDetailPage /></ProtectedRoute>} />
           <Route path="/instructor/courses/:courseId/students" element={<ProtectedRoute allowedRoles={["INSTRUCTOR", "SUPERADMIN"]}><InstructorCourseStudentsPage /></ProtectedRoute>} />
           <Route path="/instructor/courses/:courseId/analytics" element={<ProtectedRoute allowedRoles={["INSTRUCTOR", "SUPERADMIN"]}><InstructorCourseAnalyticsPage /></ProtectedRoute>} />
+          <Route path="/instructor/courses/:courseId/qa" element={<ProtectedRoute allowedRoles={["INSTRUCTOR", "SUPERADMIN"]}><InstructorCourseQAPage /></ProtectedRoute>} />
 
           {/* Người dùng & Giảng viên */}
           <Route path="/admin/users" element={<ProtectedRoute allowedRoles={["SUPERADMIN"]}><UserManagementPage /></ProtectedRoute>} />

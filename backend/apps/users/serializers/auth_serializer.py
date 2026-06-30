@@ -4,18 +4,19 @@ from apps.users.models import User
 
 
 class UserSerializer(serializers.ModelSerializer):
-    """Serializer chuyển User model thành JSON trả về client - bao gồm role, full_name và avatar."""
+    """Serializer chuyển User model thành JSON trả về client - bao gồm role, full_name, avatar và permissions."""
 
     role = serializers.CharField(source='role.code')
     full_name = serializers.SerializerMethodField()
     avatar_url = serializers.SerializerMethodField()
+    permissions = serializers.SerializerMethodField()
 
     class Meta:
         model = User
         fields = [
             'id', 'email', 'first_name', 'last_name', 'full_name',
             'phone', 'role', 'avatar_url', 'date_joined', 'last_login',
-            'google_email', 'is_active',
+            'google_email', 'is_active', 'permissions',
         ]
 
     def get_full_name(self, obj):
@@ -25,6 +26,12 @@ class UserSerializer(serializers.ModelSerializer):
     def get_avatar_url(self, obj):
         """Lấy URL ảnh đại diện của user."""
         return obj.avatar_url
+
+    def get_permissions(self, obj):
+        """Lấy danh sách permission codes của role user."""
+        if obj.role:
+            return list(obj.role.permissions.values_list('code', flat=True))
+        return []
 
 
 class LoginSerializer(serializers.Serializer):

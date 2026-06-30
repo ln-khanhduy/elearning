@@ -68,3 +68,54 @@ class Course(models.Model):
             models.Index(fields=['status', 'created_at']),              # Lọc khóa học theo trạng thái + mới nhất
             models.Index(fields=['category']),          # Lọc khóa học theo danh mục
         ]
+
+
+class CourseQuestion(models.Model):
+    """
+    Câu hỏi Q&A của học viên trong khóa học.
+    Học viên có thể đặt câu hỏi liên quan đến bài học cụ thể hoặc chung chung.
+    """
+    class Status(models.TextChoices):
+        OPEN = 'OPEN', 'Open'
+        ANSWERED = 'ANSWERED', 'Answered'
+        CLOSED = 'CLOSED', 'Closed'
+
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='questions')
+    student = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='course_questions')
+    lesson = models.ForeignKey('lessons.Lesson', on_delete=models.SET_NULL, null=True, blank=True, related_name='questions')
+    title = models.CharField(max_length=200)
+    content = models.TextField()
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.OPEN)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'course_question'
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['course', 'status']),
+            models.Index(fields=['student', 'course']),
+        ]
+
+    def __str__(self):
+        return f"[{self.course.title}] {self.title}"
+
+
+class CourseAnswer(models.Model):
+    """
+    Câu trả lời cho câu hỏi Q&A.
+    Cả giảng viên và học viên đều có thể trả lời.
+    """
+    question = models.ForeignKey(CourseQuestion, on_delete=models.CASCADE, related_name='answers')
+    author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='course_answers')
+    content = models.TextField()
+    is_instructor = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'course_answer'
+        ordering = ['created_at']
+
+    def __str__(self):
+        return f"Trả lời cho '{self.question.title}' bởi {self.author.get_full_name() or self.author.email}"

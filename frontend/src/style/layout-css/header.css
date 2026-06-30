@@ -168,8 +168,9 @@
 }
 
 .header-right .btn-primary:hover {
-  background: #0a2d55;
-  border-color: #0a2d55;
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--primary);
   transform: translateY(-1px);
 }
 
