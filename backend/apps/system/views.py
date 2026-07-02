@@ -2,10 +2,10 @@ from rest_framework import status
 from rest_framework.response import Response
 
 from apps.common.base_api_view import BasePermissionAPIView
-from apps.system.services.admin_log_service import AdminLogService
+from apps.system.services import admin_log_service
 
 from apps.system.serializers.dashboard_serializer import DashboardDataSerializer
-from apps.system.services.dashboard_service import AdminDashboardService
+from apps.system.services import dashboard_service
 
 
 
@@ -25,10 +25,10 @@ class AdminDashboardView(BasePermissionAPIView):
             except (ValueError, TypeError):
                 year = None
 
-        data = AdminDashboardService.get_dashboard_data(year)
+        data = dashboard_service.get_dashboard_data(year)
         serializer = DashboardDataSerializer(data)
 
-        AdminLogService.log(
+        admin_log_service.log(
             admin=request.user,
             action_type='DASHBOARD_VIEW',
             detail=f"Admin {request.user.email} đã xem dashboard (năm: {year or 'tất cả'})",

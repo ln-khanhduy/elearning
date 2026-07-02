@@ -8,39 +8,21 @@ from rest_framework.views import APIView
 from rest_framework.parsers import MultiPartParser, FormParser
 
 
-
 from apps.common.base_api_view import BasePermissionAPIView
-from apps.system.services.admin_log_service import AdminLogService
+from apps.system.services import admin_log_service
 
-from apps.quizzes.services.quiz_service import QuizService
+from apps.quizzes.services import quiz_service
 from apps.quizzes.serializers.quiz_serializer import QuizSerializer, QuizCreateUpdateSerializer
 
-from apps.quizzes.services.question_service import QuestionService
+from apps.quizzes.services import question_service
 from apps.quizzes.serializers.question_serializer import QuestionSerializer, QuestionCreateUpdateSerializer
 
-from apps.quizzes.services.question_import_service import QuestionImportService
-from apps.quizzes.repositories.quiz_repository import QuizRepository
-from apps.courses.services.course_permission_service import CoursePermissionService
+from apps.quizzes.services import question_import_service
+from apps.quizzes.repositories import quiz_repository
+from apps.quizzes.repositories import question_repository
+from apps.courses.services.course_permission_service import can_manage_course
 import re
-import base64
-
-
-
-
-def success_response(data=None, message="Success", http_status=status.HTTP_200_OK):
-    return Response({
-        "success": True,
-        "message": message,
-        "data": data,
-    }, status=http_status)
-
-
-def error_response(message="Error", errors=None, http_status=status.HTTP_400_BAD_REQUEST):
-    return Response({
-        "success": False,
-        "message": message,
-        "errors": errors or {},
-    }, status=http_status)
+from apps.common.response_helpers import success_response, error_response
 
 
 # ==================== QUIZ ====================
@@ -52,7 +34,7 @@ class LessonQuizListAPIView(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request, lesson_id):
-        quizzes = QuizService.get_quizzes_by_lesson(lesson_id)
+        quizzes = quiz_service.get_quizzes_by_lesson(lesson_id)
         return success_response(QuizSerializer(quizzes, many=True).data)
 
 
@@ -63,7 +45,7 @@ class QuizDetailAPIView(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request, quiz_id):
-        quiz = QuizService.get_quiz_detail(quiz_id)
+        quiz = quiz_service.get_quiz_detail(quiz_id)
         return success_response(QuizSerializer(quiz).data)
 
 
@@ -76,8 +58,8 @@ class QuizCreateAPIView(BasePermissionAPIView):
     def post(self, request, lesson_id):
         serializer = QuizCreateUpdateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        quiz = QuizService.create_quiz(lesson_id, request.user, serializer.validated_data)
-        AdminLogService.log(
+        quiz = quiz_service.create_quiz(lesson_id, request.user, serializer.validated_data)
+        admin_log_service.log(
             admin=request.user,
             action_type='LESSON_CREATE',
             detail=f"Admin {request.user.email} đã tạo quiz '{quiz.title}' (ID: {quiz.id}) trong bài học ID {lesson_id}",
@@ -97,8 +79,8 @@ class QuizUpdateAPIView(BasePermissionAPIView):
     def patch(self, request, quiz_id):
         serializer = QuizCreateUpdateSerializer(data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
-        quiz = QuizService.update_quiz(quiz_id, request.user, serializer.validated_data)
-        AdminLogService.log(
+        quiz = quiz_service.update_quiz(quiz_id, request.user, serializer.validated_data)
+        admin_log_service.log(
             admin=request.user,
             action_type='LESSON_UPDATE',
             detail=f"Admin {request.user.email} đã cập nhật quiz '{quiz.title}' (ID: {quiz.id})",
@@ -116,12 +98,11 @@ class QuizDeleteAPIView(BasePermissionAPIView):
     required_permission = "course.lesson.delete"
 
     def delete(self, request, quiz_id):
-        from apps.quizzes.repositories.quiz_repository import QuizRepository
-        quiz = QuizRepository.get_by_id(quiz_id)
+        quiz = quiz_repository.get_by_id(quiz_id)
         quiz_title = quiz.title
         quiz_id_str = str(quiz.id)
-        QuizService.delete_quiz(quiz_id, request.user)
-        AdminLogService.log(
+        quiz_service.delete_quiz(quiz_id, request.user)
+        admin_log_service.log(
             admin=request.user,
             action_type='LESSON_DELETE',
             detail=f"Admin {request.user.email} đã xóa quiz '{quiz_title}' (ID: {quiz_id_str})",
@@ -141,7 +122,7 @@ class QuizQuestionListAPIView(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request, quiz_id):
-        questions = QuestionService.get_questions_by_quiz(quiz_id)
+        questions = question_service.get_questions_by_quiz(quiz_id)
         return success_response(QuestionSerializer(questions, many=True).data)
 
 
@@ -154,8 +135,8 @@ class QuestionCreateAPIView(BasePermissionAPIView):
     def post(self, request, quiz_id):
         serializer = QuestionCreateUpdateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        question = QuestionService.create_question(quiz_id, request.user, serializer.validated_data)
-        AdminLogService.log(
+        question = question_service.create_question(quiz_id, request.user, serializer.validated_data)
+        admin_log_service.log(
             admin=request.user,
             action_type='LESSON_CREATE',
             detail=f"Admin {request.user.email} đã tạo câu hỏi (ID: {question.id}) trong quiz ID {quiz_id}",
@@ -175,8 +156,8 @@ class QuestionUpdateAPIView(BasePermissionAPIView):
     def patch(self, request, question_id):
         serializer = QuestionCreateUpdateSerializer(data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
-        question = QuestionService.update_question(question_id, request.user, serializer.validated_data)
-        AdminLogService.log(
+        question = question_service.update_question(question_id, request.user, serializer.validated_data)
+        admin_log_service.log(
             admin=request.user,
             action_type='LESSON_UPDATE',
             detail=f"Admin {request.user.email} đã cập nhật câu hỏi (ID: {question.id})",
@@ -194,13 +175,12 @@ class QuestionDeleteAPIView(BasePermissionAPIView):
     required_permission = "course.lesson.delete"
 
     def delete(self, request, question_id):
-        from apps.quizzes.repositories.question_repository import QuestionRepository
-        question = QuestionRepository.get_by_id(question_id)
+        question = question_repository.get_by_id(question_id)
         if not question:
             return error_response("Câu hỏi không tồn tại.", http_status=status.HTTP_404_NOT_FOUND)
         question_id_str = str(question.id)
-        QuestionService.delete_question(question_id, request.user)
-        AdminLogService.log(
+        question_service.delete_question(question_id, request.user)
+        admin_log_service.log(
             admin=request.user,
             action_type='LESSON_DELETE',
             detail=f"Admin {request.user.email} đã xóa câu hỏi (ID: {question_id_str})",
@@ -227,20 +207,18 @@ class QuestionImportPreviewAPIView(BasePermissionAPIView):
             return error_response("Vui lòng upload file CSV hoặc XLSX.", http_status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            ext = QuestionImportService.validate_file(file)
+            ext = question_import_service.validate_file(file)
         except ValueError as e:
             return error_response(str(e), http_status=status.HTTP_400_BAD_REQUEST)
 
         try:
             if ext == '.csv':
-                rows = QuestionImportService.parse_csv(file)
+                rows = question_import_service.parse_csv(file)
             else:
-                rows = QuestionImportService.parse_excel(file)
+                rows = question_import_service.parse_excel(file)
         except ValueError as e:
-            # Check if this is a missing columns error
             error_msg = str(e)
             if "Thiếu cột bắt buộc" in error_msg:
-                # Extract column names from the error message
                 match = re.search(r'Thiếu cột bắt buộc: (.+)', error_msg)
                 missing_columns = match.group(1).split(', ') if match else []
                 return success_response({
@@ -251,15 +229,15 @@ class QuestionImportPreviewAPIView(BasePermissionAPIView):
         except Exception as e:
             return error_response(f"Lỗi đọc file: {str(e)}", http_status=status.HTTP_400_BAD_REQUEST)
 
-
         if not rows:
             return error_response("File không có dữ liệu.", http_status=status.HTTP_400_BAD_REQUEST)
 
-        preview_data, errors = QuestionImportService.preview_questions(rows)
+        preview_data, errors = question_import_service.preview_questions(rows)
+        valid_count = len(rows) - len(errors)
 
         return success_response({
             "total_rows": len(rows),
-            "valid_rows": len(preview_data),
+            "valid_rows": valid_count,
             "error_count": len(errors),
             "preview": preview_data,
             "errors": errors,
@@ -282,14 +260,14 @@ class QuestionImportExecuteAPIView(BasePermissionAPIView):
         if not rows:
             return error_response("Không có câu hỏi nào để import.", http_status=status.HTTP_400_BAD_REQUEST)
 
-        quiz = QuizRepository.get_by_id(quiz_id)
+        quiz = quiz_repository.get_by_id(quiz_id)
         if not quiz:
             return error_response("Quiz không tồn tại.", http_status=status.HTTP_404_NOT_FOUND)
 
-        if not CoursePermissionService.can_manage_course(quiz.lesson.chapter.course, request.user):
+        if not can_manage_course(quiz.lesson.chapter.course, request.user):
             return error_response("Bạn không có quyền thao tác với khóa học này.", http_status=status.HTTP_403_FORBIDDEN)
 
-        imported_count, errors = QuestionImportService.import_questions(rows, quiz)
+        imported_count, errors = question_import_service.import_questions(rows, quiz)
 
         if errors:
             return success_response({
@@ -297,7 +275,7 @@ class QuestionImportExecuteAPIView(BasePermissionAPIView):
                 "errors": errors,
             }, f"Import {imported_count} câu hỏi, có {len(errors)} lỗi.")
 
-        AdminLogService.log(
+        admin_log_service.log(
             admin=request.user,
             action_type='LESSON_CREATE',
             detail=f"Admin {request.user.email} đã import {imported_count} câu hỏi vào quiz '{quiz.title}' (ID: {quiz.id})",
@@ -342,7 +320,6 @@ class QuestionImportTemplateAPIView(APIView):
 
         response = HttpResponse(content, content_type=content_type)
         response['Content-Disposition'] = f'attachment; filename="{filename}"'
-        # Add UTF-8 charset to help Excel recognize the encoding
         if fmt == 'csv':
             response['Content-Type'] = 'text/csv; charset=utf-8'
         return response

@@ -1,15 +1,11 @@
 from django.urls import path
-from apps.payments.views.payment_views import (
-    # Stripe
+from apps.payments.views import (
     StripeCheckoutAPIView,
     StripeWebhookAPIView,
     StripeVerifyAPIView,
-    # Transaction
     TransactionDetailAPIView,
-    # Admin
     AdminTransactionListAPIView,
     MarkTransactionPaidAPIView,
-    # Instructor
     InstructorRevenueAPIView,
 )
 
@@ -18,7 +14,6 @@ urlpatterns = [
     path("stripe/courses/<int:course_id>/checkout/", StripeCheckoutAPIView.as_view(), name="stripe-checkout"),
     path("stripe/webhook/", StripeWebhookAPIView.as_view(), name="stripe-webhook"),
     path("stripe/verify/", StripeVerifyAPIView.as_view(), name="stripe-verify"),
-
     # Transaction
     path("transactions/<uuid:transaction_id>/", TransactionDetailAPIView.as_view(), name="transaction-detail"),
 

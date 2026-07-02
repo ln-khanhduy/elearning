@@ -1,80 +1,41 @@
-from django.utils import timezone
 from django.shortcuts import get_object_or_404
 from apps.users.models import InstructorProfile, InstructorCertificate
-from apps.users.models import InstructorProfile as InstructorProfileModel
 
 
-class InstructorRepository:
-    """Repository quản lý hồ sơ đăng ký giảng viên."""
-
-    @staticmethod
-    def update_last_login(user):
-        """Cập nhật thời gian đăng nhập cuối cùng của user."""
-        user.last_login = timezone.now()
-        user.save(update_fields=["last_login"])
-
-    @staticmethod
-    def get_all_applications(status_filter=None):
-        """
-        Lấy danh sách tất cả hồ sơ đăng ký giảng viên.
-        Có thể lọc theo trạng thái (PENDING, APPROVED, REJECTED) nếu truyền tham số status_filter.
-        Kết quả sắp xếp theo thời gian nộp đơn mới nhất.
-        """
-        qs = InstructorProfile.objects.select_related("user", "user__role", "reviewed_by").all().order_by("-applied_at")
-        if status_filter:
-            qs = qs.filter(status=status_filter.upper())
-        return qs
-
-    @staticmethod
-    def get_application_by_id(application_id):
-        """Lấy chi tiết một hồ sơ đăng ký giảng viên theo ID, kèm thông tin user và người duyệt. Trả về 404 nếu không tìm thấy."""
-        return get_object_or_404(InstructorProfile.objects.select_related("user", "user__role", "reviewed_by"), id=application_id)
-
-    @staticmethod
-    def get_application_by_email(email):
-        """
-        Lấy hồ sơ đăng ký giảng viên theo email (email là unique).
-        Trả về None nếu email chưa từng gửi hồ sơ đăng ký.
-        """
-        try:
-            return InstructorProfile.objects.select_related("user", "user__role", "reviewed_by").get(email=email)
-        except InstructorProfile.DoesNotExist:
-            return None
-
-    @staticmethod
-    def create_application(validated_data):
-        """Tạo một hồ sơ đăng ký giảng viên mới với trạng thái PENDING, không gắn với user nào."""
-        return InstructorProfile.objects.create(user=None, status=InstructorProfileModel.Status.PENDING, **validated_data)
+def get_all_applications(status_filter=None):
+    qs = InstructorProfile.objects.select_related("user", "user__role", "reviewed_by").all().order_by("-applied_at")
+    if status_filter:
+        qs = qs.filter(status=status_filter.upper())
+    return qs
 
 
-class InstructorCertificateRepository:
-    """Repository quản lý chứng chỉ của giảng viên."""
+def get_application_by_id(application_id):
+    return get_object_or_404(InstructorProfile.objects.select_related("user", "user__role", "reviewed_by"), id=application_id)
 
-    @staticmethod
-    def create_certificate(application, title, file):
-        """Tạo chứng chỉ mới cho hồ sơ giảng viên."""
-        return InstructorCertificate.objects.create(
-            instructor_profile=application,
-            title=title,
-            file=file,
-        )
 
-    @staticmethod
-    def get_certificates_by_application(application):
-        """Lấy danh sách chứng chỉ của hồ sơ giảng viên, sắp xếp theo thời gian upload mới nhất."""
-        return InstructorCertificate.objects.filter(instructor_profile=application).order_by("-uploaded_at")
+def get_application_by_email(email):
+    try:
+        return InstructorProfile.objects.select_related("user", "user__role", "reviewed_by").get(email=email)
+    except InstructorProfile.DoesNotExist:
+        return None
 
-    @staticmethod
-    def get_certificate_by_id(application, certificate_id):
-        """Lấy chứng chỉ theo ID, kiểm tra thuộc hồ sơ. Trả về 404 nếu không tìm thấy."""
-        return get_object_or_404(
-            InstructorCertificate,
-            id=certificate_id,
-            instructor_profile=application,
-        )
 
-    @staticmethod
-    def delete_certificate(application, certificate_id):
-        """Xóa chứng chỉ của hồ sơ giảng viên."""
-        certificate = InstructorCertificateRepository.get_certificate_by_id(application, certificate_id)
-        certificate.delete()
+def create_application(validated_data):
+    return InstructorProfile.objects.create(user=None, status=InstructorProfile.Status.PENDING, **validated_data)
+
+
+def create_certificate(application, title, file):
+    return InstructorCertificate.objects.create(instructor_profile=application, title=title, file=file)
+
+
+def get_certificates_by_application(application):
+    return InstructorCertificate.objects.filter(instructor_profile=application).order_by("-uploaded_at")
+
+
+def get_certificate_by_id(application, certificate_id):
+    return get_object_or_404(InstructorCertificate, id=certificate_id, instructor_profile=application)
+
+
+def delete_certificate(application, certificate_id):
+    certificate = get_certificate_by_id(application, certificate_id)
+    certificate.delete()

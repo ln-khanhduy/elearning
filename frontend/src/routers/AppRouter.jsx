@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import PublicLayout from "../components/layout/PublicLayout";
 import MainLayout from "../components/layout/MainLayout"
@@ -60,62 +60,62 @@ function AppRouter() {
         </Route>
         <Route element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
           {/* Dashboard - chỉ SUPERADMIN mới có thể xem */}
-          <Route path="/dashboard" element={<ProtectedRoute allowedRoles={["SUPERADMIN"]}><AdminDashboardPage /></ProtectedRoute>} />
+          <Route path="/dashboard" element={<ProtectedRoute allowedPermissions={["admin.dashboard.view"]}><AdminDashboardPage /></ProtectedRoute>} />
 
           {/* Học tập */}
-          <Route path="/my-courses" element={<ProtectedRoute allowedRoles={["STUDENT", "INSTRUCTOR"]}><MyCoursesPage /></ProtectedRoute>} />
-          <Route path="/my-certificates" element={<ProtectedRoute allowedRoles={["STUDENT", "INSTRUCTOR"]}><CertificatesPage /></ProtectedRoute>} />
-          <Route path="/courses/:courseId/learn" element={<ProtectedRoute allowedRoles={["STUDENT", "INSTRUCTOR"]}><LearningPage /></ProtectedRoute>} />
-          <Route path="/courses/:courseId/learn/:lessonId" element={<ProtectedRoute allowedRoles={["STUDENT", "INSTRUCTOR"]}><LearningPage /></ProtectedRoute>} />
-          <Route path="/courses/:courseId/qa" element={<ProtectedRoute allowedRoles={["STUDENT", "INSTRUCTOR"]}><StudentCourseQAPage /></ProtectedRoute>} />
+          <Route path="/my-courses" element={<ProtectedRoute allowedPermissions={["student.my_course.view"]}><MyCoursesPage /></ProtectedRoute>} />
+          <Route path="/my-certificates" element={<ProtectedRoute allowedPermissions={["student.course.view_certificate"]}><CertificatesPage /></ProtectedRoute>} />
+          <Route path="/courses/:courseId/learn" element={<ProtectedRoute allowedPermissions={["student.learning.view"]}><LearningPage /></ProtectedRoute>} />
+          <Route path="/courses/:courseId/learn/:lessonId" element={<ProtectedRoute allowedPermissions={["student.learning.view"]}><LearningPage /></ProtectedRoute>} />
+          <Route path="/courses/:courseId/qa" element={<ProtectedRoute allowedPermissions={["course.comment.create"]}><StudentCourseQAPage /></ProtectedRoute>} />
 
-          {/* Thanh toán */}
-          <Route path="/courses/:courseId/checkout" element={<ProtectedRoute allowedRoles={["STUDENT", "INSTRUCTOR"]}><CheckoutPage /></ProtectedRoute>} />
-          <Route path="/payment/success" element={<ProtectedRoute allowedRoles={["STUDENT", "INSTRUCTOR"]}><SuccessPage /></ProtectedRoute>} />
-          <Route path="/payment/cancel" element={<ProtectedRoute allowedRoles={["STUDENT", "INSTRUCTOR"]}><CancelPage /></ProtectedRoute>} />
+          {/* Thanh toan */}
+          <Route path="/courses/:courseId/checkout" element={<ProtectedRoute allowedPermissions={["student.course.buy"]}><CheckoutPage /></ProtectedRoute>} />
+          <Route path="/payment/success" element={<ProtectedRoute allowedPermissions={["student.payment.create"]}><SuccessPage /></ProtectedRoute>} />
+          <Route path="/payment/cancel" element={<ProtectedRoute allowedPermissions={["student.payment.create"]}><CancelPage /></ProtectedRoute>} />
 
           {/* ==================== ADMIN COURSES ==================== */}
-          <Route path="/admin/courses" element={<ProtectedRoute allowedRoles={["COURSE_ADMIN", "SUPERADMIN"]}><AdminCourseListPage /></ProtectedRoute>} />
-          <Route path="/admin/courses/create" element={<ProtectedRoute allowedRoles={["COURSE_ADMIN", "SUPERADMIN"]}><CourseBuilderPage mode="create" /></ProtectedRoute>} />
-          <Route path="/admin/courses/:courseId/edit" element={<ProtectedRoute allowedRoles={["COURSE_ADMIN", "SUPERADMIN"]}><CourseBuilderPage mode="edit" /></ProtectedRoute>} />
-          <Route path="/admin/courses/:courseId/assign" element={<ProtectedRoute allowedRoles={["COURSE_ADMIN", "SUPERADMIN"]}><AdminCourseAssignPage /></ProtectedRoute>} />
-          <Route path="/admin/courses/categories" element={<ProtectedRoute allowedRoles={["COURSE_ADMIN", "SUPERADMIN"]}><AdminCategoryPage /></ProtectedRoute>} />
-          <Route path="/admin/reviews" element={<ProtectedRoute allowedRoles={["COURSE_ADMIN", "SUPERADMIN"]}><AdminReviewsPage /></ProtectedRoute>} />
+          <Route path="/admin/courses" element={<ProtectedRoute allowedPermissions={["course.course.view"]}><AdminCourseListPage /></ProtectedRoute>} />
+          <Route path="/admin/courses/create" element={<ProtectedRoute allowedPermissions={["course.course.create"]}><CourseBuilderPage mode="create" /></ProtectedRoute>} />
+          <Route path="/admin/courses/:courseId/edit" element={<ProtectedRoute allowedPermissions={["course.course.update"]}><CourseBuilderPage mode="edit" /></ProtectedRoute>} />
+          <Route path="/admin/courses/:courseId/assign" element={<ProtectedRoute allowedPermissions={["course.instructor.assign"]}><AdminCourseAssignPage /></ProtectedRoute>} />
+          <Route path="/admin/courses/categories" element={<ProtectedRoute allowedPermissions={["course.category.view"]}><AdminCategoryPage /></ProtectedRoute>} />
+          <Route path="/admin/reviews" element={<ProtectedRoute allowedPermissions={["course.review.view"]}><AdminReviewsPage /></ProtectedRoute>} />
 
           {/* ==================== INSTRUCTOR COURSES ==================== */}
-          <Route path="/instructor/courses" element={<ProtectedRoute allowedRoles={["INSTRUCTOR", "SUPERADMIN"]}><InstructorCoursesPage /></ProtectedRoute>} />
-          <Route path="/instructor/courses/:courseId" element={<ProtectedRoute allowedRoles={["INSTRUCTOR", "SUPERADMIN"]}><InstructorCourseDetailPage /></ProtectedRoute>} />
-          <Route path="/instructor/courses/:courseId/students" element={<ProtectedRoute allowedRoles={["INSTRUCTOR", "SUPERADMIN"]}><InstructorCourseStudentsPage /></ProtectedRoute>} />
-          <Route path="/instructor/courses/:courseId/analytics" element={<ProtectedRoute allowedRoles={["INSTRUCTOR", "SUPERADMIN"]}><InstructorCourseAnalyticsPage /></ProtectedRoute>} />
-          <Route path="/instructor/courses/:courseId/qa" element={<ProtectedRoute allowedRoles={["INSTRUCTOR", "SUPERADMIN"]}><InstructorCourseQAPage /></ProtectedRoute>} />
+          <Route path="/instructor/courses" element={<ProtectedRoute allowedPermissions={["instructor.course.view_own"]}><InstructorCoursesPage /></ProtectedRoute>} />
+          <Route path="/instructor/courses/:courseId" element={<ProtectedRoute allowedPermissions={["instructor.course.manage_own"]}><InstructorCourseDetailPage /></ProtectedRoute>} />
+          <Route path="/instructor/courses/:courseId/students" element={<ProtectedRoute allowedPermissions={["instructor.course.view_own"]}><InstructorCourseStudentsPage /></ProtectedRoute>} />
+          <Route path="/instructor/courses/:courseId/analytics" element={<ProtectedRoute allowedPermissions={["instructor.course.view_own"]}><InstructorCourseAnalyticsPage /></ProtectedRoute>} />
+          <Route path="/instructor/courses/:courseId/qa" element={<ProtectedRoute allowedPermissions={["course.comment.reply"]}><InstructorCourseQAPage /></ProtectedRoute>} />
 
-          {/* Người dùng & Giảng viên */}
-          <Route path="/admin/users" element={<ProtectedRoute allowedRoles={["SUPERADMIN"]}><UserManagementPage /></ProtectedRoute>} />
-          <Route path="/admin/instructors" element={<ProtectedRoute allowedRoles={["INSTRUCTOR_MANAGER", "SUPERADMIN"]}><InstructorListPage /></ProtectedRoute>} />
-          <Route path="/admin/instructor-support" element={<ProtectedRoute allowedRoles={["INSTRUCTOR_MANAGER"]}><></></ProtectedRoute>} />
-          <Route path="/admin/register-instructor" element={<ProtectedRoute allowedRoles={["INSTRUCTOR_MANAGER", "SUPERADMIN"]}><AdminInstructorApplicationsPage /></ProtectedRoute>} />
-          <Route path="/admin/complaints" element={<ProtectedRoute allowedRoles={["USER_MANAGER", "SUPERADMIN"]}><></></ProtectedRoute>} />
+          {/* Người dùng & Giáo viên */}
+          <Route path="/admin/users" element={<ProtectedRoute allowedPermissions={["user.user.view"]}><UserManagementPage /></ProtectedRoute>} />
+          <Route path="/admin/instructors" element={<ProtectedRoute allowedPermissions={["user.instructor.view"]}><InstructorListPage /></ProtectedRoute>} />
+          <Route path="/admin/instructor-support" element={<ProtectedRoute allowedPermissions={["user.instructor.support"]}><></></ProtectedRoute>} />
+          <Route path="/admin/register-instructor" element={<ProtectedRoute allowedPermissions={["user.instructor.approve"]}><AdminInstructorApplicationsPage /></ProtectedRoute>} />
+          <Route path="/admin/complaints" element={<ProtectedRoute allowedPermissions={["user.user.complaint_resolve"]}><></></ProtectedRoute>} />
 
           {/* Tài chính */}
-          <Route path="/finance/transactions" element={<ProtectedRoute allowedRoles={["FINANCE_ADMIN","SUPERADMIN"]}><FinanceTransactionsPage /></ProtectedRoute>} />
-          <Route path="/finance/revenue" element={<ProtectedRoute allowedRoles={["FINANCE_ADMIN","SUPERADMIN"]}><></></ProtectedRoute>} />
-          <Route path="/finance/fees" element={<ProtectedRoute allowedRoles={["FINANCE_ADMIN","SUPERADMIN"]}><></></ProtectedRoute>} />
-          <Route path="/finance/reports" element={<ProtectedRoute allowedRoles={["FINANCE_ADMIN"]}><></></ProtectedRoute>} />
+          <Route path="/finance/transactions" element={<ProtectedRoute allowedPermissions={["finance.finance.revenue_view"]}><FinanceTransactionsPage /></ProtectedRoute>} />
+          <Route path="/finance/revenue" element={<ProtectedRoute allowedPermissions={["finance.finance.revenue_view"]}><></></ProtectedRoute>} />
+          <Route path="/finance/fees" element={<ProtectedRoute allowedPermissions={["finance.finance.revenue_view"]}><></></ProtectedRoute>} />
+          <Route path="/finance/reports" element={<ProtectedRoute allowedPermissions={["finance.finance.report_export"]}><></></ProtectedRoute>} />
 
           {/* Instructor */}
-          <Route path="/instructor/revenue" element={<ProtectedRoute allowedRoles={["INSTRUCTOR","SUPERADMIN"]}><InstructorRevenuePage /></ProtectedRoute>} />
+          <Route path="/instructor/revenue" element={<ProtectedRoute allowedPermissions={["user.instructor.sales_history"]}><InstructorRevenuePage /></ProtectedRoute>} />
 
           {/* Super Admin */}
-          <Route path="/super-admin/admins" element={<ProtectedRoute allowedRoles={["SUPERADMIN"]}><></></ProtectedRoute>} />
-          <Route path="/super-admin/roles" element={<ProtectedRoute allowedRoles={["SUPERADMIN"]}><></></ProtectedRoute>} />
-          <Route path="/super-admin/permissions" element={<ProtectedRoute allowedRoles={["SUPERADMIN"]}><></></ProtectedRoute>} />
-          <Route path="/super-admin/role-permissions" element={<ProtectedRoute allowedRoles={["SUPERADMIN"]}><></></ProtectedRoute>} />
-          <Route path="/super-admin/activity-logs" element={<ProtectedRoute allowedRoles={["SUPERADMIN"]}><></></ProtectedRoute>} />
-          <Route path="/super-admin/settings" element={<ProtectedRoute allowedRoles={["SUPERADMIN"]}><></></ProtectedRoute>} />
+          <Route path="/super-admin/admins" element={<ProtectedRoute allowedPermissions={["admin.admin.view"]}><></></ProtectedRoute>} />
+          <Route path="/super-admin/roles" element={<ProtectedRoute allowedPermissions={["admin.admin.view"]}><></></ProtectedRoute>} />
+          <Route path="/super-admin/permissions" element={<ProtectedRoute allowedPermissions={["admin.admin.view"]}><></></ProtectedRoute>} />
+          <Route path="/super-admin/role-permissions" element={<ProtectedRoute allowedPermissions={["admin.admin.view"]}><></></ProtectedRoute>} />
+          <Route path="/super-admin/activity-logs" element={<ProtectedRoute allowedPermissions={["admin.admin.view"]}><></></ProtectedRoute>} />
+          <Route path="/super-admin/settings" element={<ProtectedRoute allowedPermissions={["admin.admin.view"]}><></></ProtectedRoute>} />
 
           {/* Tài khoản */}
-          <Route path="/profile" element={<ProtectedRoute allowedRoles={["STUDENT", "INSTRUCTOR", "COURSE_ADMIN", "INSTRUCTOR_MANAGER", "USER_MANAGER", "FINANCE_ADMIN", "SUPERADMIN"]}><ProfilePage /></ProtectedRoute>} />
-          <Route path="/notifications" element={<ProtectedRoute allowedRoles={["STUDENT", "INSTRUCTOR", "COURSE_ADMIN", "INSTRUCTOR_MANAGER", "USER_MANAGER", "FINANCE_ADMIN", "SUPERADMIN"]}><></></ProtectedRoute>} />
+          <Route path="/profile" element={<ProtectedRoute allowedPermissions={["student.profile.manage"]}><ProfilePage /></ProtectedRoute>} />
+          <Route path="/notifications" element={<ProtectedRoute allowedPermissions={["user.user.notify"]}><></></ProtectedRoute>} />
         </Route>
       </Routes>
     </BrowserRouter>
@@ -123,3 +123,11 @@ function AppRouter() {
 }
 
 export default AppRouter;
+
+
+
+
+
+
+
+

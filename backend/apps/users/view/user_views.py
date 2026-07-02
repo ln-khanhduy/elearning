@@ -7,9 +7,9 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 
 
 from apps.common.base_api_view import BasePermissionAPIView
-from apps.system.services.admin_log_service import AdminLogService
+from apps.system.services import admin_log_service
 
-from apps.users.services.user_service import UserService, InstructorService
+from apps.users.services import user_service
 
 from apps.users.serializers.user_serializer import (
     UserListSerializer, UserDetailSerializer, UpdateProfileSerializer,
@@ -28,7 +28,7 @@ class UserListAPIView(BasePermissionAPIView):
     required_permission = "user.user.view"
 
     def get(self, request):
-        users = UserService.get_all_users()
+        users = user_service.get_all_users()
         serializer = UserListSerializer(users, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -41,7 +41,7 @@ class UserDetailAPIView(BasePermissionAPIView):
     required_permission = "user.user.view"
 
     def get(self, request, user_id):
-        user = UserService.get_user_by_id(user_id)
+        user = user_service.get_user_by_id(user_id)
         serializer = UserDetailSerializer(user)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -98,7 +98,7 @@ class UpdateProfileAPIView(APIView):
 
         serializer = UpdateProfileSerializer(user, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
-        UserService.update_profile(user, serializer.validated_data)
+        user_service.update_profile(user, serializer.validated_data)
 
         # Lấy thông tin user response
         user_data = UserDetailSerializer(user).data
@@ -131,8 +131,8 @@ class ChangeUserRoleAPIView(BasePermissionAPIView):
     def patch(self, request, user_id):
         serializer = ChangeUserRoleSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        user = UserService.change_role(user_id, serializer.validated_data["role_id"])
-        AdminLogService.log(
+        user = user_service.change_role(user_id, serializer.validated_data["role_id"])
+        admin_log_service.log(
             admin=request.user,
             action_type='USER_CHANGE_ROLE',
             detail=f"Admin {request.user.email} đã đổi role của user {user.email} (ID: {user.id}) thành role ID {serializer.validated_data['role_id']}",
@@ -157,8 +157,8 @@ class LockUserAPIView(BasePermissionAPIView):
         serializer = LockUnlockUserSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         reason = serializer.validated_data.get("reason", "")
-        user = UserService.lock_user(user_id, request.user, reason)
-        AdminLogService.log(
+        user = user_service.lock_user(user_id, request.user, reason)
+        admin_log_service.log(
             admin=request.user,
             action_type='USER_LOCK',
             detail=f"Admin {request.user.email} đã khóa tài khoản của user {user.email} (ID: {user.id}). Lý do: {reason or 'Không có lý do'}",
@@ -177,8 +177,8 @@ class UnlockUserAPIView(BasePermissionAPIView):
     required_permission = "user.user.unlock"
 
     def patch(self, request, user_id):
-        user = UserService.unlock_user(user_id, request.user)
-        AdminLogService.log(
+        user = user_service.unlock_user(user_id, request.user)
+        admin_log_service.log(
             admin=request.user,
             action_type='USER_UNLOCK',
             detail=f"Admin {request.user.email} đã mở khóa tài khoản của user {user.email} (ID: {user.id})",
@@ -199,7 +199,7 @@ class ChangePasswordAPIView(APIView):
     def patch(self, request):
         serializer = ChangePasswordSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        UserService.change_password(
+        user_service.change_password(
             request.user,
             serializer.validated_data["old_password"],
             serializer.validated_data["new_password"]
@@ -222,14 +222,14 @@ class InstructorApplyAPIView(APIView):
         validated_data = serializer.validated_data
         certificates = validated_data.pop('certificates', [])
 
-        profile = InstructorService.apply(validated_data)
+        profile = user_service.apply(validated_data)
 
         # Xử lý upload chứng chỉ nếu có
         if certificates:
             for cert_file in certificates:
                 # Dùng tên file làm title mặc định
                 title = os.path.splitext(cert_file.name)[0]
-                InstructorService.add_certificate(profile, title, cert_file)
+                user_service.add_certificate(profile, title, cert_file)
 
         return Response({
             "detail": "Gửi hồ sơ đăng ký giảng viên thành công. Thông tin tài khoản sẽ được gửi qua email sau khi được duyệt.",
@@ -247,7 +247,7 @@ class InstructorApplicationListAPIView(BasePermissionAPIView):
 
     def get(self, request):
         status_filter = request.query_params.get("status")
-        applications = InstructorService.get_all_applications(status_filter)
+        applications = user_service.get_all_applications(status_filter)
         serializer = InstructorApplicationSerializer(applications, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -260,7 +260,7 @@ class InstructorApplicationDetailAPIView(BasePermissionAPIView):
     required_permission = "user.instructor.view"
 
     def get(self, request, application_id):
-        application = InstructorService.get_application_detail(application_id)
+        application = user_service.get_application_detail(application_id)
         serializer = InstructorApplicationSerializer(application)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -292,7 +292,7 @@ class InstructorApplicationReviewAPIView(BasePermissionAPIView):
 
         review_status = serializer.validated_data["status"]
 
-        application, detail = InstructorService.review_application(
+        application, detail = user_service.review_application(
             application_id,
             request.user,
             review_status,
@@ -305,7 +305,7 @@ class InstructorApplicationReviewAPIView(BasePermissionAPIView):
         # Log với email từ profile (vì application.user có thể null trước khi duyệt)
         user_email = application.email
         user_id = application.user.id if application.user else None
-        AdminLogService.log(
+        admin_log_service.log(
             admin=request.user,
             action_type=action,
             detail=f"Admin {request.user.email} đã {detail.lower()} hồ sơ giảng viên của {user_email} (ID: {application.id}){f'. Lý do: {rejection_reason}' if rejection_reason else ''}",
@@ -330,24 +330,24 @@ class DownloadInstructorCVAPIView(APIView):
 
     def get(self, request, application_id):
         # Xác thực user
-        user = InstructorService._authenticate_request(request)
+        user = user_service._authenticate_request(request)
         if not user:
             return Response({"detail": "Authentication credentials were not provided."}, status=status.HTTP_401_UNAUTHORIZED)
 
         try:
-            application = InstructorService.get_application_detail(application_id)
+            application = user_service.get_application_detail(application_id)
         except Http404:
             return Response({"detail": "Không tìm thấy hồ sơ đăng ký."}, status=status.HTTP_404_NOT_FOUND)
 
         # Kiểm tra quyền: admin (user.instructor.view) hoặc chủ sở hữu hồ sơ
-        if not InstructorService.check_application_access(application, user):
+        if not user_service.check_application_access(application, user):
             return Response({"detail": "Bạn không có quyền tải file CV này."}, status=status.HTTP_403_FORBIDDEN)
 
         if not application.cv_file:
             return Response({"detail": "Hồ sơ này không có file CV."}, status=status.HTTP_404_NOT_FOUND)
 
         try:
-            return InstructorService.download_file_from_cloudinary(application.cv_file, f"CV_{application.id}.pdf")
+            return user_service.download_file_from_cloudinary(application.cv_file, f"CV_{application.id}.pdf")
         except Http404:
             return Response({"detail": "File CV không tồn tại trên hệ thống."}, status=status.HTTP_404_NOT_FOUND)
 
@@ -361,17 +361,17 @@ class DownloadInstructorCertificateAPIView(APIView):
 
     def get(self, request, application_id, certificate_id):
         try:
-            application = InstructorService.get_application_detail(application_id)
+            application = user_service.get_application_detail(application_id)
         except Http404:
             return Response({"detail": "Không tìm thấy hồ sơ đăng ký."}, status=status.HTTP_404_NOT_FOUND)
 
         # Kiểm tra quyền: admin hoặc chủ sở hữu
-        if not InstructorService.check_application_access(application, request.user):
+        if not user_service.check_application_access(application, request.user):
             return Response({"detail": "Bạn không có quyền tải chứng chỉ này."}, status=status.HTTP_403_FORBIDDEN)
 
-        certificate = InstructorService.get_certificate_by_id(application, certificate_id)
+        certificate = user_service.get_certificate_by_id(application, certificate_id)
         try:
-            return InstructorService.download_file_from_cloudinary(certificate.file, f"ChungChi_{certificate.id}.pdf")
+            return user_service.download_file_from_cloudinary(certificate.file, f"ChungChi_{certificate.id}.pdf")
         except Http404:
             return Response({"detail": "File chứng chỉ không tồn tại trên hệ thống."}, status=status.HTTP_404_NOT_FOUND)
 
@@ -386,22 +386,22 @@ class PreviewInstructorCertificateAPIView(APIView):
 
     def get(self, request, application_id, certificate_id):
         # Xác thực user
-        user = InstructorService._authenticate_request(request)
+        user = user_service._authenticate_request(request)
         if not user:
             return Response({"detail": "Authentication credentials were not provided."}, status=status.HTTP_401_UNAUTHORIZED)
 
         try:
-            application = InstructorService.get_application_detail(application_id)
+            application = user_service.get_application_detail(application_id)
         except Http404:
             return Response({"detail": "Không tìm thấy hồ sơ đăng ký."}, status=status.HTTP_404_NOT_FOUND)
 
         # Kiểm tra quyền: admin hoặc chủ sở hữu
-        if not InstructorService.check_application_access(application, user):
+        if not user_service.check_application_access(application, user):
             return Response({"detail": "Bạn không có quyền xem chứng chỉ này."}, status=status.HTTP_403_FORBIDDEN)
 
-        certificate = InstructorService.get_certificate_by_id(application, certificate_id)
+        certificate = user_service.get_certificate_by_id(application, certificate_id)
         try:
-            return InstructorService.preview_file_from_cloudinary(certificate.file, f"ChungChi_{certificate.id}.pdf")
+            return user_service.preview_file_from_cloudinary(certificate.file, f"ChungChi_{certificate.id}.pdf")
         except Http404:
             return Response({"detail": "File chứng chỉ không tồn tại trên hệ thống."}, status=status.HTTP_404_NOT_FOUND)
 
@@ -416,24 +416,24 @@ class PreviewInstructorCVAPIView(APIView):
 
     def get(self, request, application_id):
         # Xác thực user
-        user = InstructorService._authenticate_request(request)
+        user = user_service._authenticate_request(request)
         if not user:
             return Response({"detail": "Authentication credentials were not provided."}, status=status.HTTP_401_UNAUTHORIZED)
 
         try:
-            application = InstructorService.get_application_detail(application_id)
+            application = user_service.get_application_detail(application_id)
         except Http404:
             return Response({"detail": "Không tìm thấy hồ sơ đăng ký."}, status=status.HTTP_404_NOT_FOUND)
 
         # Kiểm tra quyền: admin (user.instructor.view) hoặc chủ sở hữu hồ sơ
-        if not InstructorService.check_application_access(application, user):
+        if not user_service.check_application_access(application, user):
             return Response({"detail": "Bạn không có quyền xem CV này."}, status=status.HTTP_403_FORBIDDEN)
 
         if not application.cv_file:
             return Response({"detail": "Hồ sơ này không có file CV."}, status=status.HTTP_404_NOT_FOUND)
 
         try:
-            return InstructorService.preview_file_from_cloudinary(application.cv_file, f"CV_{application.id}.pdf")
+            return user_service.preview_file_from_cloudinary(application.cv_file, f"CV_{application.id}.pdf")
         except Http404:
             return Response({"detail": "File CV không tồn tại trên hệ thống."}, status=status.HTTP_404_NOT_FOUND)
 
@@ -452,7 +452,7 @@ class InstructorCertificateUploadAPIView(APIView):
 
     def post(self, request, application_id):
         try:
-            application = InstructorService.get_application_detail(application_id)
+            application = user_service.get_application_detail(application_id)
         except Http404:
             return Response({"detail": "Không tìm thấy hồ sơ đăng ký."}, status=status.HTTP_404_NOT_FOUND)
 
@@ -460,7 +460,7 @@ class InstructorCertificateUploadAPIView(APIView):
         if request.user.email != application.email:
             return Response({"detail": "Bạn không có quyền upload chứng chỉ cho hồ sơ này."}, status=status.HTTP_403_FORBIDDEN)
 
-        certificates, errors = InstructorService.process_upload_request(application, request)
+        certificates, errors = user_service.process_upload_request(application, request)
 
         if not certificates:
             return Response({"detail": "Không thể tải lên chứng chỉ nào.", "errors": errors}, status=status.HTTP_400_BAD_REQUEST)
@@ -481,15 +481,15 @@ class InstructorCertificateListAPIView(APIView):
 
     def get(self, request, application_id):
         try:
-            application = InstructorService.get_application_detail(application_id)
+            application = user_service.get_application_detail(application_id)
         except Http404:
             return Response({"detail": "Không tìm thấy hồ sơ đăng ký."}, status=status.HTTP_404_NOT_FOUND)
 
         # Kiểm tra quyền: admin hoặc chủ sở hữu
-        if not InstructorService.check_application_access(application, request.user):
+        if not user_service.check_application_access(application, request.user):
             return Response({"detail": "Bạn không có quyền xem chứng chỉ này."}, status=status.HTTP_403_FORBIDDEN)
 
-        certificates = InstructorService.get_certificates(application)
+        certificates = user_service.get_certificates(application)
         serializer = InstructorCertificateSerializer(certificates, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -505,7 +505,7 @@ class LinkGoogleAPIView(APIView):
     def post(self, request):
         serializer = LinkGoogleSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        user = UserService.link_google_account(
+        user = user_service.link_google_account(
             request.user,
             serializer.validated_data["id_token"]
         )
@@ -524,7 +524,7 @@ class InstructorCertificateDeleteAPIView(APIView):
 
     def delete(self, request, application_id, certificate_id):
         try:
-            application = InstructorService.get_application_detail(application_id)
+            application = user_service.get_application_detail(application_id)
         except Http404:
             return Response({"detail": "Không tìm thấy hồ sơ đăng ký."}, status=status.HTTP_404_NOT_FOUND)
 
@@ -532,7 +532,7 @@ class InstructorCertificateDeleteAPIView(APIView):
         if request.user.email != application.email:
             return Response({"detail": "Bạn không có quyền xóa chứng chỉ này."}, status=status.HTTP_403_FORBIDDEN)
 
-        InstructorService.delete_certificate(application, certificate_id)
+        user_service.delete_certificate(application, certificate_id)
         return Response({"detail": "Xóa chứng chỉ thành công."}, status=status.HTTP_200_OK)
 
 
@@ -555,7 +555,7 @@ class MyInstructorCertificateUploadAPIView(APIView):
             return Response({"detail": "Không tìm thấy hồ sơ giảng viên."}, status=status.HTTP_404_NOT_FOUND)
 
         profile = user.instructor_profile
-        certificates, errors = InstructorService.process_upload_request(profile, request)
+        certificates, errors = user_service.process_upload_request(profile, request)
 
         if not certificates:
             return Response({"detail": "Không thể tải lên chứng chỉ nào.", "errors": errors}, status=status.HTTP_400_BAD_REQUEST)
@@ -585,7 +585,7 @@ class MyInstructorCertificateListAPIView(APIView):
             return Response({"detail": "Không tìm thấy hồ sơ giảng viên."}, status=status.HTTP_404_NOT_FOUND)
 
         profile = user.instructor_profile
-        certificates = InstructorService.get_certificates(profile)
+        certificates = user_service.get_certificates(profile)
         serializer = InstructorCertificateSerializer(certificates, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -608,5 +608,5 @@ class MyInstructorCertificateDeleteAPIView(APIView):
             return Response({"detail": "Không tìm thấy hồ sơ giảng viên."}, status=status.HTTP_404_NOT_FOUND)
 
         profile = user.instructor_profile
-        InstructorService.delete_certificate(profile, certificate_id)
+        user_service.delete_certificate(profile, certificate_id)
         return Response({"detail": "Xóa chứng chỉ thành công."}, status=status.HTTP_200_OK)

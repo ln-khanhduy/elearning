@@ -3,7 +3,7 @@ from rest_framework import status
 
 from apps.common.base_api_view import BasePermissionAPIView
 
-from apps.users.services.instructor_manager_service import InstructorManagerService
+from apps.users.services import instructor_manager_service
 from apps.users.serializers.instructor_manager_serializer import (
     InstructorListSerializer,
     LockInstructorSerializer,
@@ -45,7 +45,7 @@ class InstructorManageListAPIView(BasePermissionAPIView):
             status_filter = "all"
         status_param = status_filter if status_filter != "all" else None
 
-        result = InstructorManagerService.get_instructors(
+        result = instructor_manager_service.get_instructors(
             search=search if search else None,
             status=status_param,
             page=page,
@@ -78,7 +78,7 @@ class InstructorLockAPIView(BasePermissionAPIView):
         serializer.is_valid(raise_exception=True)
 
         try:
-            user, message = InstructorManagerService.lock_instructor(
+            user, message = instructor_manager_service.lock_instructor(
                 user_id, request.user, serializer.validated_data["reason"]
             )
             resp_serializer = ToggleActiveSerializer({
@@ -104,7 +104,7 @@ class InstructorUnlockAPIView(BasePermissionAPIView):
 
     def patch(self, request, user_id):
         try:
-            user, message = InstructorManagerService.unlock_instructor(user_id, request.user)
+            user, message = instructor_manager_service.unlock_instructor(user_id, request.user)
             resp_serializer = ToggleActiveSerializer({
                 "id": user.id,
                 "is_active": user.is_active,

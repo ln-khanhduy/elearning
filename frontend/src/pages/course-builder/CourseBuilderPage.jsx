@@ -158,7 +158,7 @@ export default function CourseBuilderPage({ mode = "create" }) {
       const form = new FormData();
       form.append("title", formData.title?.trim() || "");
       form.append("description", formData.description?.trim() || "");
-      form.append("price", formData.price ?? 0);
+      form.append("price", formData.price || 0);
       if (formData.category) form.append("category", formData.category);
       if (formData.preview_video_url)
         form.append("preview_video_url", formData.preview_video_url.trim());
@@ -666,7 +666,7 @@ export default function CourseBuilderPage({ mode = "create" }) {
       const form = new FormData();
       form.append("title", formData.title.trim());
       form.append("description", formData.description.trim());
-      form.append("price", formData.price ?? 0);
+      form.append("price", formData.price || 0);
       if (formData.category) form.append("category", formData.category);
       if (formData.preview_video_url?.trim())
         form.append("preview_video_url", formData.preview_video_url.trim());

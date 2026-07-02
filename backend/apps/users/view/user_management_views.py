@@ -3,8 +3,8 @@ from rest_framework import status
 
 from apps.common.base_api_view import BasePermissionAPIView
 
-from apps.users.repositories.user_repository import UserRepository
-from apps.users.services.user_management_service import UserManagementService
+from apps.users.repositories import user_repository
+from apps.users.services import user_management_service
 from apps.users.serializers.user_management_serializer import (
     UserManagementListSerializer,
     UserManagementToggleActiveSerializer,
@@ -52,7 +52,7 @@ class UserManageListAPIView(BasePermissionAPIView):
             status_filter = "all"
         status_param = status_filter if status_filter != "all" else None
 
-        result = UserManagementService.get_managed_users(
+        result = user_management_service.get_managed_users(
             search=search if search else None,
             role=role_param,
             status=status_param,
@@ -86,13 +86,13 @@ class UserManageToggleActiveAPIView(BasePermissionAPIView):
 
     def patch(self, request, user_id):
         # Lấy user từ repository
-        user = UserRepository.get_user_by_id(user_id)
+        user = user_repository.get_user_by_id(user_id)
 
         # Lấy lý do khóa từ body (nếu có)
         reason = request.data.get("reason", "")
 
         try:
-            user, message = UserManagementService.toggle_user_active(
+            user, message = user_management_service.toggle_user_active(
                 user, request.user, reason
             )
             resp_serializer = UserManagementToggleActiveSerializer({

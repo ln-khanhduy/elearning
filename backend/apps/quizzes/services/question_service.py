@@ -1,131 +1,103 @@
 from rest_framework.exceptions import PermissionDenied, ValidationError
-from apps.quizzes.repositories.quiz_repository import QuizRepository
-from apps.quizzes.repositories.question_repository import QuestionRepository
-from apps.courses.services.course_permission_service import CoursePermissionService
+from apps.quizzes.repositories import quiz_repository
+from apps.quizzes.repositories import question_repository
+from apps.courses.services.course_permission_service import can_manage_course
 
 
-class QuestionService:
-    @staticmethod
-    def get_questions_by_quiz(quiz_id):
-        """Lấy danh sách câu hỏi của một quiz (ủy quyền cho Repository truy vấn)."""
-        return QuestionRepository.get_by_quiz(quiz_id)
+def get_questions_by_quiz(quiz_id):
+    return question_repository.get_by_quiz(quiz_id)
 
-    @staticmethod
-    def create_question(quiz_id, user, validated_data):
-        """
-        Tạo câu hỏi mới trong một quiz.
-        - Kiểm tra quyền quản lý khóa học (chỉ COURSE_ADMIN/SUPERADMIN)
-        - Kiểm tra points > 0
-        - Nếu là MCQ: kiểm tra tối thiểu 2 option, tối thiểu 1 đáp án đúng
-        - Nếu là FILL_BLANK: kiểm tra correct_text_answer không được để trống
-        """
-        quiz = QuizRepository.get_by_id(quiz_id)
 
-        if not CoursePermissionService.can_manage_course(quiz.lesson.chapter.course, user):
-            raise PermissionDenied("Bạn không có quyền thao tác với khóa học này.")
+def create_question(quiz_id, user, validated_data):
+    quiz = quiz_repository.get_by_id(quiz_id)
 
-        question_type = validated_data.get("question_type")
-        options_data = validated_data.pop("options", [])
+    if not can_manage_course(quiz.lesson.chapter.course, user):
+        raise PermissionDenied("Bạn không có quyền thao tác với khóa học này.")
 
-        validated_data["quiz"] = quiz
+    question_type = validated_data.get("question_type")
+    options_data = validated_data.pop("options", [])
 
-        # Auto-calculate points cho MCQ và FILL_BLANK, ESSAY dùng điểm do người dùng nhập
-        if question_type in ("MCQ", "FILL_BLANK"):
-            existing_count = QuestionRepository.get_question_count_by_quiz_and_type(quiz_id, question_type)
-            total_questions = existing_count + 1
-            points_per_question = round(10 / total_questions, 2) if total_questions > 0 else 1
+    validated_data["quiz"] = quiz
 
-            # Update points for existing questions cùng loại
-            if existing_count > 0:
-                from apps.quizzes.models import Question
-                Question.objects.filter(quiz_id=quiz_id, question_type=question_type).update(points=points_per_question)
+    if question_type in ("MCQ", "FILL_BLANK"):
+        existing_count = question_repository.get_question_count_by_quiz_and_type(quiz_id, question_type)
+        total_questions = existing_count + 1
+        points_per_question = round(10 / total_questions, 2) if total_questions > 0 else 1
 
-            validated_data["points"] = points_per_question
-        else:
-            # ESSAY: dùng points do người dùng nhập
-            if "points" not in validated_data or validated_data["points"] is None:
-                validated_data["points"] = 1
+        if existing_count > 0:
+            from apps.quizzes.models import Question
+            Question.objects.filter(quiz_id=quiz_id, question_type=question_type).update(points=points_per_question)
 
-        question = QuestionRepository.create(validated_data)
+        validated_data["points"] = points_per_question
+    else:
+        if "points" not in validated_data or validated_data["points"] is None:
+            validated_data["points"] = 1
 
-        if question_type == "MCQ":
-            if len(options_data) < 2:
-                raise ValidationError({"options": "Câu hỏi trắc nghiệm phải có tối thiểu 2 đáp án."})
+    question = question_repository.create(validated_data)
 
-            correct_count = sum(1 for opt in options_data if opt.get("is_correct"))
-            if correct_count < 1:
-                raise ValidationError({"options": "Câu hỏi trắc nghiệm phải có tối thiểu 1 đáp án đúng."})
+    if question_type == "MCQ":
+        if len(options_data) < 2:
+            raise ValidationError({"options": "Câu hỏi trắc nghiệm phải có tối thiểu 2 đáp án."})
 
-            for opt_data in options_data:
-                opt_data["question"] = question
-                QuestionRepository.create_option(opt_data)
+        correct_count = sum(1 for opt in options_data if opt.get("is_correct"))
+        if correct_count < 1:
+            raise ValidationError({"options": "Câu hỏi trắc nghiệm phải có tối thiểu 1 đáp án đúng."})
 
-        elif question_type == "FILL_BLANK":
-            correct_text = validated_data.get("correct_text_answer")
-            if not correct_text:
-                raise ValidationError({"correct_text_answer": "Câu hỏi điền khuyết phải có đáp án đúng."})
+        for opt_data in options_data:
+            opt_data["question"] = question
+            question_repository.create_option(opt_data)
 
-        # ESSAY: không cần thêm gì
+    elif question_type == "FILL_BLANK":
+        correct_text = validated_data.get("correct_text_answer")
+        if not correct_text:
+            raise ValidationError({"correct_text_answer": "Câu hỏi điền khuyết phải có đáp án đúng."})
 
-        return QuestionRepository.get_by_id(question.id)
+    return question_repository.get_by_id(question.id)
 
-    @staticmethod
-    def update_question(question_id, user, validated_data):
-        """
-        Cập nhật câu hỏi.
-        - Kiểm tra quyền quản lý khóa học (chỉ COURSE_ADMIN/SUPERADMIN)
-        - Nếu là MCQ: cập nhật lại options (xóa cũ, tạo mới)
-        """
-        question = QuestionRepository.get_by_id(question_id)
 
-        if not CoursePermissionService.can_manage_course(question.quiz.lesson.chapter.course, user):
-            raise PermissionDenied("Bạn không có quyền thao tác với khóa học này.")
+def update_question(question_id, user, validated_data):
+    question = question_repository.get_by_id(question_id)
 
-        options_data = validated_data.pop("options", None)
+    if not can_manage_course(question.quiz.lesson.chapter.course, user):
+        raise PermissionDenied("Bạn không có quyền thao tác với khóa học này.")
 
-        for key, value in validated_data.items():
-            setattr(question, key, value)
+    options_data = validated_data.pop("options", None)
 
-        question.save()
+    for key, value in validated_data.items():
+        setattr(question, key, value)
 
-        # Nếu có options mới và là MCQ, cập nhật lại options
-        if options_data is not None and question.question_type == "MCQ":
-            if len(options_data) < 2:
-                raise ValidationError({"options": "Câu hỏi trắc nghiệm phải có tối thiểu 2 đáp án."})
+    question.save()
 
-            correct_count = sum(1 for opt in options_data if opt.get("is_correct"))
-            if correct_count < 1:
-                raise ValidationError({"options": "Câu hỏi trắc nghiệm phải có tối thiểu 1 đáp án đúng."})
+    if options_data is not None and question.question_type == "MCQ":
+        if len(options_data) < 2:
+            raise ValidationError({"options": "Câu hỏi trắc nghiệm phải có tối thiểu 2 đáp án."})
 
-            # Xóa options cũ, tạo options mới
-            QuestionRepository.delete_options_by_question(question_id)
-            for opt_data in options_data:
-                opt_data["question"] = question
-                QuestionRepository.create_option(opt_data)
+        correct_count = sum(1 for opt in options_data if opt.get("is_correct"))
+        if correct_count < 1:
+            raise ValidationError({"options": "Câu hỏi trắc nghiệm phải có tối thiểu 1 đáp án đúng."})
 
-        return QuestionRepository.get_by_id(question_id)
+        question_repository.delete_options_by_question(question_id)
+        for opt_data in options_data:
+            opt_data["question"] = question
+            question_repository.create_option(opt_data)
 
-    @staticmethod
-    def delete_question(question_id, user):
-        """
-        Xóa câu hỏi.
-        - Kiểm tra quyền quản lý khóa học trước khi xóa (chỉ COURSE_ADMIN/SUPERADMIN)
-        - Sau khi xóa, tự động chia lại 10 điểm cho các câu hỏi còn lại
-        """
-        question = QuestionRepository.get_by_id(question_id)
-        quiz_id = question.quiz_id
+    return question_repository.get_by_id(question_id)
 
-        if not CoursePermissionService.can_manage_course(question.quiz.lesson.chapter.course, user):
-            raise PermissionDenied("Bạn không có quyền thao tác với khóa học này.")
 
-        question_type = question.question_type
+def delete_question(question_id, user):
+    question = question_repository.get_by_id(question_id)
+    quiz_id = question.quiz_id
 
-        QuestionRepository.delete(question_id)
+    if not can_manage_course(question.quiz.lesson.chapter.course, user):
+        raise PermissionDenied("Bạn không có quyền thao tác với khóa học này.")
 
-        # Nếu là MCQ hoặc FILL_BLANK, chia lại 10 điểm cho các câu hỏi cùng loại còn lại
-        if question_type in ("MCQ", "FILL_BLANK"):
-            remaining_count = QuestionRepository.get_question_count_by_quiz_and_type(quiz_id, question_type)
-            if remaining_count > 0:
-                from apps.quizzes.models import Question
-                points_per_question = round(10 / remaining_count, 2)
-                Question.objects.filter(quiz_id=quiz_id, question_type=question_type).update(points=points_per_question)
+    question_type = question.question_type
+
+    question_repository.delete(question_id)
+
+    if question_type in ("MCQ", "FILL_BLANK"):
+        remaining_count = question_repository.get_question_count_by_quiz_and_type(quiz_id, question_type)
+        if remaining_count > 0:
+            from apps.quizzes.models import Question
+            points_per_question = round(10 / remaining_count, 2)
+            Question.objects.filter(quiz_id=quiz_id, question_type=question_type).update(points=points_per_question)

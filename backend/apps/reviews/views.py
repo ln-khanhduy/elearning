@@ -4,7 +4,7 @@ from rest_framework import status
 from rest_framework.views import APIView
 
 from apps.common.base_api_view import BasePermissionAPIView
-from apps.reviews.services.review_service import ReviewService
+from apps.reviews.services import review_service
 from apps.reviews.serializers.review_serializer import (
     ReviewSerializer, ReviewCreateSerializer, ReviewStatusSerializer,
 )
@@ -18,7 +18,7 @@ class ReviewListAPIView(BasePermissionAPIView):
     required_permission = "course.review.view"
 
     def get(self, request):
-        reviews = ReviewService.get_all_reviews()
+        reviews = review_service.get_all_reviews()
         serializer = ReviewSerializer(reviews, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -31,7 +31,7 @@ class CourseReviewListAPIView(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request, course_id):
-        reviews = ReviewService.get_course_reviews(course_id)
+        reviews = review_service.get_course_reviews(course_id)
         serializer = ReviewSerializer(reviews, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -44,7 +44,7 @@ class ReviewDetailAPIView(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request, review_id):
-        review, replies = ReviewService.get_review_detail(review_id)
+        review, replies = review_service.get_review_detail(review_id)
         data = ReviewSerializer(review).data
         data["replies"] = ReviewSerializer(replies, many=True).data
         return Response(data, status=status.HTTP_200_OK)
@@ -60,7 +60,7 @@ class ReviewCreateAPIView(APIView):
     def post(self, request):
         serializer = ReviewCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        review = ReviewService.create_review(request.user, serializer.validated_data)
+        review = review_service.create_review(request.user, serializer.validated_data)
         return Response(ReviewSerializer(review).data, status=status.HTTP_201_CREATED)
 
 
@@ -74,5 +74,5 @@ class ReviewUpdateStatusAPIView(BasePermissionAPIView):
     def patch(self, request, review_id):
         serializer = ReviewStatusSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        review = ReviewService.update_review_status(review_id, serializer.validated_data["status"])
+        review = review_service.update_review_status(review_id, serializer.validated_data["status"])
         return Response(ReviewSerializer(review).data, status=status.HTTP_200_OK)
