@@ -35,6 +35,7 @@
 @import url('./course-detail/lesson-item.css');
 @import url('./course-detail/instructor-card.css');
 @import url('./course-detail/course-tabs.css');
+@import url('./course-detail/reviews.css');
 
 /* Admin */
 @import url('./admin-dashboard.css');
@@ -42,6 +43,7 @@
 @import url('./admin-instructor-applications.css');
 @import url('./admin-instructor-list.css');
 @import url('./admin-reviews.css');
+@import url('./support.css');
 
 /* ===== CSS VARIABLES ===== */
 :root {

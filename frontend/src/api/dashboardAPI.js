@@ -11,5 +11,5 @@ const request = async (callback) => {
 
 export const getDashboardDataApi = async (year = null) => {
   const params = year ? { year } : {};
-  return request(() => apiClient.get("/api/system/dashboard/", { params }));
+  return request(() => apiClient.get("/api/admin/dashboard/", { params }));
 };

@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     'apps.system',
     'apps.users',
     'apps.certificates',
+    'apps.support',
     
 ]
 AUTH_USER_MODEL = 'users.User'

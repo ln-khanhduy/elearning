@@ -28,7 +28,7 @@ function LearningContent({ lesson }) {
 
       {/* Render quizzes as a list with "Vào làm" buttons */}
       {lesson.quizzes?.length > 0 && (
-        <QuizList quizzes={lesson.quizzes} />
+        <QuizList quizzes={lesson.quizzes} lessonId={lesson.id} />
       )}
     </div>
   );

@@ -4,9 +4,10 @@ from rest_framework import status
 from rest_framework.views import APIView
 
 from apps.common.base_api_view import BasePermissionAPIView
+from apps.common.response_helpers import success_response, error_response
 from apps.reviews.services import review_service
 from apps.reviews.serializers.review_serializer import (
-    ReviewSerializer, ReviewCreateSerializer, ReviewStatusSerializer,
+    ReviewSerializer, ReviewCreateSerializer, ReviewUpdateSerializer, ReviewStatusSerializer,
 )
 
 
@@ -36,6 +37,18 @@ class CourseReviewListAPIView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
+class CourseReviewStatsAPIView(APIView):
+    """
+    GET /api/reviews/courses/{course_id}/stats/ - Lấy thống kê đánh giá khóa học.
+    Không yêu cầu đăng nhập.
+    """
+    permission_classes = [AllowAny]
+
+    def get(self, request, course_id):
+        stats = review_service.get_course_review_stats(course_id)
+        return success_response(stats)
+
+
 class ReviewDetailAPIView(APIView):
     """
     GET /api/reviews/{review_id}/ - Lấy chi tiết một đánh giá kèm phản hồi.
@@ -62,6 +75,32 @@ class ReviewCreateAPIView(APIView):
         serializer.is_valid(raise_exception=True)
         review = review_service.create_review(request.user, serializer.validated_data)
         return Response(ReviewSerializer(review).data, status=status.HTTP_201_CREATED)
+
+
+class ReviewUpdateAPIView(APIView):
+    """
+    PUT /api/reviews/{review_id}/update/ - Cập nhật nội dung đánh giá (chủ sở hữu).
+    Yêu cầu đăng nhập.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def put(self, request, review_id):
+        serializer = ReviewUpdateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        review = review_service.update_review(review_id, request.user, serializer.validated_data)
+        return success_response(ReviewSerializer(review).data, "Cập nhật đánh giá thành công.")
+
+
+class ReviewDeleteAPIView(APIView):
+    """
+    DELETE /api/reviews/{review_id}/delete/ - Xóa đánh giá (chủ sở hữu).
+    Yêu cầu đăng nhập.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, review_id):
+        review_service.delete_review(review_id, request.user)
+        return success_response(None, "Đã xóa đánh giá.")
 
 
 class ReviewUpdateStatusAPIView(BasePermissionAPIView):

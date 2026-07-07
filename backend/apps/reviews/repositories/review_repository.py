@@ -27,3 +27,52 @@ def update_status(review_id, status):
     review.status = status
     review.save(update_fields=["status", "updated_at"])
     return review
+def update_content(review_id, rating, content):
+    """Cập nhật nội dung và rating của review (chỉ chủ sở hữu)."""
+    review = get_by_id(review_id)
+    review.rating = rating
+    review.content = content
+    from django.utils import timezone
+    review.edited_at = timezone.now()
+    review.save(update_fields=["rating", "content", "edited_at", "updated_at"])
+    return review
+def get_course_stats(course_id):
+    """Lấy thống kê đánh giá của khóa học (avg rating, total count, phân phối sao)."""
+    from django.db.models import Avg, Count
+    stats = Review.objects.filter(
+        course_id=course_id,
+        status=ReviewModel.Status.PUBLISHED,
+        parent__isnull=True,
+        rating__isnull=False,
+    ).aggregate(
+        avg_rating=Avg("rating"),
+        total_count=Count("id"),
+    )
+    # Rating distribution
+    distribution = (
+        Review.objects.filter(
+            course_id=course_id,
+            status=ReviewModel.Status.PUBLISHED,
+            parent__isnull=True,
+            rating__isnull=False,
+        )
+        .values("rating")
+        .annotate(count=Count("id"))
+        .order_by("rating")
+    )
+    dist_map = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0}
+    for d in distribution:
+        dist_map[d["rating"]] = d["count"]
+    return {
+        "avg_rating": round(float(stats["avg_rating"]), 1) if stats["avg_rating"] else 0,
+        "total_count": stats["total_count"] or 0,
+        "distribution": dist_map,
+    }
+def check_user_reviewed(user_id, course_id):
+    """Kiểm tra user đã review khóa học chưa (trả về review nếu có)."""
+    return Review.objects.filter(
+        user_id=user_id,
+        course_id=course_id,
+        parent__isnull=True,
+        status__in=[ReviewModel.Status.PUBLISHED, ReviewModel.Status.HIDDEN],
+    ).first()

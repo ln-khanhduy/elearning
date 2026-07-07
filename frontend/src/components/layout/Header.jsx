@@ -35,16 +35,17 @@ function Header({ onToggleSidebar }) {
           <nav className="nav-menu d-none d-lg-flex">
             <Link to="/home">Trang chủ</Link>
             <Link to="/courses">Khóa học</Link>
-            <Link to="/instructors">Giảng viên</Link>
             <Link to="/contact">Liên hệ</Link>
             <Link to="/profile">Hồ sơ</Link>
           </nav>
         </div>
         <div className="header-right">
-          <div className="search-box d-none d-md-flex">
-            <i className="bi bi-search"></i>
-            <input type="text" placeholder="Tìm khóa học..." />
-          </div>
+          {isAuthenticated && !loading && (
+            <div className="search-box d-none d-md-flex">
+              <i className="bi bi-search"></i>
+              <input type="text" placeholder="Tìm khóa học..." />
+            </div>
+          )}
           {loading ? (
             <div className="header-auth-loading"></div>
           ) : isAuthenticated ? (

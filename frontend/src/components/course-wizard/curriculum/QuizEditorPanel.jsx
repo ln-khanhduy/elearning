@@ -165,7 +165,7 @@ function QuizEditorPanel({ quiz, sectionId, onClose, onSave, saving, onImportQue
       <div className="cw-editor-panel-footer">
         <button className="cw-btn cw-btn-secondary" onClick={onClose}>Hủy</button>
         <button className="cw-btn cw-btn-primary" onClick={handleSave} 
-        disabled={saving || !form.title.trim() || !form.time_limit_minutes || !form.passing_score}>
+        disabled={saving || !form.title.trim() || !form.time_limit_minutes || !form.passing_score || (isESSAY && !form.prompt.trim()) || (isFillBlank && (!form.prompt.trim() || !form.correct_text_answer.trim()))}>
           {saving ? (
             <><span className="spinner-border spinner-border-sm"></span> Đang lưu...</>
           ) : (

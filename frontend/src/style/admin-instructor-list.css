@@ -207,6 +207,21 @@
   vertical-align: middle;
 }
 
+/* Ensure name, role, status columns don't wrap */
+.inst-table td:nth-child(2),
+.inst-table td:nth-child(5),
+.inst-table td:nth-child(6) {
+  white-space: nowrap;
+  min-width: 130px;
+}
+
+.inst-table th:nth-child(2),
+.inst-table th:nth-child(5),
+.inst-table th:nth-child(6) {
+  white-space: nowrap;
+  min-width: 130px;
+}
+
 .inst-table tr:last-child td {
   border-bottom: none;
 }

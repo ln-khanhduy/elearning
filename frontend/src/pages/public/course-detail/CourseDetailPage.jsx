@@ -1,15 +1,19 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useUser } from "../../../context/UserContext";
 import { useCourseDetail } from "../../../hooks/course-detail/useCourseDetail";
 import { useCourseProgress } from "../../../hooks/course-detail/useCourseProgress";
+import { useReviews } from "../../../hooks/course-detail/useReviews";
 import { enrollFreeCourseApi } from "../../../api/paymentAPI";
 import CourseHero from "../../../components/course-detail/CourseHero";
 import CourseProgressCard from "../../../components/course-detail/CourseProgressCard";
 import CourseContentList from "../../../components/course-detail/CourseContentList";
 import InstructorCard from "../../../components/course-detail/InstructorCard";
 import CourseTabs, { TabPanel } from "../../../components/course-detail/CourseTabs";
+import ReviewStats from "../../../components/course-detail/ReviewStats";
+import ReviewForm from "../../../components/course-detail/ReviewForm";
+import ReviewItem from "../../../components/course-detail/ReviewItem";
 import "../../../style/course-detail/course-theme.css";
 import "../../../style/course-detail/course-detail-page.css";
 
@@ -21,12 +25,11 @@ import "../../../style/course-detail/course-detail-page.css";
 function CourseDetailPage() {
   const { courseId } = useParams();
   const navigate = useNavigate();
-  const { isAuthenticated } = useUser();
+  const { isAuthenticated, user } = useUser();
 
   const {
     course,
     curriculum,
-    reviews,
     loading,
     error,
     refetch: refetchCourse,
@@ -40,6 +43,28 @@ function CourseDetailPage() {
     getCompletedLessonsCount,
     getTotalLessonsCount,
   } = useCourseProgress(courseId);
+
+  // Reviews
+  const {
+    reviews,
+    stats,
+    loading: reviewsLoading,
+    userReview,
+    fetchReviews,
+    fetchStats,
+    handleCreateReview,
+    handleCreateReply,
+    handleUpdateReview,
+    handleDeleteReview,
+  } = useReviews(courseId);
+
+  const [showReviewForm, setShowReviewForm] = useState(false);
+
+  // Fetch reviews/stats on mount
+  useEffect(() => {
+    fetchReviews();
+    fetchStats();
+  }, [fetchReviews, fetchStats]);
 
   const completedCount = getCompletedLessonsCount(curriculum);
   const totalLessons = getTotalLessonsCount(curriculum);
@@ -203,52 +228,52 @@ function CourseDetailPage() {
                 />
               </TabPanel>
 
-              <TabPanel label="Đánh giá" badge={reviews.length}>
+              <TabPanel label="Đánh giá" badge={stats?.total_count || reviews.length}>
                 <div className="reviews-section">
                   <h3>Đánh giá khóa học</h3>
+
+                  {/* Thống kê đánh giá */}
+                  <ReviewStats stats={stats} />
+
+                  {/* Nút viết đánh giá (chỉ hiện nếu chưa review và đã login) */}
+                  {isAuthenticated && !userReview && !showReviewForm && (
+                    <div className="review-form-trigger text-center mb-3">
+                      <button className="btn btn-primary" onClick={() => setShowReviewForm(true)}>
+                        <i className="bi bi-star me-1"></i> Viết đánh giá
+                      </button>
+                    </div>
+                  )}
+
+                  {isAuthenticated && !userReview && showReviewForm && (
+                    <ReviewForm
+                      onSubmit={async (rating, content) => {
+                        const success = await handleCreateReview(rating, content);
+                        if (success) setShowReviewForm(false);
+                      }}
+                      onCancel={() => setShowReviewForm(false)}
+                      mode="create"
+                    />
+                  )}
+
+                  {isAuthenticated && userReview && (
+                    <div className="review-user-review-notice">
+                      <i className="bi bi-check-circle-fill text-success me-2"></i>
+                      Bạn đã đánh giá khóa học này.
+                    </div>
+                  )}
+
+                  {/* Danh sách đánh giá */}
                   {reviews.length > 0 ? (
                     <div className="reviews-list">
-                      {reviews.map((review, i) => (
-                        <div key={review.id || i} className="review-item">
-                          <div className="review-header">
-                            <div className="review-avatar">
-                              {review.user_avatar ? (
-                                <img
-                                  src={review.user_avatar}
-                                  alt={review.user_name}
-                                  className="review-avatar-img"
-                                />
-                              ) : (
-                                <span className="review-avatar-letter">
-                                  {(review.user_name || "U")[0].toUpperCase()}
-                                </span>
-                              )}
-                            </div>
-                            <div className="review-user">
-                              <strong>{review.user_name || "Học viên"}</strong>
-                              <div className="review-stars">
-                                {[1, 2, 3, 4, 5].map((s) => (
-                                  <i
-                                    key={s}
-                                    className={`bi ${
-                                      s <= (review.rating || 0)
-                                        ? "bi-star-fill"
-                                        : "bi-star"
-                                    }`}
-                                  ></i>
-                                ))}
-                              </div>
-                            </div>
-                            <span className="review-date">
-                              {review.created_at
-                                ? new Date(review.created_at).toLocaleDateString("vi-VN")
-                                : ""}
-                            </span>
-                          </div>
-                          {review.comment && (
-                            <p className="review-comment">{review.comment}</p>
-                          )}
-                        </div>
+                      {reviews.map((review) => (
+                        <ReviewItem
+                          key={review.id}
+                          review={review}
+                          userId={user?.id}
+                          onUpdate={handleUpdateReview}
+                          onDelete={handleDeleteReview}
+                          onReply={handleCreateReply}
+                        />
                       ))}
                     </div>
                   ) : (

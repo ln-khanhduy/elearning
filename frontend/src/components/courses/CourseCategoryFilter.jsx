@@ -1,53 +1,65 @@
 /**
- * Sidebar filter danh mục khóa học
- * Hiển thị danh sách categories để lọc
+ * Sidebar filter danh mục khóa học - dạng checkbox grid
+ * Hiển thị 2 checkbox mỗi hàng, không icon
  */
+
+import { useState, useEffect } from "react";
+
 function CourseCategoryFilter({
   categories,
   activeCategory,
   onCategoryClick,
   loading,
 }) {
+  const [selectedCategory, setSelectedCategory] = useState(activeCategory || "");
+
+  useEffect(() => {
+    setSelectedCategory(activeCategory || "");
+  }, [activeCategory]);
+
+  const handleChange = (catId) => {
+    const newValue = selectedCategory === String(catId) ? "" : String(catId);
+    setSelectedCategory(newValue);
+    onCategoryClick(newValue);
+  };
+
   return (
     <aside className="course-category-filter">
       <div className="course-category-header">
         <i className="bi bi-funnel"></i>
         <h3>Danh mục</h3>
       </div>
-      <ul className="course-category-list">
-        <li>
-          <button
-            className={`course-category-item ${
-              !activeCategory ? "active" : ""
-            }`}
-            onClick={() => onCategoryClick("")}
-          >
-            <i className="bi bi-grid-3x3-gap"></i>
-            <span>Tất cả khóa học</span>
-          </button>
-        </li>
+      <div className="course-category-grid">
+        <label className={`cat-checkbox ${!selectedCategory ? "active" : ""}`}>
+          <input
+            type="checkbox"
+            checked={!selectedCategory}
+            onChange={() => {
+              setSelectedCategory("");
+              onCategoryClick("");
+            }}
+          />
+          <span>Tất cả</span>
+        </label>
         {loading ? (
-          <li className="course-category-skeleton">
-            {[1, 2, 3, 4, 5].map((i) => (
+          <div className="course-category-skeleton">
+            {[1, 2, 3, 4].map((i) => (
               <div key={i} className="skeleton-line" />
             ))}
-          </li>
+          </div>
         ) : (
           categories.map((cat) => (
-            <li key={cat.id}>
-              <button
-                className={`course-category-item ${
-                  activeCategory === String(cat.id) ? "active" : ""
-                }`}
-                onClick={() => onCategoryClick(cat.id)}
-              >
-                <i className="bi bi-bookmark"></i>
-                <span>{cat.name}</span>
-              </button>
-            </li>
+            <label key={cat.id} className={`cat-checkbox ${selectedCategory === String(cat.id) ? "active" : ""}`}>
+              <input
+                type="checkbox"
+                checked={selectedCategory === String(cat.id)}
+                onChange={() => handleChange(cat.id)}
+              />
+              <span>{cat.name}</span>
+            </label>
           ))
         )}
-      </ul>
+      </div>
     </aside>
   );
 }

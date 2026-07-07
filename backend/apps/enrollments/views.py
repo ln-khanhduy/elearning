@@ -37,9 +37,15 @@ class CheckEnrolledAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, course_id):
+        from apps.courses.models import Course
         enrollment = enrollment_service.check_enrolled(request.user, course_id)
+        course = Course.objects.filter(id=course_id).first()
+        is_owner = course is not None and course.created_by_id == request.user.id
+        can_access = enrollment is not None or is_owner
         return success_response({
             "is_enrolled": enrollment is not None,
+            "is_owner": is_owner,
+            "can_access": can_access,
             "enrollment": EnrollmentSerializer(enrollment).data if enrollment else None,
         })
 

@@ -51,7 +51,7 @@ function CertificatesPage() {
           <i className="bi bi-award"></i>
           <h3>Chưa có chứng chỉ nào</h3>
           <p>Hoàn thành khóa học để nhận chứng chỉ</p>
-          <Link to="/courses" className="btn btn-primary">
+          <Link to="/courses" className="cert-btn-explore">
             Khám phá khóa học
           </Link>
         </div>

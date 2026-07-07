@@ -1,0 +1,65 @@
+/* ===== System Settings Page ===== */
+.sys-config-card {
+  background: #fff;
+  border-radius: 10px;
+  border: 1px solid #e9ecef;
+  padding: 24px;
+  max-width: 600px;
+}
+
+.sys-config-title {
+  margin: 0 0 16px;
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.sys-config-field {
+  margin-bottom: 16px;
+}
+
+.sys-config-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #495057;
+  margin-bottom: 4px;
+}
+
+.sys-config-input-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sys-config-input {
+  max-width: 150px;
+  height: 40px;
+}
+
+.sys-config-unit {
+  font-size: 13px;
+  color: #6c757d;
+}
+
+.sys-config-validation {
+  padding: 10px 14px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  margin-bottom: 16px;
+}
+
+.sys-config-validation.valid {
+  background: #d4edda;
+  color: #155724;
+}
+
+.sys-config-validation.invalid {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.sys-config-save-btn {
+  width: 100%;
+  outline: none;
+  border: none;
+}

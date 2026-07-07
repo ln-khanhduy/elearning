@@ -9,7 +9,6 @@ export const sidebarItems = [
   // Admin courses
   { type: "item", label: "Quản lý khóa học", path: "/admin/courses", icon: "bi-tools", requiredPermissions: ["course.course.view"] },
   { type: "item", label: "Danh mục khóa học", path: "/admin/courses/categories", icon: "bi-folder", requiredPermissions: ["course.category.view"] },
-  { type: "item", label: "Bình luận / Đánh giá", path: "/admin/reviews", icon: "bi-chat-square-text", requiredPermissions: ["course.review.view"] },
 
   // Instructor courses
   { type: "item", label: "Khóa học giảng dạy", path: "/instructor/courses", icon: "bi-journal-bookmark", requiredPermissions: ["instructor.course.view_own"] },
@@ -17,7 +16,6 @@ export const sidebarItems = [
 
   { type: "group", label: "Người dùng & Giảng viên" },
   { type: "item", label: "Quản lý người dùng", path: "/admin/users", icon: "bi-people", requiredPermissions: ["user.user.view"] },
-  { type: "item", label: "Danh sách giảng viên", path: "/admin/instructors", icon: "bi-person-badge", requiredPermissions: ["user.instructor.view"] },
   { type: "item", label: "Hỗ trợ giảng viên", path: "/admin/instructor-support", icon: "bi-headset", requiredPermissions: ["user.instructor.support"] },
   { type: "item", label: "Hồ sơ đăng ký giảng viên", path: "/admin/register-instructor", icon: "bi-file-earmark-person", requiredPermissions: ["user.instructor.view"] },
   { type: "item", label: "Khiếu nại người dùng", path: "/admin/complaints", icon: "bi-exclamation-triangle", requiredPermissions: ["user.user.complaint_resolve"] },
@@ -29,12 +27,13 @@ export const sidebarItems = [
   { type: "item", label: "Báo cáo tài chính", path: "/finance/reports", icon: "bi-file-earmark-bar-graph", requiredPermissions: ["finance.finance.report_export"] },
 
   { type: "group", label: "Super Admin" },
-  { type: "item", label: "Quản lý admin", path: "/super-admin/admins", icon: "bi-person-gear", requiredPermissions: ["admin.admin.view"] },
-  { type: "item", label: "Quản lý role", path: "/super-admin/roles", icon: "bi-shield-lock", requiredPermissions: ["admin.role.view"] },
-  { type: "item", label: "Quản lý permission", path: "/super-admin/permissions", icon: "bi-key", requiredPermissions: ["admin.role.view"] },
-  { type: "item", label: "Gán quyền cho role", path: "/super-admin/role-permissions", icon: "bi-diagram-3", requiredPermissions: ["admin.role.assign_permission"] },
+  { type: "item", label: "Role & Permission", path: "/super-admin/roles", icon: "bi-shield-lock", requiredPermissions: ["admin.role.view"] },
   { type: "item", label: "Nhật ký hoạt động", path: "/super-admin/activity-logs", icon: "bi-clock-history", requiredPermissions: ["admin.dashboard.view"] },
   { type: "item", label: "Cấu hình hệ thống", path: "/super-admin/settings", icon: "bi-sliders", requiredPermissions: ["admin.dashboard.view"] },
+
+  { type: "group", label: "Hỗ trợ" },
+  { type: "item", label: "Hỗ trợ & Yêu cầu", path: "/support", icon: "bi-headset", requiredPermissions: ["support.request.create"] },
+  { type: "item", label: "Xử lý yêu cầu", path: "/admin/requests", icon: "bi-inbox", requiredPermissions: ["support.request.process"] },
 
   { type: "group", label: "Tài khoản" },
   { type: "item", label: "Thông báo", path: "/notifications", icon: "bi-bell" },

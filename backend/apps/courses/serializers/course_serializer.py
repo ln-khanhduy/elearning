@@ -1,6 +1,9 @@
 from rest_framework import serializers
 from apps.courses.models import Course
 from apps.courses.serializers.category_tag_serializer import CategorySerializer
+from apps.courses.repositories import course_repository
+from apps.courses.repositories import course_repository
+
 
 
 class CourseListSerializer(serializers.ModelSerializer):
@@ -47,18 +50,15 @@ class CourseListSerializer(serializers.ModelSerializer):
 
     def get_chapter_count(self, obj):
         """Đếm số chương (section) của khóa học."""
-        from apps.courses.repositories.course_repository import CourseRepository
-        return CourseRepository.count_chapters(obj.id)
+        return course_repository.count_chapters(obj.id)
 
     def get_lesson_count(self, obj):
         """Đếm số bài học của khóa học."""
-        from apps.courses.repositories.course_repository import CourseRepository
-        return CourseRepository.count_lessons(obj.id)
+        return course_repository.count_lessons(obj.id)
 
     def get_student_count(self, obj):
         """Đếm số học viên đang active của khóa học."""
-        from apps.courses.repositories.course_repository import CourseRepository
-        return CourseRepository.count_students(obj.id)
+        return course_repository.count_students(obj.id)
 
 
 class CourseDetailSerializer(serializers.ModelSerializer):
@@ -117,13 +117,11 @@ class CourseDetailSerializer(serializers.ModelSerializer):
 
     def get_chapter_count(self, obj):
         """Đếm số chương (section) của khóa học."""
-        from apps.courses.repositories.course_repository import CourseRepository
-        return CourseRepository.count_chapters(obj.id)
+        return course_repository.count_chapters(obj.id)
 
     def get_lesson_count(self, obj):
         """Đếm số bài học của khóa học."""
-        from apps.courses.repositories.course_repository import CourseRepository
-        return CourseRepository.count_lessons(obj.id)
+        return course_repository.count_lessons(obj.id)
 
 
 class CourseCreateUpdateSerializer(serializers.ModelSerializer):

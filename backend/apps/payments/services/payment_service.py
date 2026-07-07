@@ -9,7 +9,6 @@ from apps.courses.models import Course
 
 
 PROVIDER_FEES = {
-    "MOMO": Decimal("1.5"),
     "STRIPE": Decimal("2.9"),
 }
 def calculate_fees(gross_amount, provider):
@@ -23,8 +22,7 @@ def calculate_fees(gross_amount, provider):
     """
     gross = Decimal(str(gross_amount))
 
-    # Provider fee
-    fee_percent = payment_repository.PROVIDER_FEES.get(provider, Decimal("0"))
+    fee_percent = PROVIDER_FEES.get(provider, Decimal("0"))
     payment_fee = (gross * fee_percent / Decimal("100")).quantize(
         Decimal("0.01"), rounding=ROUND_HALF_UP
     )
@@ -160,7 +158,7 @@ def get_instructor_revenue(instructor_id):
     result_transactions = []
 
     for t in transactions:
-        if t.status in [PaymentTransaction.Status.FAILED, PaymentTransaction.Status.CANCELLED]:
+        if t.status in [PaymentTransaction.Status.FAILED]:
             continue
 
         item = {

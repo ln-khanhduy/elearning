@@ -161,75 +161,87 @@
   letter-spacing: 0.03em;
 }
 
-.course-category-list {
-  list-style: none;
-  margin: 0;
-  padding: 4px 0;
+.course-category-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  padding: 6px 8px;
 }
 
-.course-category-item {
+.cat-checkbox {
   display: flex;
   align-items: center;
-  gap: 10px;
-  width: 100%;
-  padding: 9px 16px;
-  border: none;
-  background: transparent;
+  gap: 3px;
+  padding: 3px 6px;
   cursor: pointer;
-  font-size: 0.85rem;
+  font-size: 0.7rem;
   color: #555;
+  border-radius: 3px;
   transition: all 0.15s;
-  text-align: left;
+  user-select: none;
+  flex: 0 1 auto;
+  max-width: 100%;
+}
+
+.cat-checkbox input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 11px;
+  height: 11px;
+  border: 1.5px solid #d0d5dd;
+  border-radius: 2px;
+  cursor: pointer;
+  flex-shrink: 0;
   position: relative;
+  transition: all 0.15s;
+  margin: 0;
 }
 
-.course-category-item i {
-  font-size: 0.82rem;
-  color: #b0b8c4;
-  width: 16px;
-  text-align: center;
-  transition: color 0.15s;
+.cat-checkbox input[type="checkbox"]:checked {
+  border-color: var(--primary, #0f3d75);
+  background-color: var(--primary, #0f3d75);
 }
 
-.course-category-item:hover {
+.cat-checkbox input[type="checkbox"]:checked::after {
+  content: "";
+  position: absolute;
+  left: 2.5px;
+  top: 0px;
+  width: 3.5px;
+  height: 6.5px;
+  border: solid #fff;
+  border-width: 0 1.5px 1.5px 0;
+  transform: rotate(45deg);
+}
+
+.cat-checkbox:hover {
   background: #f5f7fb;
   color: var(--primary, #0f3d75);
 }
 
-.course-category-item:hover i {
-  color: var(--primary, #0f3d75);
-}
-
-.course-category-item.active {
+.cat-checkbox.active {
   background: #eef3fa;
   color: var(--primary, #0f3d75);
   font-weight: 600;
 }
 
-.course-category-item.active::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 4px;
-  bottom: 4px;
-  width: 3px;
-  background: var(--primary, #0f3d75);
-  border-radius: 0 2px 2px 0;
-}
-
-.course-category-item.active i {
-  color: var(--primary, #0f3d75);
+.cat-checkbox span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 1.2;
 }
 
 .course-category-skeleton {
-  padding: 8px 16px;
+  grid-column: 1 / -1;
+  padding: 4px 0;
 }
 
 .course-category-skeleton .skeleton-line {
-  height: 10px;
+  height: 8px;
   background: #eef0f4;
-  border-radius: 4px;
-  margin-bottom: 10px;
+  border-radius: 3px;
+  margin-bottom: 6px;
   animation: skeleton-pulse 1.5s ease-in-out infinite;
 }
 
@@ -392,6 +404,7 @@
   line-height: 1.4;
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }

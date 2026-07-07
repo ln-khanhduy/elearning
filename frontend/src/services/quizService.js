@@ -18,6 +18,28 @@ export const validateQuizForm = (form) => {
     return { valid: false, message: "Điểm tối đa phải từ 1 đến 10." };
   }
 
+  const questionType = form.question_type;
+
+  // Kiểm tra câu hỏi tự luận (ESSAY) phải có nội dung câu hỏi
+  if (questionType === "ESSAY") {
+    const prompt = String(form.prompt || "").trim();
+    if (!prompt) {
+      return { valid: false, message: "Vui lòng nhập nội dung câu hỏi tự luận." };
+    }
+  }
+
+  // Kiểm tra câu hỏi điền khuyết (FILL_BLANK) phải có nội dung câu hỏi và đáp án
+  if (questionType === "FILL_BLANK") {
+    const prompt = String(form.prompt || "").trim();
+    if (!prompt) {
+      return { valid: false, message: "Vui lòng nhập nội dung câu hỏi điền khuyết." };
+    }
+    const correctAnswer = String(form.correct_text_answer || "").trim();
+    if (!correctAnswer) {
+      return { valid: false, message: "Vui lòng nhập đáp án đúng cho câu hỏi điền khuyết." };
+    }
+  }
+
   return { valid: true };
 };
 

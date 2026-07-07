@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect, useRef } from "react";
 import { useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { submitQuizApi } from "../../api/learningAPI";
@@ -33,17 +33,141 @@ function parseFillBlankPrompt(prompt) {
  * QuizList - Hiển thị danh sách bài tập của bài học.
  * Click "Vào làm" để mở inline quiz trong cùng trang học tập.
  */
-function QuizList({ quizzes }) {
+// Key lưu state trong sessionStorage
+const STORAGE_PREFIX = "quiz_taking_";
+
+function loadQuizState(courseId, lessonId) {
+  try {
+    const raw = sessionStorage.getItem(`${STORAGE_PREFIX}${courseId}_${lessonId}`);
+    if (raw) return JSON.parse(raw);
+  } catch {}
+  return null;
+}
+
+function saveQuizState(courseId, lessonId, state) {
+  try {
+    sessionStorage.setItem(`${STORAGE_PREFIX}${courseId}_${lessonId}`, JSON.stringify(state));
+  } catch {}
+}
+
+function clearQuizState(courseId, lessonId) {
+  try {
+    sessionStorage.removeItem(`${STORAGE_PREFIX}${courseId}_${lessonId}`);
+  } catch {}
+}
+
+function QuizList({ quizzes, lessonId }) {
   const { courseId } = useParams();
   const [activeQuizId, setActiveQuizId] = useState(null);
   const [answers, setAnswers] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [results, setResults] = useState({});
+  const [timeRemaining, setTimeRemaining] = useState(null); // seconds remaining
+  const [quizStartedAt, setQuizStartedAt] = useState(null); // timestamp when quiz started
+  const timerRef = useRef(null);
+  const courseIdRef = useRef(courseId);
+  courseIdRef.current = courseId;
+
+  // Khôi phục state từ sessionStorage khi component mount
+  useEffect(() => {
+    if (!courseId) return;
+    const lessonIdStr = lessonId != null ? String(lessonId) : "";
+    const saved = loadQuizState(courseId, lessonIdStr);
+    if (saved) {
+      if (saved.activeQuizId) setActiveQuizId(saved.activeQuizId);
+      if (saved.answers) setAnswers(saved.answers);
+      if (saved.results) setResults(saved.results);
+      if (saved.quizStartedAt) {
+        setQuizStartedAt(saved.quizStartedAt);
+        // Tính lại thời gian còn lại dựa vào thời gian bắt đầu
+        const elapsed = (Date.now() - saved.quizStartedAt) / 1000;
+        const total = saved.totalSeconds || 0;
+        const remaining = Math.max(0, Math.round(total - elapsed));
+        setTimeRemaining(remaining);
+      }
+    }
+  }, []); // Chỉ chạy 1 lần khi mount
+
+  // Lưu state vào sessionStorage bất cứ khi nào có thay đổi quan trọng
+  useEffect(() => {
+    if (!courseId || !activeQuizId) return;
+    const lessonIdStr = lessonId != null ? String(lessonId) : "";
+    saveQuizState(courseId, lessonIdStr, {
+      activeQuizId,
+      answers,
+      results,
+      quizStartedAt,
+      totalSeconds: quizzes.find(q => q.id === activeQuizId)?.time_limit_minutes
+        ? Number(quizzes.find(q => q.id === activeQuizId).time_limit_minutes) * 60
+        : 0,
+    });
+  }, [activeQuizId, answers, results, quizStartedAt, courseId]);
+
+  // Nộp bài dùng cho timer hết giờ: bỏ qua kiểm tra unanswered
+  const forceSubmit = useCallback(async (quiz) => {
+    setSubmitting(true);
+    try {
+      const formattedAnswers = quiz.questions.map((q) => {
+        const ans = answers[q.id] || {};
+        let answerText = ans.answer_text || null;
+        if (q.question_type === "FILL_BLANK" && ans.blanks) {
+          const parts = parseFillBlankPrompt(q.prompt);
+          const blankParts = parts.filter((p) => p.type === "blank");
+          answerText = blankParts.map((bp) => ans.blanks[bp.index] || "").join("|");
+        }
+        return {
+          question_id: q.id,
+          selected_option_id: ans.selected_option_id || null,
+          answer_text: answerText,
+        };
+      });
+
+      const res = await submitQuizApi(courseId, quiz.id, formattedAnswers);
+      if (res?.success && res?.data) {
+        setResults((prev) => ({ ...prev, [quiz.id]: res.data }));
+        if (res.data.status === "SUBMITTED") {
+          toast.success("Đã gửi bài tự luận thành công. Vui lòng chờ giảng viên chấm điểm.");
+        } else {
+          toast.success(
+            res.data.passed
+              ? "Chúc mừng! Bạn đã vượt qua bài kiểm tra."
+              : "Bạn chưa đạt yêu cầu. Hãy thử lại!"
+          );
+        }
+      }
+    } catch (err) {
+      toast.error(err.message || "Có lỗi xảy ra khi nộp bài.");
+    } finally {
+      setSubmitting(false);
+    }
+  }, [answers, courseId]);
 
   const handleStartQuiz = (quizId) => {
     setActiveQuizId(quizId);
+
+    // Kiểm tra xem đã có state cũ trong sessionStorage chưa (đã làm trước đó)
+    const lessonIdStr = lessonId != null ? String(lessonId) : "";
+    const saved = loadQuizState(courseId, lessonIdStr);
+
+    // Nếu có saved state cho quiz này, khôi phục (resume) thay vì reset
+    // Kiểm tra quizStartedAt để biết đã từng bắt đầu làm quiz này chưa
+    const hasSavedSession = saved && saved.activeQuizId === quizId && saved.quizStartedAt;
+    if (hasSavedSession) {
+      if (saved.answers) setAnswers(saved.answers);
+      if (saved.results) setResults(saved.results);
+      setQuizStartedAt(saved.quizStartedAt);
+      const elapsed = (Date.now() - saved.quizStartedAt) / 1000;
+      const total = saved.totalSeconds || 0;
+      const remaining = Math.max(0, Math.round(total - elapsed));
+      setTimeRemaining(remaining);
+      return;
+    }
+
+    // Không có saved state → khởi tạo mới
     setAnswers({});
-    // Nếu quiz đã có attempt trước đó, hiển thị kết quả luôn
+    setResults({});
+    setQuizStartedAt(Date.now());
+
     const quiz = quizzes.find(q => q.id === quizId);
     if (quiz?.latest_attempt) {
       const attempt = quiz.latest_attempt;
@@ -57,6 +181,67 @@ function QuizList({ quizzes }) {
         },
       }));
     }
+
+    // Khởi tạo timer nếu quiz có thời gian giới hạn
+    if (quiz?.time_limit_minutes && Number(quiz.time_limit_minutes) > 0) {
+      const totalSeconds = Number(quiz.time_limit_minutes) * 60;
+      setTimeRemaining(totalSeconds);
+    } else {
+      setTimeRemaining(null);
+    }
+  };
+
+  // Timer countdown - dùng ref để tránh stale closure
+  const forceSubmitRef = useRef(forceSubmit);
+  forceSubmitRef.current = forceSubmit;
+  const quizzesRef = useRef(quizzes);
+  quizzesRef.current = quizzes;
+  const resultsRef = useRef(results);
+  resultsRef.current = results;
+
+  useEffect(() => {
+    if (timeRemaining === null || timeRemaining <= 0) {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+      return;
+    }
+
+    timerRef.current = setInterval(() => {
+      setTimeRemaining((prev) => {
+        if (prev <= 1) {
+          clearInterval(timerRef.current);
+          timerRef.current = null;
+          // Lấy dữ liệu mới nhất qua ref
+          const currentQuizzes = quizzesRef.current;
+          const currentResults = resultsRef.current;
+          const currentForceSubmit = forceSubmitRef.current;
+          const activeQuiz = currentQuizzes.find(q => q.id === activeQuizId);
+          if (activeQuiz && !currentResults[activeQuiz.id]) {
+            toast.warning("Đã hết thời gian làm bài! Đang nộp bài...");
+            currentForceSubmit(activeQuiz);
+          }
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+    };
+  }, [timeRemaining, activeQuizId]);
+
+  // Format time: MM:SS
+  const formatTime = (seconds) => {
+    if (seconds === null || seconds === undefined) return null;
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
   };
 
   const handleSelectOption = useCallback((questionId, optionId) => {
@@ -80,7 +265,6 @@ function QuizList({ quizzes }) {
     // Kiểm tra unanswered cho MCQ/ESSAY
     const unanswered = quiz.questions.filter((q) => {
       if (q.question_type === "FILL_BLANK") {
-        // FILL_BLANK: kiểm tra tất cả blanks đã được điền
         const ans = answers[q.id];
         if (!ans || !ans.blanks) return true;
         const parts = parseFillBlankPrompt(q.prompt);
@@ -141,6 +325,20 @@ function QuizList({ quizzes }) {
       return next;
     });
     setAnswers({});
+    setQuizStartedAt(Date.now());
+
+    // Reset timer: khởi tạo lại thời gian
+    const quiz = quizzes.find(q => q.id === quizId);
+    if (quiz?.time_limit_minutes && Number(quiz.time_limit_minutes) > 0) {
+      const totalSeconds = Number(quiz.time_limit_minutes) * 60;
+      setTimeRemaining(totalSeconds);
+    }
+
+    // Xóa saved state để lần sau vào làm sẽ là session mới
+    if (courseId) {
+      const lessonIdStr = lessonId != null ? String(lessonId) : "";
+      clearQuizState(courseId, lessonIdStr);
+    }
   };
 
   const isEssayQuiz = (quiz) => {
@@ -148,8 +346,8 @@ function QuizList({ quizzes }) {
   };
 
   const handleBack = () => {
-    setActiveQuizId(null);
-    setAnswers({});
+    // Chỉ ẩn quiz view, không clear state để giữ nguyên đáp án và timer khi quay lại
+    setActiveQuizId(null);  
   };
 
   return (
@@ -177,7 +375,13 @@ function QuizList({ quizzes }) {
                     <h4>{quiz.title}</h4>
                     {quiz.description && <p className="quiz-taking-description">{quiz.description}</p>}
                     <div className="quiz-taking-meta">
-                      <span><i className="bi bi-clock"></i> {quiz.time_limit_minutes || "Không giới hạn"} phút</span>
+                      {timeRemaining !== null ? (
+                        <span className={`quiz-timer ${timeRemaining <= 60 ? "quiz-timer--warning" : ""}`}>
+                          <i className="bi bi-hourglass-split"></i> {formatTime(timeRemaining)}
+                        </span>
+                      ) : (
+                        <span><i className="bi bi-clock"></i> {quiz.time_limit_minutes || "Không giới hạn"} phút</span>
+                      )}
                       {quiz.quiz_type === "MCQ" && <span><i className="bi bi-question-circle"></i> {quiz.questions?.length || 0} câu hỏi</span>}
                       <span><i className="bi bi-tag"></i> {quiz.quiz_type === "MCQ" ? "Trắc nghiệm" : quiz.quiz_type === "ESSAY" ? "Tự luận" : "Điền khuyết"}</span>
                     </div>

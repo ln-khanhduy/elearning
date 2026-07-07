@@ -106,6 +106,16 @@ function UserManagementPage() {
         return "Học viên";
       case "INSTRUCTOR":
         return "Giảng viên";
+      case "SUPERADMIN":
+        return "Super Admin";
+      case "COURSE_ADMIN":
+        return "Quản trị khóa học";
+      case "USER_MANAGER":
+        return "Quản lý người dùng";
+      case "INSTRUCTOR_MANAGER":
+        return "Quản lý giảng viên";
+      case "FINANCE_ADMIN":
+        return "Quản trị tài chính";
       default:
         return role || "—";
     }
@@ -228,7 +238,7 @@ function UserManagementPage() {
       </div>
 
       {/* Search & Filter */}
-      <div className="inst-toolbar">
+        <div className="inst-toolbar">
         <div className="inst-search-box">
           <i className="bi bi-search inst-search-icon"></i>
           <input
@@ -250,43 +260,33 @@ function UserManagementPage() {
           )}
         </div>
         <div className="inst-filter-group">
-          {/* Role filter */}
           <button
-            className={`inst-filter-btn ${roleFilter === "all" ? "active" : ""}`}
-            onClick={() => setRoleFilter("all")}
+            className={`inst-filter-btn ${roleFilter === "all" && statusFilter === "all" ? "active" : ""}`}
+            onClick={() => { setRoleFilter("all"); setStatusFilter("all"); }}
           >
             Tất cả
           </button>
           <button
             className={`inst-filter-btn ${roleFilter === "student" ? "active" : ""}`}
-            onClick={() => setRoleFilter("student")}
+            onClick={() => { setRoleFilter("student"); setStatusFilter("all"); }}
           >
             Học viên
           </button>
           <button
             className={`inst-filter-btn ${roleFilter === "instructor" ? "active" : ""}`}
-            onClick={() => setRoleFilter("instructor")}
+            onClick={() => { setRoleFilter("instructor"); setStatusFilter("all"); }}
           >
             Giảng viên
           </button>
-        </div>
-        <div className="inst-filter-group">
-          {/* Status filter */}
-          <button
-            className={`inst-filter-btn ${statusFilter === "all" ? "active" : ""}`}
-            onClick={() => setStatusFilter("all")}
-          >
-            Tất cả
-          </button>
           <button
             className={`inst-filter-btn ${statusFilter === "active" ? "active" : ""}`}
-            onClick={() => setStatusFilter("active")}
+            onClick={() => { setRoleFilter("all"); setStatusFilter("active"); }}
           >
             Đang hoạt động
           </button>
           <button
             className={`inst-filter-btn ${statusFilter === "locked" ? "active" : ""}`}
-            onClick={() => setStatusFilter("locked")}
+            onClick={() => { setRoleFilter("all"); setStatusFilter("locked"); }}
           >
             Đã khóa
           </button>
@@ -357,8 +357,8 @@ function UserManagementPage() {
                     <td>{user.email}</td>
                     <td>{user.phone || "—"}</td>
                     <td>
-                      <span className={`inst-badge ${user.role === "INSTRUCTOR" ? "inst-badge-instructor" : "inst-badge-student"}`}>
-                        {getRoleLabel(user.role)}
+                      <span className={`inst-badge ${user.role_code === "INSTRUCTOR" ? "inst-badge-instructor" : user.role_code === "STUDENT" ? "inst-badge-student" : "inst-badge-admin"}`}>
+                        {getRoleLabel(user.role_code)}
                       </span>
                     </td>
                     <td>

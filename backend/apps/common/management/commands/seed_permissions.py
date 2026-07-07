@@ -102,12 +102,18 @@ PERMISSIONS = {
     # Instructor course management
     "instructor.course.view_own": "Xem khóa học giảng dạy",
     "instructor.course.manage_own": "Quản lý khóa học giảng dạy",
+
+    # Support & Request
+    "support.request.create": "Gửi yêu cầu hỗ trợ",
+    "support.request.process": "Xử lý yêu cầu hỗ trợ",
 }
 
 
 
 ROLE_PERMISSIONS = {
     "SUPERADMIN": [
+        "support.request.create",
+        "support.request.process",
         "admin.admin.create",
         "admin.admin.assign_role",
         "admin.admin.change_role",
@@ -183,6 +189,7 @@ ROLE_PERMISSIONS = {
     ],
 
     "COURSE_ADMIN": [
+        "support.request.process",
 
         "course.course.view",
         "course.course.create",
@@ -213,7 +220,8 @@ ROLE_PERMISSIONS = {
     ],
 
     "INSTRUCTOR_MANAGER": [
-
+        "support.request.process",
+        "user.user.view",
         "user.instructor.view",
         "user.instructor.lock",
         "user.instructor.support",
@@ -222,6 +230,7 @@ ROLE_PERMISSIONS = {
     ],
 
     "USER_MANAGER": [
+        "support.request.process",
         "user.user.view",
         "user.user.update",
         "user.user.lock",
@@ -231,6 +240,7 @@ ROLE_PERMISSIONS = {
     ],
 
     "FINANCE_ADMIN": [
+        "support.request.process",
         "finance.finance.revenue_view",
         "finance.finance.withdraw_approve",
         "finance.finance.discount_config",
@@ -241,6 +251,7 @@ ROLE_PERMISSIONS = {
 
 
     "INSTRUCTOR": [
+        "support.request.create",
         "instructor.course.view_own",
         "instructor.wallet.view_balance",
         "user.instructor.sales_history",
@@ -251,6 +262,7 @@ ROLE_PERMISSIONS = {
 
 
     "STUDENT": [
+        "support.request.create",
         "student.course.search",
         "student.course.preview",
         "student.course.buy",

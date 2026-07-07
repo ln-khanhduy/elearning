@@ -50,9 +50,10 @@ class CourseListAPIView(APIView):
     def get(self, request):
         page = int(request.GET.get("page", 1))
         page_size = int(request.GET.get("page_size", 10))
+        # Public API chỉ hiển thị khóa học đã PUBLISHED
         courses = course_service.search_courses(
             keyword=request.GET.get("q"),
-            status_value=request.GET.get("status"),
+            status_value=request.GET.get("status") or "PUBLISHED",
             category_id=request.GET.get("category"),
             instructor_id=request.GET.get("instructor"),
         )
@@ -75,6 +76,9 @@ class CourseDetailAPIView(APIView):
 
     def get(self, request, course_id):
         course = course_service.get_course_detail(course_id)
+        # Public API chỉ hiển thị khóa học đã PUBLISHED
+        if course.status != "PUBLISHED":
+            return error_response("Không tìm thấy khóa học.", http_status=404)
         return success_response(CourseDetailSerializer(course).data)
 
 
@@ -332,7 +336,7 @@ class CourseCurriculumPreviewAPIView(APIView):
         course = course_service.get_course_detail(course_id)
         if not course_permission_service.can_view_course(course, request.user):
             return error_response("Bạn không có quyền xem nội dung khóa học này.", http_status=status.HTTP_403_FORBIDDEN)
-        course_data = course_service.build_full_curriculum(course_id)
+        course_data = curriculum_service.build_full_curriculum(course_id)
         return success_response(course_data)
 
 

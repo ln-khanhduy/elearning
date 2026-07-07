@@ -16,8 +16,9 @@ function MyCoursesPage() {
   const loadMyCourses = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await getMyCoursesApi();
-      setEnrollments(data || []);
+      const result = await getMyCoursesApi();
+      const data = result.data || result;
+      setEnrollments(Array.isArray(data) ? data : []);
     } catch (error) {
       toast.error("Không thể tải danh sách khóa học của bạn.");
     } finally {

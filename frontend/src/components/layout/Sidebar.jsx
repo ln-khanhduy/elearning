@@ -13,27 +13,23 @@ function Sidebar({ isOpen, onClose }) {
   const isSuperAdmin = roleCode === "SUPERADMIN";
 
   // Lọc: chỉ giữ item hợp lệ, và chỉ giữ group nếu có ít nhất 1 item hợp lệ trong group đó
-  const visibleItems = sidebarItems.filter((item, index) => {
-    if (item.type === "group") {
-      for (let i = index + 1; i < sidebarItems.length; i++) {
-        const next = sidebarItems[i];
-        if (next.type === "group") break;
-        // SUPERADMIN thấy tất cả item trong group
-        if (isSuperAdmin) return true;
-        // Không có requiredPermissions → ai cũng thấy
-        if (!next.requiredPermissions || next.requiredPermissions.length === 0) return true;
-        // Check permission
-        if (next.requiredPermissions.some(p => userPermissions.includes(p))) return true;
+    const visibleItems = sidebarItems.filter((item, index) => {
+      if (item.type === "group") {
+        for (let i = index + 1; i < sidebarItems.length; i++) {
+          const next = sidebarItems[i];
+          if (next.type === "group") break;
+          // Không có requiredPermissions → ai cũng thấy
+          if (!next.requiredPermissions || next.requiredPermissions.length === 0) return true;
+          // Check permission
+          if (next.requiredPermissions.some(p => userPermissions.includes(p))) return true;
+        }
+        return false;
       }
-      return false;
-    }
-    // SUPERADMIN thấy tất cả
-    if (isSuperAdmin) return true;
-    // Không có requiredPermissions → ai cũng thấy
-    if (!item.requiredPermissions || item.requiredPermissions.length === 0) return true;
-    // Check permission
-    return item.requiredPermissions.some(p => userPermissions.includes(p));
-  });
+      // Không có requiredPermissions → ai cũng thấy
+      if (!item.requiredPermissions || item.requiredPermissions.length === 0) return true;
+      // Check permission
+      return item.requiredPermissions.some(p => userPermissions.includes(p));
+    });
 
   const hasItemAfterGroup = (index) => {
     return visibleItems.slice(index + 1).some((item) => item.type === "item");

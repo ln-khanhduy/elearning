@@ -232,6 +232,7 @@ def mark_lesson_complete(user, course_id, lesson_id):
     """
     Đánh dấu bài học đã hoàn thành.
     - Kiểm tra enrollment
+    - Kiểm tra tất cả bài tập trong bài học đều đã hoàn thành và đạt điểm
     - Tạo/cập nhật LessonProgress
     - Cập nhật CourseProgress
     """
@@ -241,6 +242,33 @@ def mark_lesson_complete(user, course_id, lesson_id):
     lesson = Lesson.objects.filter(id=lesson_id, chapter__course_id=course_id).first()
     if not lesson:
         raise NotFound("Không tìm thấy bài học.")
+
+    # Kiểm tra tất cả bài tập (quiz) trong bài học đều đã đạt yêu cầu
+    quizzes = Quiz.objects.filter(lesson=lesson)
+    for quiz in quizzes:
+        # Lấy attempt gần nhất đã SUBMITTED hoặc GRADED
+        latest_attempt = QuizAttempt.objects.filter(
+            quiz=quiz,
+            student=user,
+            status__in=["SUBMITTED", "GRADED"],
+        ).order_by("-submitted_at").first()
+
+        if not latest_attempt:
+            raise ValidationError(
+                "Cần hoàn thành tất cả bài tập trước khi đánh dấu hoàn thành bài học."
+            )
+
+        # Nếu là ESSAY và đang chờ chấm (SUBMITTED), chưa thể biết đạt hay không
+        if latest_attempt.status == "SUBMITTED":
+            raise ValidationError(
+                "Cần hoàn thành tất cả bài tập trước khi đánh dấu hoàn thành bài học."
+            )
+
+        # Kiểm tra điểm đạt yêu cầu
+        if float(latest_attempt.score) < float(quiz.passing_score):
+            raise ValidationError(
+                "Cần hoàn thành tất cả bài tập trước khi đánh dấu hoàn thành bài học."
+            )
 
     with transaction.atomic():
         # Tạo hoặc cập nhật LessonProgress

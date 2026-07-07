@@ -20,12 +20,14 @@ export function useCourseProgress(courseId) {
     if (!courseId) return;
     try {
       setLoading(true);
-      const data = await checkEnrolledApi(courseId);
-      // Backend trả về { is_enrolled, is_owner, can_access, enrollment }
-      const isEnrolledFlag = data?.is_enrolled === true;
-      const isOwnerFlag = data?.is_owner === true;
-      const canAccessFlag = data?.can_access === true;
-      const enrollmentData = data?.enrollment || null;
+      const res = await checkEnrolledApi(courseId);
+      // Backend trả về { success: true, data: { is_enrolled, is_owner, can_access, enrollment } }
+      // hoặc trực tiếp { is_enrolled, is_owner, can_access, enrollment } nếu đã unwrap
+      const responseData = res?.data ?? res;
+      const isEnrolledFlag = responseData?.is_enrolled === true;
+      const isOwnerFlag = responseData?.is_owner === true;
+      const canAccessFlag = responseData?.can_access === true;
+      const enrollmentData = responseData?.enrollment || null;
 
       // Chỉ coi là enrolled nếu enrollment có status ACTIVE hoặc COMPLETED
       const validStatuses = ["ACTIVE", "COMPLETED"];

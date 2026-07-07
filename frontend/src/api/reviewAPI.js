@@ -20,12 +20,24 @@ export const getCourseReviewsApi = async (courseId) => {
   return request(() => apiClient.get(`/api/reviews/courses/${courseId}/`));
 };
 
+export const getCourseReviewStatsApi = async (courseId) => {
+  return request(() => apiClient.get(`/api/reviews/courses/${courseId}/stats/`));
+};
+
 export const getReviewDetailApi = async (reviewId) => {
   return request(() => apiClient.get(`/api/reviews/${reviewId}/`));
 };
 
 export const createReviewApi = async (data) => {
   return request(() => apiClient.post("/api/reviews/create/", data));
+};
+
+export const updateReviewApi = async (reviewId, data) => {
+  return request(() => apiClient.put(`/api/reviews/${reviewId}/update/`, data));
+};
+
+export const deleteReviewApi = async (reviewId) => {
+  return request(() => apiClient.delete(`/api/reviews/${reviewId}/delete/`));
 };
 
 export const updateReviewStatusApi = async (reviewId, status) => {
