@@ -3,14 +3,12 @@ from django.conf import settings
 from django.utils import timezone
 from apps.payments.repositories import payment_repository 
 from apps.payments.models import PaymentTransaction
-from apps.enrollments.models import Enrollment, CourseProgress
-from apps.lessons.models import Lesson
+from apps.system.repositories import system_config_repository
+from apps.enrollments.repositories import enrollment_repository
+from apps.lessons.repositories import lesson_repository
 from apps.courses.models import Course
 
 
-PROVIDER_FEES = {
-    "STRIPE": Decimal("2.9"),
-}
 def calculate_fees(gross_amount, provider):
     """
     Tính toán các khoản phí từ gross_amount.
@@ -22,22 +20,25 @@ def calculate_fees(gross_amount, provider):
     """
     gross = Decimal(str(gross_amount))
 
-    fee_percent = PROVIDER_FEES.get(provider, Decimal("0"))
+    fee_percent = system_config_repository.get_decimal("payment_fee_percent")
     payment_fee = (gross * fee_percent / Decimal("100")).quantize(
         Decimal("0.01"), rounding=ROUND_HALF_UP
     )
 
-    # Tax (chưa áp dụng)
-    tax = Decimal("0.00")
+    # Tax từ SystemConfig
+    tax_percent = system_config_repository.get_decimal("tax_percent")
+    tax = (gross * tax_percent / Decimal("100")).quantize(
+        Decimal("0.01"), rounding=ROUND_HALF_UP
+    )
 
     # Net amount
     net = (gross - payment_fee - tax).quantize(
         Decimal("0.01"), rounding=ROUND_HALF_UP
     )
 
-    # Platform fee
-    platform_fee_percent = Decimal(str(settings.PLATFORM_FEE_PERCENT))
-    platform_fee = (net * platform_fee_percent / Decimal("100")).quantize(
+    # Platform fee từ SystemConfig
+    pf_percent = system_config_repository.get_decimal("platform_fee_percent")
+    platform_fee = (net * pf_percent / Decimal("100")).quantize(
         Decimal("0.01"), rounding=ROUND_HALF_UP
     )
 
@@ -91,38 +92,29 @@ def grant_course_access(transaction):
     student = transaction.student
     course = transaction.course
 
-    # Tìm hoặc tạo Enrollment
-    enrollment, created = Enrollment.objects.get_or_create(
-        student=student,
-        course=course,
-        defaults={
-            "status": Enrollment.Status.ACTIVE,
-            "payment_transaction": transaction,
-            "enrolled_at": timezone.now(),
-            "access_granted_at": timezone.now(),
-        }
-    )
+    defaults = {
+        "status": "ACTIVE",
+        "payment_transaction": transaction,
+        "enrolled_at": timezone.now(),
+        "access_granted_at": timezone.now(),
+    }
+    enrollment, created = enrollment_repository.get_or_create_enrollment(student, course, defaults)
 
-    # Nếu enrollment đã tồn tại nhưng chưa ACTIVE
-    if not created and enrollment.status not in [Enrollment.Status.ACTIVE, Enrollment.Status.COMPLETED]:
-        enrollment.status = Enrollment.Status.ACTIVE
+    if not created and enrollment.status not in ["ACTIVE", "COMPLETED"]:
+        enrollment.status = "ACTIVE"
         enrollment.payment_transaction = transaction
         enrollment.enrolled_at = timezone.now()
         enrollment.access_granted_at = timezone.now()
         enrollment.save()
 
-    # Tạo hoặc cập nhật CourseProgress
-    progress, _ = CourseProgress.objects.get_or_create(
-        enrollment=enrollment,
-        defaults={
-            "total_lessons_count": Lesson.objects.filter(
-                chapter__course=course
-            ).count(),
-            "progress_percent": Decimal("0.00"),
-            "started_at": timezone.now(),
-            "last_activity_at": timezone.now(),
-        }
-    )
+    total_lessons = lesson_repository.count_by_course(course.id)
+    progress_defaults = {
+        "total_lessons_count": total_lessons,
+        "progress_percent": Decimal("0.00"),
+        "started_at": timezone.now(),
+        "last_activity_at": timezone.now(),
+    }
+    enrollment_repository.get_or_create_course_progress(enrollment, progress_defaults)
 
     return enrollment
 def validate_course_for_payment(user, course):
@@ -136,12 +128,7 @@ def validate_course_for_payment(user, course):
     if course.price <= 0:
         return False, "Khóa học miễn phí. Vui lòng sử dụng đăng ký miễn phí."
 
-    # Kiểm tra đã enroll ACTIVE/COMPLETED chưa
-    existing = Enrollment.objects.filter(
-        student=user,
-        course=course,
-        status__in=[Enrollment.Status.ACTIVE, Enrollment.Status.COMPLETED]
-    ).first()
+    existing = enrollment_repository.find_active_or_completed(user, course)
     if existing:
         return False, "Bạn đã đăng ký khóa học này."
 

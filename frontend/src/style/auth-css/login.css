@@ -20,3 +20,54 @@
   border-radius: var(--card-radius, 10px);
   box-shadow: 0 6px 24px rgba(15, 61, 117, 0.06);
 }
+
+/* ===== RESPONSIVE ===== */
+
+/* Mobile (max-width: 480px) */
+@media (max-width: 480px) {
+  .login-main {
+    padding: 20px 12px;
+  }
+
+  .login-card {
+    padding: 16px;
+    border-radius: 8px;
+  }
+
+  .login-card .form-control {
+    font-size: 13px;
+    height: 38px;
+  }
+
+  .login-card .btn-primary,
+  .login-card .btn-google {
+    height: 38px;
+    font-size: 13px;
+  }
+
+  .login-card h2 {
+    font-size: 15px;
+  }
+
+  .login-card p {
+    font-size: 11px;
+  }
+}
+
+/* Mobile siêu nhỏ (320px) */
+@media (max-width: 320px) {
+  .login-card {
+    padding: 12px;
+  }
+
+  .login-card .form-control {
+    font-size: 12px;
+    height: 36px;
+  }
+
+  .login-card .btn-primary,
+  .login-card .btn-google {
+    height: 34px;
+    font-size: 12px;
+  }
+}

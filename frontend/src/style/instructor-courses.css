@@ -1124,6 +1124,29 @@
   padding: 0;
 }
 
+.lesson-item:hover {
+  cursor: pointer;
+}
+
+.lesson-item--active {
+  background: #f0f4ff;
+  font-weight: 600;
+}
+
+.lesson-preview video {
+  max-height: 360px;
+  width: 100%;
+  border-radius: 8px;
+}
+
+.lesson-preview .quiz-preview-item {
+  transition: box-shadow 0.15s ease;
+}
+
+.lesson-preview .quiz-preview-item:hover {
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.08);
+}
+
 .lesson-item {
   display: flex;
   align-items: center;

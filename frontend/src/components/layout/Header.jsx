@@ -1,8 +1,9 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import logoSrc from "../../img/logo.png";
 import { logoutApi } from "../../api/authAPI";
 import { useUser } from "../../context/UserContext";
+import NotificationBell from "../notification/NotificationBell";
 
 function Header({ onToggleSidebar }) {
   const [openMenu, setOpenMenu] = useState(false);
@@ -33,10 +34,10 @@ function Header({ onToggleSidebar }) {
             <div className="logo fw-bold">LMS Learn</div>
           </Link>
           <nav className="nav-menu d-none d-lg-flex">
-            <Link to="/home">Trang chủ</Link>
-            <Link to="/courses">Khóa học</Link>
-            <Link to="/contact">Liên hệ</Link>
-            <Link to="/profile">Hồ sơ</Link>
+            <NavLink to="/home" className={({ isActive }) => isActive ? "active" : ""}>Trang chủ</NavLink>
+            <NavLink to="/courses" className={({ isActive }) => isActive ? "active" : ""}>Khóa học</NavLink>
+            <NavLink to="/contact" className={({ isActive }) => isActive ? "active" : ""}>Liên hệ</NavLink>
+            <NavLink to="/profile" className={({ isActive }) => isActive ? "active" : ""}>Hồ sơ</NavLink>
           </nav>
         </div>
         <div className="header-right">
@@ -50,6 +51,7 @@ function Header({ onToggleSidebar }) {
             <div className="header-auth-loading"></div>
           ) : isAuthenticated ? (
             <div className="user-actions">
+              <NotificationBell />
               <span className="user-email d-none d-md-inline">{user?.email}</span>
               <div className="user-menu">
                 <button type="button" className="avatar-btn" onClick={() => setOpenMenu((prev) => !prev)}>

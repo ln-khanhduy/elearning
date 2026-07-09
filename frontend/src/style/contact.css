@@ -1,0 +1,144 @@
+/* ===== CONTACT PAGE ===== */
+.contact-page {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.contact-header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.contact-header h2 {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--course-text, #1a1a2e);
+  margin-bottom: 8px;
+}
+
+.contact-header p {
+  font-size: 14px;
+  color: var(--muted, #6c757d);
+  margin: 0;
+}
+
+.contact-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.contact-card {
+  background: var(--card, #ffffff);
+  border: 1px solid #e9ecef;
+  border-radius: var(--card-radius, 10px);
+  padding: 24px 20px;
+  text-align: center;
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.contact-card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+  transform: translateY(-2px);
+}
+
+.contact-card-icon {
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(15, 61, 117, 0.06);
+  border-radius: 12px;
+  font-size: 22px;
+  color: var(--primary, #0f3d75);
+}
+
+.contact-card-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--course-text, #1a1a2e);
+  margin: 0 0 10px;
+}
+
+.contact-card-items {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.contact-card-link {
+  font-size: 13px;
+  color: var(--primary, #0f3d75);
+  text-decoration: none;
+  transition: color 0.15s ease;
+  word-break: break-all;
+}
+
+.contact-card-link:hover {
+  color: #0a2d55;
+  text-decoration: underline;
+}
+
+/* ===== RESPONSIVE ===== */
+
+/* Mobile (max-width: 480px) */
+@media (max-width: 480px) {
+  .contact-page {
+    padding: 0 4px;
+  }
+
+  .contact-header {
+    margin-bottom: 24px;
+  }
+
+  .contact-header h2 {
+    font-size: 20px;
+  }
+
+  .contact-header p {
+    font-size: 13px;
+  }
+
+  .contact-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .contact-card {
+    padding: 16px 12px;
+  }
+
+  .contact-card-icon {
+    width: 40px;
+    height: 40px;
+    font-size: 18px;
+  }
+
+  .contact-card-label {
+    font-size: 13px;
+  }
+
+  .contact-card-link {
+    font-size: 12px;
+  }
+}
+
+/* Mobile siêu nhỏ (320px) */
+@media (max-width: 320px) {
+  .contact-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .contact-card {
+    padding: 12px 10px;
+  }
+
+  .contact-card-icon {
+    width: 36px;
+    height: 36px;
+    font-size: 16px;
+  }
+}

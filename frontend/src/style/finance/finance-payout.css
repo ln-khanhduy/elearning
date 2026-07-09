@@ -1,0 +1,162 @@
+/* ===== FINANCE PAYOUT PAGE ===== */
+
+.payout-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: var(--btn-height, 40px);
+  padding: 0 20px;
+  border-radius: var(--card-radius, 10px);
+  border: none;
+  background: var(--success, #16a34a);
+  color: #fff;
+  font-size: var(--font-size-body, 14px);
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.payout-btn:hover:not(:disabled) {
+  background: #15803d;
+}
+
+.payout-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.payout-btn--sm {
+  height: 34px;
+  padding: 0 14px;
+  font-size: var(--font-size-small, 13px);
+}
+
+/* Summary cards */
+.payout-summary-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.payout-summary-card {
+  background: var(--card, #fff);
+  border-radius: var(--card-radius, 10px);
+  border: 1px solid #e9ecef;
+  padding: 14px 16px;
+}
+
+.payout-summary-label {
+  font-size: var(--font-size-xs, 12px);
+  color: var(--muted, #6c757d);
+  margin-bottom: 4px;
+}
+
+.payout-summary-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--course-text, #1a1a2e);
+}
+
+/* Filter bar */
+.payout-filter-bar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  align-items: flex-end;
+}
+
+.payout-filter-select {
+  height: 36px;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+  padding: 0 10px;
+  font-size: var(--font-size-small, 13px);
+  background: var(--card, #fff);
+  color: var(--course-text, #1a1a2e);
+  outline: none;
+  min-width: 160px;
+}
+
+/* Badges */
+.payout-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 4px;
+  font-size: var(--font-size-xs, 12px);
+  font-weight: 500;
+}
+
+.payout-badge--ready {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.payout-badge--waiting {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+/* Table */
+.payout-table-wrap {
+  background: var(--card, #fff);
+  border-radius: var(--card-radius, 10px);
+  border: 1px solid #e9ecef;
+  overflow-x: auto;
+}
+
+.payout-table {
+  font-size: var(--font-size-small, 13px);
+  width: 100%;
+  min-width: 900px;
+}
+
+.payout-table th {
+  background: #f8f9fa;
+  font-weight: 600;
+  padding: 10px 12px;
+  white-space: nowrap;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.payout-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #f0f0f0;
+  vertical-align: middle;
+}
+
+.payout-table tr:last-child td {
+  border-bottom: none;
+}
+
+.payout-table tr:hover {
+  background: #f8fafc;
+}
+
+/* Bottom bar */
+.payout-bottom-bar {
+  background: var(--card, #fff);
+  border-radius: var(--card-radius, 10px);
+  border: 1px solid #e9ecef;
+  padding: 12px 16px;
+  margin-top: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.finance-status-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 4px;
+  font-size: var(--font-size-xs, 12px);
+  font-weight: 500;
+  color: #fff;
+}
+
+@media (max-width: 768px) {
+  .payout-summary-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

@@ -87,7 +87,17 @@
 .nav-menu a.active {
   color: var(--primary);
   font-weight: 600;
-  background: rgba(15, 61, 117, 0.08);
+}
+
+.nav-menu a.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 14px;
+  right: 14px;
+  height: 2px;
+  background: #000;
+  border-radius: 1px;
 }
 
 /* RIGHT */

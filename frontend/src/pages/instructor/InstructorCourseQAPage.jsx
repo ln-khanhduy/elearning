@@ -44,8 +44,8 @@ function QuestionReplyModal({ show, question, onClose, onReplied }) {
             </div>
           </div>
           <div className="modal-footer">
-            <button className="btn btn-secondary" onClick={onClose}>Hủy</button>
-            <button className="btn btn-primary" onClick={handleSubmit} disabled={submitting}>
+            <button className="qa-modal-btn-secondary" onClick={onClose}>Hủy</button>
+            <button className="qa-modal-btn-primary" onClick={handleSubmit} disabled={submitting}>
               {submitting ? "Đang gửi..." : "Gửi trả lời"}
             </button>
           </div>
@@ -98,13 +98,13 @@ function InstructorCourseQAPage() {
           <h2>Hỏi & Đáp</h2>
           <p className="text-muted">{course?.title || "Đang tải..."} — Quản lý câu hỏi từ học viên</p>
         </div>
-        <button className="course-btn-outline" onClick={() => navigate(`/instructor/courses/${courseId}`)}>
+        <button className="qa-back-btn" onClick={() => navigate(`/instructor/courses/${courseId}`)}>
           <i className="bi bi-arrow-left me-1"></i> Quay lại
         </button>
       </div>
       <div className="mb-3 d-flex gap-2">
         {["", "OPEN", "ANSWERED", "CLOSED"].map(s => (
-          <button key={s} className={`btn btn-sm ${statusFilter === s ? "btn-primary" : "btn-outline-secondary"}`}
+          <button key={s} className={`qa-filter-btn ${statusFilter === s ? "qa-filter-btn--active" : ""}`}
             onClick={() => handleFilterChange(s)}>
             {s ? STATUS_LABEL[s] : "Tất cả"}
           </button>
@@ -142,7 +142,7 @@ function InstructorCourseQAPage() {
                     </small>
                   </div>
                   {q.status !== "CLOSED" && (
-                    <button className="btn btn-sm btn-outline-primary ms-3" onClick={() => setReplyQuestion(q)}>
+                    <button className="qa-reply-btn ms-3" onClick={() => setReplyQuestion(q)}>
                       <i className="bi bi-reply me-1"></i>Trả lời
                     </button>
                   )}
@@ -151,7 +151,7 @@ function InstructorCourseQAPage() {
             </div>
           ))}
           {totalPages > 1 && (
-            <nav className="mt-3">
+            <nav className="mt-3 qa-pagination">
               <ul className="pagination justify-content-center">
                 <li className={`page-item ${page <= 1 ? "disabled" : ""}`}>
                   <button className="page-link" onClick={() => setPage(p => Math.max(1, p - 1))}>Trước</button>

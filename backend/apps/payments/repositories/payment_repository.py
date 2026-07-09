@@ -69,3 +69,23 @@ def get_held_transactions_expired():
         status=PaymentTransactionModel.Status.HOLD,
         hold_time__lte=timezone.now()
     )
+
+def get_eligible_payouts():
+    """Lấy transaction HOLD đã hết hạn VÀ có giảng viên được phân công."""
+    return PaymentTransaction.objects.filter(
+        status=PaymentTransactionModel.Status.HOLD,
+        hold_time__lte=timezone.now(),
+        course__assigned_instructor__isnull=False,
+    ).select_related("student", "course", "course__assigned_instructor").order_by("hold_time")
+
+def mark_paid_batch(transaction_ids, paid_at=None):
+    """Cập nhật hàng loạt transaction sang PAID."""
+    from django.utils import timezone
+    now = paid_at or timezone.now()
+    updated = PaymentTransaction.objects.filter(
+        id__in=transaction_ids,
+        status=PaymentTransactionModel.Status.HOLD,
+        hold_time__lte=now,
+        course__assigned_instructor__isnull=False,
+    ).update(status=PaymentTransactionModel.Status.PAID, paid_at=now)
+    return updated

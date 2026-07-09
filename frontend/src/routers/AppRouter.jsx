@@ -1,49 +1,63 @@
-﻿import React from "react";
+﻿import React, { lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import PublicLayout from "../components/layout/PublicLayout";
 import MainLayout from "../components/layout/MainLayout"
 import ProtectedRoute from "./ProtectedRoute";
-import RegisterPage from "../pages/auth/RegisterPage";
-import ForgotPasswordPage from "../pages/auth/ForgotPasswordPage";
-import LoginPage from "../pages/auth/LoginPage";
-import VerifyotpPage from "../pages/auth/VerifyotpPage";
-import ResetPasswordPage from "../pages/auth/ResetPasswordPage";
-import HomePage from "../pages/public/HomePage";
-import CoursesPage from "../pages/public/CoursesPage";
-import CourseDetailPage from "../pages/public/course-detail/CourseDetailPage";
-import AdminDashboardPage from "../pages/admin/AdminDashboardPage";
-import ProfilePage from "../pages/public/ProfilePage";
-import InstructorApplyPage from "../pages/instructor/InstructorApplyPage";
-import AdminInstructorApplicationsPage from "../pages/admin/AdminInstructorApplicationsPage";
-import InstructorCoursesPage from "../pages/instructor/InstructorCoursesPage";
-import InstructorCourseDetailPage from "../pages/instructor/InstructorCourseDetailPage";
-import InstructorCourseStudentsPage from "../pages/instructor/InstructorCourseStudentsPage";
-import InstructorCourseAnalyticsPage from "../pages/instructor/InstructorCourseAnalyticsPage";
-import InstructorCourseQAPage from "../pages/instructor/InstructorCourseQAPage";
-import AdminCourseListPage from "../pages/admin/AdminCourseListPage";
-import CourseBuilderPage from "../pages/course-builder/CourseBuilderPage";
-import AdminCourseAssignPage from "../pages/admin/AdminCourseAssignPage";
-import AdminCategoryPage from "../pages/admin/AdminCategoryPage";
-import MyCoursesPage from "../pages/student/MyCoursesPage";
-import CertificatesPage from "../pages/student/CertificatesPage";
-import StudentCourseQAPage from "../pages/student/StudentCourseQAPage";
-import LearningPage from "../pages/learning/LearningPage";
-import AdminReviewsPage from "../pages/admin/AdminReviewsPage";
-import InstructorListPage from "../pages/admin/InstructorListPage";
-import UserManagementPage from "../pages/admin/UserManagementPage";
-import RoleManagePage from "../pages/admin/RoleManagePage";
-import ActivityLogPage from "../pages/admin/ActivityLogPage";
-import SystemSettingsPage from "../pages/admin/SystemSettingsPage";
 
-// Payment Pages
-import CheckoutPage from "../pages/public/payment/CheckoutPage";
-import SuccessPage from "../pages/public/payment/SuccessPage";
-import CancelPage from "../pages/public/payment/CancelPage";
-import InstructorRevenuePage from "../pages/instructor/InstructorRevenuePage";
-import FinanceTransactionsPage from "../pages/admin/FinanceTransactionsPage";
-import SupportPage from "../pages/support/SupportPage";
-import AdminRequestProcessingPage from "../pages/admin/AdminRequestProcessingPage";
+// Lazy load all pages
+const RegisterPage = lazy(() => import("../pages/auth/RegisterPage"));
+const ForgotPasswordPage = lazy(() => import("../pages/auth/ForgotPasswordPage"));
+const LoginPage = lazy(() => import("../pages/auth/LoginPage"));
+const VerifyotpPage = lazy(() => import("../pages/auth/VerifyotpPage"));
+const ResetPasswordPage = lazy(() => import("../pages/auth/ResetPasswordPage"));
+const HomePage = lazy(() => import("../pages/public/HomePage"));
+const CoursesPage = lazy(() => import("../pages/public/CoursesPage"));
+const ContactPage = lazy(() => import("../pages/public/ContactPage"));
+const CourseDetailPage = lazy(() => import("../pages/public/course-detail/CourseDetailPage"));
+const AdminDashboardPage = lazy(() => import("../pages/admin/AdminDashboardPage"));
+const ProfilePage = lazy(() => import("../pages/public/ProfilePage"));
+const InstructorApplyPage = lazy(() => import("../pages/instructor/InstructorApplyPage"));
+const AdminInstructorApplicationsPage = lazy(() => import("../pages/admin/AdminInstructorApplicationsPage"));
+const InstructorCoursesPage = lazy(() => import("../pages/instructor/InstructorCoursesPage"));
+const InstructorCourseDetailPage = lazy(() => import("../pages/instructor/InstructorCourseDetailPage"));
+const InstructorCourseStudentsPage = lazy(() => import("../pages/instructor/InstructorCourseStudentsPage"));
+const InstructorCourseAnalyticsPage = lazy(() => import("../pages/instructor/InstructorCourseAnalyticsPage"));
+const InstructorCourseQAPage = lazy(() => import("../pages/instructor/InstructorCourseQAPage"));
+const AdminCourseListPage = lazy(() => import("../pages/admin/AdminCourseListPage"));
+const CourseBuilderPage = lazy(() => import("../pages/course-builder/CourseBuilderPage"));
+const AdminCourseAssignPage = lazy(() => import("../pages/admin/AdminCourseAssignPage"));
+const AdminCategoryPage = lazy(() => import("../pages/admin/AdminCategoryPage"));
+const MyCoursesPage = lazy(() => import("../pages/student/MyCoursesPage"));
+const CertificatesPage = lazy(() => import("../pages/student/CertificatesPage"));
+const StudentCourseQAPage = lazy(() => import("../pages/student/StudentCourseQAPage"));
+const LearningPage = lazy(() => import("../pages/learning/LearningPage"));
+const AdminReviewsPage = lazy(() => import("../pages/admin/AdminReviewsPage"));
+const InstructorListPage = lazy(() => import("../pages/admin/InstructorListPage"));
+const UserManagementPage = lazy(() => import("../pages/admin/UserManagementPage"));
+const RoleManagePage = lazy(() => import("../pages/admin/RoleManagePage"));
+const ActivityLogPage = lazy(() => import("../pages/admin/ActivityLogPage"));
+const SystemSettingsPage = lazy(() => import("../pages/admin/SystemSettingsPage"));
+const CheckoutPage = lazy(() => import("../pages/public/payment/CheckoutPage"));
+const SuccessPage = lazy(() => import("../pages/public/payment/SuccessPage"));
+const CancelPage = lazy(() => import("../pages/public/payment/CancelPage"));
+const InstructorRevenuePage = lazy(() => import("../pages/instructor/InstructorRevenuePage"));
+const FinanceTransactionsPage = lazy(() => import("../pages/admin/FinanceTransactionsPage"));
+const FinanceRevenuePage = lazy(() => import("../pages/admin/FinanceRevenuePage"));
+const FinanceReportsPage = lazy(() => import("../pages/admin/FinanceReportsPage"));
+const FinancePayoutPage = lazy(() => import("../pages/admin/FinancePayoutPage"));
+const SupportPage = lazy(() => import("../pages/support/SupportPage"));
+const AdminRequestProcessingPage = lazy(() => import("../pages/admin/AdminRequestProcessingPage"));
+const NotificationsPage = lazy(() => import("../pages/notification/NotificationsPage"));
 
+function PageLoader() {
+  return (
+    <div className="d-flex justify-content-center align-items-center" style={{ minHeight: "40vh" }}>
+      <div className="spinner-border text-primary" role="status">
+        <span className="visually-hidden">Đang tải...</span>
+      </div>
+    </div>
+  );
+}
 
 function AppRouter() {
   return (
@@ -51,76 +65,55 @@ function AppRouter() {
       <Routes>
         <Route element={<PublicLayout />}>
           <Route path="/" element={<Navigate to="/home" replace />} />
-          <Route path="/home" element={<HomePage />} />
-          <Route path="/courses" element={<CoursesPage />} />
-          <Route path="/courses/:courseId" element={<CourseDetailPage />} />
-          <Route path="/register" element={<RegisterPage />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-          <Route path="/verify-otp" element={<VerifyotpPage />} />
-          <Route path="/register/verify-otp" element={<VerifyotpPage />} />
-          <Route path="/reset-password" element={<ResetPasswordPage />} />
-          {/* Public instructor apply - không cần đăng nhập */}
-          <Route path="/instructor/apply" element={<InstructorApplyPage />} />
+          <Route path="/home" element={<Suspense fallback={<PageLoader />}><HomePage /></Suspense>} />
+          <Route path="/courses" element={<Suspense fallback={<PageLoader />}><CoursesPage /></Suspense>} />
+          <Route path="/courses/:courseId" element={<Suspense fallback={<PageLoader />}><CourseDetailPage /></Suspense>} />
+          <Route path="/contact" element={<Suspense fallback={<PageLoader />}><ContactPage /></Suspense>} />
+          <Route path="/register" element={<Suspense fallback={<PageLoader />}><RegisterPage /></Suspense>} />
+          <Route path="/login" element={<Suspense fallback={<PageLoader />}><LoginPage /></Suspense>} />
+          <Route path="/forgot-password" element={<Suspense fallback={<PageLoader />}><ForgotPasswordPage /></Suspense>} />
+          <Route path="/verify-otp" element={<Suspense fallback={<PageLoader />}><VerifyotpPage /></Suspense>} />
+          <Route path="/register/verify-otp" element={<Suspense fallback={<PageLoader />}><VerifyotpPage /></Suspense>} />
+          <Route path="/reset-password" element={<Suspense fallback={<PageLoader />}><ResetPasswordPage /></Suspense>} />
+          <Route path="/instructor/apply" element={<Suspense fallback={<PageLoader />}><InstructorApplyPage /></Suspense>} />
         </Route>
         <Route element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
-          {/* Dashboard - chỉ SUPERADMIN mới có thể xem */}
-          <Route path="/dashboard" element={<ProtectedRoute allowedPermissions={["admin.dashboard.view"]}><AdminDashboardPage /></ProtectedRoute>} />
-
-          {/* Học tập */}
-          <Route path="/my-courses" element={<ProtectedRoute allowedPermissions={["student.my_course.view"]}><MyCoursesPage /></ProtectedRoute>} />
-          <Route path="/my-certificates" element={<ProtectedRoute allowedPermissions={["student.course.view_certificate"]}><CertificatesPage /></ProtectedRoute>} />
-          <Route path="/courses/:courseId/learn" element={<ProtectedRoute allowedPermissions={["student.learning.view"]}><LearningPage /></ProtectedRoute>} />
-          <Route path="/courses/:courseId/learn/:lessonId" element={<ProtectedRoute allowedPermissions={["student.learning.view"]}><LearningPage /></ProtectedRoute>} />
-          <Route path="/courses/:courseId/qa" element={<ProtectedRoute allowedPermissions={["course.comment.create"]}><StudentCourseQAPage /></ProtectedRoute>} />
-
-          {/* Thanh toan */}
-          <Route path="/courses/:courseId/checkout" element={<ProtectedRoute allowedPermissions={["student.course.buy"]}><CheckoutPage /></ProtectedRoute>} />
-          <Route path="/payment/success" element={<ProtectedRoute allowedPermissions={["student.payment.create"]}><SuccessPage /></ProtectedRoute>} />
-          <Route path="/payment/cancel" element={<ProtectedRoute allowedPermissions={["student.payment.create"]}><CancelPage /></ProtectedRoute>} />
-
-          {/* ADMIN COURSES */}
-          <Route path="/admin/courses" element={<ProtectedRoute allowedPermissions={["course.course.view"]}><AdminCourseListPage /></ProtectedRoute>} />
-          <Route path="/admin/courses/create" element={<ProtectedRoute allowedPermissions={["course.course.create"]}><CourseBuilderPage mode="create" /></ProtectedRoute>} />
-          <Route path="/admin/courses/:courseId/edit" element={<ProtectedRoute allowedPermissions={["course.course.update"]}><CourseBuilderPage mode="edit" /></ProtectedRoute>} />
-          <Route path="/admin/courses/:courseId/assign" element={<ProtectedRoute allowedPermissions={["course.instructor.assign"]}><AdminCourseAssignPage /></ProtectedRoute>} />
-          <Route path="/admin/courses/categories" element={<ProtectedRoute allowedPermissions={["course.category.view"]}><AdminCategoryPage /></ProtectedRoute>} />
-          <Route path="/admin/reviews" element={<ProtectedRoute allowedPermissions={["course.review.view"]}><AdminReviewsPage /></ProtectedRoute>} />
-
-          {/*  INSTRUCTOR COURSES  */}
-          <Route path="/instructor/courses" element={<ProtectedRoute allowedPermissions={["instructor.course.view_own"]}><InstructorCoursesPage /></ProtectedRoute>} />
-          <Route path="/instructor/courses/:courseId" element={<ProtectedRoute allowedPermissions={["instructor.course.view_own"]}><InstructorCourseDetailPage /></ProtectedRoute>} />
-          <Route path="/instructor/courses/:courseId/students" element={<ProtectedRoute allowedPermissions={["instructor.course.view_own"]}><InstructorCourseStudentsPage /></ProtectedRoute>} />
-          <Route path="/instructor/courses/:courseId/analytics" element={<ProtectedRoute allowedPermissions={["instructor.course.view_own"]}><InstructorCourseAnalyticsPage /></ProtectedRoute>} />
-          <Route path="/instructor/courses/:courseId/qa" element={<ProtectedRoute allowedPermissions={["course.comment.reply"]}><InstructorCourseQAPage /></ProtectedRoute>} />
-
-          {/* Người dùng & Giáo viên */}
-          <Route path="/admin/users" element={<ProtectedRoute allowedPermissions={["user.user.view"]}><UserManagementPage /></ProtectedRoute>} />
-          <Route path="/admin/instructor-support" element={<ProtectedRoute allowedPermissions={["user.instructor.support"]}><></></ProtectedRoute>} />
-          <Route path="/admin/register-instructor" element={<ProtectedRoute allowedPermissions={["user.instructor.approve"]}><AdminInstructorApplicationsPage /></ProtectedRoute>} />
-          <Route path="/admin/complaints" element={<ProtectedRoute allowedPermissions={["user.user.complaint_resolve"]}><></></ProtectedRoute>} />
-
-          {/* Tài chính */}
-          <Route path="/finance/transactions" element={<ProtectedRoute allowedPermissions={["finance.finance.revenue_view"]}><FinanceTransactionsPage /></ProtectedRoute>} />
-          <Route path="/finance/revenue" element={<ProtectedRoute allowedPermissions={["finance.finance.revenue_view"]}><></></ProtectedRoute>} />
-          <Route path="/finance/fees" element={<ProtectedRoute allowedPermissions={["finance.finance.revenue_view"]}><></></ProtectedRoute>} />
-          <Route path="/finance/reports" element={<ProtectedRoute allowedPermissions={["finance.finance.report_export"]}><></></ProtectedRoute>} />
-
-          {/* Instructor */}
-          <Route path="/instructor/revenue" element={<ProtectedRoute allowedPermissions={["user.instructor.sales_history"]}><InstructorRevenuePage /></ProtectedRoute>} />
-
-          {/* Super Admin */}
-          <Route path="/super-admin/roles" element={<ProtectedRoute allowedPermissions={["admin.role.view"]}><RoleManagePage /></ProtectedRoute>} />
-          <Route path="/super-admin/activity-logs" element={<ProtectedRoute allowedPermissions={["admin.dashboard.view"]}><ActivityLogPage /></ProtectedRoute>} />
-          <Route path="/super-admin/settings" element={<ProtectedRoute allowedPermissions={["admin.dashboard.view"]}><SystemSettingsPage /></ProtectedRoute>} />
-
-          {/* Hỗ trợ */}
-          <Route path="/support" element={<ProtectedRoute allowedPermissions={["support.request.create"]}><SupportPage /></ProtectedRoute>} />
-          <Route path="/admin/requests" element={<ProtectedRoute allowedPermissions={["support.request.process"]}><AdminRequestProcessingPage /></ProtectedRoute>} />
-
-          {/* Tài khoản */}
-          <Route path="/profile" element={<ProtectedRoute allowedPermissions={["student.profile.manage"]}><ProfilePage /></ProtectedRoute>} />
-          <Route path="/notifications" element={<ProtectedRoute allowedPermissions={["user.user.notify"]}><></></ProtectedRoute>} />
+          <Route path="/dashboard" element={<ProtectedRoute allowedPermissions={["admin.dashboard.view"]}><Suspense fallback={<PageLoader />}><AdminDashboardPage /></Suspense></ProtectedRoute>} />
+          <Route path="/my-courses" element={<ProtectedRoute allowedPermissions={["student.my_course.view"]}><Suspense fallback={<PageLoader />}><MyCoursesPage /></Suspense></ProtectedRoute>} />
+          <Route path="/my-certificates" element={<ProtectedRoute allowedPermissions={["student.course.view_certificate"]}><Suspense fallback={<PageLoader />}><CertificatesPage /></Suspense></ProtectedRoute>} />
+          <Route path="/courses/:courseId/learn" element={<ProtectedRoute><Suspense fallback={<PageLoader />}><LearningPage /></Suspense></ProtectedRoute>} />
+          <Route path="/courses/:courseId/learn/:lessonId" element={<ProtectedRoute><Suspense fallback={<PageLoader />}><LearningPage /></Suspense></ProtectedRoute>} />
+          <Route path="/courses/:courseId/qa" element={<ProtectedRoute allowedPermissions={["course.comment.create"]}><Suspense fallback={<PageLoader />}><StudentCourseQAPage /></Suspense></ProtectedRoute>} />
+          <Route path="/courses/:courseId/checkout" element={<ProtectedRoute allowedPermissions={["student.course.buy"]}><Suspense fallback={<PageLoader />}><CheckoutPage /></Suspense></ProtectedRoute>} />
+          <Route path="/payment/success" element={<ProtectedRoute allowedPermissions={["student.payment.create"]}><Suspense fallback={<PageLoader />}><SuccessPage /></Suspense></ProtectedRoute>} />
+          <Route path="/payment/cancel" element={<ProtectedRoute allowedPermissions={["student.payment.create"]}><Suspense fallback={<PageLoader />}><CancelPage /></Suspense></ProtectedRoute>} />
+          <Route path="/admin/courses" element={<ProtectedRoute allowedPermissions={["course.course.view"]}><Suspense fallback={<PageLoader />}><AdminCourseListPage /></Suspense></ProtectedRoute>} />
+          <Route path="/admin/courses/create" element={<ProtectedRoute allowedPermissions={["course.course.create"]}><Suspense fallback={<PageLoader />}><CourseBuilderPage mode="create" /></Suspense></ProtectedRoute>} />
+          <Route path="/admin/courses/:courseId/edit" element={<ProtectedRoute allowedPermissions={["course.course.update"]}><Suspense fallback={<PageLoader />}><CourseBuilderPage mode="edit" /></Suspense></ProtectedRoute>} />
+          <Route path="/admin/courses/:courseId/assign" element={<ProtectedRoute allowedPermissions={["course.instructor.assign"]}><Suspense fallback={<PageLoader />}><AdminCourseAssignPage /></Suspense></ProtectedRoute>} />
+          <Route path="/admin/courses/categories" element={<ProtectedRoute allowedPermissions={["course.category.view"]}><Suspense fallback={<PageLoader />}><AdminCategoryPage /></Suspense></ProtectedRoute>} />
+          <Route path="/admin/reviews" element={<ProtectedRoute allowedPermissions={["course.review.view"]}><Suspense fallback={<PageLoader />}><AdminReviewsPage /></Suspense></ProtectedRoute>} />
+          <Route path="/instructor/courses" element={<ProtectedRoute allowedPermissions={["instructor.course.view_own"]}><Suspense fallback={<PageLoader />}><InstructorCoursesPage /></Suspense></ProtectedRoute>} />
+          <Route path="/instructor/courses/:courseId" element={<ProtectedRoute allowedPermissions={["instructor.course.view_own"]}><Suspense fallback={<PageLoader />}><InstructorCourseDetailPage /></Suspense></ProtectedRoute>} />
+          <Route path="/instructor/courses/:courseId/students" element={<ProtectedRoute allowedPermissions={["instructor.course.view_own"]}><Suspense fallback={<PageLoader />}><InstructorCourseStudentsPage /></Suspense></ProtectedRoute>} />
+          <Route path="/instructor/courses/:courseId/analytics" element={<ProtectedRoute allowedPermissions={["instructor.course.view_own"]}><Suspense fallback={<PageLoader />}><InstructorCourseAnalyticsPage /></Suspense></ProtectedRoute>} />
+          <Route path="/instructor/courses/:courseId/qa" element={<ProtectedRoute allowedPermissions={["course.comment.reply"]}><Suspense fallback={<PageLoader />}><InstructorCourseQAPage /></Suspense></ProtectedRoute>} />
+          <Route path="/admin/users" element={<ProtectedRoute allowedPermissions={["user.user.view"]}><Suspense fallback={<PageLoader />}><UserManagementPage /></Suspense></ProtectedRoute>} />
+          <Route path="/admin/instructor-support" element={<ProtectedRoute allowedPermissions={["user.instructor.support"]}><Suspense fallback={<PageLoader />}><InstructorListPage /></Suspense></ProtectedRoute>} />
+          <Route path="/admin/register-instructor" element={<ProtectedRoute allowedPermissions={["user.instructor.approve"]}><Suspense fallback={<PageLoader />}><AdminInstructorApplicationsPage /></Suspense></ProtectedRoute>} />
+          <Route path="/admin/complaints" element={<ProtectedRoute allowedPermissions={["user.user.complaint_resolve"]}><Suspense fallback={<PageLoader />}><SupportPage /></Suspense></ProtectedRoute>} />
+          <Route path="/finance/transactions" element={<ProtectedRoute allowedPermissions={["finance.finance.revenue_view"]}><Suspense fallback={<PageLoader />}><FinanceTransactionsPage /></Suspense></ProtectedRoute>} />
+          <Route path="/finance/revenue" element={<ProtectedRoute allowedPermissions={["finance.finance.revenue_view"]}><Suspense fallback={<PageLoader />}><FinanceRevenuePage /></Suspense></ProtectedRoute>} />
+          <Route path="/finance/reports" element={<ProtectedRoute allowedPermissions={["finance.finance.report_export"]}><Suspense fallback={<PageLoader />}><FinanceReportsPage /></Suspense></ProtectedRoute>} />
+          <Route path="/finance/payouts" element={<ProtectedRoute allowedPermissions={["finance.finance.payout"]}><Suspense fallback={<PageLoader />}><FinancePayoutPage /></Suspense></ProtectedRoute>} />
+          <Route path="/instructor/revenue" element={<ProtectedRoute allowedPermissions={["user.instructor.sales_history"]}><Suspense fallback={<PageLoader />}><InstructorRevenuePage /></Suspense></ProtectedRoute>} />
+          <Route path="/super-admin/roles" element={<ProtectedRoute allowedPermissions={["admin.role.view"]}><Suspense fallback={<PageLoader />}><RoleManagePage /></Suspense></ProtectedRoute>} />
+          <Route path="/super-admin/activity-logs" element={<ProtectedRoute allowedPermissions={["admin.dashboard.view"]}><Suspense fallback={<PageLoader />}><ActivityLogPage /></Suspense></ProtectedRoute>} />
+          <Route path="/super-admin/settings" element={<ProtectedRoute allowedPermissions={["admin.dashboard.view"]}><Suspense fallback={<PageLoader />}><SystemSettingsPage /></Suspense></ProtectedRoute>} />
+          <Route path="/support" element={<ProtectedRoute allowedPermissions={["support.request.create"]}><Suspense fallback={<PageLoader />}><SupportPage /></Suspense></ProtectedRoute>} />
+          <Route path="/admin/requests" element={<ProtectedRoute allowedPermissions={["support.request.process"]}><Suspense fallback={<PageLoader />}><AdminRequestProcessingPage /></Suspense></ProtectedRoute>} />
+          <Route path="/profile" element={<ProtectedRoute allowedPermissions={["student.profile.manage"]}><Suspense fallback={<PageLoader />}><ProfilePage /></Suspense></ProtectedRoute>} />
+          <Route path="/notifications" element={<ProtectedRoute><Suspense fallback={<PageLoader />}><NotificationsPage /></Suspense></ProtectedRoute>} />
         </Route>
       </Routes>
     </BrowserRouter>
@@ -128,11 +121,3 @@ function AppRouter() {
 }
 
 export default AppRouter;
-
-
-
-
-
-
-
-

@@ -16,7 +16,6 @@ from apps.courses.repositories.qa_repository import (
     order_by_newest,
     paginate,
     get_question_by_id,
-    create_question,
     create_answer,
     update_question_status,
     create_notification,
@@ -114,10 +113,19 @@ def get_question_detail(question_id):
 
 
 def create_question(course, student, data):
-    return create_question(
+    from apps.notifications import services as notif_service
+    from apps.courses.repositories import qa_repository as qa_repo
+    qst = qa_repo.create_question(
         course=course, student=student,
         lesson=data.get('lesson'), title=data.get('title'), content=data.get('content'),
     )
+    try:
+        if course.assigned_instructor:
+            student_name = student.get_full_name() or student.email
+            notif_service.notify_question_asked(course.assigned_instructor, student_name, course.title, data.get('title', ''))
+    except Exception:
+        pass
+    return qst
 
 
 def reply_question(question, author, content):

@@ -285,8 +285,14 @@ function CourseDetailPage() {
                 </div>
               </TabPanel>
 
-              <TabPanel label="Giảng viên">
-                <InstructorCard course={course} />
+              <TabPanel label="Hỏi & Đáp">
+                <div className="text-center py-5">
+                  <i className="bi bi-chat-dots" style={{ fontSize: "3rem", color: "var(--muted, #6c757d)" }}></i>
+                  <p className="mt-3 mb-3 text-muted">Đặt câu hỏi cho giảng viên về khóa học này</p>
+                  <button className="qa-create-btn" onClick={() => navigate(`/courses/${courseId}/qa`)}>
+                    <i className="bi bi-plus-lg me-1"></i> Đặt câu hỏi
+                  </button>
+                </div>
               </TabPanel>
             </CourseTabs>
           </div>
@@ -307,6 +313,15 @@ function CourseDetailPage() {
                 loading={progressLoading}
               />
 
+              {isAuthenticated && (
+                <button
+                  className="btn btn-primary w-100 mt-2"
+                  onClick={() => navigate(`/courses/${courseId}/qa`)}
+                  style={{ height: "var(--btn-height, 40px)", borderRadius: "var(--card-radius, 10px)", fontSize: "var(--font-size-body, 14px)" }}
+                >
+                  <i className="bi bi-chat-dots me-1"></i> Hỏi & Đáp
+                </button>
+              )}
             </div>
           </div>
         </div>

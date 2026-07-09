@@ -5,14 +5,14 @@ function Footer() {
     <footer className="footer-container">
       <div className="footer-left">
         <strong>LMS Learn</strong>
-        <span>© 2026 LMS Learn. All rights reserved.</span>
+        <span>© 2026 LMS Learn. Bản quyền được bảo lưu.</span>
       </div>
 
       <div className="footer-right">
+        <Link to="/">Trang chủ</Link>
+        <Link to="/courses">Khóa học</Link>
+        <Link to="/contact">Liên hệ</Link>
         <Link to="/instructor/apply">Trở thành giảng viên</Link>
-        <a href="#">Privacy Policy</a>
-        <a href="#">Terms of Service</a>
-        <a href="#">Help Center</a>
       </div>
     </footer>
   );

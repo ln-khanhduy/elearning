@@ -1,4 +1,5 @@
 from django.utils import timezone
+from django.core.cache import cache
 
 from apps.system.repositories import dashboard_repository
 def get_monthly_data(queryset_result):
@@ -33,8 +34,10 @@ def get_revenue_by_year():
 
     revenue_map = {}
     for item in revenues:
-        if item["year"]:
-            revenue_map[item["year"].year] = float(item["total"] or 0)
+        year_val = item.get("year")
+        if year_val:
+            year = year_val.year if hasattr(year_val, 'year') else int(year_val)
+            revenue_map[year] = float(item["total"] or 0)
 
     current_year = timezone.now().year
     result = []
@@ -48,11 +51,15 @@ def get_revenue_by_year():
 def get_dashboard_data(year=None):
     """
     Tổng hợp tất cả dữ liệu thống kê cho dashboard admin.
-    Bao gồm: thống kê tổng quan, người dùng theo tháng/role, khóa học theo trạng thái,
-    hồ sơ giảng viên chờ duyệt, doanh thu và hoạt động gần đây.
+    Cache 5 phút để giảm tải database.
     """
     if year is None:
         year = timezone.now().year
+
+    cache_key = f"dashboard_data_{year}"
+    cached = cache.get(cache_key)
+    if cached:
+        return cached
 
     users_by_month = get_monthly_data(
         dashboard_repository.get_new_users_by_month(year)
@@ -96,37 +103,85 @@ def get_dashboard_data(year=None):
         reverse=True
     )[:8]
 
-    return {
+    revenue_today = dashboard_repository.get_revenue_today()
+    revenue_this_week = dashboard_repository.get_revenue_this_week()
+    revenue_last_week = dashboard_repository.get_revenue_last_week()
+    revenue_change = None
+    if revenue_last_week > 0:
+        revenue_change = round((revenue_this_week - revenue_last_week) / revenue_last_week * 100, 1)
+
+    recent_enrollments = []
+    for e in dashboard_repository.get_recent_enrollments():
+        recent_enrollments.append({
+            "id": e.id,
+            "student_name": e.student.get_full_name() or e.student.email,
+            "course_title": e.course.title,
+            "enrolled_at": e.created_at,
+        })
+
+    top_courses = dashboard_repository.get_top_courses()
+
+    result = {
         "stats": [
             {
                 "key": "total_users",
                 "label": "Tổng người dùng",
                 "value": dashboard_repository.count_users(),
+                "link": "/admin/users",
             },
             {
                 "key": "total_admins",
                 "label": "Tổng admin",
                 "value": dashboard_repository.count_admins(),
+                "link": "/admin/users",
             },
             {
                 "key": "total_instructors",
                 "label": "Tổng giảng viên",
                 "value": dashboard_repository.count_instructors(),
+                "link": "/admin/register-instructor",
             },
             {
                 "key": "total_students",
                 "label": "Tổng học viên",
                 "value": dashboard_repository.count_students(),
+                "link": "/admin/users",
             },
             {
                 "key": "total_courses",
                 "label": "Tổng khóa học",
                 "value": dashboard_repository.count_courses(),
+                "link": "/admin/courses",
+            },
+            {
+                "key": "revenue_today",
+                "label": "Doanh thu hôm nay",
+                "value": revenue_today,
+                "link": "/finance/revenue",
+            },
+            {
+                "key": "revenue_week",
+                "label": "Doanh thu tuần này",
+                "value": revenue_this_week,
+                "link": "/finance/revenue",
             },
             {
                 "key": "total_revenue",
                 "label": "Doanh thu hệ thống",
                 "value": get_total_revenue(),
+                "link": "/finance/revenue",
+            },
+            {
+                "key": "pending_instructor",
+                "label": "Giảng viên chờ duyệt",
+                "value": dashboard_repository.count_pending_instructor_applications(),
+                "link": "/admin/register-instructor",
+            },
+            {
+                "key": "pending_requests",
+                "label": "Yêu cầu hỗ trợ",
+                "value": dashboard_repository.get_pending_requests_count(),
+                "link": "/admin/requests",
             },
         ],
         "users_by_month": users_by_month,
@@ -134,5 +189,13 @@ def get_dashboard_data(year=None):
         "courses_by_status": courses_by_status,
         "pending_instructor_applications": dashboard_repository.count_pending_instructor_applications(),
         "revenue_by_year": get_revenue_by_year(),
+        "revenue_change": revenue_change,
+        "revenue_today": revenue_today,
+        "revenue_this_week": revenue_this_week,
         "activities": recent_activities,
+        "top_courses": top_courses,
+        "recent_enrollments": recent_enrollments,
     }
+
+    cache.set(cache_key, result, 300)  # 5 phút
+    return result

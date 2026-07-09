@@ -79,6 +79,7 @@ PERMISSIONS = {
 
     # Finance
     "finance.finance.revenue_view": "Xem doanh thu",
+    "finance.finance.payout": "Thanh toán cho giảng viên",
     "finance.finance.withdraw_approve": "Duyệt lệnh rút tiền",
     "finance.finance.discount_config": "Cấu hình giảm giá",
     "finance.finance.fee_config": "Cấu hình thu phí",
@@ -175,6 +176,7 @@ ROLE_PERMISSIONS = {
         "user.user.complaint_resolve",
 
         "finance.finance.revenue_view",
+        "finance.finance.payout",
         "finance.finance.discount_config",
         "finance.finance.fee_config",
 
@@ -242,6 +244,7 @@ ROLE_PERMISSIONS = {
     "FINANCE_ADMIN": [
         "support.request.process",
         "finance.finance.revenue_view",
+        "finance.finance.payout",
         "finance.finance.withdraw_approve",
         "finance.finance.discount_config",
         "finance.finance.fee_config",

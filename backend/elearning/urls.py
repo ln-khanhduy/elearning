@@ -38,6 +38,9 @@ urlpatterns = [
 
     # Support requests
     path("api/support/", include("apps.support.urls")),
+
+    # Notifications
+    path("api/notifications/", include("apps.notifications.urls")),
 ]
 
 

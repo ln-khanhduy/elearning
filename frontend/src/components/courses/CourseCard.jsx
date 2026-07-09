@@ -86,6 +86,7 @@ function CourseCard({ course }) {
               src={instructor_avatar}
               alt={instructor_name}
               className="course-card-instructor-avatar"
+              loading="lazy"
             />
           ) : (
             <span className="course-card-instructor-avatar-fallback">

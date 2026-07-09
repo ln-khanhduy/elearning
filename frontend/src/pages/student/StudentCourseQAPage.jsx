@@ -44,17 +44,17 @@ function StudentCourseQAPage() {
           <p className="text-muted">Đặt câu hỏi cho giảng viên về khóa học này</p>
         </div>
         <div className="d-flex gap-2">
-          <button className="course-btn-outline" onClick={() => navigate(-1)}>
+          <button className="qa-back-btn" onClick={() => navigate(-1)}>
             <i className="bi bi-arrow-left me-1"></i> Quay lại
           </button>
-          <button className="course-btn-primary" onClick={() => setShowCreate(true)}>
+          <button className="qa-create-btn" onClick={() => setShowCreate(true)}>
             <i className="bi bi-plus-lg me-1"></i>Đặt câu hỏi
           </button>
         </div>
       </div>
       <div className="mb-3 d-flex gap-2">
         {["", "OPEN", "ANSWERED", "CLOSED"].map(s => (
-          <button key={s} className={`btn btn-sm ${statusFilter === s ? "btn-primary" : "btn-outline-secondary"}`}
+          <button key={s} className={`qa-filter-btn ${statusFilter === s ? "qa-filter-btn--active" : ""}`}
             onClick={() => handleFilterChange(s)}>
             {s ? STATUS_LABEL[s] : "Tất cả"}
           </button>
@@ -70,7 +70,7 @@ function StudentCourseQAPage() {
         <div className="text-center py-5">
           <i className="bi bi-chat-dots" style={{ fontSize: "3rem", color: "#ccc" }}></i>
           <p className="text-muted mt-2">Chưa có câu hỏi nào.</p>
-          <button className="btn btn-primary" onClick={() => setShowCreate(true)}>
+          <button className="qa-create-btn" onClick={() => setShowCreate(true)}>
             <i className="bi bi-plus-lg me-1"></i>Đặt câu hỏi đầu tiên
           </button>
         </div>
@@ -94,7 +94,7 @@ function StudentCourseQAPage() {
             </div>
           ))}
           {totalPages > 1 && (
-            <nav className="mt-3">
+            <nav className="mt-3 qa-pagination">
               <ul className="pagination justify-content-center">
                 <li className={`page-item ${page <= 1 ? "disabled" : ""}`}>
                   <button className="page-link" onClick={() => setPage(p => Math.max(1, p - 1))}>Trước</button>

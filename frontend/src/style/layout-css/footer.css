@@ -60,3 +60,20 @@
     padding: 12px 24px;
   }
 }
+
+/* Mobile siêu nhỏ (320px) */
+@media (max-width: 320px) {
+  .footer-container {
+    padding: 8px 10px;
+    font-size: 10px;
+    gap: 2px;
+  }
+
+  .footer-right {
+    gap: 6px;
+  }
+
+  .footer-right a {
+    font-size: 10px;
+  }
+}

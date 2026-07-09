@@ -1,7 +1,9 @@
 from apps.support import repositories as support_repo
+from apps.support.models import SupportRequest
 from apps.payments.models import PaymentTransaction
 from django.utils import timezone
 from rest_framework.exceptions import PermissionDenied, ValidationError
+from apps.notifications import services as notif_service
 
 
 def create_request(user, data):
@@ -33,7 +35,29 @@ def create_request(user, data):
         "description": description,
         "transaction_id": transaction_id,
     }
-    return support_repo.create(request_data)
+    request_obj = support_repo.create(request_data)
+
+    # Notify admins about new support request
+    try:
+        from apps.users.models import User, Role
+        # Find admins who can process this request type
+        admin_roles = []
+        if request_type == "REFUND":
+            admin_roles = ["FINANCE_ADMIN", "SUPERADMIN"]
+        elif request_type == "TECHNICAL":
+            admin_roles = ["SUPERADMIN"]
+        elif request_type == "COMPLAINT":
+            admin_roles = ["USER_MANAGER", "INSTRUCTOR_MANAGER", "SUPERADMIN"]
+        elif request_type == "OTHER":
+            admin_roles = ["SUPERADMIN"]
+        if admin_roles:
+            admins = User.objects.filter(role__code__in=admin_roles, is_active=True)
+            for admin in admins:
+                notif_service.notify_support_request_created(admin, user.get_full_name() or user.email, request_type, title)
+    except Exception:
+        pass
+
+    return request_obj
 
 
 def get_my_requests(user):
@@ -62,7 +86,16 @@ def process_request(request_id, user, data):
             transaction.refund_reviewed_at = timezone.now()
             transaction.save(update_fields=["status", "refunded_at", "refund_reviewed_by", "refund_reviewed_at"])
 
-    return support_repo.update_status(request_obj, status, assigned_to=user, resolution_note=resolution_note)
+    result = support_repo.update_status(request_obj, status, assigned_to=user, resolution_note=resolution_note)
+
+    # Notify the user who created the request
+    try:
+        status_label = dict(SupportRequest.Status.choices).get(status, status)
+        notif_service.notify_support_request_processed(request_obj.user, request_obj.title, status_label, resolution_note or "")
+    except Exception:
+        pass
+
+    return result
 
 
 def _can_process(user, request_type):

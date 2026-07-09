@@ -44,6 +44,10 @@
 @import url('./admin-instructor-list.css');
 @import url('./admin-reviews.css');
 @import url('./support.css');
+@import url('./notification/notification.css');
+@import url('./student/qa-page.css');
+@import url('./contact.css');
+@import url('./finance/finance-revenue.css');
 
 /* ===== CSS VARIABLES ===== */
 :root {

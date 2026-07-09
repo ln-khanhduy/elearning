@@ -2,20 +2,24 @@ from rest_framework.exceptions import NotFound
 from apps.courses.models import Course
 from apps.lessons.models import Chapter
 def get_all():
-    """Lấy danh sách tất cả khóa học (trừ ARCHIVED), kèm thông tin created_by, assigned_instructor và category, sắp xếp theo ngày tạo mới nhất."""
+    """Lấy danh sách tất cả khóa học, kèm thông tin created_by, assigned_instructor và category, sắp xếp theo ngày tạo mới nhất."""
     return Course.objects.select_related("created_by", "assigned_instructor", "category").exclude(status="ARCHIVED").order_by("-created_at")
+
 def get_published():
     """Lấy danh sách khóa học đã PUBLIC, kèm thông tin created_by, assigned_instructor và category, sắp xếp theo ngày tạo mới nhất."""
     return Course.objects.select_related("created_by", "assigned_instructor", "category").filter(status=Course.Status.PUBLISHED).order_by("-created_at")
+
 def get_by_id(course_id):
     """Lấy chi tiết một khóa học theo ID, kèm thông tin created_by, assigned_instructor và category. Trả về 404 nếu không tìm thấy."""
     course = Course.objects.select_related("created_by", "assigned_instructor", "category").filter(id=course_id).first()
     if not course:
         raise NotFound("Không tìm thấy khóa học.")
     return course
+
 def create(data):
     """Tạo một khóa học mới với dữ liệu đã được validate."""
     return Course.objects.create(**data)
+
 def search(keyword=None, status_value=None, category_id=None, instructor_id=None, assigned_instructor_id=None):
     """
     Tìm kiếm khóa học theo từ khóa (title), lọc theo trạng thái và danh mục.

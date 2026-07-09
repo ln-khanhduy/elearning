@@ -28,14 +28,17 @@ def translate_error_message(message):
 
 
 def translate_errors(errors):
-    """Dịch tất cả error messages trong dict/list."""
+    """Dịch tất cả error messages trong dict/list và convert thành plain string."""
     if isinstance(errors, dict):
         return {key: translate_errors(value) for key, value in errors.items()}
     elif isinstance(errors, list):
         return [translate_errors(item) for item in errors]
-    elif isinstance(errors, str):
-        return translate_error_message(errors)
-    return errors
+    # ErrorDetail là str subclass, cần xử lý trước khi translate
+    if hasattr(errors, 'code'):
+        return str(translate_error_message(str(errors)))
+    if isinstance(errors, str):
+        return str(translate_error_message(errors))
+    return str(errors) if errors else errors
 
 
 def custom_exception_handler(exc, context):

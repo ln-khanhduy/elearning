@@ -1,6 +1,7 @@
 ﻿import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import InputField from "../../components/common/InputField";
+import TermsModal from "../../components/common/TermsModal";
 import { sendRegisterOtp } from "../../services/authService";
 
 function RegisterPage() {
@@ -9,6 +10,7 @@ function RegisterPage() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [showTerms, setShowTerms] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -97,7 +99,11 @@ function RegisterPage() {
                 onChange={(e) => setAcceptedTerms(e.target.checked)}
               />
               <label className="form-check-label small text-secondary">
-                Tôi đồng ý với Điều khoản và Chính sách bảo mật của LMS Learn.
+                Tôi đồng ý với{" "}
+                <button type="button" className="terms-link" onClick={() => setShowTerms(true)}>
+                  Điều khoản và Chính sách bảo mật
+                </button>{" "}
+                của LMS Learn.
               </label>
             </div>
             <button type="submit" className="btn-register" disabled={loading}>
@@ -110,6 +116,8 @@ function RegisterPage() {
             <Link to="/login" className="ms-1 fw-semibold text-decoration-none"> Đăng nhập ngay </Link>
           </div>
         </div>
+
+        <TermsModal open={showTerms} onClose={() => setShowTerms(false)} />
       </main>
     </div>
   );

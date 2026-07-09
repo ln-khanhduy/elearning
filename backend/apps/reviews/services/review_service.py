@@ -23,6 +23,8 @@ def get_review_detail(review_id):
 
 def create_review(user, data):
     """Tạo review mới. Kiểm tra duplicate + enrollment."""
+    from apps.notifications import services as notif_service
+
     course = course_repository.get_by_id(data["course_id"])
 
     # Kiểm tra enrollment (chỉ học viên đã enroll mới được review)
@@ -49,14 +51,32 @@ def create_review(user, data):
     if data.get("parent"):
         parent_review = review_repository.get_by_id(data["parent"])
         review_data["parent"] = parent_review
-        # Reply không có rating
         review_data["content"] = data["content"]
     else:
-        # Review chính: bắt buộc có rating
         review_data["rating"] = data["rating"]
         review_data["content"] = data["content"]
 
-    return review_repository.create(review_data)
+    review_obj = review_repository.create(review_data)
+
+    # Notify
+    try:
+        if data.get("parent"):
+            # Reply to review -> notify the original reviewer
+            parent_review = review_repository.get_by_id(data["parent"])
+            instructor_name = user.get_full_name() or user.email
+            notif_service.notify_review_replied(parent_review.user, instructor_name, course.title)
+        else:
+            # New review -> notify instructor
+            if course.assigned_instructor:
+                student_name = user.get_full_name() or user.email
+                notif_service.notify_new_review(
+                    course.assigned_instructor, student_name,
+                    course.title, data.get("rating", 0), data.get("content", ""),
+                )
+    except Exception:
+        pass
+
+    return review_obj
 
 
 def update_review(review_id, user, data):

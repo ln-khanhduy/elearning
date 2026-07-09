@@ -16,15 +16,13 @@ export const sidebarItems = [
 
   { type: "group", label: "Người dùng & Giảng viên" },
   { type: "item", label: "Quản lý người dùng", path: "/admin/users", icon: "bi-people", requiredPermissions: ["user.user.view"] },
-  { type: "item", label: "Hỗ trợ giảng viên", path: "/admin/instructor-support", icon: "bi-headset", requiredPermissions: ["user.instructor.support"] },
   { type: "item", label: "Hồ sơ đăng ký giảng viên", path: "/admin/register-instructor", icon: "bi-file-earmark-person", requiredPermissions: ["user.instructor.view"] },
-  { type: "item", label: "Khiếu nại người dùng", path: "/admin/complaints", icon: "bi-exclamation-triangle", requiredPermissions: ["user.user.complaint_resolve"] },
 
   { type: "group", label: "Tài chính" },
   { type: "item", label: "Doanh thu", path: "/finance/revenue", icon: "bi-cash-stack", requiredPermissions: ["finance.finance.revenue_view"] },
   { type: "item", label: "Giao dịch", path: "/finance/transactions", icon: "bi-receipt", requiredPermissions: ["finance.finance.revenue_view"] },
-  { type: "item", label: "Cấu hình phí", path: "/finance/fees", icon: "bi-gear", requiredPermissions: ["finance.finance.fee_config"] },
   { type: "item", label: "Báo cáo tài chính", path: "/finance/reports", icon: "bi-file-earmark-bar-graph", requiredPermissions: ["finance.finance.report_export"] },
+  { type: "item", label: "Thanh toán GV", path: "/finance/payouts", icon: "bi-cash-stack", requiredPermissions: ["finance.finance.payout"] },
 
   { type: "group", label: "Super Admin" },
   { type: "item", label: "Role & Permission", path: "/super-admin/roles", icon: "bi-shield-lock", requiredPermissions: ["admin.role.view"] },

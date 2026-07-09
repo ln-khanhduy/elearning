@@ -6,34 +6,40 @@ from apps.users.models import User, Role, InstructorProfile
 from apps.courses.models import Course
 from apps.payments.models import PaymentTransaction
 from apps.payments.models import PaymentTransaction as PaymentTransactionModel
+
+
 def count_users():
-    """Đếm tổng số người dùng trong hệ thống."""
     return User.objects.count()
+
+
 def count_admins():
-    """Đếm số lượng admin (tất cả role không phải STUDENT và INSTRUCTOR)."""
     return User.objects.exclude(role__code__in=["STUDENT", "INSTRUCTOR"]).count()
+
+
 def count_instructors():
-    """Đếm số lượng giảng viên (role INSTRUCTOR)."""
     return User.objects.filter(role__code="INSTRUCTOR").count()
+
+
 def count_students():
-    """Đếm số lượng học viên (role STUDENT)."""
     return User.objects.filter(role__code="STUDENT").count()
+
+
 def count_courses():
-    """Đếm tổng số khóa học trong hệ thống."""
     return Course.objects.count()
+
+
 def get_users_by_role():
-    """Lấy số lượng người dùng nhóm theo từng role."""
     return (
         Role.objects
         .annotate(total=Count("user"))
         .values("id", "code", "name", "total")
         .order_by("id")
     )
+
+
 def get_new_users_by_month(year=None):
-    """Lấy số lượng người dùng mới đăng ký theo từng tháng trong một năm."""
     if year is None:
         year = timezone.now().year
-
     return (
         User.objects
         .filter(date_joined__year=year)
@@ -42,26 +48,30 @@ def get_new_users_by_month(year=None):
         .annotate(total=Count("id"))
         .order_by("month")
     )
+
+
 def get_courses_by_status():
-    """Lấy số lượng khóa học nhóm theo trạng thái (draft, pending, approved, rejected, published)."""
     return (
         Course.objects
         .values("status")
         .annotate(total=Count("id"))
         .order_by("status")
     )
+
+
 def count_pending_instructor_applications():
-    """Đếm số lượng hồ sơ đăng ký giảng viên đang chờ duyệt."""
     return InstructorProfile.objects.filter(status=InstructorProfile.Status.PENDING).count()
+
+
 def get_total_revenue():
-    """Tính tổng doanh thu từ tất cả giao dịch đã thanh toán (PAID, HOLD)."""
     result = PaymentTransaction.objects.filter(
         status__in=[PaymentTransactionModel.Status.PAID, PaymentTransactionModel.Status.HOLD]
     ).aggregate(total=Sum("net_amount"))
     return result["total"] or 0
+
+
 def get_revenue_by_year():
-    """Lấy doanh thu theo từng năm từ các giao dịch đã thanh toán."""
-    return (
+    revenues = (
         PaymentTransaction.objects
         .filter(status__in=[PaymentTransactionModel.Status.PAID, PaymentTransactionModel.Status.HOLD])
         .annotate(year=TruncYear("paid_at"))
@@ -69,16 +79,105 @@ def get_revenue_by_year():
         .annotate(total=Sum("net_amount"))
         .order_by("year")
     )
+    revenue_map = {}
+    for item in revenues:
+        if item["year"]:
+            revenue_map[item["year"].year] = float(item["total"] or 0)
+
+    current_year = timezone.now().year
+    result = []
+    for year in range(2019, current_year + 1):
+        result.append({"year": year, "total": revenue_map.get(year, 0)})
+    return result
+
+
 def get_recent_users(limit=5):
-    """Lấy danh sách người dùng mới nhất, kèm thông tin role."""
     return User.objects.select_related("role").order_by("-date_joined")[:limit]
+
+
 def get_recent_courses(limit=5):
-    """Lấy danh sách khóa học mới nhất, kèm thông tin created_by và assigned_instructor."""
     return Course.objects.select_related("created_by", "assigned_instructor").order_by("-created_at")[:limit]
+
+
 def get_recent_instructor_applications(limit=5):
-    """Lấy danh sách hồ sơ đăng ký giảng viên mới nhất, kèm thông tin user và người duyệt."""
     return (
         InstructorProfile.objects
         .select_related("user", "reviewed_by")
         .order_by("-created_at")[:limit]
     )
+
+
+def get_recent_enrollments(limit=5):
+    """Lấy danh sách đăng ký gần đây."""
+    from apps.enrollments.models import Enrollment
+    return (
+        Enrollment.objects
+        .select_related("student", "course")
+        .order_by("-created_at")[:limit]
+    )
+
+
+def get_revenue_today():
+    """Lấy doanh thu hôm nay."""
+    today = timezone.now().date()
+    result = PaymentTransaction.objects.filter(
+        status__in=[PaymentTransactionModel.Status.PAID, PaymentTransactionModel.Status.HOLD],
+        paid_at__date=today,
+    ).aggregate(total=Sum("net_amount"))
+    return result["total"] or 0
+
+
+def get_revenue_this_week():
+    """Lấy doanh thu tuần này."""
+    now = timezone.now()
+    start_of_week = now - timezone.timedelta(days=now.weekday())
+    result = PaymentTransaction.objects.filter(
+        status__in=[PaymentTransactionModel.Status.PAID, PaymentTransactionModel.Status.HOLD],
+        paid_at__gte=start_of_week,
+    ).aggregate(total=Sum("net_amount"))
+    return result["total"] or 0
+
+
+def get_revenue_last_week():
+    """Lấy doanh thu tuần trước."""
+    now = timezone.now()
+    start_of_week = now - timezone.timedelta(days=now.weekday())
+    end_of_last_week = start_of_week
+    start_of_last_week = start_of_week - timezone.timedelta(days=7)
+    result = PaymentTransaction.objects.filter(
+        status__in=[PaymentTransactionModel.Status.PAID, PaymentTransactionModel.Status.HOLD],
+        paid_at__gte=start_of_last_week,
+        paid_at__lt=end_of_last_week,
+    ).aggregate(total=Sum("net_amount"))
+    return result["total"] or 0
+
+
+def get_pending_requests_count():
+    """Đếm số yêu cầu hỗ trợ đang chờ xử lý."""
+    from apps.support.models import SupportRequest
+    return SupportRequest.objects.filter(status=SupportRequest.Status.PENDING).count()
+
+
+def get_top_courses(limit=5):
+    """Lấy top khóa học có nhiều học viên nhất và doanh thu."""
+    from apps.enrollments.models import Enrollment
+    from django.db.models import Q
+    courses = Course.objects.filter(
+        enrollments__status=Enrollment.Status.ACTIVE
+    ).distinct().select_related("assigned_instructor").order_by("-created_at")[:limit * 2]
+    
+    result = []
+    for course in courses:
+        student_count = Enrollment.objects.filter(course=course, status=Enrollment.Status.ACTIVE).count()
+        revenue = PaymentTransaction.objects.filter(
+            enrollments__course_id=course.id,
+            status__in=[PaymentTransactionModel.Status.PAID, PaymentTransactionModel.Status.HOLD]
+        ).aggregate(total=Sum("net_amount"))["total"] or 0
+        result.append({
+            "id": course.id,
+            "title": course.title,
+            "student_count": student_count,
+            "total_revenue": float(revenue),
+            "instructor_name": course.assigned_instructor.get_full_name() if course.assigned_instructor else None,
+        })
+    return sorted(result, key=lambda x: x["student_count"], reverse=True)[:limit]

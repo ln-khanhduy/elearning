@@ -92,6 +92,13 @@ def verify_session(session_id):
     # Tạo enrollment
     payment_service.grant_course_access(transaction)
 
+    # Notify payment success
+    try:
+        from apps.notifications import services as notif_service
+        notif_service.notify_payment_success(transaction.student, transaction.course.title, transaction.gross_amount)
+    except Exception:
+        pass
+
     return transaction
 def handle_webhook(payload, sig_header):
     """

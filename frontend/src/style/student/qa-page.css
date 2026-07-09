@@ -1,0 +1,148 @@
+/* ===== QA PAGE STYLES ===== */
+
+/* Filter buttons */
+.qa-filter-btn {
+  padding: 5px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1.5px solid #e2e8f0;
+  background: transparent;
+  color: #6c757d;
+  white-space: nowrap;
+}
+
+.qa-filter-btn:hover {
+  border-color: var(--primary, #0f3d75);
+  color: var(--primary, #0f3d75);
+  background: rgba(15, 61, 117, 0.04);
+}
+
+.qa-filter-btn--active {
+  background: var(--primary, #0f3d75);
+  color: #fff;
+  border-color: var(--primary, #0f3d75);
+}
+
+/* Reply button */
+.qa-reply-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1.5px solid var(--primary, #0f3d75);
+  background: transparent;
+  color: var(--primary, #0f3d75);
+}
+
+.qa-reply-btn:hover {
+  background: var(--primary, #0f3d75);
+  color: #fff;
+}
+
+/* Pagination */
+.qa-pagination .page-link {
+  border: 1px solid #e2e8f0;
+  color: #495057;
+  font-size: 13px;
+  padding: 6px 12px;
+  transition: all 0.2s ease;
+}
+
+.qa-pagination .page-link:hover {
+  border-color: var(--primary, #0f3d75);
+  color: var(--primary, #0f3d75);
+  background: transparent;
+}
+
+.qa-pagination .page-item.active .page-link {
+  background: var(--primary, #0f3d75);
+  border-color: var(--primary, #0f3d75);
+  color: #fff;
+}
+
+/* Modal buttons */
+.qa-modal-btn-primary {
+  background: var(--primary, #0f3d75);
+  color: #fff;
+  border: none;
+  padding: 8px 20px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.qa-modal-btn-primary:hover {
+  background: #0a2d55;
+}
+
+.qa-modal-btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.qa-modal-btn-secondary {
+  background: transparent;
+  color: #6c757d;
+  border: 1px solid #e2e8f0;
+  padding: 8px 20px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.qa-modal-btn-secondary:hover {
+  border-color: var(--primary, #0f3d75);
+  color: var(--primary, #0f3d75);
+}
+
+/* Back button */
+.qa-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: 1.5px solid var(--primary, #0f3d75);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--primary, #0f3d75);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.qa-back-btn:hover {
+  background: rgba(15, 61, 117, 0.05);
+}
+
+/* Create question button */
+.qa-create-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
+  background: var(--primary, #0f3d75);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.qa-create-btn:hover {
+  background: #0a2d55;
+}

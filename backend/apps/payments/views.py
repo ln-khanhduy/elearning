@@ -211,6 +211,96 @@ class MarkTransactionPaidAPIView(BasePermissionAPIView):
         }, status=status.HTTP_200_OK)
 
 
+# ==================== PAYOUT ====================
+
+class AdminPayoutListAPIView(BasePermissionAPIView):
+    """
+    GET /api/payments/admin/payouts/
+    Danh sách giao dịch đủ điều kiện thanh toán cho giảng viên.
+    Chỉ HOLD, hold_time <= now, course có assigned_instructor.
+    """
+    required_permission = "finance.finance.payout"
+
+    def get(self, request):
+        transactions = payment_repository.get_eligible_payouts()
+        serializer = AdminTransactionSerializer(transactions, many=True)
+        return Response({
+            "success": True,
+            "data": serializer.data,
+        }, status=status.HTTP_200_OK)
+
+
+class AdminBatchPayoutAPIView(BasePermissionAPIView):
+    """
+    POST /api/payments/admin/payouts/batch/
+    Thanh toán hàng loạt cho giảng viên.
+    Body: { "transaction_ids": ["uuid1", "uuid2", ...] }
+    Chỉ xử lý các transaction HOLD đã hết hạn, có instructor.
+    Đã PAID rồi sẽ không bị ảnh hưởng (backend filter lại status).
+    """
+    required_permission = "finance.finance.payout"
+
+    def post(self, request):
+        from apps.notifications import services as notif_service
+
+        transaction_ids = request.data.get("transaction_ids", [])
+        if not transaction_ids:
+            return Response({
+                "success": False, "message": "Vui lòng chọn giao dịch cần thanh toán.",
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        now = timezone.now()
+        # Chỉ lấy các transaction đủ điều kiện trong danh sách đã chọn
+        eligible = PaymentTransaction.objects.filter(
+            id__in=transaction_ids,
+            status=PaymentTransaction.Status.HOLD,
+            hold_time__lte=now,
+            course__assigned_instructor__isnull=False,
+        ).select_related("course__assigned_instructor")
+
+        if not eligible.exists():
+            return Response({
+                "success": False, "message": "Không có giao dịch nào đủ điều kiện thanh toán.",
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        # Group by instructor để gửi notification
+        instructor_data = {}
+        for t in eligible:
+            instructor = t.course.assigned_instructor
+            if instructor:
+                if instructor.id not in instructor_data:
+                    instructor_data[instructor.id] = {
+                        "instructor": instructor,
+                        "total": 0,
+                        "courses": [],
+                    }
+                instructor_data[instructor.id]["total"] += float(t.instructor_share_amount or 0)
+                instructor_data[instructor.id]["courses"].append(t.course.title)
+
+        # Batch update to PAID
+        ids = list(eligible.values_list("id", flat=True))
+        paid_count = payment_repository.mark_paid_batch(ids, paid_at=now)
+
+        def _fmt(amount):
+            return f"{amount:,.0f}₫" if amount % 1 == 0 else f"{amount:,.2f}₫"
+
+        for info in instructor_data.values():
+            for course_title in info["courses"]:
+                try:
+                    notif_service.notify_payout_completed(
+                        info["instructor"], _fmt(info["total"]), course_title,
+                    )
+                except Exception:
+                    pass
+
+        total_amount = sum(float(t.instructor_share_amount or 0) for t in eligible)
+        return Response({
+            "success": True,
+            "message": f"Đã thanh toán {paid_count} giao dịch, tổng {_fmt(total_amount)}.",
+            "data": {"paid_count": paid_count, "total_amount": total_amount},
+        }, status=status.HTTP_200_OK)
+
+
 # ==================== INSTRUCTOR REVENUE ====================
 
 class InstructorRevenueAPIView(BasePermissionAPIView):

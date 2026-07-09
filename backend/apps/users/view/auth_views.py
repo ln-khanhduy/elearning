@@ -25,6 +25,7 @@ from apps.users.services import google_oauth_service
 from apps.users.services import password_reset_service
 from apps.users.services import register_service
 from apps.users.utils.cookies import REFRESH_COOKIE_NAME, delete_refresh_cookie, set_refresh_cookie
+from apps.notifications import services as notif_service
 
 
 RATE_LIMIT_CACHE_PREFIX = "rate_limit"
@@ -79,6 +80,11 @@ class RegisterVerifyOTPView(APIView):
         auth_service.update_last_login(user)
         tokens = auth_service.generate_tokens_for_user(user)
 
+        try:
+            notif_service.notify_login(user)
+        except Exception:
+            pass
+
         response = Response({"user": UserSerializer(user).data, "access": tokens["access"]}, status=status.HTTP_201_CREATED)
         set_refresh_cookie(response, tokens["refresh"])
         return response
@@ -101,6 +107,11 @@ class AuthLoginView(APIView):
         user = serializer.validated_data["user"]
         auth_service.update_last_login(user)
         tokens = auth_service.generate_tokens_for_user(user)
+
+        try:
+            notif_service.notify_login(user)
+        except Exception:
+            pass
 
         response = Response({"user": UserSerializer(user).data, "access": tokens["access"]}, status=status.HTTP_200_OK)
         set_refresh_cookie(response, tokens["refresh"])
@@ -258,6 +269,11 @@ class ResetPasswordView(APIView):
         except ValidationError as e:
             message = e.detail[0] if isinstance(e.detail, list) else str(e.detail)
             return Response({"detail": str(message)}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            user = password_reset_service.get_user_by_token(serializer.validated_data["token"])
+            notif_service.notify_password_change(user)
+        except Exception:
+            pass
         return Response({"detail": "Mật khẩu mới đã được cập nhật."}, status=status.HTTP_200_OK)
 
 
@@ -298,6 +314,11 @@ class GoogleIdTokenLoginView(APIView):
 
         auth_service.update_last_login(user)
         tokens = auth_service.generate_tokens_for_user(user)
+
+        try:
+            notif_service.notify_login(user)
+        except Exception:
+            pass
 
         response = Response({
             "access": tokens["access"],

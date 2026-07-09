@@ -16,9 +16,33 @@ export const getErrorMessage = (error) => {
 
   if (!data) return "Có lỗi xảy ra. Vui lòng thử lại.";
   if (typeof data === "string") return data;
-  if (data.detail) return data.detail;
-  if (data.error) return data.error;
-  if (data.message) return data.message;
+  
+  // Ưu tiên lấy message từ detail/error/message
+  if (data.detail) {
+    const msg = String(data.detail);
+    // Nếu bị DRF ErrorDetail serialize kèm metadata, parse lấy text
+    if (msg.includes("string='")) {
+      const match = msg.match(/string='([^']+)'/);
+      if (match) return match[1];
+    }
+    return msg;
+  }
+  if (data.error) {
+    const msg = String(data.error);
+    if (msg.includes("string='")) {
+      const match = msg.match(/string='([^']+)'/);
+      if (match) return match[1];
+    }
+    return msg;
+  }
+  if (data.message) {
+    const msg = String(data.message);
+    if (msg.includes("string='")) {
+      const match = msg.match(/string='([^']+)'/);
+      if (match) return match[1];
+    }
+    return msg;
+  }
 
   // Hàm đệ quy để lấy message lỗi đầu tiên từ nested object
   const extractFirstError = (obj) => {

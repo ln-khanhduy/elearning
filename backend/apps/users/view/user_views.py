@@ -10,6 +10,7 @@ from apps.common.base_api_view import BasePermissionAPIView
 from apps.system.services import admin_log_service
 
 from apps.users.services import user_service
+from apps.notifications import services as notif_service
 
 from apps.users.serializers.user_serializer import (
     UserListSerializer, UserDetailSerializer, UpdateProfileSerializer,
@@ -166,6 +167,10 @@ class LockUserAPIView(BasePermissionAPIView):
             target_type='User',
         )
 
+        try:
+            notif_service.notify_account_locked(user, reason, request.user.email)
+        except Exception:
+            pass
         return Response({"detail": "Khóa tài khoản thành công."}, status=status.HTTP_200_OK)
 
 
