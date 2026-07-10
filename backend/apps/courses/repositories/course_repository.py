@@ -1,13 +1,42 @@
+from django.db.models import Count, Subquery, OuterRef, Q
 from rest_framework.exceptions import NotFound
 from apps.courses.models import Course
-from apps.lessons.models import Chapter
+from apps.lessons.models import Chapter, Lesson
+from apps.enrollments.models import Enrollment
+
+
+def _annotate_counts(qs):
+    """Annotate chapter_count, lesson_count, student_count để tránh N+1 queries."""
+    return qs.annotate(
+        _chapter_count=Count("chapters", distinct=True),
+        _lesson_count=Subquery(
+            Lesson.objects.filter(chapter__course=OuterRef("id"))
+            .values("chapter__course")
+            .annotate(cnt=Count("id"))
+            .values("cnt")[:1]
+        ),
+        _student_count=Count(
+            "enrollments",
+            filter=Q(enrollments__status=Enrollment.Status.ACTIVE),
+        ),
+    )
+
+
 def get_all():
-    """Lấy danh sách tất cả khóa học, kèm thông tin created_by, assigned_instructor và category, sắp xếp theo ngày tạo mới nhất."""
-    return Course.objects.select_related("created_by", "assigned_instructor", "category").exclude(status="ARCHIVED").order_by("-created_at")
+    """Lấy danh sách tất cả khóa học, kèm thông tin created_by, assigned_instructor, category và các count."""
+    return _annotate_counts(
+        Course.objects.select_related("created_by", "assigned_instructor", "category")
+        .exclude(status="ARCHIVED")
+        .order_by("-created_at")
+    )
 
 def get_published():
-    """Lấy danh sách khóa học đã PUBLIC, kèm thông tin created_by, assigned_instructor và category, sắp xếp theo ngày tạo mới nhất."""
-    return Course.objects.select_related("created_by", "assigned_instructor", "category").filter(status=Course.Status.PUBLISHED).order_by("-created_at")
+    """Lấy danh sách khóa học đã PUBLIC, kèm thông tin created_by, assigned_instructor, category và các count."""
+    return _annotate_counts(
+        Course.objects.select_related("created_by", "assigned_instructor", "category")
+        .filter(status=Course.Status.PUBLISHED)
+        .order_by("-created_at")
+    )
 
 def get_by_id(course_id):
     """Lấy chi tiết một khóa học theo ID, kèm thông tin created_by, assigned_instructor và category. Trả về 404 nếu không tìm thấy."""
@@ -51,8 +80,13 @@ def exists_by_id(course_id):
     """Kiểm tra khóa học có tồn tại trong hệ thống hay không dựa trên ID."""
     return Course.objects.filter(id=course_id).exists()
 def get_by_instructor(instructor_id):
-    """Lấy danh sách khóa học của một instructor (dựa trên assigned_instructor)."""
-    return Course.objects.select_related("created_by", "assigned_instructor", "category").filter(assigned_instructor_id=instructor_id).exclude(status="ARCHIVED").order_by("-created_at")
+    """Lấy danh sách khóa học của một instructor (dựa trên assigned_instructor), kèm count."""
+    return _annotate_counts(
+        Course.objects.select_related("created_by", "assigned_instructor", "category")
+        .filter(assigned_instructor_id=instructor_id)
+        .exclude(status="ARCHIVED")
+        .order_by("-created_at")
+    )
 def count_chapters(course_id):
     """Đếm số chapter (chapter) của một khóa học."""
     return Chapter.objects.filter(course_id=course_id).count()

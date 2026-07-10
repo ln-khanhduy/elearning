@@ -20,6 +20,7 @@ from apps.users.serializers.auth_serializer import (
     RegisterVerifyOTPSerializer, ResetPasswordSerializer,
     UserSerializer, VerifyOTPSerializer,
 )
+from apps.users.serializers.user_serializer import InstructorCertificateSerializer
 from apps.users.services import auth_service
 from apps.users.services import google_oauth_service
 from apps.users.services import password_reset_service
@@ -113,7 +114,21 @@ class AuthLoginView(APIView):
         except Exception:
             pass
 
-        response = Response({"user": UserSerializer(user).data, "access": tokens["access"]}, status=status.HTTP_200_OK)
+        user_data = UserSerializer(user).data
+
+        # Nếu là instructor, thêm thông tin hồ sơ giảng viên (bank, bio, cv, certificates)
+        if user.role and user.role.code == "INSTRUCTOR" and hasattr(user, 'instructor_profile'):
+            profile = user.instructor_profile
+            user_data["bank_name"] = profile.bank_name
+            user_data["bank_account_number"] = profile.bank_account_number
+            user_data["bank_account_name"] = profile.bank_account_name
+            user_data["bio"] = profile.bio
+            user_data["portfolio_link"] = profile.portfolio_link
+            user_data["cv_file"] = profile.cv_file.url if profile.cv_file else None
+            certificates_qs = profile.certificates.all()
+            user_data["certificates"] = InstructorCertificateSerializer(certificates_qs, many=True).data
+
+        response = Response({"user": user_data, "access": tokens["access"]}, status=status.HTTP_200_OK)
         set_refresh_cookie(response, tokens["refresh"])
         return response
 
@@ -206,10 +221,24 @@ class AuthSessionView(APIView):
             delete_refresh_cookie(response)
             return response
 
+        user_data = UserSerializer(user).data
+
+        # Nếu là instructor, thêm thông tin hồ sơ giảng viên (bank, bio, cv, certificates)
+        if user.role and user.role.code == "INSTRUCTOR" and hasattr(user, 'instructor_profile'):
+            profile = user.instructor_profile
+            user_data["bank_name"] = profile.bank_name
+            user_data["bank_account_number"] = profile.bank_account_number
+            user_data["bank_account_name"] = profile.bank_account_name
+            user_data["bio"] = profile.bio
+            user_data["portfolio_link"] = profile.portfolio_link
+            user_data["cv_file"] = profile.cv_file.url if profile.cv_file else None
+            certificates_qs = profile.certificates.all()
+            user_data["certificates"] = InstructorCertificateSerializer(certificates_qs, many=True).data
+
         return Response(
             {
                 "access": access,
-                "user": UserSerializer(user).data,
+                "user": user_data,
             },
             status=status.HTTP_200_OK,
         )
@@ -320,9 +349,23 @@ class GoogleIdTokenLoginView(APIView):
         except Exception:
             pass
 
+        user_data = UserSerializer(user).data
+
+        # Nếu là instructor, thêm thông tin hồ sơ giảng viên (bank, bio, cv, certificates)
+        if user.role and user.role.code == "INSTRUCTOR" and hasattr(user, 'instructor_profile'):
+            profile = user.instructor_profile
+            user_data["bank_name"] = profile.bank_name
+            user_data["bank_account_number"] = profile.bank_account_number
+            user_data["bank_account_name"] = profile.bank_account_name
+            user_data["bio"] = profile.bio
+            user_data["portfolio_link"] = profile.portfolio_link
+            user_data["cv_file"] = profile.cv_file.url if profile.cv_file else None
+            certificates_qs = profile.certificates.all()
+            user_data["certificates"] = InstructorCertificateSerializer(certificates_qs, many=True).data
+
         response = Response({
             "access": tokens["access"],
-            "user": UserSerializer(user).data,
+            "user": user_data,
         }, status=status.HTTP_200_OK)
 
         set_refresh_cookie(response, tokens["refresh"])

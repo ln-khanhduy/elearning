@@ -1,42 +1,40 @@
 import { useState, useEffect, useCallback } from "react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { getMyCoursesApi } from "../../api/enrollmentAPI";
+import { getMyEnrollmentsApi } from "../../api/enrollmentAPI";
 
 function MyCoursesPage() {
-  const STATUS_MAP = {
-    PENDING_PAYMENT: { label: "Chờ thanh toán", color: "#ffc107" },
-    ACTIVE: { label: "Đang học", color: "#198754" },
-    COMPLETED: { label: "Hoàn thành", color: "#0d6efd" },
-    CANCELLED: { label: "Đã hủy", color: "#dc3545" },
-  };
+  const navigate = useNavigate();
   const [enrollments, setEnrollments] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const loadMyCourses = useCallback(async () => {
+  const loadEnrollments = useCallback(async () => {
     try {
       setLoading(true);
-      const result = await getMyCoursesApi();
-      const data = result.data || result;
-      setEnrollments(Array.isArray(data) ? data : []);
-    } catch (error) {
-      toast.error("Không thể tải danh sách khóa học của bạn.");
+      const res = await getMyEnrollmentsApi();
+      setEnrollments(res?.data || res || []);
+    } catch (err) {
+      toast.error("Không thể tải danh sách khóa học.");
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    loadMyCourses();
-  }, [loadMyCourses]);
+    loadEnrollments();
+  }, [loadEnrollments]);
 
-  const getStatusBadge = (status) => {
-    const s = STATUS_MAP[status] || { label: status, color: "#6c757d" };
-    return (
-      <span className="mycourse-status-badge" style={{ backgroundColor: s.color + "20", color: s.color }}>
-        {s.label}
-      </span>
-    );
+  const getProgressPercent = (enr) => {
+    if (enr.progress_percent !== undefined && enr.progress_percent !== null) {
+      return Math.round(Number(enr.progress_percent));
+    }
+    return 0;
+  };
+
+  const getProgressColor = (percent) => {
+    if (percent >= 80) return "#198754";
+    if (percent >= 40) return "#ffc107";
+    return "#dc3545";
   };
 
   if (loading) {
@@ -51,74 +49,60 @@ function MyCoursesPage() {
     );
   }
 
+  if (enrollments.length === 0) {
+    return (
+      <div className="my-courses-page">
+        <div className="my-courses-header">
+          <h2>Khóa học của tôi</h2>
+          <p className="text-muted">Bạn chưa đăng ký khóa học nào.</p>
+        </div>
+        <div className="text-center py-5">
+          <button className="btn btn-primary" onClick={() => navigate("/courses")}>
+            Khám phá khóa học
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="my-courses-page">
       <div className="my-courses-header">
-        <div>
-          <h2>Khóa học của tôi</h2>
-          <p className="text-muted">Các khóa học bạn đã đăng ký.</p>
-        </div>
+        <h2>Khóa học của tôi</h2>
+        <p className="text-muted">{enrollments.length} khóa học đã đăng ký</p>
       </div>
-
-      {enrollments.length === 0 ? (
-        <div className="my-courses-empty">
-          <i className="bi bi-journal-bookmark"></i>
-          <h4>Bạn chưa đăng ký khóa học nào</h4>
-          <p>Hãy khám phá các khóa học và bắt đầu học ngay!</p>
-          <Link to="/courses" className="mycourses-btn-primary">
-            Khám phá khóa học
-          </Link>
-        </div>
-      ) : (
-        <div className="mycourses-grid">
-          {enrollments.map((enr) => (
-            <div key={enr.id} className="mycourse-card">
-              <div className="mycourse-card-thumb">
-                {enr.course_thumbnail ? (
-                  <img src={enr.course_thumbnail} alt={enr.course_title} />
-                ) : (
-                  <div className="mycourse-card-thumb-placeholder">
-                    <i className="bi bi-image"></i>
-                  </div>
-                )}
-                {getStatusBadge(enr.status)}
-              </div>
-              <div className="mycourse-card-body">
-                <h5 className="mycourse-card-title">{enr.course_title}</h5>
-                <p className="mycourse-card-instructor">
-                  <i className="bi bi-person"></i> {enr.instructor_name}
-                </p>
-                {enr.status === "ACTIVE" && (
-                  <div className="mycourse-progress">
-                    <div className="mycourse-progress-bar">
-                      <div
-                        className="mycourse-progress-fill"
-                        style={{ width: `${Math.min(enr.progress_percent || 0, 100)}%` }}
-                      ></div>
-                    </div>
-                    <span className="mycourse-progress-text">
-                      {Math.round(enr.progress_percent || 0)}%
-                    </span>
-                  </div>
-                )}
-                <div className="mycourse-card-footer">
-                  <span className="mycourse-date">
-                    Đăng ký: {new Date(enr.enrolled_at || enr.created_at).toLocaleDateString("vi-VN")}
-                  </span>
-                  {(enr.status === "ACTIVE" || enr.status === "COMPLETED") && (
-                    <Link to={`/courses/${enr.course}/learn`} className="mycourse-btn-study">
-                      {enr.status === "COMPLETED" ? "Xem lại" : "Học tiếp"}
-                    </Link>
-                  )}
-
+      <div className="my-courses-grid">
+        {enrollments.map((enr) => (
+          <div key={enr.id} className="my-course-card" onClick={() => navigate(`/courses/${enr.course}/learn`)}>
+            <div className="my-course-thumb">
+              {enr.course_thumbnail ? (
+                <img src={enr.course_thumbnail} alt={enr.course_title} loading="lazy" />
+              ) : (
+                <div className="my-course-thumb-placeholder">
+                  <i className="bi bi-play-circle"></i>
                 </div>
-              </div>
+              )}
+              {getProgressPercent(enr) > 0 && (
+                <div className="my-course-progress-bar">
+                  <div className="my-course-progress-fill" style={{ width: `${getProgressPercent(enr)}%`, background: getProgressColor(getProgressPercent(enr)) }}></div>
+                </div>
+              )}
             </div>
-          ))}
-        </div>
-      )}
+            <div className="my-course-body">
+              <h3>{enr.course_title || "Khóa học"}</h3>
+              <p className="text-muted small">{enr.instructor_name || ""}</p>
+              {getProgressPercent(enr) > 0 && (
+                <div className="d-flex align-items-center gap-2 mt-2">
+                  <small className="fw-bold" style={{ color: getProgressColor(getProgressPercent(enr)) }}>
+                    {getProgressPercent(enr)}%
+                  </small>
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
-
 export default MyCoursesPage;

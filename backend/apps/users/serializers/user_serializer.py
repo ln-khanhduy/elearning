@@ -163,12 +163,15 @@ class InstructorCertificateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = InstructorCertificate
-        fields = ["id", "title", "file", "file_url", "uploaded_at"]
+        fields = ["id", "title", "file_url", "uploaded_at"]
         read_only_fields = ["id", "file_url", "uploaded_at"]
 
     def get_file_url(self, obj):
         if obj.file:
-            return obj.file.url
+            try:
+                return obj.file.url
+            except Exception:
+                return None
         return None
 
 

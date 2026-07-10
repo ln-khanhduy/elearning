@@ -61,8 +61,7 @@ export const linkGoogleAccountApi = async (idToken) => {
 // ===== Instructor Profile Management =====
 
 export const uploadInstructorCertificateApi = async (data) => {
-  const config = { headers: { "Content-Type": "multipart/form-data" } };
-  return request(() => apiClient.post("/api/users/instructors/certificates/", data, config));
+  return request(() => apiClient.post("/api/users/instructors/certificates/", data));
 };
 
 export const deleteInstructorCertificateApi = async (certificateId) => {

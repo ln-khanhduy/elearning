@@ -382,8 +382,8 @@ def upload_certificates(application, titles, files):
             continue
         title = titles[i].strip() if i < len(titles) else ""
         if not title:
-            errors.append(f"Thiếu tên cho file thứ {i + 1}")
-            continue
+            # Dùng tên file làm title mặc định
+            title = file.name.rsplit(".", 1)[0] if "." in file.name else file.name
 
         try:
             certificate = instructor_repository.create_certificate(application, title, file)
@@ -397,8 +397,10 @@ def upload_certificates(application, titles, files):
 def process_upload_request(application, request):
     titles = request.data.getlist("titles[]") or [request.data.get("title", "")]
     files = request.FILES.getlist("files[]") or ([request.FILES.get("file")] if request.FILES.get("file") else [])
+    # Filter out None values
+    files = [f for f in files if f]
 
-    if not files or not any(files):
+    if not files:
         raise DRFValidationError({"detail": "Vui lòng chọn file chứng chỉ."})
 
     if len(titles) != len(files):

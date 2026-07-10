@@ -114,6 +114,11 @@ apiClient.interceptors.response.use(
       !isRefreshUrl &&
       !isAuthSessionUrl
     ) {
+      // Skip retry for FormData requests — FormData stream is consumed after first send
+      if (originalRequest.data instanceof FormData) {
+        return Promise.reject(error);
+      }
+
       originalRequest._retry = true;
 
       try {

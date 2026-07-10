@@ -255,7 +255,7 @@ function AdminCourseListPage() {
             <div key={course.id} className="course-card">
               <div className="course-card-thumb">
                 {course.thumbnail_url ? (
-                  <img src={course.thumbnail_url} alt={course.title} />
+                  <img src={course.thumbnail_url} alt={course.title} loading="lazy" />
                 ) : (
                   <div className="course-card-thumb-placeholder">
                     <i className="bi bi-image"></i>

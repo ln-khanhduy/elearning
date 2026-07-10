@@ -25,15 +25,15 @@ def create_application(validated_data):
 
 
 def create_certificate(application, title, file):
-    return InstructorCertificate.objects.create(instructor_profile=application, title=title, file=file)
+    return InstructorCertificate.objects.create(profile=application, title=title, file=file)
 
 
 def get_certificates_by_application(application):
-    return InstructorCertificate.objects.filter(instructor_profile=application).order_by("-uploaded_at")
+    return InstructorCertificate.objects.filter(profile=application).order_by("-uploaded_at")
 
 
 def get_certificate_by_id(application, certificate_id):
-    return get_object_or_404(InstructorCertificate, id=certificate_id, instructor_profile=application)
+    return get_object_or_404(InstructorCertificate, id=certificate_id, profile=application)
 
 
 def delete_certificate(application, certificate_id):
