@@ -80,7 +80,7 @@ function AppRouter() {
         <Route element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
           <Route path="/dashboard" element={<ProtectedRoute allowedPermissions={["admin.dashboard.view"]}><Suspense fallback={<PageLoader />}><AdminDashboardPage /></Suspense></ProtectedRoute>} />
           <Route path="/my-courses" element={<ProtectedRoute allowedPermissions={["student.my_course.view"]}><Suspense fallback={<PageLoader />}><MyCoursesPage /></Suspense></ProtectedRoute>} />
-          <Route path="/my-certificates" element={<ProtectedRoute allowedPermissions={["student.course.view_certificate"]}><Suspense fallback={<PageLoader />}><CertificatesPage /></Suspense></ProtectedRoute>} />
+          <Route path="/my-certificates" element={<ProtectedRoute><Suspense fallback={<PageLoader />}><CertificatesPage /></Suspense></ProtectedRoute>} />
           <Route path="/courses/:courseId/learn" element={<ProtectedRoute><Suspense fallback={<PageLoader />}><LearningPage /></Suspense></ProtectedRoute>} />
           <Route path="/courses/:courseId/learn/:lessonId" element={<ProtectedRoute><Suspense fallback={<PageLoader />}><LearningPage /></Suspense></ProtectedRoute>} />
           <Route path="/courses/:courseId/qa" element={<ProtectedRoute allowedPermissions={["course.comment.create"]}><Suspense fallback={<PageLoader />}><StudentCourseQAPage /></Suspense></ProtectedRoute>} />

@@ -12,7 +12,7 @@ class CourseCertificate(models.Model):
     # Liên kết tới enrollment để đảm bảo chứng chỉ gắn với một lần đăng ký khóa học cụ thể
     enrollment = models.OneToOneField( "enrollments.Enrollment",on_delete=models.CASCADE,related_name="certificate")
     # Mã chứng chỉ duy nhất, có thể là UUID hoặc một chuỗi định dạng đặc biệt (VD: "CERT-2024-0001")
-    certificate_code = models.CharField( max_length=50, unique=True)
+    certificate_code = models.CharField( max_length=100, unique=True)
     # URL để tải file chứng chỉ PDF 
     pdf_url = models.URLField(blank=True, default="")
     # URL ảnh chứng chỉ (PNG) đã upload lên Cloudinary

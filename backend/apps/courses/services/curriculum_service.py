@@ -43,7 +43,7 @@ def build_public_curriculum(course_id):
     chapters_data = []
     for chapter in chapters:
         chapter_data = ChapterSerializer(chapter).data
-        lessons = lesson_repository.get_by_chapter(chapter.id)
+        lessons = lesson_repository.get_by_chapter(chapter.id).filter(status="PUBLISHED")
         lessons_data = []
         for lesson in lessons:
             lesson_data = LessonPreviewSerializer(lesson).data

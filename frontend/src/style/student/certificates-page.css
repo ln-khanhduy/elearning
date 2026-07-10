@@ -88,7 +88,7 @@
 }
 
 .certificate-card-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--primary, #0f3d75);
   padding: 1.25rem;
   display: flex;
   align-items: center;
@@ -97,7 +97,7 @@
 
 .certificate-card-header i {
   font-size: 1.75rem;
-  color: #ffd700;
+  color: #f59e0b;
 }
 
 .certificate-badge {
@@ -169,23 +169,21 @@
 }
 
 .btn-certificate-view {
-  background: transparent;
-  border: 1.5px solid #f59e0b;
-  color: #b8860b;
+  background: var(--primary, #0f3d75);
+  border: none;
+  color: #fff;
   transition: all 0.2s ease;
 }
 
 .btn-certificate-view:hover {
-  background: #f59e0b;
+  background: #0a2d55;
   color: #fff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(15, 61, 117, 0.3);
 }
 
 .btn-certificate-view i {
   color: #f59e0b;
-}
-
-.btn-certificate-view:hover i {
-  color: #fff;
 }
 
 /* Responsive */

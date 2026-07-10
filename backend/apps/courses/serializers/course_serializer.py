@@ -124,8 +124,8 @@ class CourseCreateUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Course
         fields = [
-            "title", "description", "price", "original_price",
-            "category", "objectives", "requirements", "level",
+            "title", "description", "price",
+            "category",
             "thumbnail", "preview_video_url",
         ]
 

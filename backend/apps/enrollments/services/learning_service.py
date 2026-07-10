@@ -84,8 +84,8 @@ def get_learning_curriculum(user, course_id):
 
     result = []
     for chapter in chapters_list:
-        # Instructor thấy tất cả lessons, student chỉ thấy PUBLISHED
-        if is_owner:
+        # Instructor thấy tất cả lessons, enrolled student thấy tất cả, non-enrolled chỉ thấy PUBLISHED
+        if is_owner or is_enrolled:
             lessons = chapter.lessons.all().order_by("order", "id")
         else:
             lessons = chapter.lessons.filter(status=Lesson.Status.PUBLISHED).order_by("order", "id")
@@ -262,8 +262,8 @@ def complete_course(user, course_id):
 
 
 def _generate_certificate_code(user_id, course_id):
-    today = timezone.now().strftime("%Y%m%d")
-    random_part = uuid.uuid4().hex[:4].upper()
+    today = timezone.now().strftime("%y%m%d")
+    random_part = uuid.uuid4().hex[:6].upper()
     return f"CERT-{course_id}-{user_id}-{today}-{random_part}"
 
 
@@ -303,10 +303,44 @@ def submit_quiz(user, course_id, quiz_id, answers):
                 quiz_repository.create_attempt_answer(attempt, question, selected_option_id=selected, is_correct=is_correct, score=score)
 
             elif question.question_type == "FILL_BLANK" and text_answer:
-                correct_answer = (question.correct_text_answer or "").strip().lower()
-                if text_answer.strip().lower() == correct_answer:
-                    is_correct = True
-                    score = float(question.points)
+                def normalize(s):
+                    import re
+                    return re.sub(r'\s+', ' ', s.strip().lower())
+                
+                # Đếm số blank từ prompt để chia điểm
+                blank_count = question.prompt.count("{{") if question.prompt else 1
+                points_per_blank = float(question.points) / max(blank_count, 1)
+                
+                user_ans = normalize(text_answer)
+                correct_ans = normalize(question.correct_text_answer or "")
+                
+                # Tách user answer: frontend gửi dạng "value1|value2" hoặc "value1, value2"
+                user_raw_parts = user_ans.split("|")
+                if len(user_raw_parts) == 1:
+                    user_raw_parts = user_raw_parts[0].split(",")
+                user_parts = [normalize(p) for p in user_raw_parts if p]
+                
+                # Tách correct answer: có thể dùng "," hoặc "|" làm separator
+                correct_raw_parts = correct_ans.split("|")
+                if len(correct_raw_parts) == 1:
+                    correct_raw_parts = correct_raw_parts[0].split(",")
+                correct_parts = [normalize(p) for p in correct_raw_parts if p]
+                
+                # Lấy đúng số phần bằng số blank
+                user_parts = user_parts[:blank_count]
+                correct_parts = correct_parts[:blank_count]
+                
+                # Chấm từng blank riêng
+                matched_blanks = 0
+                for i in range(min(len(user_parts), len(correct_parts))):
+                    if user_parts[i] == correct_parts[i]:
+                        matched_blanks += 1
+                
+                if matched_blanks > 0:
+                    score = points_per_blank * matched_blanks
+                    if matched_blanks >= blank_count:
+                        is_correct = True
+                
                 quiz_repository.create_attempt_answer(attempt, question, answer_text=text_answer, is_correct=is_correct, score=score)
 
             elif question.question_type == "ESSAY":

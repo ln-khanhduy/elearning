@@ -86,25 +86,17 @@ function LearningSidebar({
             </div>
           )}
 
-          {certificate && (
+          {certificate && certificate.image_url && (
             <div className="certificate-info">
-              <div className="certificate-code">
-                <i className="bi bi-award-fill"></i> {certificate.certificate_code}
-              </div>
               <div className="certificate-date">
                 Cấp ngày: {new Date(certificate.issued_at).toLocaleDateString("vi-VN")}
               </div>
-              {certificate.image_url && (
-                <button
-                  className="certificate-view-btn"
-                  onClick={() => window.open(certificate.image_url, "_blank")}
-                >
-                  <i className="bi bi-image"></i> Xem chứng chỉ
-                </button>
-              )}
-              <Link to="/my-certificates" className="certificates-link">
-                <i className="bi bi-box-arrow-up-right"></i> Xem tất cả chứng chỉ
-              </Link>
+              <button
+                className="certificate-view-btn"
+                onClick={() => window.open(certificate.image_url, "_blank")}
+              >
+                <i className="bi bi-award-fill"></i> Xem chứng chỉ
+              </button>
             </div>
           )}
         </div>

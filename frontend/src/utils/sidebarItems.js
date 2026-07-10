@@ -4,7 +4,7 @@ export const sidebarItems = [
   { type: "group", label: "Quản lý học tập" },
   { type: "item", label: "Khóa học", path: "/courses", icon: "bi-mortarboard", requiredPermissions: ["student.course.search"] },
   { type: "item", label: "Khóa học của tôi", path: "/my-courses", icon: "bi-journal-bookmark", requiredPermissions: ["student.my_course.view"] },
-  { type: "item", label: "Chứng chỉ của tôi", path: "/my-certificates", icon: "bi-award", requiredPermissions: ["student.learning.view"] },
+  { type: "item", label: "Chứng chỉ của tôi", path: "/my-certificates", icon: "bi-award" },
 
   // Admin courses
   { type: "item", label: "Quản lý khóa học", path: "/admin/courses", icon: "bi-tools", requiredPermissions: ["course.course.view"] },
