@@ -4,6 +4,7 @@ import {
   getUnreadCountApi,
   markNotificationReadApi,
   markAllNotificationsReadApi,
+  deleteAllNotificationsApi,
 } from "../../api/notificationAPI";
 
 export function useNotifications() {
@@ -61,6 +62,15 @@ export function useNotifications() {
     } catch {}
   }, []);
 
+  const handleDeleteAll = useCallback(async () => {
+    try {
+      await deleteAllNotificationsApi();
+      setNotifications([]);
+      setPagination(null);
+      setUnreadCount(0);
+    } catch {}
+  }, []);
+
   return {
     notifications,
     pagination,
@@ -70,6 +80,7 @@ export function useNotifications() {
     fetchUnreadCount,
     handleMarkRead,
     handleMarkAllRead,
+    handleDeleteAll,
   };
 }
 

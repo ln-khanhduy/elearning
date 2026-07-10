@@ -22,6 +22,10 @@ def get_recent(user_id, limit=5):
     return notif_repo.get_recent(user_id, limit)
 
 
+def delete_all(user_id):
+    return notif_repo.delete_all(user_id)
+
+
 def _create(recipient, title, body, notification_type, channel, link=None):
     return notif_repo.create(recipient, title, body, notification_type, channel, link)
 

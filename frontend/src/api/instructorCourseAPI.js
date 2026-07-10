@@ -9,6 +9,10 @@ const request = async (callback) => {
   }
 };
 
+export const getInstructorCoursesApi = async () => {
+  return request(() => apiClient.get("/api/courses/instructor/"));
+};
+
 export const getInstructorCourseDetailApi = async (courseId) => {
   return request(() => apiClient.get(`/api/courses/instructor/${courseId}/`));
 };

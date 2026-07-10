@@ -24,3 +24,7 @@ export const markNotificationReadApi = async (notificationId) => {
 export const markAllNotificationsReadApi = async () => {
   return request(() => apiClient.patch("/api/notifications/read-all/"));
 };
+
+export const deleteAllNotificationsApi = async () => {
+  return request(() => apiClient.delete("/api/notifications/delete-all/"));
+};

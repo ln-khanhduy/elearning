@@ -19,6 +19,7 @@
 @import url('./my-courses.css');
 @import url('./instructor-courses.css');
 
+/* Admin */
 /* Courses */
 @import url('./courses/courses-page.css');
 
@@ -38,8 +39,8 @@
 @import url('./course-detail/reviews.css');
 
 /* Admin */
-@import url('./admin-dashboard.css');
 @import url('./admin-courses.css');
+@import url('./admin-dashboard.css');
 @import url('./admin-instructor-applications.css');
 @import url('./admin-instructor-list.css');
 @import url('./admin-reviews.css');
@@ -115,3 +116,27 @@ a {
 }
 
 .small { font-size: 0.85rem; }
+
+/* ===== CONFIRM MODAL ===== */
+.modal-backdrop-custom {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1050;
+  padding: 20px;
+}
+
+.modal-content-custom {
+  background: #fff;
+  border-radius: var(--card-radius, 10px);
+  width: 100%;
+  max-width: 420px;
+  padding: 24px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+}

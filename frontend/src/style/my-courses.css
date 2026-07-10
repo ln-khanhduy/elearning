@@ -27,25 +27,31 @@
 
 .my-courses-empty {
   text-align: center;
-  padding: 32px 20px;
+  padding: 60px 20px;
   background: var(--card);
   border-radius: var(--card-radius, 10px);
   border: 2px dashed #dee2e6;
 }
 
 .my-courses-empty i {
-  font-size: 36px;
-  color: #198754;
-  margin-bottom: 10px;
+  font-size: 48px;
+  color: var(--primary);
+  margin-bottom: 16px;
+  opacity: 0.5;
 }
 
 .my-courses-empty h4 {
   color: #495057;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
+  font-weight: 600;
 }
 
 .my-courses-empty p {
   color: #6c757d;
+  margin-bottom: 24px;
+  max-width: 400px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 /* ===== MY COURSES GRID (used by MyCoursesPage.jsx) ===== */

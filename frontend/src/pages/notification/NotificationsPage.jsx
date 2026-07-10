@@ -1,7 +1,9 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 import { useNotifications } from "../../hooks/notification/useNotifications";
 import NotificationItem from "../../components/notification/NotificationItem";
+import ConfirmModal from "../../components/common/ConfirmModal";
 
 function NotificationsPage() {
   const navigate = useNavigate();
@@ -13,7 +15,10 @@ function NotificationsPage() {
     fetchUnreadCount,
     handleMarkRead,
     handleMarkAllRead,
+    handleDeleteAll,
   } = useNotifications();
+
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   useEffect(() => {
     fetchNotifications(1);
@@ -24,16 +29,33 @@ function NotificationsPage() {
     fetchNotifications(page);
   };
 
+  const handleDeleteAllClick = () => {
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDeleteAll = () => {
+    handleDeleteAll();
+    setShowDeleteConfirm(false);
+    toast.success("Đã xóa tất cả thông báo.");
+  };
+
   return (
     <div className="container-center py-4">
       <div className="notif-page">
         <div className="notif-page-header">
           <h3>Thông báo</h3>
-          {pagination && pagination.total > 0 && (
-            <button className="notif-page-mark-all-btn" onClick={handleMarkAllRead}>
-              Đánh dấu tất cả đã đọc
-            </button>
-          )}
+          <div className="notif-page-actions">
+            {pagination && pagination.total > 0 && (
+              <>
+                <button className="notif-page-mark-all-btn" onClick={handleMarkAllRead}>
+                  Đánh dấu đã đọc
+                </button>
+                <button className="notif-page-delete-all-btn" onClick={handleDeleteAllClick}>
+                  <i className="bi bi-trash"></i> Xóa tất cả
+                </button>
+              </>
+            )}
+          </div>
         </div>
 
         {loading ? (
@@ -86,6 +108,17 @@ function NotificationsPage() {
           </>
         )}
       </div>
+
+      <ConfirmModal
+        show={showDeleteConfirm}
+        title="Xóa tất cả thông báo"
+        message="Bạn có chắc chắn muốn xóa tất cả thông báo? Hành động này không thể hoàn tác."
+        confirmLabel="Xóa tất cả"
+        cancelLabel="Hủy"
+        variant="danger"
+        onConfirm={confirmDeleteAll}
+        onCancel={() => setShowDeleteConfirm(false)}
+      />
     </div>
   );
 }

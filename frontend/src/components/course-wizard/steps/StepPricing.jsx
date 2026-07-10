@@ -78,7 +78,7 @@ function StepPricing({ formData, errors, onFieldChange }) {
 
   return (
     <div className="cw-card">
-      <h3 className="cw-card-title">Giá bán & Cài đặt</h3>
+      <h3 className="cw-card-title">Giá bán</h3>
 
       <div className="cw-form-grid">
         <div className="cw-form-group">

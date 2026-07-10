@@ -78,5 +78,9 @@ def mark_all_as_read(user_id):
     return Notification.objects.filter(recipient_id=user_id, is_read=False).update(is_read=True)
 
 
+def delete_all(user_id):
+    return Notification.objects.filter(recipient_id=user_id).delete()
+
+
 def get_recent(user_id, limit=5):
     return Notification.objects.filter(recipient_id=user_id).order_by("-created_at")[:limit]

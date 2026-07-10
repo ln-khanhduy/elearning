@@ -111,26 +111,28 @@
 }
 
 .instructor-course-status {
-  display: inline-block;
-  padding: 2px 7px;
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
   border-radius: 20px;
-  font-size: 10px;
-  font-weight: 700;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
 }
 
-.status-pending {
-  background: #fff3cd;
-  color: #856404;
-}
-
-.status-approved {
-  background: #d4edda;
+.instructor-course-status.bg-success {
+  background: #d4edda !important;
   color: #155724;
 }
 
-.status-rejected {
-  background: #f8d7da;
-  color: #721c24;
+.instructor-course-status.bg-secondary {
+  background: #e9ecef !important;
+  color: #495057;
+}
+
+.instructor-course-status.bg-warning {
+  background: #fff3cd !important;
+  color: #856404;
 }
 
 .instructor-course-actions {

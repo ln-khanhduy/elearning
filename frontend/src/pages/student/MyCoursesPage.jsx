@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { getMyEnrollmentsApi } from "../../api/enrollmentAPI";
+import { getMyCoursesApi } from "../../api/enrollmentAPI";
 
 function MyCoursesPage() {
   const navigate = useNavigate();
@@ -11,7 +11,7 @@ function MyCoursesPage() {
   const loadEnrollments = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await getMyEnrollmentsApi();
+      const res = await getMyCoursesApi();
       setEnrollments(res?.data || res || []);
     } catch (err) {
       toast.error("Không thể tải danh sách khóa học.");
@@ -56,8 +56,10 @@ function MyCoursesPage() {
           <h2>Khóa học của tôi</h2>
           <p className="text-muted">Bạn chưa đăng ký khóa học nào.</p>
         </div>
-        <div className="text-center py-5">
-          <button className="btn btn-primary" onClick={() => navigate("/courses")}>
+        <div className="my-courses-empty text-center py-5">
+          <h4>Bạn chưa đăng ký khóa học nào</h4>
+          <p>Hãy khám phá các khóa học và bắt đầu hành trình học tập ngay hôm nay.</p>
+          <button className="mycourses-btn-primary" onClick={() => navigate("/courses")}>
             Khám phá khóa học
           </button>
         </div>

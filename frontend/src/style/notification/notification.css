@@ -194,6 +194,12 @@
   color: var(--course-text, #1a1a2e);
 }
 
+.notif-page-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
 .notif-page-mark-all-btn {
   background: none;
   border: 1px solid var(--primary, #0f3d75);
@@ -203,6 +209,25 @@
   font-size: var(--font-size-small, 13px);
   cursor: pointer;
   transition: all 0.2s ease;
+}
+
+.notif-page-delete-all-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: 1px solid #dc3545;
+  color: #dc3545;
+  padding: 6px 16px;
+  border-radius: var(--card-radius, 10px);
+  font-size: var(--font-size-small, 13px);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.notif-page-delete-all-btn:hover {
+  background: #dc3545;
+  color: #fff;
 }
 
 .notif-page-back-home {
