@@ -68,12 +68,16 @@ def get_assigned_courses(instructor):
     """
     Lấy danh sách khóa học được phân công cho một giảng viên.
     Chỉ trả về các khóa học đã publish hoặc hidden (không trả draft).
+    Kèm theo số lượng học viên, chapter, lesson đã được annotate.
     """
+    from apps.courses.repositories.course_repository import _annotate_counts
     from apps.courses.models import Course
-    return Course.objects.filter(
-        assigned_instructor=instructor
-    ).exclude(
-        status=Course.Status.DRAFT
-    ).select_related(
-        "category", "created_by"
-    ).order_by("-created_at")
+    return _annotate_counts(
+        Course.objects.filter(
+            assigned_instructor=instructor
+        ).exclude(
+            status=Course.Status.DRAFT
+        ).select_related(
+            "category", "created_by"
+        ).order_by("-created_at")
+    )

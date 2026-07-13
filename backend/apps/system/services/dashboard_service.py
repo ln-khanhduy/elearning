@@ -27,27 +27,9 @@ def get_total_revenue():
 def get_revenue_by_year():
     """
     Lấy doanh thu theo từng năm.
-    - Truy vấn doanh thu từ Repository
-    - Điền giá trị 0 cho những năm không có dữ liệu (từ 2019 đến năm hiện tại)
+    Ủy quyền cho Repository - dữ liệu đã được xử lý sẵn (điền 0 cho năm không có dữ liệu).
     """
-    revenues = dashboard_repository.get_revenue_by_year()
-
-    revenue_map = {}
-    for item in revenues:
-        year_val = item.get("year")
-        if year_val:
-            year = year_val.year if hasattr(year_val, 'year') else int(year_val)
-            revenue_map[year] = float(item["total"] or 0)
-
-    current_year = timezone.now().year
-    result = []
-    for year in range(2019, current_year + 1):
-        result.append({
-            "year": year,
-            "total": revenue_map.get(year, 0),
-        })
-
-    return result
+    return dashboard_repository.get_revenue_by_year()
 def get_dashboard_data(year=None):
     """
     Tổng hợp tất cả dữ liệu thống kê cho dashboard admin.

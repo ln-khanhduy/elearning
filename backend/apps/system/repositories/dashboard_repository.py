@@ -161,23 +161,34 @@ def get_pending_requests_count():
 def get_top_courses(limit=5):
     """Lấy top khóa học có nhiều học viên nhất và doanh thu."""
     from apps.enrollments.models import Enrollment
-    from django.db.models import Q
-    courses = Course.objects.filter(
-        enrollments__status=Enrollment.Status.ACTIVE
-    ).distinct().select_related("assigned_instructor").order_by("-created_at")[:limit * 2]
-    
+    from django.db.models import Q, OuterRef, Subquery, FloatField
+
+    # Annotate student_count on each course
+    courses_qs = Course.objects.annotate(
+        _student_count=Count(
+            "enrollments",
+            filter=Q(enrollments__status=Enrollment.Status.ACTIVE),
+        ),
+        _total_revenue=Subquery(
+            PaymentTransaction.objects.filter(
+                enrollments__course=OuterRef("id"),
+                status__in=[PaymentTransactionModel.Status.PAID, PaymentTransactionModel.Status.HOLD],
+            ).values("enrollments__course").annotate(
+                total=Sum("net_amount")
+            ).values("total")[:1],
+            output_field=FloatField(),
+        ),
+    ).filter(
+        _student_count__gt=0
+    ).select_related("assigned_instructor").order_by("-_student_count")[:limit]
+
     result = []
-    for course in courses:
-        student_count = Enrollment.objects.filter(course=course, status=Enrollment.Status.ACTIVE).count()
-        revenue = PaymentTransaction.objects.filter(
-            enrollments__course_id=course.id,
-            status__in=[PaymentTransactionModel.Status.PAID, PaymentTransactionModel.Status.HOLD]
-        ).aggregate(total=Sum("net_amount"))["total"] or 0
+    for course in courses_qs:
         result.append({
             "id": course.id,
             "title": course.title,
-            "student_count": student_count,
-            "total_revenue": float(revenue),
+            "student_count": getattr(course, '_student_count', 0),
+            "total_revenue": float(course._total_revenue or 0) if hasattr(course, '_total_revenue') and course._total_revenue else 0,
             "instructor_name": course.assigned_instructor.get_full_name() if course.assigned_instructor else None,
         })
-    return sorted(result, key=lambda x: x["student_count"], reverse=True)[:limit]
+    return result

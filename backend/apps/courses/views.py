@@ -293,7 +293,7 @@ class InstructorCourseStudentsAPIView(APIView):
         course = course_service.get_course_detail(course_id)
         if not course_permission_service.can_view_course(course, request.user):
             return error_response("Bạn không có quyền xem khóa học này.", http_status=status.HTTP_403_FORBIDDEN)
-        enrollments = Enrollment.objects.filter(course_id=course_id, status=Enrollment.Status.ACTIVE).select_related('student')
+        enrollments = Enrollment.objects.filter(course_id=course_id, status=Enrollment.Status.ACTIVE).select_related('student', 'progress')
         students_data = []
         for enrollment in enrollments:
             progress_obj = getattr(enrollment, 'progress', None)
@@ -571,7 +571,6 @@ class StudentCourseQuestionCloseAPIView(APIView):
 
 
 # ==================== INSTRUCTOR LEARNING REPORT ====================
-
 
 class InstructorCourseLearningReportAPIView(APIView):
     permission_classes = [IsAuthenticated]

@@ -6,7 +6,7 @@ class DashboardStatsSerializer(serializers.Serializer):
 
     key = serializers.CharField()
     label = serializers.CharField()
-    value = serializers.IntegerField()
+    value = serializers.FloatField()
 
 
 class UsersByMonthSerializer(serializers.Serializer):
@@ -59,4 +59,9 @@ class DashboardDataSerializer(serializers.Serializer):
     courses_by_status = CoursesByStatusSerializer(many=True)
     pending_instructor_applications = serializers.IntegerField()
     revenue_by_year = RevenueByYearSerializer(many=True)
+    revenue_change = serializers.FloatField(allow_null=True)
+    revenue_today = serializers.FloatField()
+    revenue_this_week = serializers.FloatField()
     activities = ActivitySerializer(many=True)
+    top_courses = serializers.ListField(child=serializers.DictField(), required=False, default=[])
+    recent_enrollments = serializers.ListField(child=serializers.DictField(), required=False, default=[])
