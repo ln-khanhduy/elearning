@@ -114,6 +114,25 @@ function StepCourseInformation({
           )}
         </div>
 
+        {/* Preview Video URL */}
+        <div className="cw-form-group full-width">
+          <label className="cw-form-label">
+            <span className="cw-form-label-text">Video giới thiệu (trailer)</span>
+          </label>
+          <input
+            type="url"
+            name="preview_video_url"
+            className="cw-input"
+            value={formData.preview_video_url || ""}
+            onChange={handleChange}
+            placeholder="https://www.youtube.com/watch?v=..."
+          />
+          <div className="cw-hint-text">
+            <i className="bi bi-info-circle"></i>
+            Dán link YouTube video giới thiệu ngắn về khóa học để thu hút học viên.
+          </div>
+        </div>
+
         {/* Thumbnail */}
         <div className="cw-form-group full-width">
           <label className="cw-form-label">
