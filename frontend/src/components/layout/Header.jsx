@@ -140,11 +140,6 @@ function Header({ onToggleSidebar }) {
             <div className="header-auth-loading"></div>
           ) : isAuthenticated ? (
             <div className="user-actions">
-              {user?.role !== "SUPERADMIN" && (
-                <Link to="/my-courses" className="header-icon-link d-none d-md-inline" title="Khóa học của tôi">
-                  <i className="bi bi-journal-bookmark"></i>
-                </Link>
-              )}
               <Link to="/my-wishlist" className="header-icon-link position-relative" title="Yêu thích">
                 <i className="bi bi-heart"></i>
                 {wishlistCount > 0 && <span className="wishlist-badge">{wishlistCount > 99 ? "99+" : wishlistCount}</span>}
