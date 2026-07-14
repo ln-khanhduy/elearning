@@ -17,9 +17,10 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-left: 10px;
-  padding-right: 10px;
+  padding-left: 8px !important;
+  padding-right: 8px !important;
   height: 100%;
+  max-width: 100%;
 }
 
 /* LEFT */
@@ -27,8 +28,9 @@
   display: flex;
   align-items: center;
   gap: 4px;
-  min-width: 0;
-  flex-shrink: 1;
+  flex-shrink: 0;
+  flex: 0 1 auto;
+  overflow: hidden;
 }
 
 /* Nút toggle sidebar cho mobile */
