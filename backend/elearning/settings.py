@@ -29,7 +29,14 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG') == 'True'
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    'localhost',
+    '127.0.0.1',
+    '.onrender.com',  # Cho phép tất cả subdomain của Render
+    os.getenv('RENDER_EXTERNAL_URL', '').replace('https://', ''),
+    os.getenv('BACKEND_URL', '').replace('https://', ''),
+    os.getenv('FRONTEND_URL', '').replace('https://', ''),
+]
 
 # Application definition
 INSTALLED_APPS = [
