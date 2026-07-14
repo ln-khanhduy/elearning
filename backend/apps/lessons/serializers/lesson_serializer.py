@@ -61,6 +61,7 @@ class LessonCreateUpdateSerializer(serializers.ModelSerializer):
     """Serializer cho tạo/cập nhật bài học - validate title, order, content_type, video_url, material_file."""
 
     title = serializers.CharField(min_length=3, max_length=50, trim_whitespace=True)
+    order = serializers.IntegerField(required=False, allow_null=True)
 
     class Meta:
         model = Lesson
@@ -77,7 +78,13 @@ class LessonCreateUpdateSerializer(serializers.ModelSerializer):
 
     def validate_order(self, value):
         """Kiểm tra thứ tự bài học phải là số không âm."""
-        if value is not None and value < 0:
+        if value is None:
+            return value
+        try:
+            value = int(value)
+        except (TypeError, ValueError):
+            raise serializers.ValidationError("Thứ tự bài học không hợp lệ.")
+        if value < 0:
             raise serializers.ValidationError("Thứ tự bài học không hợp lệ.")
         return value
 
