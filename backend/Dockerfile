@@ -7,15 +7,16 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq-dev gcc && \
     rm -rf /var/lib/apt/lists/*
 
-# Copy requirements và cài đặt
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Copy toàn bộ source code
+# Copy toàn bộ code backend vào /app
 COPY . .
 
-# Port Render sẽ gán tự động qua biến $PORT
+# Cài đặt dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Chạy migration khi build (tùy chọn, có thể bỏ qua nếu lỗi)
+RUN python manage.py collectstatic --noinput || true
+
 EXPOSE 8000
 
-# Dùng Daphne để hỗ trợ WebSocket + HTTP
+# Dùng Daphne cho WebSocket + HTTP
 CMD daphne -b 0.0.0.0 -p $PORT elearning.asgi:application
