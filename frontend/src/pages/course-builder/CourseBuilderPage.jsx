@@ -152,9 +152,28 @@ export default function CourseBuilderPage({ mode = "create" }) {
   // ==================== AUTO SAVE ====================
 
   const saveDraft = useCallback(async () => {
-    if (!isEdit) return;
     setSaving(true);
     try {
+      // Nếu đang tạo mới, tạo khóa học trước rồi chuyển sang edit
+      if (!isEdit) {
+        const form = new FormData();
+        form.append("title", formData.title?.trim() || "");
+        form.append("description", formData.description?.trim() || "");
+        form.append("price", formData.price || 0);
+        if (formData.category) form.append("category", formData.category);
+        if (formData.preview_video_url?.trim())
+          form.append("preview_video_url", formData.preview_video_url.trim());
+        if (thumbnail) form.append("thumbnail", thumbnail);
+
+        const res = await createAdminCourseApi(form);
+        const newCourseId = res?.data?.id || res?.id;
+        if (newCourseId) {
+          toast.success("Đã lưu nháp!");
+          navigate(`/admin/courses/${newCourseId}/edit`, { replace: true });
+        }
+        return;
+      }
+
       const form = new FormData();
       form.append("title", formData.title?.trim() || "");
       form.append("description", formData.description?.trim() || "");
@@ -179,7 +198,7 @@ export default function CourseBuilderPage({ mode = "create" }) {
     } finally {
       setSaving(false);
     }
-  }, [isEdit, courseId, formData, thumbnail]);
+  }, [isEdit, courseId, formData, thumbnail, navigate]);
 
   // Debounced auto-save
   useEffect(() => {
