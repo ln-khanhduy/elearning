@@ -60,17 +60,24 @@ def update_lesson(lesson_id, user, data):
     if not course_permission_service.can_manage_course(lesson.chapter.course, user):
         raise PermissionDenied("Bạn không có quyền thao tác với khóa học này.")
 
-    new_order = data.get("order")
+    # Xử lý các trường integer bị gửi dưới dạng chuỗi rỗng từ FormData
+    cleaned_data = {}
+    for key, value in data.items():
+        if key in ("order",) and (value == "" or value is None):
+            continue  # Bỏ qua order rỗng
+        cleaned_data[key] = value
+
+    new_order = cleaned_data.get("order")
     if new_order is not None and new_order != lesson.order and lesson_repository.exists_order(lesson.chapter_id, new_order):
         raise ValidationError({"order": "Thứ tự bài học đã tồn tại trong chương này."})
 
-    if "title" in data:
+    if "title" in cleaned_data:
         slug = _generate_unique_slug(
-            lesson.chapter_id, data["title"], exclude_lesson_id=lesson_id
+            lesson.chapter_id, cleaned_data["title"], exclude_lesson_id=lesson_id
         )
         lesson.slug = slug
 
-    for key, value in data.items():
+    for key, value in cleaned_data.items():
         setattr(lesson, key, value)
 
     lesson.save()

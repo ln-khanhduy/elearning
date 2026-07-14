@@ -25,6 +25,8 @@ class SmartMediaCloudinaryStorage:
                       '.zip', '.rar', '.txt', '.csv', '.mp4', '.avi', '.mov'}
 
     def __init__(self):
+        from django.core.files.storage import FileSystemStorage
+        self._local_storage = FileSystemStorage(location=settings.MEDIA_ROOT, base_url=settings.MEDIA_URL)
         self._cloudinary_available = _is_cloudinary_configured()
         if self._cloudinary_available:
             from cloudinary_storage.storage import MediaCloudinaryStorage
@@ -32,9 +34,8 @@ class SmartMediaCloudinaryStorage:
             self._cloudinary_module = cloudinary
             self._storage = MediaCloudinaryStorage()
         else:
-            from django.core.files.storage import FileSystemStorage
             self._cloudinary_module = None
-            self._storage = FileSystemStorage(location=settings.MEDIA_ROOT, base_url=settings.MEDIA_URL)
+            self._storage = self._local_storage
 
     def _get_resource_type(self, name):
         ext = os.path.splitext(name)[1].lower()
@@ -49,6 +50,9 @@ class SmartMediaCloudinaryStorage:
             return None
         if self._cloudinary_available and self._cloudinary_module:
             try:
+                # Nếu file tồn tại ở local (fallback từ Cloudinary upload lỗi), serve local
+                if self._local_storage.exists(name):
+                    return self._local_storage.url(name)
                 resource_type = self._get_resource_type(name)
                 url, _ = self._cloudinary_module.utils.cloudinary_url(
                     name, resource_type=resource_type, type='upload', secure=True
@@ -56,10 +60,12 @@ class SmartMediaCloudinaryStorage:
                 return url
             except Exception as e:
                 logger.warning(f"Cloudinary URL error for {name}: {e}")
-                return self._storage.url(name)
+                return self._local_storage.url(name)
         return self._storage.url(name)
 
     def open(self, name, mode='rb'):
+        if self._cloudinary_available and self._local_storage.exists(name):
+            return self._local_storage.open(name, mode)
         return self._storage.open(name, mode)
 
     def save(self, name, content, max_length=None):
@@ -78,8 +84,8 @@ class SmartMediaCloudinaryStorage:
                 return result.get('public_id', name)
             except Exception as e:
                 logger.warning(f"Cloudinary upload error for {name}: {e}")
-                return self._storage.save(name, content, max_length)
-        return self._storage.save(name, content, max_length)
+                return self._local_storage.save(name, content, max_length)
+        return self._local_storage.save(name, content, max_length)
 
     def delete(self, name):
         if self._cloudinary_available:
@@ -89,31 +95,35 @@ class SmartMediaCloudinaryStorage:
                 cloudinary.uploader.destroy(name, resource_type=resource_type)
             except Exception as e:
                 logger.warning(f"Cloudinary delete error for {name}: {e}")
-        return self._storage.delete(name)
+        return self._local_storage.delete(name)
 
     def exists(self, name):
+        if self._cloudinary_available and self._local_storage.exists(name):
+            return True
         return self._storage.exists(name)
 
     def listdir(self, path):
-        return self._storage.listdir(path)
+        return self._local_storage.listdir(path)
 
     def size(self, name):
+        if self._cloudinary_available and self._local_storage.exists(name):
+            return self._local_storage.size(name)
         return self._storage.size(name)
 
     def get_accessed_time(self, name):
-        return self._storage.get_accessed_time(name)
+        return self._local_storage.get_accessed_time(name)
 
     def get_created_time(self, name):
-        return self._storage.get_created_time(name)
+        return self._local_storage.get_created_time(name)
 
     def get_modified_time(self, name):
-        return self._storage.get_modified_time(name)
+        return self._local_storage.get_modified_time(name)
 
     def get_available_name(self, name, max_length=None):
-        return self._storage.get_available_name(name, max_length)
+        return self._local_storage.get_available_name(name, max_length)
 
     def path(self, name):
-        return self._storage.path(name)
+        return self._local_storage.path(name)
 
     def generate_filename(self, filename):
-        return self._storage.generate_filename(filename)
+        return self._local_storage.generate_filename(filename)
