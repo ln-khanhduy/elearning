@@ -359,19 +359,24 @@ export default function CourseBuilderPage({ mode = "create" }) {
         }
 
         if (lessonData.id) {
-          await updateLessonApi(lessonData.id, payload);
+          const res = await updateLessonApi(lessonData.id, payload);
+          const updatedLesson = res?.data || res;
           setCurriculum((prev) =>
             prev.map((s) =>
               s.id === lessonData.section_id
                 ? {
                     ...s,
                     lessons: (s.lessons || []).map((l) =>
-                      l.id === lessonData.id ? { ...l, ...lessonData } : l
+                      l.id === lessonData.id ? { ...l, ...updatedLesson } : l
                     ),
                   }
                 : s
             )
           );
+          // Cập nhật editingItem để drawer hiển thị dữ liệu mới
+          if (updatedLesson) {
+            setEditingItem((prev) => prev?.id === lessonData.id ? { ...prev, ...updatedLesson } : prev);
+          }
         } else {
           const res = await createLessonApi(lessonData.section_id, payload);
           const newLesson = res?.data || res;
