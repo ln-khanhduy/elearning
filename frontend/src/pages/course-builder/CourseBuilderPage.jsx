@@ -831,6 +831,7 @@ export default function CourseBuilderPage({ mode = "create" }) {
             onGoToStep={handleGoToStep}
             saving={saving}
             publishing={publishing}
+            isEdit={isEdit}
           />
         )}
       </div>
