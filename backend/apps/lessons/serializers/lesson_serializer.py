@@ -90,11 +90,12 @@ class LessonCreateUpdateSerializer(serializers.ModelSerializer):
         content_type = attrs.get("content_type")
         video_url = attrs.get("video_url")
         material_file = attrs.get("material_file")
+        is_partial = self.partial
 
         if content_type == "VIDEO" and not video_url:
             raise serializers.ValidationError({"video_url": "Bài học VIDEO phải có URL video."})
 
-        if content_type == "DOCUMENT" and not material_file:
+        if content_type == "DOCUMENT" and not material_file and not is_partial:
             raise serializers.ValidationError({"material_file": "Bài học DOCUMENT phải có tài liệu đính kèm."})
 
         return attrs
