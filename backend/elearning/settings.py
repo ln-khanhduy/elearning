@@ -18,7 +18,10 @@ from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-load_dotenv(BASE_DIR / '.env.development')
+# Load .env file (chỉ khi tồn tại, không crash nếu không có trên production)
+_env_file = BASE_DIR / '.env.development'
+if _env_file.exists():
+    load_dotenv(_env_file)
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
