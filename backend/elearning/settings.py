@@ -267,18 +267,38 @@ DEFAULT_FILE_STORAGE = 'apps.common.cloudinary_storage.SmartMediaCloudinaryStora
 # CORS and CSRF configuration
 FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:3000')
 BACKEND_URL = os.getenv('BACKEND_URL', 'http://localhost:8000')
-CORS_ALLOWED_ORIGINS = [
+# CORS: Cho phép tất cả origins trong development
+# Production: tự động allow Vercel + Render domains
+import re as _re
+
+# Tự động thêm origins từ env vars và các domain phổ biến
+CORS_ALLOWED_ORIGINS = []
+_cors_origins = [
     FRONTEND_URL,
     'http://localhost:5173',
+    'http://localhost:3000',
     'http://127.0.0.1:5173',
+    os.getenv('RENDER_EXTERNAL_URL', ''),
+    f'https://{os.getenv("RENDER_EXTERNAL_URL", "")}',
 ]
+for o in _cors_origins:
+    if o and o not in CORS_ALLOWED_ORIGINS:
+        CORS_ALLOWED_ORIGINS.append(o)
+
+# Cho phép tất cả subdomain Vercel bằng regex
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r'^https://.*\.vercel\.app$',
+    r'^https://.*\.onrender\.com$',
+]
+
 CORS_ALLOW_CREDENTIALS = True
 CSRF_COOKIE_SECURE = not DEBUG
-CSRF_TRUSTED_ORIGINS = [
-    FRONTEND_URL,
+
+# CSRF trusted origins
+CSRF_TRUSTED_ORIGINS = list(CORS_ALLOWED_ORIGINS) + [
     'http://localhost:5173',
     'http://127.0.0.1:5173',
-]
+] if not DEBUG else []
 
 # ==================== PAYMENT CONFIGURATION ====================
 STRIPE_SECRET_KEY = os.getenv('STRIPE_SECRET_KEY')
