@@ -22,7 +22,7 @@ import {
   publishAdminCourseApi,
   getCategoriesApi,
   getCurriculumApi,
-} from "../../api/courseAPI";
+} from "../../api/courseAPI";Tóa
 import {
   createChapterApi,
   updateChapterApi,
