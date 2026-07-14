@@ -1,0 +1,179 @@
+/* ==================== ADMIN COUPON PAGE ==================== */
+.admin-coupon-page {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.admin-coupon-page h4 {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1a1a2e;
+  margin: 0;
+}
+
+/* Form card */
+.admin-coupon-page .card {
+  background: #fff;
+  border: 1px solid #e9ecef;
+  border-radius: var(--card-radius, 10px);
+  margin-bottom: 16px;
+}
+
+.admin-coupon-page .card-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1a1a2e;
+}
+
+.admin-coupon-page .form-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #212529;
+  margin-bottom: 5px;
+}
+
+.admin-coupon-page .form-control,
+.admin-coupon-page .form-select {
+  padding: 8px 12px;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #212529;
+  background: #fff;
+  outline: none;
+  transition: border-color 0.2s;
+  height: 40px;
+}
+
+.admin-coupon-page .form-control:focus,
+.admin-coupon-page .form-select:focus {
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.admin-coupon-page textarea.form-control {
+  height: auto;
+  resize: vertical;
+}
+
+/* Bảng coupon */
+.admin-coupon-page .table {
+  margin-bottom: 0;
+}
+
+.admin-coupon-page .table thead th {
+  padding: 10px 12px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #6c757d;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background: #f8f9fa;
+  border-bottom: 2px solid #e9ecef;
+  white-space: nowrap;
+}
+
+.admin-coupon-page .table td {
+  padding: 10px 12px;
+  font-size: 13px;
+  color: #212529;
+  border-bottom: 1px solid #f0f0f0;
+  vertical-align: middle;
+}
+
+.admin-coupon-page .table tbody tr:hover td {
+  background: #f8f9ff;
+}
+
+/* Nút action trong bảng */
+.admin-coupon-page .btn-outline-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: #e8f4fd;
+  color: #0d6efd;
+  border: 1px solid #b6d4fe;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+  padding: 0;
+}
+
+.admin-coupon-page .btn-outline-primary:hover {
+  background: #cfe2ff;
+}
+
+.admin-coupon-page .btn-outline-danger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: #fce4ec;
+  color: #dc3545;
+  border: 1px solid #f1aeb5;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+  padding: 0;
+}
+
+.admin-coupon-page .btn-outline-danger:hover {
+  background: #f8d7da;
+}
+
+/* Nút chính */
+.admin-coupon-page .btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 18px;
+  background: #0f3d75;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  white-space: nowrap;
+  height: 40px;
+}
+
+.admin-coupon-page .btn-primary:hover {
+  background: #0a2d55;
+}
+
+.admin-coupon-page .btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 18px;
+  background: #fff;
+  color: #495057;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  height: 40px;
+}
+
+.admin-coupon-page .btn-secondary:hover {
+  background: #f8f9fa;
+  border-color: #ced4da;
+}
+
+/* Badge */
+.admin-coupon-page .badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 6px;
+}

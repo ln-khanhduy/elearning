@@ -1,0 +1,38 @@
+/* ===== 404 NOT FOUND PAGE ===== */
+.not-found-page {
+  min-height: 60vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+}
+
+.not-found-page .btn-primary {
+  padding: 10px 24px;
+  background: var(--primary);
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.not-found-page .btn-primary:hover {
+  background: #0a2d55;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.not-found-page .btn-outline-secondary {
+  padding: 10px 24px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #334155;
+}
+
+.not-found-page .btn-outline-secondary:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+  background: rgba(15, 61, 117, 0.04);
+}

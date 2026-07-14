@@ -1,0 +1,82 @@
+# Render Blueprint - Deploy Django Backend + PostgreSQL
+# Dùng file này: Import from GitHub trên Render Dashboard
+# Hoặc dùng Render CLI: render deploy
+
+services:
+  # ==================== Dịch vụ Web Django ====================
+  - type: web
+    name: elearning-backend
+    env: python
+    region: singapore  # Gần Việt Nam nhất
+    plan: free
+    buildCommand: |
+      pip install -r requirements.txt
+      python manage.py collectstatic --noinput
+    startCommand: daphne -b 0.0.0.0 -p $PORT elearning.asgi:application
+    healthCheckPath: /api/health/
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.0
+      - key: DJANGO_SETTINGS_MODULE
+        value: elearning.settings
+      - key: DEBUG
+        value: "False"
+      - key: SECRET_KEY
+        generateValue: true  # Render tự tạo random key
+      - key: DB_NAME
+        fromDatabase:
+          name: elearning-db
+          property: database
+      - key: DB_USER
+        fromDatabase:
+          name: elearning-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: elearning-db
+          property: password
+      - key: DB_HOST
+        fromDatabase:
+          name: elearning-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: elearning-db
+          property: port
+      - key: FRONTEND_URL
+        value: https://elearning-phi-beryl.vercel.app  #  Đổi thành URL Vercel của bạn
+      - key: BACKEND_URL
+        value: https://elearning-backend.onrender.com  #  Render sẽ tự điền
+      - key: RENDER_PING_DISABLE
+        value: "false"
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false  #  Set thủ công trong Dashboard
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_PUBLISHABLE_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: EMAIL_HOST
+        sync: false
+      - key: EMAIL_PORT
+        value: "587"
+      - key: EMAIL_USE_TLS
+        value: "True"
+      - key: EMAIL_HOST_USER
+        sync: false
+      - key: EMAIL_HOST_PASSWORD
+        sync: false
+
+  # ==================== PostgreSQL Database ====================
+databases:
+  - name: elearning-db
+    databaseName: elearning
+    plan: free  # 1GB storage, miễn phí
+    region: singapore
