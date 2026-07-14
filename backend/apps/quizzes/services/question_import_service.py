@@ -12,6 +12,8 @@ VALID_CORRECT_ANSWERS = {'A', 'B', 'C', 'D'}
 MAX_QUESTION_LENGTH = 1000
 MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
 REQUIRED_COLUMNS = ['question', 'difficulty', 'option_a', 'option_b', 'option_c', 'option_d', 'correct']
+
+
 def validate_file(uploaded_file):
     """
     Kiểm tra file upload có hợp lệ không.
@@ -22,9 +24,11 @@ def validate_file(uploaded_file):
         raise ValueError("Chỉ hỗ trợ file CSV hoặc XLSX.")
     if uploaded_file.size == 0:
         raise ValueError("File không được để trống.")
-    if uploaded_file.size > QuestionImportService.MAX_FILE_SIZE:
+    if uploaded_file.size > MAX_FILE_SIZE:
         raise ValueError("File không được vượt quá 10MB.")
     return ext
+
+
 def validate_headers(headers):
     """
     Kiểm tra file có đủ các cột bắt buộc không.
@@ -32,10 +36,12 @@ def validate_headers(headers):
     """
     normalized_headers = [h.strip().lower() if h else '' for h in headers]
     missing = []
-    for col in QuestionImportService.REQUIRED_COLUMNS:
+    for col in REQUIRED_COLUMNS:
         if col not in normalized_headers:
             missing.append(col)
     return missing
+
+
 def parse_csv(file):
     """
     Đọc nội dung file CSV, trả về list các dict.
@@ -121,6 +127,8 @@ def parse_csv(file):
             cleaned[key] = v.strip() if v else ''
         rows.append(cleaned)
     return rows
+
+
 def parse_excel(file):
     """
     Đọc nội dung file XLSX, trả về list các dict.
@@ -162,6 +170,8 @@ def parse_excel(file):
 
     wb.close()
     return rows
+
+
 def validate_row(row, row_index):
     """
     Validate một dòng dữ liệu.
@@ -173,13 +183,13 @@ def validate_row(row, row_index):
     question = row.get('question', '').strip()
     if not question:
         errors.append("Question không được để trống.")
-    elif len(question) > QuestionImportService.MAX_QUESTION_LENGTH:
-        errors.append(f"Question không được vượt quá {QuestionImportService.MAX_QUESTION_LENGTH} ký tự.")
+    elif len(question) > MAX_QUESTION_LENGTH:
+        errors.append(f"Question không được vượt quá {MAX_QUESTION_LENGTH} ký tự.")
 
     # Validate difficulty
     difficulty = row.get('difficulty', '').strip().upper()
-    if difficulty and difficulty not in QuestionImportService.VALID_DIFFICULTIES:
-        valid_str = ', '.join(sorted(QuestionImportService.VALID_DIFFICULTIES))
+    if difficulty and difficulty not in VALID_DIFFICULTIES:
+        valid_str = ', '.join(sorted(VALID_DIFFICULTIES))
         errors.append(f"Difficulty không hợp lệ. Chỉ chấp nhận: {valid_str}.")
 
     # Validate options
@@ -197,13 +207,15 @@ def validate_row(row, row_index):
         # Check for multiple correct answers (comma-separated)
         correct_parts = [c.strip() for c in correct.split(',')]
         for part in correct_parts:
-            if part not in QuestionImportService.VALID_CORRECT_ANSWERS:
+            if part not in VALID_CORRECT_ANSWERS:
                 errors.append(f"Correct answer '{part}' không tồn tại. Chỉ chấp nhận A, B, C, D.")
         # Check for duplicates
         if len(correct_parts) != len(set(correct_parts)):
             errors.append("Correct answer không được trùng lặp.")
 
     return errors
+
+
 def preview_questions(rows):
     """
     Parse và validate tất cả các dòng.
@@ -245,6 +257,8 @@ def preview_questions(rows):
             })
 
     return preview_data, all_errors
+
+
 def import_questions(rows, quiz):
     """
     Import câu hỏi vào database.
@@ -303,7 +317,7 @@ def import_questions(rows, quiz):
             questions_to_create = []
             for idx, row in enumerate(valid_rows):
                 difficulty = row.get('difficulty', '').strip().upper()
-                if difficulty not in QuestionImportService.VALID_DIFFICULTIES:
+                if difficulty not in VALID_DIFFICULTIES:
                     difficulty = Question.Difficulty.EASY
 
                 max_order += 1

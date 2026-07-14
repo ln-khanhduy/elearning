@@ -96,6 +96,9 @@ PERMISSIONS = {
     "student.profile.manage": "Quản lý thông tin cá nhân",
     "student.my_course.view": "Xem khóa học đã mua",
     "student.wallet.deposit": "Yêu cầu hoàn tiền",
+    "student.wishlist.manage": "Quản lý danh sách yêu thích",
+    "student.cart.view": "Xem giỏ hàng",
+    "student.cart.manage": "Quản lý giỏ hàng",
 
     # Instructor finance
     "instructor.wallet.view_balance": "Xem số dư ví",
@@ -284,6 +287,10 @@ ROLE_PERMISSIONS = {
 
         "student.profile.manage",
         "student.my_course.view",
+
+        "student.wishlist.manage",
+        "student.cart.view",
+        "student.cart.manage",
     ],
 }
 

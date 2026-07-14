@@ -16,4 +16,9 @@ class HasRequiredPermission(BasePermission):
 
         if required_permission is None:
             return False
+        
+        # Kiểm tra user có role không, tránh lỗi 500 khi user.role = None
+        if not user.role:
+            return False
+
         return user.role.permissions.filter(code=required_permission).exists()
