@@ -1,6 +1,6 @@
 /* ===== HEADER - Improved styling ===== */
 .header-container {
-  height: var(--header-height, 60px);
+  height: var(--header-height, 48px);
   background: white;
   border-bottom: 1px solid #eef2f6;
   display: flex;
@@ -17,8 +17,8 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-left: 16px;
-  padding-right: 16px;
+  padding-left: 10px;
+  padding-right: 10px;
   height: 100%;
 }
 
@@ -26,7 +26,9 @@
 .header-left {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 4px;
+  min-width: 0;
+  flex-shrink: 1;
 }
 
 /* Nút toggle sidebar cho mobile */
@@ -65,18 +67,20 @@
 .nav-menu {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 2px;
+  flex-shrink: 0;
 }
 
 .nav-menu a {
   color: #4b5563;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 500;
   text-decoration: none;
-  padding: 6px 14px;
-  border-radius: 8px;
+  padding: 4px 8px;
+  border-radius: 6px;
   transition: all 0.2s ease;
   position: relative;
+  white-space: nowrap;
 }
 
 .nav-menu a:hover {
