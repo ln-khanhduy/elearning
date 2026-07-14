@@ -10,13 +10,19 @@ function CartPage() {
   const [cart, setCart] = useState(null);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
+  const [selectedIds, setSelectedIds] = useState([]);
   const [confirmModal, setConfirmModal] = useState({ show: false, type: null, courseId: null });
 
   const loadCart = useCallback(async () => {
     try {
       setLoading(true);
       const data = await getCartApi();
-      setCart(data?.data || { items: [], total: 0, item_count: 0 });
+      const cartData = data?.data || { items: [], total: 0, item_count: 0 };
+      setCart(cartData);
+      // Auto-select all when cart loads
+      if (cartData.items?.length > 0) {
+        setSelectedIds(cartData.items.map(item => item.course_id));
+      }
     } catch (error) {
       toast.error("Không thể tải giỏ hàng.");
     } finally {
@@ -33,6 +39,7 @@ function CartPage() {
       await removeFromCartApi(courseId);
       toast.success("Đã xóa khóa học khỏi giỏ hàng.");
       window.dispatchEvent(new Event("cart-change"));
+      setSelectedIds(prev => prev.filter(id => id !== courseId));
       loadCart();
     } catch (error) {
       toast.error(error.message);
@@ -44,6 +51,7 @@ function CartPage() {
       await clearCartApi();
       toast.success("Đã xóa toàn bộ giỏ hàng.");
       window.dispatchEvent(new Event("cart-change"));
+      setSelectedIds([]);
       loadCart();
     } catch (error) {
       toast.error(error.message);
@@ -67,23 +75,43 @@ function CartPage() {
     setConfirmModal({ show: false, type: null, courseId: null });
   };
 
+  // Select / deselect
+  const handleToggleSelect = (courseId) => {
+    setSelectedIds(prev =>
+      prev.includes(courseId)
+        ? prev.filter(id => id !== courseId)
+        : [...prev, courseId]
+    );
+  };
+
+  const handleSelectAll = () => {
+    if (selectedIds.length === cart?.items?.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(cart?.items?.map(item => item.course_id) || []);
+    }
+  };
+
+  // Checkout selected items
   const handleCheckout = async () => {
-    if (!cart || cart.items.length === 0) {
-      toast.warning("Giỏ hàng trống.");
+    const selectedItems = cart?.items?.filter(item => selectedIds.includes(item.course_id)) || [];
+    if (selectedItems.length === 0) {
+      toast.warning("Vui lòng chọn ít nhất 1 khóa học để thanh toán.");
       return;
     }
-    // For now, navigate to checkout of the first item (single course checkout)
-    // Future: implement multi-course checkout
+
     setProcessing(true);
     try {
-      const firstItem = cart.items[0];
-      const result = await createStripeCheckoutApi(firstItem.course_id);
-      const checkoutUrl = result?.data?.checkout_url;
-      if (checkoutUrl) {
-        window.location.href = checkoutUrl;
-      } else {
-        throw new Error("Không nhận được đường dẫn thanh toán.");
+      // Thanh toán lần lượt từng khóa học được chọn
+      for (const item of selectedItems) {
+        const result = await createStripeCheckoutApi(item.course_id);
+        const checkoutUrl = result?.data?.checkout_url;
+        if (checkoutUrl) {
+          window.location.href = checkoutUrl;
+          return; // Chuyển hướng ngay, các khóa còn lại sẽ thanh toán sau
+        }
       }
+      throw new Error("Không nhận được đường dẫn thanh toán.");
     } catch (error) {
       toast.error(error.message || "Tạo thanh toán thất bại.");
     } finally {
@@ -95,6 +123,10 @@ function CartPage() {
     if (!val && val !== 0) return null;
     return Number(val).toLocaleString("vi-VN") + "₫";
   };
+
+  const selectedItems = cart?.items?.filter(item => selectedIds.includes(item.course_id)) || [];
+  const selectedTotal = selectedItems.reduce((sum, item) => sum + Number(item.price || 0), 0);
+  const allSelected = selectedIds.length === cart?.items?.length;
 
   return (
     <div className="cart-page">
@@ -130,9 +162,36 @@ function CartPage() {
       ) : (
         <div className="row g-4">
           <div className="col-lg-8">
+            {/* Select all */}
+            <div className="d-flex align-items-center mb-2 px-1">
+              <div className="form-check">
+                <input
+                  type="checkbox"
+                  className="form-check-input"
+                  id="selectAll"
+                  checked={allSelected}
+                  onChange={handleSelectAll}
+                />
+                <label className="form-check-label small" htmlFor="selectAll">
+                  {allSelected ? "Bỏ chọn tất cả" : "Chọn tất cả"}
+                </label>
+              </div>
+              <span className="ms-2 text-muted small">
+                Đã chọn {selectedIds.length}/{cart.items.length} khóa học
+              </span>
+            </div>
+
             <div className="list-group">
               {cart.items.map((item) => (
                 <div key={item.id} className="list-group-item list-group-item-action d-flex gap-3 py-3">
+                  <div className="d-flex align-items-center">
+                    <input
+                      type="checkbox"
+                      className="form-check-input me-2"
+                      checked={selectedIds.includes(item.course_id)}
+                      onChange={() => handleToggleSelect(item.course_id)}
+                    />
+                  </div>
                   <div className="flex-shrink-0" style={{ width: "120px" }}>
                     {item.thumbnail_url ? (
                       <img src={item.thumbnail_url} alt={item.course_title} className="rounded" style={{ width: "100%", height: "70px", objectFit: "cover" }} />
@@ -164,11 +223,15 @@ function CartPage() {
           <div className="col-lg-4">
             <div className="card shadow-sm">
               <div className="card-body">
-                <h5 className="card-title">Tổng cộng</h5>
+                <h5 className="card-title">Thanh toán</h5>
                 <hr />
                 <div className="d-flex justify-content-between mb-2">
+                  <span>Đã chọn:</span>
+                  <span>{selectedItems.length} khóa học</span>
+                </div>
+                <div className="d-flex justify-content-between mb-2">
                   <span>Tạm tính:</span>
-                  <span>{formatPrice(cart.total)}</span>
+                  <span>{formatPrice(selectedTotal)}</span>
                 </div>
                 <div className="d-flex justify-content-between mb-3 text-muted small">
                   <span>Phí thanh toán:</span>
@@ -177,12 +240,12 @@ function CartPage() {
                 <hr />
                 <div className="d-flex justify-content-between mb-3">
                   <strong>Tổng tiền:</strong>
-                  <strong className="text-primary fs-5">{formatPrice(cart.total)}</strong>
+                  <strong className="text-primary fs-5">{formatPrice(selectedTotal)}</strong>
                 </div>
                 <button
-                  className="btn btn-primary w-100"
+                  className="btn btn-primary w-100 mb-2"
                   onClick={handleCheckout}
-                  disabled={processing}
+                  disabled={processing || selectedItems.length === 0}
                 >
                   {processing ? (
                     <>
@@ -191,10 +254,21 @@ function CartPage() {
                     </>
                   ) : (
                     <>
-                      <i className="bi bi-credit-card me-2"></i>Thanh toán
+                      <i className="bi bi-credit-card me-2"></i>
+                      {selectedItems.length === 0
+                        ? "Chọn khóa học để thanh toán"
+                        : selectedItems.length === 1
+                        ? "Thanh toán 1 khóa học"
+                        : `Thanh toán ${selectedItems.length} khóa học`}
                     </>
                   )}
                 </button>
+                {selectedItems.length > 1 && (
+                  <div className="alert alert-info py-2 px-3 small mb-0">
+                    <i className="bi bi-info-circle me-1"></i>
+                    Các khóa học sẽ được thanh toán lần lượt.
+                  </div>
+                )}
               </div>
             </div>
           </div>
