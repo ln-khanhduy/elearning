@@ -13,9 +13,6 @@ COPY . .
 # Cài đặt dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Chạy migration khi build (tùy chọn, có thể bỏ qua nếu lỗi)
-RUN python manage.py collectstatic --noinput || true
-
 EXPOSE 8000
 
 # Dùng Daphne cho WebSocket + HTTP
