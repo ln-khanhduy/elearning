@@ -131,4 +131,4 @@ class CourseCreateUpdateSerializer(serializers.ModelSerializer):
 
 
 class CourseAssignInstructorSerializer(serializers.Serializer):
-    instructor_id = serializers.IntegerField(required=False, allow_null=True)
+    instructor_id = serializers.CharField(required=False, allow_null=True, allow_blank=True)

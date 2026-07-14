@@ -220,14 +220,14 @@ class AdminCourseHideAPIView(BasePermissionAPIView):
 
 
 
-class AdminCourseAssignInstructorAPIView(APIView):
-    permission_classes = [IsAuthenticated]
+class AdminCourseAssignInstructorAPIView(BasePermissionAPIView):
+    required_permission = "course.instructor.assign"
 
     def patch(self, request, course_id):
         serializer = CourseAssignInstructorSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         instructor_id = serializer.validated_data.get("instructor_id")
-        if instructor_id is None:
+        if not instructor_id:
             course = course_assignment_service.remove_instructor(course_id, request.user)
             admin_log_service.log(
                 admin=request.user,
