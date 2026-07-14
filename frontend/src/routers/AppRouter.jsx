@@ -83,9 +83,13 @@ function AppRouter() {
           <Route path="/register/verify-otp" element={<Suspense fallback={<PageLoader />}><VerifyotpPage /></Suspense>} />
           <Route path="/reset-password" element={<Suspense fallback={<PageLoader />}><ResetPasswordPage /></Suspense>} />
           <Route path="/instructor/apply" element={<Suspense fallback={<PageLoader />}><InstructorApplyPage /></Suspense>} />
+          <Route path="*" element={<Suspense fallback={<PageLoader />}><NotFoundPage /></Suspense>} />
+        </Route>
+
+        {/* ======== PAYMENT ROUTES (MainLayout, no auth) ======== */}
+        <Route element={<MainLayout />}>
           <Route path="/payment/success" element={<Suspense fallback={<PageLoader />}><SuccessPage /></Suspense>} />
           <Route path="/payment/cancel" element={<Suspense fallback={<PageLoader />}><CancelPage /></Suspense>} />
-          <Route path="*" element={<Suspense fallback={<PageLoader />}><NotFoundPage /></Suspense>} />
         </Route>
 
         {/* ======== PROTECTED ROUTES ======== */}
