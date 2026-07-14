@@ -142,18 +142,23 @@ class LessonUpdateAPIView(BasePermissionAPIView):
     required_permission = "course.lesson.update"
 
     def patch(self, request, lesson_id):
-        serializer = LessonCreateUpdateSerializer(data=request.data, partial=True)
-        serializer.is_valid(raise_exception=True)
-        lesson = lesson_service.update_lesson(lesson_id, request.user, serializer.validated_data)
-        admin_log_service.log(
-            admin=request.user,
-            action_type='LESSON_UPDATE',
-            detail=f"Admin {request.user.email} đã cập nhật bài học '{lesson.title}' (ID: {lesson.id})",
-            target_id=str(lesson.id),
-            target_type='Lesson',
-        )
-
-        return success_response(LessonSerializer(lesson).data, "Cập nhật bài học thành công.")
+        import logging
+        logger = logging.getLogger(__name__)
+        try:
+            serializer = LessonCreateUpdateSerializer(data=request.data, partial=True)
+            serializer.is_valid(raise_exception=True)
+            lesson = lesson_service.update_lesson(lesson_id, request.user, serializer.validated_data)
+            admin_log_service.log(
+                admin=request.user,
+                action_type='LESSON_UPDATE',
+                detail=f"Admin {request.user.email} đã cập nhật bài học '{lesson.title}' (ID: {lesson.id})",
+                target_id=str(lesson.id),
+                target_type='Lesson',
+            )
+            return success_response(LessonSerializer(lesson).data, "Cập nhật bài học thành công.")
+        except Exception as e:
+            logger.exception(f"Lesson update error (lesson_id={lesson_id}): {e}")
+            return Response({"success": False, "message": str(e)}, status=500)
 
 
 class LessonDeleteAPIView(BasePermissionAPIView):
