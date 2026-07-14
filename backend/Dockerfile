@@ -15,5 +15,5 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 EXPOSE 8000
 
-# Dùng Daphne cho WebSocket + HTTP
-CMD daphne -b 0.0.0.0 -p $PORT elearning.asgi:application
+# Seed permissions + start Daphne
+CMD python manage.py seed_permissions --noinput 2>/dev/null; daphne -b 0.0.0.0 -p $PORT elearning.asgi:application
