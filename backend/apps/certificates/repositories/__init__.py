@@ -1,0 +1,1 @@
+from apps.certificates.repositories.certificate_repository import *  # noqa: F401, F403
