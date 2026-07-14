@@ -1,18 +1,34 @@
-let accessToken = null;
+const ACCESS_TOKEN_KEY = 'elearning_access_token';
 
 export const setAccessToken = (token) => {
-  accessToken = token;
+  if (token) {
+    try {
+      localStorage.setItem(ACCESS_TOKEN_KEY, token);
+    } catch (e) {
+      console.warn('Cannot save token to localStorage:', e);
+    }
+  }
 };
 
-export const getAccessToken = () => accessToken;
+export const getAccessToken = () => {
+  try {
+    return localStorage.getItem(ACCESS_TOKEN_KEY);
+  } catch (e) {
+    return null;
+  }
+};
 
 // Đăng xuất
 export const clearAccessToken = () => {
-  accessToken = null;
+  try {
+    localStorage.removeItem(ACCESS_TOKEN_KEY);
+  } catch (e) {
+    console.warn('Cannot clear token:', e);
+  }
 };
 
 export const clearAuthSessionData = () => {
-  accessToken = null;
+  clearAccessToken();
 
   try {
     sessionStorage.removeItem('register_email');
@@ -27,5 +43,5 @@ export const clearAuthSessionData = () => {
 
 // check login
 export const isAuthenticated = () => {
-  return !!accessToken;
+  return !!getAccessToken();
 };
