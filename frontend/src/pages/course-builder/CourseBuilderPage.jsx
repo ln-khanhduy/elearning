@@ -513,6 +513,9 @@ export default function CourseBuilderPage({ mode = "create" }) {
             }
           }
 
+          // Giữ prompt và correct_text_answer vì newQuiz từ API không có các trường này
+          const newQuizWithPrompt = { ...newQuiz, prompt, correct_text_answer: correctTextAnswer };
+
           setCurriculum((prev) =>
             prev.map((s) =>
               s.id === quizData.section_id
@@ -523,7 +526,7 @@ export default function CourseBuilderPage({ mode = "create" }) {
                         ? {
                             ...l,
                             quizzes: (l.quizzes || []).map((q) =>
-                              q.id === quizData.id ? { ...q, ...newQuiz, id: newQuiz.id } : q
+                              q.id === quizData.id ? { ...q, ...newQuizWithPrompt, id: newQuiz.id } : q
                             ),
                           }
                         : l
@@ -533,7 +536,7 @@ export default function CourseBuilderPage({ mode = "create" }) {
             )
           );
           // Update editingItem with the real ID from backend
-          setEditingItem((prev) => prev?.id === quizData.id ? { ...prev, ...newQuiz, id: newQuiz.id } : prev);
+          setEditingItem((prev) => prev?.id === quizData.id ? { ...prev, ...newQuizWithPrompt, id: newQuiz.id } : prev);
           setSelectedItem((prev) => prev?.id === quizData.id ? { ...prev, id: newQuiz.id } : prev);
         } else if (quizData.id) {
           // Existing quiz - update on backend
@@ -648,7 +651,14 @@ export default function CourseBuilderPage({ mode = "create" }) {
   }, []);
 
   const handleSelectQuiz = useCallback((quiz, sectionId) => {
-    setEditingItem(quiz);
+    // Lấy prompt và correct_text_answer từ questions[0] nếu quiz không có sẵn
+    const firstQuestion = quiz.questions?.[0];
+    const enhancedQuiz = {
+      ...quiz,
+      prompt: quiz.prompt || firstQuestion?.prompt || "",
+      correct_text_answer: quiz.correct_text_answer || firstQuestion?.correct_text_answer || "",
+    };
+    setEditingItem(enhancedQuiz);
     setEditingSectionId(sectionId);
     setDrawerType("quiz");
     setDrawerOpen(true);
