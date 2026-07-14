@@ -9,9 +9,10 @@ def set_refresh_cookie(response, refresh_token):
         value=refresh_token,
         httponly=True,
         secure=not settings.DEBUG,
-        samesite="Lax",
+        samesite="None" if not settings.DEBUG else "Lax",
         max_age=7 * 24 * 60 * 60,
         path="/",
+        domain=None,
     )
 
 
@@ -19,5 +20,6 @@ def delete_refresh_cookie(response):
     response.delete_cookie(
         key=REFRESH_COOKIE_NAME,
         path="/",
-        samesite="Lax",
+        samesite="None" if not settings.DEBUG else "Lax",
+        domain=None,
     )
