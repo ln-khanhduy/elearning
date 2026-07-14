@@ -18,8 +18,9 @@ class SmartMediaCloudinaryStorage:
     """
     Storage thông minh: dùng Cloudinary nếu có config, fallback về local storage.
     Tự động chọn resource_type dựa trên extension file khi upload và lấy URL.
-    Khi upload lỗi, fallback về local storage; khi lấy URL, ưu tiên cloudinary,
-    nếu file tồn tại local thì serve local (tránh 404).
+    Khi lấy URL, nếu file tồn tại local (do upload Cloudinary lỗi trước đó),
+    tự động re-upload lên Cloudinary để đảm bảo file luôn available.
+    Khi upload Cloudinary lỗi, không throw exception mà fallback về local.
     """
 
     IMAGE_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg', '.bmp', '.ico'}
@@ -47,14 +48,43 @@ class SmartMediaCloudinaryStorage:
             return 'image'
         return 'raw'
 
+    def _ensure_cloudinary(self, name):
+        """
+        Đảm bảo file đã được upload lên Cloudinary.
+        Nếu file chỉ tồn tại local (do lần upload trước lỗi), re-upload.
+        """
+        if not self._cloudinary_available or not self._cloudinary_module:
+            return False
+        if not self._local_storage.exists(name):
+            return True  # File không local, coi như đã Cloudinary hoặc không tồn tại
+        resource_type = self._get_resource_type(name)
+        try:
+            import cloudinary.uploader
+            with self._local_storage.open(name, 'rb') as f:
+                cloudinary.uploader.upload(
+                    f,
+                    public_id=name,
+                    resource_type=resource_type,
+                    type='upload',
+                    overwrite=True,
+                )
+            # Sau khi upload thành công, xóa file local để tiết kiệm dung lượng
+            try:
+                self._local_storage.delete(name)
+            except Exception:
+                pass
+            return True
+        except Exception as e:
+            logger.warning(f"Cloudinary re-upload error for {name}: {e}")
+            return False
+
     def url(self, name):
         if not name:
             return None
         if self._cloudinary_available and self._cloudinary_module:
             try:
-                # Nếu file tồn tại ở local (fallback từ Cloudinary upload lỗi), serve local
-                if self._local_storage.exists(name):
-                    return self._local_storage.url(name)
+                # Đảm bảo file đã upload Cloudinary (re-upload nếu cần)
+                self._ensure_cloudinary(name)
                 resource_type = self._get_resource_type(name)
                 url, _ = self._cloudinary_module.utils.cloudinary_url(
                     name, resource_type=resource_type, type='upload', secure=True
