@@ -77,7 +77,7 @@ class LessonCreateUpdateSerializer(serializers.ModelSerializer):
 
     def validate_order(self, value):
         """Kiểm tra thứ tự bài học phải là số không âm."""
-        if value < 0:
+        if value is not None and value < 0:
             raise serializers.ValidationError("Thứ tự bài học không hợp lệ.")
         return value
 
