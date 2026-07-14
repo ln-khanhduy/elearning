@@ -220,8 +220,8 @@ class AdminCourseHideAPIView(BasePermissionAPIView):
 
 
 
-class AdminCourseAssignInstructorAPIView(APIView):
-    permission_classes = [IsAuthenticated]
+class AdminCourseAssignInstructorAPIView(BasePermissionAPIView):
+    required_permission = "course.instructor.assign"
 
     def patch(self, request, course_id):
         serializer = CourseAssignInstructorSerializer(data=request.data)
