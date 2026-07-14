@@ -843,6 +843,7 @@ export default function CourseBuilderPage({ mode = "create" }) {
           isLastStep={currentStep === 5}
           onPrevious={handlePrevious}
           onNext={currentStep === 1 && !isEdit ? handleCreateCourse : handleNext}
+          isEdit={isEdit}
           onSaveDraft={saveDraft}
           saving={saving}
           nextLabel={currentStep === 1 && !isEdit ? "Tạo khóa học" : "Tiếp theo"}

@@ -11,20 +11,23 @@ function StickyActionBar({
   isLastStep,
   nextLabel,
   hidePrevious,
+  isEdit,
 }) {
   return (
     <div className="cw-action-bar">
-      <div className="cw-action-left">
-        <button
-          type="button"
-          className="cw-btn cw-btn-secondary"
-          onClick={onSaveDraft}
-          disabled={saving}
-        >
-          <i className="bi bi-cloud-upload"></i>
-          {saving ? "Đang lưu..." : "Lưu nháp"}
-        </button>
-      </div>
+      {!isEdit && (
+        <div className="cw-action-left">
+          <button
+            type="button"
+            className="cw-btn cw-btn-secondary"
+            onClick={onSaveDraft}
+            disabled={saving}
+          >
+            <i className="bi bi-cloud-upload"></i>
+            {saving ? "Đang lưu..." : "Lưu nháp"}
+          </button>
+        </div>
+      )}
 
       <div className="cw-action-right">
         {!isFirstStep && !hidePrevious && (

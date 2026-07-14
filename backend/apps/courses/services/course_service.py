@@ -36,6 +36,10 @@ def update_course(course_id, user, validated_data):
         setattr(course, key, value)
     if "title" in validated_data:
         course.slug = slugify(validated_data["title"])
+    # Khi lưu nháp: nếu khóa học đang PUBLISHED, tự động chuyển về DRAFT
+    # để các thay đổi không hiển thị công khai cho đến khi xuất bản lại
+    if course.status == Course.Status.PUBLISHED:
+        course.status = Course.Status.DRAFT
     course.save()
     return course
 

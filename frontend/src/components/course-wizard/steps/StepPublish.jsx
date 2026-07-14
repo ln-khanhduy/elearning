@@ -10,6 +10,7 @@ function StepPublish({
   onGoToStep,
   saving,
   publishing,
+  isEdit,
 }) {
   const requirements = useMemo(() => {
     return [
