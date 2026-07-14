@@ -17,9 +17,12 @@ def _is_cloudinary_configured():
 class SmartMediaCloudinaryStorage:
     """
     Storage thông minh: dùng Cloudinary nếu có config, fallback về local storage.
+    Tự động chọn resource_type dựa trên extension file khi upload và lấy URL.
     """
 
     IMAGE_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg', '.bmp', '.ico'}
+    RAW_EXTENSIONS = {'.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx',
+                      '.zip', '.rar', '.txt', '.csv', '.mp4', '.avi', '.mov'}
 
     def __init__(self):
         self._cloudinary_available = _is_cloudinary_configured()
@@ -60,9 +63,32 @@ class SmartMediaCloudinaryStorage:
         return self._storage.open(name, mode)
 
     def save(self, name, content, max_length=None):
+        if self._cloudinary_available:
+            # Upload với resource_type phù hợp, không phải mặc định 'image'
+            resource_type = self._get_resource_type(name)
+            try:
+                import cloudinary.uploader
+                result = cloudinary.uploader.upload(
+                    content,
+                    public_id=name,
+                    resource_type=resource_type,
+                    type='upload',
+                    overwrite=True,
+                )
+                return result.get('public_id', name)
+            except Exception as e:
+                logger.warning(f"Cloudinary upload error for {name}: {e}")
+                return self._storage.save(name, content, max_length)
         return self._storage.save(name, content, max_length)
 
     def delete(self, name):
+        if self._cloudinary_available:
+            resource_type = self._get_resource_type(name)
+            try:
+                import cloudinary.uploader
+                cloudinary.uploader.destroy(name, resource_type=resource_type)
+            except Exception as e:
+                logger.warning(f"Cloudinary delete error for {name}: {e}")
         return self._storage.delete(name)
 
     def exists(self, name):
