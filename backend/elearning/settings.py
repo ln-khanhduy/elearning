@@ -282,10 +282,10 @@ _cors_origins = [
     'http://localhost:3000',
     'http://127.0.0.1:5173',
     os.getenv('RENDER_EXTERNAL_URL', ''),
-    f'https://{os.getenv("RENDER_EXTERNAL_URL", "")}',
 ]
 for o in _cors_origins:
-    if o and o not in CORS_ALLOWED_ORIGINS:
+    # Chỉ thêm nếu o không rỗng và có scheme hợp lệ (http:// hoặc https://)
+    if o and o.startswith('http') and o not in CORS_ALLOWED_ORIGINS:
         CORS_ALLOWED_ORIGINS.append(o)
 
 # Cho phép tất cả subdomain Vercel bằng regex
