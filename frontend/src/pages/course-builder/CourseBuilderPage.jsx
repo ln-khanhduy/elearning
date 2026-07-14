@@ -589,6 +589,8 @@ export default function CourseBuilderPage({ mode = "create" }) {
                 : s
             )
           );
+          // Cập nhật editingItem để drawer hiển thị dữ liệu mới ngay lập tức
+          setEditingItem((prev) => prev?.id === quizData.id ? { ...prev, ...mergedPayload } : prev);
         }
         toast.success("Đã lưu bài tập.");
       } catch (error) {
