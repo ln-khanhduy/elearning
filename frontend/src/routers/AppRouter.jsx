@@ -69,6 +69,7 @@ function AppRouter() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* ======== PUBLIC ROUTES ======== */}
         <Route element={<PublicLayout />}>
           <Route path="/" element={<Navigate to="/home" replace />} />
           <Route path="/home" element={<Suspense fallback={<PageLoader />}><HomePage /></Suspense>} />
@@ -82,8 +83,12 @@ function AppRouter() {
           <Route path="/register/verify-otp" element={<Suspense fallback={<PageLoader />}><VerifyotpPage /></Suspense>} />
           <Route path="/reset-password" element={<Suspense fallback={<PageLoader />}><ResetPasswordPage /></Suspense>} />
           <Route path="/instructor/apply" element={<Suspense fallback={<PageLoader />}><InstructorApplyPage /></Suspense>} />
+          <Route path="/payment/success" element={<Suspense fallback={<PageLoader />}><SuccessPage /></Suspense>} />
+          <Route path="/payment/cancel" element={<Suspense fallback={<PageLoader />}><CancelPage /></Suspense>} />
           <Route path="*" element={<Suspense fallback={<PageLoader />}><NotFoundPage /></Suspense>} />
         </Route>
+
+        {/* ======== PROTECTED ROUTES ======== */}
         <Route element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
           <Route path="/dashboard" element={<ProtectedRoute allowedPermissions={["admin.dashboard.view"]}><Suspense fallback={<PageLoader />}><AdminDashboardPage /></Suspense></ProtectedRoute>} />
           <Route path="/my-courses" element={<ProtectedRoute allowedPermissions={["student.my_course.view"]}><Suspense fallback={<PageLoader />}><MyCoursesPage /></Suspense></ProtectedRoute>} />
@@ -93,8 +98,6 @@ function AppRouter() {
           <Route path="/courses/:courseId/learn/:lessonId" element={<ProtectedRoute><Suspense fallback={<PageLoader />}><LearningPage /></Suspense></ProtectedRoute>} />
           <Route path="/courses/:courseId/qa" element={<ProtectedRoute allowedPermissions={["course.comment.create"]}><Suspense fallback={<PageLoader />}><StudentCourseQAPage /></Suspense></ProtectedRoute>} />
           <Route path="/courses/:courseId/checkout" element={<ProtectedRoute allowedPermissions={["student.course.buy"]}><Suspense fallback={<PageLoader />}><CheckoutPage /></Suspense></ProtectedRoute>} />
-          <Route path="/payment/success" element={<Suspense fallback={<PageLoader />}><SuccessPage /></Suspense>} />
-          <Route path="/payment/cancel" element={<Suspense fallback={<PageLoader />}><CancelPage /></Suspense>} />
           <Route path="/admin/courses" element={<ProtectedRoute allowedPermissions={["course.course.view"]}><Suspense fallback={<PageLoader />}><AdminCourseListPage /></Suspense></ProtectedRoute>} />
           <Route path="/admin/courses/create" element={<ProtectedRoute allowedPermissions={["course.course.create"]}><Suspense fallback={<PageLoader />}><CourseBuilderPage mode="create" /></Suspense></ProtectedRoute>} />
           <Route path="/admin/courses/:courseId/edit" element={<ProtectedRoute allowedPermissions={["course.course.update"]}><Suspense fallback={<PageLoader />}><CourseBuilderPage mode="edit" /></Suspense></ProtectedRoute>} />
