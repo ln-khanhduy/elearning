@@ -18,6 +18,8 @@ class SmartMediaCloudinaryStorage:
     """
     Storage thông minh: dùng Cloudinary nếu có config, fallback về local storage.
     Tự động chọn resource_type dựa trên extension file khi upload và lấy URL.
+    Khi upload lỗi, fallback về local storage; khi lấy URL, ưu tiên cloudinary,
+    nếu file tồn tại local thì serve local (tránh 404).
     """
 
     IMAGE_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg', '.bmp', '.ico'}
@@ -53,12 +55,6 @@ class SmartMediaCloudinaryStorage:
                 # Nếu file tồn tại ở local (fallback từ Cloudinary upload lỗi), serve local
                 if self._local_storage.exists(name):
                     return self._local_storage.url(name)
-
-                # Kiểm tra resource có thực sự tồn tại trên Cloudinary không
-                if not self._exists(name):
-                    logger.warning(f"Cloudinary resource not found: {name}, returning None")
-                    return None
-
                 resource_type = self._get_resource_type(name)
                 url, _ = self._cloudinary_module.utils.cloudinary_url(
                     name, resource_type=resource_type, type='upload', secure=True
@@ -66,18 +62,15 @@ class SmartMediaCloudinaryStorage:
                 return url
             except Exception as e:
                 logger.warning(f"Cloudinary URL error for {name}: {e}")
-                if self._local_storage.exists(name):
-                    return self._local_storage.url(name)
-                return None
+                return self._storage.url(name)
         return self._storage.url(name)
 
     def open(self, name, mode='rb'):
-        if self._cloudinary_available and self._local_storage.exists(name):
-            return self._local_storage.open(name, mode)
         return self._storage.open(name, mode)
 
     def save(self, name, content, max_length=None):
         if self._cloudinary_available:
+            # Upload với resource_type phù hợp, không phải mặc định 'image'
             resource_type = self._get_resource_type(name)
             try:
                 import cloudinary.uploader
@@ -105,25 +98,12 @@ class SmartMediaCloudinaryStorage:
         return self._local_storage.delete(name)
 
     def exists(self, name):
-        # Nếu file tồn tại local → chắc chắn tồn tại
-        if self._local_storage.exists(name):
-            return True
-        # Nếu Cloudinary available, kiểm tra qua API
-        if self._cloudinary_available and self._cloudinary_module:
-            try:
-                resource_type = self._get_resource_type(name)
-                self._cloudinary_module.api.resource(name, resource_type=resource_type)
-                return True
-            except Exception:
-                return False
         return self._storage.exists(name)
 
     def listdir(self, path):
         return self._local_storage.listdir(path)
 
     def size(self, name):
-        if self._cloudinary_available and self._local_storage.exists(name):
-            return self._local_storage.size(name)
         return self._storage.size(name)
 
     def get_accessed_time(self, name):
