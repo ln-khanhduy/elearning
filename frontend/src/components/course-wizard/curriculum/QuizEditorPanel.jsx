@@ -25,11 +25,12 @@ function QuizEditorPanel({ quiz, sectionId, onClose, onSave, saving, onImportQue
     if (!quiz) return;
     const firstQuestion = quiz.questions?.[0];
     const promptValue = quiz.prompt || firstQuestion?.prompt || "";
+    const correctAnswerValue = quiz.correct_text_answer || firstQuestion?.correct_text_answer || "";
     setForm({
       title: quiz.title || "", description: quiz.description || "",
       time_limit_minutes: quiz.time_limit_minutes || "", passing_score: quiz.passing_score || "",
       question_type: quiz.quiz_type || quiz.question_type || "MCQ",
-      prompt: promptValue, correct_text_answer: firstQuestion?.correct_text_answer || "",
+      prompt: promptValue, correct_text_answer: correctAnswerValue,
     });
     setDirty(false); // Reset cờ dirty vì form vừa đồng bộ với dữ liệu gốc
   }, [quiz]);
