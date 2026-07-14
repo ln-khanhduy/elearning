@@ -567,6 +567,9 @@ export default function CourseBuilderPage({ mode = "create" }) {
             }
           }
 
+          // Giữ lại prompt và correct_text_answer để hiển thị khi mở lại quiz
+          const mergedPayload = { ...payload, prompt, correct_text_answer: correctTextAnswer };
+
           setCurriculum((prev) =>
             prev.map((s) =>
               s.id === quizData.section_id
@@ -577,7 +580,7 @@ export default function CourseBuilderPage({ mode = "create" }) {
                         ? {
                             ...l,
                             quizzes: (l.quizzes || []).map((q) =>
-                              q.id === quizData.id ? { ...q, ...payload } : q
+                              q.id === quizData.id ? { ...q, ...mergedPayload } : q
                             ),
                           }
                         : l
