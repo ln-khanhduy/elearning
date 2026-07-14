@@ -129,6 +129,46 @@
 }
 
 
+/* Wishlist + Cart actions */
+.progress-card-actions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.progress-card-action-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border: 1.5px solid var(--course-border, #e2e8f0);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--course-text-muted, #64748b);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.progress-card-action-btn:hover:not(:disabled) {
+  border-color: var(--course-primary, #0f3d75);
+  color: var(--course-primary, #0f3d75);
+  background: rgba(15, 61, 117, 0.04);
+}
+
+.progress-card-action-btn.active {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.progress-card-action-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 /* Info items */
 .progress-card-info {
   display: flex;

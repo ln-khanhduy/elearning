@@ -1,5 +1,5 @@
 import { Link, NavLink, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import logoSrc from "../../img/logo.png";
 import { logoutApi } from "../../api/authAPI";
 import { useUser } from "../../context/UserContext";
@@ -7,8 +7,55 @@ import NotificationBell from "../notification/NotificationBell";
 
 function Header({ onToggleSidebar }) {
   const [openMenu, setOpenMenu] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showMobileSearch, setShowMobileSearch] = useState(false);
+  const [wishlistCount, setWishlistCount] = useState(0);
+  const [cartCount, setCartCount] = useState(0);
   const navigate = useNavigate();
   const { user, isAuthenticated, loading, clearUserSession } = useUser();
+  const searchTimeoutRef = useRef(null);
+  const mobileSearchInputRef = useRef(null);
+
+  const refreshWishlistCount = useCallback(() => {
+    import("../../api/wishlistAPI").then(({ getWishlistCountApi }) => {
+      getWishlistCountApi().then((res) => {
+        setWishlistCount(res?.data?.count ?? 0);
+      }).catch(() => {});
+    });
+  }, []);
+
+  const refreshCartCount = useCallback(() => {
+    import("../../api/cartAPI").then(({ getCartApi }) => {
+      getCartApi().then((res) => {
+        const data = res?.data || res || {};
+        setCartCount(data?.item_count || data?.items?.length || 0);
+      }).catch(() => {});
+    });
+  }, []);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      refreshWishlistCount();
+      refreshCartCount();
+    }
+  }, [isAuthenticated, refreshWishlistCount, refreshCartCount]);
+
+  useEffect(() => {
+    const handleWishlistChange = () => refreshWishlistCount();
+    const handleCartChange = () => refreshCartCount();
+    window.addEventListener("wishlist-change", handleWishlistChange);
+    window.addEventListener("cart-change", handleCartChange);
+    return () => {
+      window.removeEventListener("wishlist-change", handleWishlistChange);
+      window.removeEventListener("cart-change", handleCartChange);
+    };
+  }, [refreshWishlistCount, refreshCartCount]);
+
+  useEffect(() => {
+    if (showMobileSearch && mobileSearchInputRef.current) {
+      mobileSearchInputRef.current.focus();
+    }
+  }, [showMobileSearch]);
 
   const handleLogout = async () => {
     try {
@@ -20,6 +67,29 @@ function Header({ onToggleSidebar }) {
       setOpenMenu(false);
       navigate("/login", { replace: true });
     }
+  };
+
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    const q = searchQuery.trim();
+    if (q) {
+      navigate(`/courses?q=${encodeURIComponent(q)}`);
+    } else {
+      navigate("/courses");
+    }
+    setShowMobileSearch(false);
+  };
+
+  const handleSearchChange = (value) => {
+    setSearchQuery(value);
+    if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+    searchTimeoutRef.current = setTimeout(() => {
+      const trimmed = value.trim();
+      if (trimmed) {
+        navigate(`/courses?q=${encodeURIComponent(trimmed)}`);
+        setShowMobileSearch(false);
+      }
+    }, 400);
   };
 
   return (
@@ -36,21 +106,53 @@ function Header({ onToggleSidebar }) {
           <nav className="nav-menu d-none d-lg-flex">
             <NavLink to="/home" className={({ isActive }) => isActive ? "active" : ""}>Trang chủ</NavLink>
             <NavLink to="/courses" className={({ isActive }) => isActive ? "active" : ""}>Khóa học</NavLink>
+            {isAuthenticated && (
+              <NavLink to="/my-courses" className={({ isActive }) => isActive ? "active" : ""}>Khóa học của tôi</NavLink>
+            )}
+            {isAuthenticated && (
+              <NavLink to="/profile" className={({ isActive }) => isActive ? "active" : ""}>Hồ sơ</NavLink>
+            )}
             <NavLink to="/contact" className={({ isActive }) => isActive ? "active" : ""}>Liên hệ</NavLink>
-            <NavLink to="/profile" className={({ isActive }) => isActive ? "active" : ""}>Hồ sơ</NavLink>
           </nav>
         </div>
         <div className="header-right">
           {isAuthenticated && !loading && (
-            <div className="search-box d-none d-md-flex">
-              <i className="bi bi-search"></i>
-              <input type="text" placeholder="Tìm khóa học..." />
-            </div>
+            <>
+              {/* Desktop search */}
+              <form className="search-box d-none d-md-flex" onSubmit={handleSearchSubmit}>
+                <button type="submit" className="search-submit-btn" aria-label="Tìm kiếm">
+                  <i className="bi bi-search"></i>
+                </button>
+                <input
+                  type="text"
+                  placeholder="Tìm khóa học..."
+                  value={searchQuery}
+                  onChange={(e) => handleSearchChange(e.target.value)}
+                />
+              </form>
+              {/* Mobile search toggle */}
+              <button type="button" className="header-icon-link d-md-none" onClick={() => setShowMobileSearch(true)} title="Tìm kiếm">
+                <i className="bi bi-search"></i>
+              </button>
+            </>
           )}
           {loading ? (
             <div className="header-auth-loading"></div>
           ) : isAuthenticated ? (
             <div className="user-actions">
+              {user?.role !== "SUPERADMIN" && (
+                <Link to="/my-courses" className="header-icon-link d-none d-md-inline" title="Khóa học của tôi">
+                  <i className="bi bi-journal-bookmark"></i>
+                </Link>
+              )}
+              <Link to="/my-wishlist" className="header-icon-link position-relative" title="Yêu thích">
+                <i className="bi bi-heart"></i>
+                {wishlistCount > 0 && <span className="wishlist-badge">{wishlistCount > 99 ? "99+" : wishlistCount}</span>}
+              </Link>
+              <Link to="/cart" className="header-icon-link position-relative" title="Giỏ hàng">
+                <i className="bi bi-cart3"></i>
+                {cartCount > 0 && <span className="wishlist-badge">{cartCount > 99 ? "99+" : cartCount}</span>}
+              </Link>
               <NotificationBell />
               <span className="user-email d-none d-md-inline">{user?.email}</span>
               <div className="user-menu">
@@ -68,8 +170,15 @@ function Header({ onToggleSidebar }) {
                         <i className="bi bi-grid me-2"></i>Dashboard
                       </Link>
                     )}
-                    <Link to="/profile" className="user-dropdown-item" onClick={() => setOpenMenu(false)}>Hồ sơ</Link>
-                    <button type="button" className="user-dropdown-item logout-item" onClick={handleLogout}>Đăng xuất</button>
+                    <Link to="/my-learning" className="user-dropdown-item" onClick={() => setOpenMenu(false)}>
+                      <i className="bi bi-play-circle me-2"></i>Tiếp tục học
+                    </Link>
+                    <Link to="/profile" className="user-dropdown-item" onClick={() => setOpenMenu(false)}>
+                      <i className="bi bi-person-circle me-2"></i>Hồ sơ
+                    </Link>
+                    <button type="button" className="user-dropdown-item logout-item" onClick={handleLogout}>
+                      <i className="bi bi-box-arrow-right me-2"></i>Đăng xuất
+                    </button>
                   </div>
                 )}
               </div>
@@ -84,6 +193,26 @@ function Header({ onToggleSidebar }) {
           )}
         </div>
       </div>
+
+      {/* Mobile search overlay */}
+      {showMobileSearch && (
+        <div className="mobile-search-overlay">
+          <div className="mobile-search-bar">
+            <i className="bi bi-search"></i>
+            <input
+              ref={mobileSearchInputRef}
+              type="text"
+              placeholder="Tìm khóa học..."
+              value={searchQuery}
+              onChange={(e) => handleSearchChange(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") handleSearchSubmit(e); }}
+            />
+            <button type="button" className="mobile-search-close" onClick={() => { setShowMobileSearch(false); setSearchQuery(""); }}>
+              <i className="bi bi-x-lg"></i>
+            </button>
+          </div>
+        </div>
+      )}
     </header>
   );
 }

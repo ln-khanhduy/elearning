@@ -59,6 +59,8 @@ INSTALLED_APPS = [
     'apps.users',
     'apps.certificates',
     'apps.support',
+    'apps.promotions',
+    'apps.cart',
     
 ]
 AUTH_USER_MODEL = 'users.User'
@@ -108,20 +110,55 @@ CHANNEL_LAYERS = {
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 # DATABASES configuration
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('DB_NAME'),
-        'USER': os.getenv('DB_USER'),
-        'PASSWORD': os.getenv('DB_PASSWORD'),
-        'HOST': os.getenv('DB_HOST'),
-        'PORT': os.getenv('DB_PORT'),
-        'OPTIONS': {
-            'sslmode': 'require',
-        },
+# Render cung cấp DATABASE_URL, fallback sang cấu hình tay
+import re
+
+_DATABASE_URL = os.getenv('DATABASE_URL')
+if _DATABASE_URL:
+    # Parse DATABASE_URL từ Render dạng: postgresql://user:pass@host:port/dbname
+    match = re.match(r'postgres(?:ql)?://(.+):(.+)@(.+):(\d+)/(.+)', _DATABASE_URL)
+    if match:
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.postgresql',
+                'NAME': match.group(5),
+                'USER': match.group(1),
+                'PASSWORD': match.group(2),
+                'HOST': match.group(3),
+                'PORT': match.group(4),
+                'OPTIONS': {
+                    'sslmode': 'require',
+                },
+            }
+        }
+    else:
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.postgresql',
+                'NAME': os.getenv('DB_NAME'),
+                'USER': os.getenv('DB_USER'),
+                'PASSWORD': os.getenv('DB_PASSWORD'),
+                'HOST': os.getenv('DB_HOST'),
+                'PORT': os.getenv('DB_PORT'),
+                'OPTIONS': {
+                    'sslmode': 'require',
+                },
+            }
+        }
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.getenv('DB_NAME'),
+            'USER': os.getenv('DB_USER'),
+            'PASSWORD': os.getenv('DB_PASSWORD'),
+            'HOST': os.getenv('DB_HOST'),
+            'PORT': os.getenv('DB_PORT'),
+            'OPTIONS': {
+                'sslmode': 'require',
+            },
+        }
     }
-    
-}
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
 # Password validation configuration

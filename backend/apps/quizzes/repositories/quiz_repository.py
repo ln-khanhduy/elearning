@@ -78,6 +78,17 @@ def update(quiz_id, data):
     return quiz
 
 
+def count_attempts_in_range(student_id, course_id, start_date, end_date):
+    """Đếm số quiz attempt trong khoảng thời gian (dùng cho weekly digest)."""
+    from django.utils import timezone
+    return QuizAttempt.objects.filter(
+        student_id=student_id,
+        quiz__lesson__chapter__course_id=course_id,
+        submitted_at__gte=start_date,
+        submitted_at__lte=end_date,
+    ).count()
+
+
 def delete(quiz_id):
     quiz = get_by_id(quiz_id)
     quiz.delete()

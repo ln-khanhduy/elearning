@@ -20,27 +20,37 @@ from django.conf.urls.static import static
 from django.urls import include, path
 
 urlpatterns = [
+    # Health check cho Render (ping giữ service thức)
+    path('api/health/', include('apps.common.urls')),
+    
+    # Auth & Users
     path('api/auth/', include('apps.users.urls.auth_urls')),
     path("api/users/", include("apps.users.urls.user_urls")),
+    
+    # Courses
     path("api/courses/", include("apps.courses.urls")),
     path("api/lessons/", include("apps.lessons.urls")),
-    path("api/quizzes/", include("apps.quizzes.urls")),
-    path("api/reviews/", include("apps.reviews.urls")),
     path("api/enrollments/", include("apps.enrollments.urls")),
     path("api/learning/", include("apps.enrollments.urls")),
+    
+    # Quizzes & Reviews
+    path("api/quizzes/", include("apps.quizzes.urls")),
+    path("api/reviews/", include("apps.reviews.urls")),
 
-    # Payments
+    # Payments & Certificates
     path("api/payments/", include("apps.payments.urls")),
-
     path("api/certificates/", include("apps.certificates.urls")),
 
+    # Admin & System (bao gồm automation trigger)
     path("api/admin/", include("apps.system.urls")),
 
-    # Support requests
+    # Support & Notifications
     path("api/support/", include("apps.support.urls")),
-
-    # Notifications
     path("api/notifications/", include("apps.notifications.urls")),
+
+    # Promotions & Cart
+    path("api/promotions/", include("apps.promotions.urls")),
+    path("api/cart/", include("apps.cart.urls")),
 ]
 
 

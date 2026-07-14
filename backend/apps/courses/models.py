@@ -70,6 +70,32 @@ class Course(models.Model):
         ]
 
 
+class WishlistItem(models.Model):
+    """
+    Mục yêu thích - lưu khóa học mà học viên yêu thích để mua sau.
+    Mỗi học viên có thể yêu thích nhiều khóa học.
+    """
+    student = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='wishlist_items'
+    )
+    course = models.ForeignKey(
+        Course,
+        on_delete=models.CASCADE,
+        related_name='wishlisted_by'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'wishlist_item'
+        unique_together = ('student', 'course')
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.student.email} - {self.course.title}"
+
+
 class CourseQuestion(models.Model):
     """
     Câu hỏi Q&A của học viên trong khóa học.

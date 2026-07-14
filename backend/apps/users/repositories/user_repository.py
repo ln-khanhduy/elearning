@@ -47,6 +47,11 @@ def update_last_login(user):
     user.save(update_fields=["last_login"])
 
 
+def get_users_by_role(role_code):
+    """Lấy tất cả user theo role code."""
+    return User.objects.filter(role__code=role_code).select_related('role').all()
+
+
 def get_managed_users(search=None, role=None, status=None, page=1, page_size=10):
     qs = User.objects.select_related("role").filter(role__code__in=["STUDENT", "INSTRUCTOR"])
     if role and role.upper() in ["STUDENT", "INSTRUCTOR"]:

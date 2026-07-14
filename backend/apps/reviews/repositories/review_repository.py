@@ -68,6 +68,16 @@ def get_course_stats(course_id):
         "total_count": stats["total_count"] or 0,
         "distribution": dist_map,
     }
+def get_by_student_and_course(student_id, course_id):
+    """Lấy review của học viên cho khóa học (dùng cho review reminder)."""
+    return Review.objects.filter(
+        user_id=student_id,
+        course_id=course_id,
+        parent__isnull=True,
+        status__in=[ReviewModel.Status.PUBLISHED, ReviewModel.Status.HIDDEN],
+    ).first()
+
+
 def check_user_reviewed(user_id, course_id):
     """Kiểm tra user đã review khóa học chưa (trả về review nếu có)."""
     return Review.objects.filter(

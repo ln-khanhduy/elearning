@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
+import { toast } from "react-toastify";
 import InputField from "../../components/common/InputField";
 import { Link, useNavigate } from "react-router-dom";
 import { resetPassword } from "../../services/authService";
@@ -31,7 +32,7 @@ function ResetPasswordPage() {
 
     try {
       await resetPassword(token, password, confirmPassword);
-      alert('Mật khẩu đã được cập nhật. Vui lòng đăng nhập lại.');
+      toast.success('Mật khẩu đã được cập nhật. Vui lòng đăng nhập lại.');
       navigate('/login');
     } catch (err) {
       setError(err.message);

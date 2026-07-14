@@ -7,6 +7,7 @@ import {
   verifyRegisterOtp,
 } from "../../services/authService";
 import { useUser } from "../../context/UserContext";
+import { toast } from "react-toastify";
 
 function VerifyOtpPage() {
   const [otp, setOtp] = useState(new Array(6).fill(""));
@@ -98,7 +99,7 @@ const handleResend = async () => {
 
     setOtp(new Array(6).fill(""));
     inputRefs.current[0]?.focus();
-    alert("Mã OTP mới đã được gửi.");
+    toast.success("Mã OTP mới đã được gửi.");
   } catch (err) {
     setError(err.message);
   } finally {

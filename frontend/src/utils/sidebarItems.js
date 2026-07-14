@@ -3,7 +3,10 @@ export const sidebarItems = [
 
   { type: "group", label: "Quản lý học tập" },
   { type: "item", label: "Khóa học", path: "/courses", icon: "bi-mortarboard", requiredPermissions: ["student.course.search"] },
+  { type: "item", label: "Trung tâm học tập", path: "/my-learning", icon: "bi-play-circle" },
   { type: "item", label: "Khóa học của tôi", path: "/my-courses", icon: "bi-journal-bookmark", requiredPermissions: ["student.my_course.view"] },
+  { type: "item", label: "Yêu thích", path: "/my-wishlist", icon: "bi-heart" },
+  { type: "item", label: "Giỏ hàng", path: "/cart", icon: "bi-cart3" },
   { type: "item", label: "Chứng chỉ của tôi", path: "/my-certificates", icon: "bi-award" },
 
   // Admin courses
@@ -19,6 +22,7 @@ export const sidebarItems = [
   { type: "item", label: "Hồ sơ đăng ký giảng viên", path: "/admin/register-instructor", icon: "bi-file-earmark-person", requiredPermissions: ["user.instructor.view"] },
 
   { type: "group", label: "Tài chính" },
+  { type: "item", label: "Mã giảm giá", path: "/admin/coupons", icon: "bi-ticket-perforated", requiredPermissions: ["finance.coupon.view"] },
   { type: "item", label: "Doanh thu", path: "/finance/revenue", icon: "bi-cash-stack", requiredPermissions: ["finance.finance.revenue_view"] },
   { type: "item", label: "Giao dịch", path: "/finance/transactions", icon: "bi-receipt", requiredPermissions: ["finance.finance.revenue_view"] },
   { type: "item", label: "Báo cáo tài chính", path: "/finance/reports", icon: "bi-file-earmark-bar-graph", requiredPermissions: ["finance.finance.report_export"] },

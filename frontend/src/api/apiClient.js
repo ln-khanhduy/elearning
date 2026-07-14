@@ -133,6 +133,11 @@ apiClient.interceptors.response.use(
         return apiClient(originalRequest);
       } catch (refreshError) {
         clearAuthSessionData();
+        // Redirect to login với return URL để sau login quay lại
+        const currentPath = window.location.pathname;
+        if (currentPath !== "/login" && currentPath !== "/register") {
+          window.location.href = `/login?redirect=${encodeURIComponent(currentPath)}`;
+        }
         return Promise.reject(refreshError);
       }
     }

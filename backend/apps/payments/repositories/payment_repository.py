@@ -70,6 +70,14 @@ def get_held_transactions_expired():
         hold_time__lte=timezone.now()
     )
 
+def get_pending_transactions():
+    """Lấy tất cả transaction PENDING (chưa thanh toán) để xử lý abandoned cart."""
+    from apps.payments.models import PaymentTransaction as PT
+    return PaymentTransaction.objects.filter(
+        status=PT.Status.PENDING
+    ).select_related('student', 'course').order_by('created_at')
+
+
 def get_eligible_payouts():
     """Lấy transaction HOLD đã hết hạn VÀ có giảng viên được phân công."""
     return PaymentTransaction.objects.filter(

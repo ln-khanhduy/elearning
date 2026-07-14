@@ -46,8 +46,13 @@
 @import url('./admin-reviews.css');
 @import url('./support.css');
 @import url('./notification/notification.css');
+@import url('./my-learning.css');
 @import url('./student/qa-page.css');
 @import url('./contact.css');
+@import url('./wishlist-page.css');
+@import url('./cart-page.css');
+@import url('./admin-coupon.css');
+@import url('./not-found.css');
 @import url('./finance/finance-revenue.css');
 
 /* ===== CSS VARIABLES ===== */
@@ -139,4 +144,38 @@ a {
   max-width: 420px;
   padding: 24px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+}
+
+/* ===== ERROR BOUNDARY ===== */
+.error-boundary .btn-primary {
+  padding: 10px 24px;
+  background: var(--primary);
+  border: 1.5px solid var(--primary);
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.error-boundary .btn-primary:hover {
+  background: #0a2d55;
+  border-color: #0a2d55;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(15, 61, 117, 0.2);
+}
+
+.error-boundary .btn-outline-secondary {
+  padding: 10px 24px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #334155;
+  transition: all 0.2s;
+}
+
+.error-boundary .btn-outline-secondary:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+  background: rgba(15, 61, 117, 0.04);
 }

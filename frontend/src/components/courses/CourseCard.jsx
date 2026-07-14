@@ -1,9 +1,13 @@
 import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { toast } from "react-toastify";
+import { addToWishlistApi, removeFromWishlistApi } from "../../api/wishlistAPI";
+import { addToCartApi, removeFromCartApi } from "../../api/cartAPI";
+import { useUser } from "../../context/UserContext";
 
 /**
  * Card hiển thị thông tin khóa học
- * Bao gồm: thumbnail, title, instructor (avatar + tên), rating, level, category, price
- * Có fallback cho các trường thiếu dữ liệu
+ * Bao gồm: thumbnail, title, instructor (avatar + tên), rating, level, category, price, wishlist, cart
  */
 function CourseCard({ course }) {
   const {
@@ -18,7 +22,12 @@ function CourseCard({ course }) {
     rating,
     student_count,
     duration,
+    is_wishlisted: initialWishlisted,
   } = course;
+  const { isAuthenticated } = useUser();
+  const [wishlisted, setWishlisted] = useState(!!initialWishlisted);
+  const [wishlistLoading, setWishlistLoading] = useState(false);
+  const [cartLoading, setCartLoading] = useState(false);
 
   const instructor_name = assigned_instructor_name;
   const instructor_avatar = assigned_instructor_avatar;
@@ -43,6 +52,72 @@ function CourseCard({ course }) {
 
   // Get first letter for avatar fallback
   const avatarLetter = (instructor_name || "G")[0].toUpperCase();
+
+  const handleToggleWishlist = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!isAuthenticated) {
+      toast.info("Vui lòng đăng nhập để sử dụng tính năng này.");
+      return;
+    }
+    if (wishlistLoading) return;
+    setWishlistLoading(true);
+    try {
+      if (wishlisted) {
+        await removeFromWishlistApi(id);
+        setWishlisted(false);
+        toast.success("Đã xóa khỏi danh sách yêu thích.");
+      } else {
+        await addToWishlistApi(id);
+        setWishlisted(true);
+        toast.success("Đã thêm vào danh sách yêu thích.", {
+          action: {
+            text: "Hoàn tác",
+            onClick: () => {
+              removeFromWishlistApi(id).then(() => {
+                setWishlisted(false);
+                window.dispatchEvent(new Event("wishlist-change"));
+              }).catch(() => {});
+            },
+          },
+        });
+      }
+      window.dispatchEvent(new Event("wishlist-change"));
+    } catch (err) {
+      toast.error("Không thể thao tác. Vui lòng thử lại.");
+    } finally {
+      setWishlistLoading(false);
+    }
+  };
+
+  const handleAddToCart = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!isAuthenticated) {
+      toast.info("Vui lòng đăng nhập để sử dụng tính năng này.");
+      return;
+    }
+    if (cartLoading) return;
+    setCartLoading(true);
+    try {
+      await addToCartApi(id);
+      window.dispatchEvent(new Event("cart-change"));
+      toast.success("Đã thêm vào giỏ hàng.", {
+        action: {
+          text: "Hoàn tác",
+          onClick: () => {
+            removeFromCartApi(id).then(() => {
+              window.dispatchEvent(new Event("cart-change"));
+            }).catch(() => {});
+          },
+        },
+      });
+    } catch (err) {
+      toast.error(err.message || "Không thể thêm vào giỏ hàng.");
+    } finally {
+      setCartLoading(false);
+    }
+  };
 
   return (
     <div className="course-card">
@@ -70,6 +145,24 @@ function CourseCard({ course }) {
           {category_name && (
             <span className="course-card-badge">{category_name}</span>
           )}
+          {/* Wishlist button */}
+          <button
+            className={`course-card-wishlist-btn ${wishlisted ? "active" : ""}`}
+            onClick={handleToggleWishlist}
+            disabled={wishlistLoading}
+            title={wishlisted ? "Bỏ yêu thích" : "Thêm vào yêu thích"}
+          >
+            <i className={`bi ${wishlistLoading ? "bi-arrow-repeat spin" : wishlisted ? "bi-heart-fill" : "bi-heart"}`}></i>
+          </button>
+          {/* Cart button */}
+          <button
+            className="course-card-cart-btn"
+            onClick={handleAddToCart}
+            disabled={cartLoading}
+            title="Thêm vào giỏ hàng"
+          >
+            <i className={`bi ${cartLoading ? "bi-arrow-repeat spin" : "bi-cart-plus"}`}></i>
+          </button>
         </div>
       </Link>
 

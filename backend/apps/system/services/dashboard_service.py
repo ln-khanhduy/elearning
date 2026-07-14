@@ -71,6 +71,8 @@ def get_dashboard_data(year=None):
         })
 
     for application in dashboard_repository.get_recent_instructor_applications():
+        if not application.user:
+            continue
         recent_activities.append({
             "time": application.created_at,
             "event": "INSTRUCTOR_APPLICATION",

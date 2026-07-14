@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import PublicLayout from "../components/layout/PublicLayout";
 import MainLayout from "../components/layout/MainLayout"
 import ProtectedRoute from "./ProtectedRoute";
+import ErrorBoundary from "../components/common/ErrorBoundary";
 
 // Lazy load all pages
 const RegisterPage = lazy(() => import("../pages/auth/RegisterPage"));
@@ -28,6 +29,7 @@ const CourseBuilderPage = lazy(() => import("../pages/course-builder/CourseBuild
 const AdminCourseAssignPage = lazy(() => import("../pages/admin/AdminCourseAssignPage"));
 const AdminCategoryPage = lazy(() => import("../pages/admin/AdminCategoryPage"));
 const MyCoursesPage = lazy(() => import("../pages/student/MyCoursesPage"));
+const MyLearningPage = lazy(() => import("../pages/student/MyLearningPage"));
 const CertificatesPage = lazy(() => import("../pages/student/CertificatesPage"));
 const StudentCourseQAPage = lazy(() => import("../pages/student/StudentCourseQAPage"));
 const LearningPage = lazy(() => import("../pages/learning/LearningPage"));
@@ -48,6 +50,10 @@ const FinancePayoutPage = lazy(() => import("../pages/admin/FinancePayoutPage"))
 const SupportPage = lazy(() => import("../pages/support/SupportPage"));
 const AdminRequestProcessingPage = lazy(() => import("../pages/admin/AdminRequestProcessingPage"));
 const NotificationsPage = lazy(() => import("../pages/notification/NotificationsPage"));
+const WishlistPage = lazy(() => import("../pages/student/WishlistPage"));
+const CartPage = lazy(() => import("../pages/public/payment/CartPage"));
+const AdminCouponPage = lazy(() => import("../pages/admin/AdminCouponPage"));
+const NotFoundPage = lazy(() => import("../pages/public/NotFoundPage"));
 
 function PageLoader() {
   return (
@@ -66,8 +72,8 @@ function AppRouter() {
         <Route element={<PublicLayout />}>
           <Route path="/" element={<Navigate to="/home" replace />} />
           <Route path="/home" element={<Suspense fallback={<PageLoader />}><HomePage /></Suspense>} />
-          <Route path="/courses" element={<Suspense fallback={<PageLoader />}><CoursesPage /></Suspense>} />
-          <Route path="/courses/:courseId" element={<Suspense fallback={<PageLoader />}><CourseDetailPage /></Suspense>} />
+          <Route path="/courses" element={<Suspense fallback={<PageLoader />}><ErrorBoundary><CoursesPage /></ErrorBoundary></Suspense>} />
+          <Route path="/courses/:courseId" element={<Suspense fallback={<PageLoader />}><ErrorBoundary><CourseDetailPage /></ErrorBoundary></Suspense>} />
           <Route path="/contact" element={<Suspense fallback={<PageLoader />}><ContactPage /></Suspense>} />
           <Route path="/register" element={<Suspense fallback={<PageLoader />}><RegisterPage /></Suspense>} />
           <Route path="/login" element={<Suspense fallback={<PageLoader />}><LoginPage /></Suspense>} />
@@ -76,10 +82,12 @@ function AppRouter() {
           <Route path="/register/verify-otp" element={<Suspense fallback={<PageLoader />}><VerifyotpPage /></Suspense>} />
           <Route path="/reset-password" element={<Suspense fallback={<PageLoader />}><ResetPasswordPage /></Suspense>} />
           <Route path="/instructor/apply" element={<Suspense fallback={<PageLoader />}><InstructorApplyPage /></Suspense>} />
+          <Route path="*" element={<Suspense fallback={<PageLoader />}><NotFoundPage /></Suspense>} />
         </Route>
         <Route element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
           <Route path="/dashboard" element={<ProtectedRoute allowedPermissions={["admin.dashboard.view"]}><Suspense fallback={<PageLoader />}><AdminDashboardPage /></Suspense></ProtectedRoute>} />
           <Route path="/my-courses" element={<ProtectedRoute allowedPermissions={["student.my_course.view"]}><Suspense fallback={<PageLoader />}><MyCoursesPage /></Suspense></ProtectedRoute>} />
+          <Route path="/my-learning" element={<ProtectedRoute><Suspense fallback={<PageLoader />}><MyLearningPage /></Suspense></ProtectedRoute>} />
           <Route path="/my-certificates" element={<ProtectedRoute><Suspense fallback={<PageLoader />}><CertificatesPage /></Suspense></ProtectedRoute>} />
           <Route path="/courses/:courseId/learn" element={<ProtectedRoute><Suspense fallback={<PageLoader />}><LearningPage /></Suspense></ProtectedRoute>} />
           <Route path="/courses/:courseId/learn/:lessonId" element={<ProtectedRoute><Suspense fallback={<PageLoader />}><LearningPage /></Suspense></ProtectedRoute>} />
@@ -114,6 +122,9 @@ function AppRouter() {
           <Route path="/admin/requests" element={<ProtectedRoute allowedPermissions={["support.request.process"]}><Suspense fallback={<PageLoader />}><AdminRequestProcessingPage /></Suspense></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute allowedPermissions={["student.profile.manage"]}><Suspense fallback={<PageLoader />}><ProfilePage /></Suspense></ProtectedRoute>} />
           <Route path="/notifications" element={<ProtectedRoute><Suspense fallback={<PageLoader />}><NotificationsPage /></Suspense></ProtectedRoute>} />
+          <Route path="/my-wishlist" element={<ProtectedRoute><Suspense fallback={<PageLoader />}><WishlistPage /></Suspense></ProtectedRoute>} />
+          <Route path="/cart" element={<ProtectedRoute><Suspense fallback={<PageLoader />}><CartPage /></Suspense></ProtectedRoute>} />
+          <Route path="/admin/coupons" element={<ProtectedRoute allowedPermissions={["finance.coupon.view"]}><Suspense fallback={<PageLoader />}><AdminCouponPage /></Suspense></ProtectedRoute>} />
         </Route>
       </Routes>
     </BrowserRouter>

@@ -1,4 +1,8 @@
 from django.urls import path
+from apps.courses.views_wishlist import (
+    WishlistListAPIView, WishlistAddAPIView, WishlistRemoveAPIView,
+    WishlistCheckAPIView, WishlistCountAPIView,
+)
 from apps.courses.views import (
     # Public
     CourseListAPIView, CourseDetailAPIView,
@@ -67,4 +71,11 @@ urlpatterns = [
     path("categories/create/", CategoryCreateAPIView.as_view(), name="category-create"),
     path("categories/<int:category_id>/update/", CategoryUpdateAPIView.as_view(), name="category-update"),
     path("categories/<int:category_id>/delete/", CategoryDeleteAPIView.as_view(), name="category-delete"),
+
+    # ==================== WISHLIST ====================
+    path("wishlist/", WishlistListAPIView.as_view(), name="wishlist-list"),
+    path("wishlist/count/", WishlistCountAPIView.as_view(), name="wishlist-count"),
+    path("wishlist/<int:course_id>/add/", WishlistAddAPIView.as_view(), name="wishlist-add"),
+    path("wishlist/<int:course_id>/remove/", WishlistRemoveAPIView.as_view(), name="wishlist-remove"),
+    path("wishlist/<int:course_id>/check/", WishlistCheckAPIView.as_view(), name="wishlist-check"),
 ]

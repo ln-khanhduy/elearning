@@ -301,6 +301,7 @@ function CourseDetailPage() {
           <div className="course-detail-right">
             <div className="course-detail-sticky">
               <CourseProgressCard
+                courseId={courseId}
                 isEnrolled={isEnrolled}
                 progressPercent={progressPercent}
                 completedCount={completedCount}

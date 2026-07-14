@@ -24,16 +24,12 @@ class Notification(models.Model):
         FAILED = 'FAILED', 'Failed'
 
     recipient = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='notifications')
-    title = models.CharField(max_length=200)  # Tiêu đề thông báo
-    body = models.TextField()  # Nội dung thông báo
-    # Loại thông báo
+    title = models.CharField(max_length=200)
+    body = models.TextField()
     notification_type = models.CharField(max_length=20, choices=Type.choices, default=Type.SYSTEM)
-    # Cách gửi thông báo (IN_APP / EMAIL)
     channel = models.CharField(max_length=20, choices=Channel.choices, default=Channel.IN_APP)
-    # Đường dẫn khi người dùng click vào thông báo (VD: /courses/123/)
     link = models.URLField(null=True, blank=True)
     is_read = models.BooleanField(default=False)
-    # Trạng thái gửi (PENDING / SENT / FAILED)
     send_status = models.CharField(max_length=20, choices=SendStatus.choices, default=SendStatus.PENDING)
     created_at = models.DateTimeField(auto_now_add=True)
 
