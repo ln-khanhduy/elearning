@@ -1,16 +1,46 @@
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback, useState } from "react";
 import { getAccessToken } from "../../utils/authToken";
+import { getUnreadCountApi } from "../../api/notificationAPI";
 
 const WS_BASE_URL = import.meta.env.VITE_WS_URL || "ws://localhost:8000";
 
 /**
  * Hook để kết nối WebSocket nhận thông báo realtime.
- * Tự động kết nối/ngắt kết nối dựa vào access token.
+ * Tự động fallback sang polling nếu WebSocket không hoạt động (Render free).
  */
 export function useNotificationSocket({ onNotification, onUnreadCount }) {
   const wsRef = useRef(null);
   const reconnectTimerRef = useRef(null);
   const mountedRef = useRef(true);
+  const [usePolling, setUsePolling] = useState(false);
+  const pollTimerRef = useRef(null);
+
+  // Polling fallback: gọi API mỗi 30s
+  const startPolling = useCallback(() => {
+    if (pollTimerRef.current) return;
+    const poll = async () => {
+      if (!mountedRef.current) return;
+      try {
+        const res = await getUnreadCountApi();
+        if (res?.data?.count !== undefined && onUnreadCount) {
+          onUnreadCount(res.data.count);
+        }
+      } catch {
+        // ignore
+      }
+      if (mountedRef.current) {
+        pollTimerRef.current = setTimeout(poll, 30000);
+      }
+    };
+    poll();
+  }, [onUnreadCount]);
+
+  const stopPolling = useCallback(() => {
+    if (pollTimerRef.current) {
+      clearTimeout(pollTimerRef.current);
+      pollTimerRef.current = null;
+    }
+  }, []);
 
   const connect = useCallback(() => {
     const token = getAccessToken();
@@ -22,12 +52,14 @@ export function useNotificationSocket({ onNotification, onUnreadCount }) {
       wsRef.current = null;
     }
 
-    const url = `${WS_BASE_URL}/ws/notifications/?token=${encodeURIComponent(token)}`;
+    // Routing đã có ws/ prefix → không thêm /ws nữa
+    const url = `${WS_BASE_URL.replace(/\/+$/, '')}/ws/notifications/?token=${encodeURIComponent(token)}`;
     const ws = new WebSocket(url);
     wsRef.current = ws;
 
     ws.onopen = () => {
-      // console.log("[WS] Connected to notifications");
+      setUsePolling(false);
+      stopPolling();
     };
 
     ws.onmessage = (event) => {
@@ -45,29 +77,33 @@ export function useNotificationSocket({ onNotification, onUnreadCount }) {
 
     ws.onclose = (event) => {
       wsRef.current = null;
-      // Reconnect after 5 seconds if not intentional close and component still mounted
-      if (!event.wasClean && mountedRef.current) {
-        reconnectTimerRef.current = setTimeout(() => {
-          if (mountedRef.current) connect();
-        }, 5000);
+      // Fallback sang polling nếu WebSocket không khả dụng (Render free)
+      if (!usePolling) {
+        setUsePolling(true);
+        startPolling();
       }
     };
 
     ws.onerror = () => {
-      // Will trigger onclose, no need to handle separately
+      // Fallback sang polling
+      if (!usePolling) {
+        setUsePolling(true);
+        startPolling();
+      }
     };
-  }, [onNotification, onUnreadCount]);
+  }, [onNotification, onUnreadCount, startPolling, stopPolling, usePolling]);
 
   const disconnect = useCallback(() => {
     if (reconnectTimerRef.current) {
       clearTimeout(reconnectTimerRef.current);
       reconnectTimerRef.current = null;
     }
+    stopPolling();
     if (wsRef.current) {
       wsRef.current.close();
       wsRef.current = null;
     }
-  }, []);
+  }, [stopPolling]);
 
   useEffect(() => {
     mountedRef.current = true;

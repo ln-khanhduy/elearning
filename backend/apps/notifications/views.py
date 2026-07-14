@@ -1,16 +1,18 @@
-from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.views import APIView
 
-from apps.common.base_api_view import BasePermissionAPIView
 from apps.common.response_helpers import success_response, error_response
 from apps.notifications.services import notification_service
 
 
 # ==================== NOTIFICATION VIEWS ====================
+# Dùng APIView + IsAuthenticated thay vì BasePermissionAPIView
+# để tránh lỗi 500 khi permission student.learning.view chưa tồn tại
 
 
-class NotificationListAPIView(BasePermissionAPIView):
+class NotificationListAPIView(APIView):
     """API lấy danh sách thông báo của người dùng."""
-    required_permission = "student.learning.view"
+    permission_classes = [IsAuthenticated]
 
     def get(self, request):
         page = int(request.query_params.get("page", 1))
@@ -19,36 +21,36 @@ class NotificationListAPIView(BasePermissionAPIView):
         return success_response(data)
 
 
-class NotificationUnreadCountAPIView(BasePermissionAPIView):
+class NotificationUnreadCountAPIView(APIView):
     """API đếm số thông báo chưa đọc."""
-    required_permission = "student.learning.view"
+    permission_classes = [IsAuthenticated]
 
     def get(self, request):
         count = notification_service.get_unread_count(request.user.id)
         return success_response({"count": count})
 
 
-class NotificationMarkReadAPIView(BasePermissionAPIView):
+class NotificationMarkReadAPIView(APIView):
     """API đánh dấu thông báo đã đọc."""
-    required_permission = "student.learning.view"
+    permission_classes = [IsAuthenticated]
 
     def post(self, request, notification_id):
         notification_service.mark_as_read(notification_id, request.user.id)
         return success_response(None, "Đã đánh dấu đã đọc.")
 
 
-class NotificationMarkAllReadAPIView(BasePermissionAPIView):
+class NotificationMarkAllReadAPIView(APIView):
     """API đánh dấu tất cả thông báo đã đọc."""
-    required_permission = "student.learning.view"
+    permission_classes = [IsAuthenticated]
 
     def post(self, request):
         notification_service.mark_all_as_read(request.user.id)
         return success_response(None, "Đã đánh dấu tất cả đã đọc.")
 
 
-class NotificationDeleteAllAPIView(BasePermissionAPIView):
+class NotificationDeleteAllAPIView(APIView):
     """API xóa tất cả thông báo."""
-    required_permission = "student.learning.view"
+    permission_classes = [IsAuthenticated]
 
     def delete(self, request):
         notification_service.delete_all(request.user.id)
