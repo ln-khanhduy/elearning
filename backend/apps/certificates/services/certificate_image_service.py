@@ -80,6 +80,7 @@ def generate(certificate):
 
     course_name = certificate.course.title
     issued_at = certificate.issued_at.strftime("%d/%m/%Y")
+    cert_code = certificate.certificate_code
 
     img = Image.new("RGB", (WIDTH, HEIGHT), BG_COLOR)
     draw = ImageDraw.Draw(img)
@@ -90,6 +91,7 @@ def generate(certificate):
     font_course_name = get_font(40, bold=True)
     font_info = get_font(28)
     font_footer = get_font(18)
+    font_small = get_font(16)
 
     # === Vẽ border ===
     border_width = 20
@@ -161,6 +163,10 @@ def generate(certificate):
     date_bbox = draw.textbbox((0, 0), date_text, font=font_info)
     date_x = (WIDTH - date_bbox[2]) // 2
     draw.text((date_x, 670), date_text, fill=TEXT_COLOR, font=font_info)
+
+    # === Mã chứng chỉ — góc dưới bên trái ===
+    code_text = f"Certificate No: {cert_code}"
+    draw.text((80, 940), code_text, fill=MUTED_COLOR, font=font_small)
 
     # === Footer ===
     footer_text = "This certificate is issued by Future LMS - E-Learning Platform"
