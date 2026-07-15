@@ -52,11 +52,13 @@ def _broadcast_notification(notification):
 
 def get_by_user(user_id, page=1, page_size=20):
     from django.core.paginator import Paginator
+    from apps.notifications.serializers.notification_serializer import NotificationSerializer
     qs = Notification.objects.filter(recipient_id=user_id).order_by("-created_at")
     paginator = Paginator(qs, page_size)
     items = paginator.get_page(page)
+    serializer = NotificationSerializer(items, many=True)
     return {
-        "items": list(items),
+        "items": serializer.data,
         "total": paginator.count,
         "page": page,
         "page_size": page_size,

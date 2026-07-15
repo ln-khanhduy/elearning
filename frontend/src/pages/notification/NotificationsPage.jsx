@@ -2,11 +2,16 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useNotifications } from "../../hooks/notification/useNotifications";
+import { useNotificationSocket } from "../../hooks/notification/useNotificationSocket";
 import NotificationItem from "../../components/notification/NotificationItem";
 import ConfirmModal from "../../components/common/ConfirmModal";
 
 function NotificationsPage() {
   const navigate = useNavigate();
+
+  // Get sendRequest from WebSocket hook
+  const { sendRequest } = useNotificationSocket({});
+
   const {
     notifications,
     pagination,
@@ -16,7 +21,7 @@ function NotificationsPage() {
     handleMarkRead,
     handleMarkAllRead,
     handleDeleteAll,
-  } = useNotifications();
+  } = useNotifications(sendRequest);
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 

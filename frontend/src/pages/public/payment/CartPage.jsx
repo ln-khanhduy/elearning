@@ -194,7 +194,16 @@ function CartPage() {
                   </div>
                   <div className="flex-shrink-0" style={{ width: "120px" }}>
                     {item.thumbnail_url ? (
-                      <img src={item.thumbnail_url} alt={item.course_title} className="rounded" style={{ width: "100%", height: "70px", objectFit: "cover" }} />
+                      <img
+                        src={item.thumbnail_url}
+                        alt={item.course_title}
+                        className="rounded"
+                        style={{ width: "100%", height: "70px", objectFit: "cover" }}
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.style.display = "none";
+                        }}
+                      />
                     ) : (
                       <div className="bg-light rounded d-flex align-items-center justify-content-center" style={{ width: "100%", height: "70px" }}>
                         <i className="bi bi-image text-muted"></i>

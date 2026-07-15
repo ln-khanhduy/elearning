@@ -55,7 +55,6 @@ INSTALLED_APPS = [
     'drf_spectacular',
     'django_filters',
     'cloudinary',
-    'cloudinary_storage',
     # apps
     'apps.common',
     'apps.courses',
@@ -263,8 +262,6 @@ STORAGES = {
         "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
     },
 }
-
-DEFAULT_FILE_STORAGE = 'apps.common.cloudinary_storage.SmartMediaCloudinaryStorage'
 
 
 # CORS and CSRF configuration

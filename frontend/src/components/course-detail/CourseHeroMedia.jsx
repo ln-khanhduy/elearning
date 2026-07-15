@@ -22,7 +22,15 @@ function CourseHeroMedia({ title, thumbnailUrl, previewVideoUrl }) {
         ) : thumbnailUrl ? (
           // Có ảnh bìa: hiển thị ảnh + nút xem video giới thiệu
           <>
-            <img src={thumbnailUrl} alt={title} className="course-hero-thumb-img" />
+            <img
+              src={thumbnailUrl}
+              alt={title}
+              className="course-hero-thumb-img"
+              onError={(e) => {
+                e.target.onerror = null;
+                e.target.style.display = "none";
+              }}
+            />
             {previewVideoUrl && (
               <button className="course-hero-play-btn" onClick={() => setShowPreview(true)} title="Xem video giới thiệu">
                 <i className="bi bi-play-circle-fill"></i><span>Xem giới thiệu</span>

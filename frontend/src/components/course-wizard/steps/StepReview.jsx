@@ -53,7 +53,15 @@ function StepReview({ formData, thumbnailPreview, curriculum }) {
       {/* Course Preview */}
       <div className="cw-review-preview">
         {thumbnailPreview ? (
-          <img src={thumbnailPreview} alt="" className="cw-review-thumbnail" />
+          <img
+            src={thumbnailPreview}
+            alt=""
+            className="cw-review-thumbnail"
+            onError={(e) => {
+              e.target.style.display = "none";
+              e.target.nextSibling.style.display = "flex";
+            }}
+          />
         ) : (
           <div className="cw-review-thumbnail-placeholder">
             <i className="bi bi-image" style={{ fontSize: 32 }}></i>

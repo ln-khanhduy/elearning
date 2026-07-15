@@ -140,6 +140,10 @@ function CheckoutPage() {
                 src={course.thumbnail_url}
                 alt={course.title}
                 className="checkout-course-thumb"
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.style.display = "none";
+                }}
               />
             ) : (
               <div className="checkout-course-thumb-placeholder">

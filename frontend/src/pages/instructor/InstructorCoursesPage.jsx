@@ -73,7 +73,16 @@ function InstructorCoursesPage() {
           <div className="instructor-course-card" key={course.id}>
             <Link to={`/instructor/courses/${course.id}`}>
               {course.thumbnail_url ? (
-                <img src={course.thumbnail_url} alt={course.title} className="instructor-course-thumb" loading="lazy" />
+                <img
+                  src={course.thumbnail_url}
+                  alt={course.title}
+                  className="instructor-course-thumb"
+                  loading="lazy"
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.style.display = "none";
+                  }}
+                />
               ) : (
                 <div className="instructor-course-thumb-placeholder">
                   <i className="bi bi-play-circle"></i>

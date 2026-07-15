@@ -79,7 +79,17 @@ function WishlistPage() {
               <div className="card h-100 shadow-sm">
                 <div className="position-relative">
                   {item.thumbnail_url ? (
-                    <img src={item.thumbnail_url} alt={item.course_title} className="card-img-top" style={{ height: "180px", objectFit: "cover" }} />
+                    <img
+                      src={item.thumbnail_url}
+                      alt={item.course_title}
+                      className="card-img-top"
+                      style={{ height: "180px", objectFit: "cover" }}
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.style.display = "none";
+                        e.target.parentElement.classList.add("no-thumbnail");
+                      }}
+                    />
                   ) : (
                     <div className="bg-light d-flex align-items-center justify-content-center" style={{ height: "180px" }}>
                       <i className="bi bi-image text-muted" style={{ fontSize: "3rem" }}></i>

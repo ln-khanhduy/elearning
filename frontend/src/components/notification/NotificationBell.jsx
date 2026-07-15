@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUser } from "../../context/UserContext";
-import { getUnreadCountApi, markAllNotificationsReadApi, getNotificationsApi } from "../../api/notificationAPI";
 import { useNotificationSocket } from "../../hooks/notification/useNotificationSocket";
 
 function NotificationBell() {
@@ -21,7 +20,7 @@ function NotificationBell() {
     setUnreadCount(count);
   }, []);
 
-  useNotificationSocket({
+  const { sendRequest } = useNotificationSocket({
     onNotification: handleNewNotification,
     onUnreadCount: handleUnreadCount,
   });
@@ -29,15 +28,28 @@ function NotificationBell() {
   const fetchData = useCallback(async () => {
     if (!isAuthenticated) return;
     try {
-      const [unreadRes, listRes] = await Promise.all([
-        getUnreadCountApi(),
-        getNotificationsApi(1, 5),
-      ]);
-      setUnreadCount(unreadRes?.data?.count ?? 0);
-      const items = listRes?.data?.items ?? [];
-      setRecent(items);
+      if (sendRequest) {
+        // Use WebSocket
+        const unreadRes = await sendRequest({ type: "get_unread_count" });
+        const listRes = await sendRequest({
+          type: "list_notifications",
+          page: 1,
+          page_size: 5,
+        });
+        setUnreadCount(unreadRes?.count ?? 0);
+        setRecent(listRes?.items ?? []);
+      } else {
+        // Fallback to REST API if WebSocket not available
+        const { getUnreadCountApi, getNotificationsApi } = await import("../../api/notificationAPI");
+        const [unreadRes, listRes] = await Promise.all([
+          getUnreadCountApi(),
+          getNotificationsApi(1, 5),
+        ]);
+        setUnreadCount(unreadRes?.data?.count ?? 0);
+        setRecent(listRes?.data?.items ?? []);
+      }
     } catch {}
-  }, [isAuthenticated]);
+  }, [isAuthenticated, sendRequest]);
 
   useEffect(() => {
     fetchData();
@@ -55,7 +67,12 @@ function NotificationBell() {
 
   const handleMarkAllRead = async () => {
     try {
-      await markAllNotificationsReadApi();
+      if (sendRequest) {
+        await sendRequest({ type: "mark_all_read" });
+      } else {
+        const { markAllNotificationsReadApi } = await import("../../api/notificationAPI");
+        await markAllNotificationsReadApi();
+      }
       setUnreadCount(0);
       setRecent((prev) => prev.map((n) => ({ ...n, is_read: true })));
     } catch {}
