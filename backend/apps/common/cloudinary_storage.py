@@ -59,10 +59,10 @@ class SmartMediaCloudinaryStorage(Storage):
         if ext in self.IMAGE_EXTENSIONS:
             resource_type = 'image'
 
-        # QUAN TRỌNG: Cloudinary tự động bỏ đuôi file khỏi public_id cho images.
-        # Đối với image: strip extension để đồng bộ với Cloudinary.
-        # Đối với raw (PDF, DOC, ...): GIỮ extension để _get_resource_type()
-        # có thể xác định đúng resource_type khi gọi url().
+        # Với image: Cloudinary tự động bỏ extension khỏi public_id,
+        # strip extension để đồng bộ.
+        # Với raw: GIỮ extension trong public_id và DB để url()
+        # có thể xác định đúng resource_type.
         if resource_type == 'image':
             root, _ = os.path.splitext(public_id_with_ext)
             public_id = root
@@ -77,8 +77,6 @@ class SmartMediaCloudinaryStorage(Storage):
             overwrite=True,
             timeout=30,
         )
-        # Với image: strip extension khỏi public_id để đồng bộ
-        # Với raw: giữ nguyên public_id (có extension) để url() hoạt động
         uploaded_public_id = result.get('public_id', public_id)
         if resource_type == 'image':
             uploaded_root, _ = os.path.splitext(uploaded_public_id)
@@ -89,20 +87,22 @@ class SmartMediaCloudinaryStorage(Storage):
         if not name:
             return None
         try:
-            # Xác định resource_type dựa trên tên gốc hoặc extension
-            resource_type = self._get_resource_type(name)
+            ext = os.path.splitext(name.replace('\\', '/'))[1].lower()
 
-            # Với image: Cloudinary tự động thêm extension, strip để đồng bộ
-            # Với raw: Cloudinary yêu cầu public_id phải có extension trong URL
-            root, ext = os.path.splitext(name.replace('\\', '/'))
-            if resource_type == 'raw' and ext.lower() in self.RAW_EXTENSIONS:
-                # Raw files: giữ extension vì _save lưu public_id có extension
+            # Xác định resource_type từ extension trong DB name
+            if ext in self.IMAGE_EXTENSIONS:
+                resource_type = 'image'
+                clean_name, _ = os.path.splitext(name.replace('\\', '/'))
+            elif ext in self.RAW_EXTENSIONS:
+                resource_type = 'raw'
                 clean_name = name.replace('\\', '/')
-            elif ext.lower() in self.IMAGE_EXTENSIONS:
-                # Image files: strip extension vì _save đã strip
-                clean_name = root
             else:
-                clean_name = name.replace('\\', '/')
+                # File KHÔNG có extension trong DB (file cũ trước khi fix).
+                # Dùng resource_type='raw' vì:
+                # - Image serve được qua raw (Cloudinary tự convert)
+                # - Raw KHÔNG serve được qua image ("File format not supported")
+                resource_type = 'raw'
+                clean_name, _ = os.path.splitext(name.replace('\\', '/'))
 
             url_result, _ = self._cloudinary.utils.cloudinary_url(
                 clean_name,
@@ -110,6 +110,11 @@ class SmartMediaCloudinaryStorage(Storage):
                 type='upload',
                 secure=True,
             )
+
+            # Raw URL không có extension → append để browser nhận dạng đúng
+            if resource_type == 'raw' and ext in self.RAW_EXTENSIONS:
+                url_result = url_result.rstrip('/') + ext
+
             return url_result
         except Exception:
             logger.exception(f"Cloudinary URL error for {name}")
