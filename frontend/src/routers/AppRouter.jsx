@@ -83,7 +83,6 @@ function AppRouter() {
           <Route path="/register/verify-otp" element={<Suspense fallback={<PageLoader />}><VerifyotpPage /></Suspense>} />
           <Route path="/reset-password" element={<Suspense fallback={<PageLoader />}><ResetPasswordPage /></Suspense>} />
           <Route path="/instructor/apply" element={<Suspense fallback={<PageLoader />}><InstructorApplyPage /></Suspense>} />
-          <Route path="*" element={<Suspense fallback={<PageLoader />}><NotFoundPage /></Suspense>} />
         </Route>
 
         {/* ======== PAYMENT ROUTES (MainLayout, no auth) ======== */}
@@ -132,6 +131,11 @@ function AppRouter() {
           <Route path="/my-wishlist" element={<ProtectedRoute><Suspense fallback={<PageLoader />}><WishlistPage /></Suspense></ProtectedRoute>} />
           <Route path="/cart" element={<ProtectedRoute><Suspense fallback={<PageLoader />}><CartPage /></Suspense></ProtectedRoute>} />
           <Route path="/admin/coupons" element={<ProtectedRoute allowedPermissions={["finance.coupon.view"]}><Suspense fallback={<PageLoader />}><AdminCouponPage /></Suspense></ProtectedRoute>} />
+        </Route>
+
+        {/* ======== FALLBACK ROUTE (luôn ở cuối cùng) ======== */}
+        <Route element={<PublicLayout />}>
+          <Route path="*" element={<Suspense fallback={<PageLoader />}><NotFoundPage /></Suspense>} />
         </Route>
       </Routes>
     </BrowserRouter>
