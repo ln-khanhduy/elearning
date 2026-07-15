@@ -30,25 +30,24 @@ export function UserProvider({ children }) {
   };
 
   const loadUser = async () => {
-    // Nếu không có access token trong memory (sau khi refresh trang),
-    // thử refresh token từ httpOnly cookie trước
-    if (!getAccessToken()) {
-      try {
-        const refreshRes = await refreshTokenApi();
-        if (refreshRes?.access) {
-          setAccessToken(refreshRes.access);
-        } else {
-          // Không refresh được -> chưa đăng nhập
-          setUser(null);
-          setLoading(false);
-          return;
-        }
-      } catch {
-        // Refresh thất bại (không có refresh token cookie) -> chưa đăng nhập
+    // Luôn thử refresh token từ httpOnly cookie để đảm bảo access token
+    // còn hạn hoặc được cấp mới. Xử lý được trường hợp access token cũ
+    // còn trong localStorage nhưng đã hết hạn sau 15 phút.
+    try {
+      const refreshRes = await refreshTokenApi();
+      if (refreshRes?.access) {
+        setAccessToken(refreshRes.access);
+      } else {
+        // Không refresh được -> chưa đăng nhập
         setUser(null);
         setLoading(false);
         return;
       }
+    } catch {
+      // Refresh thất bại (không có refresh token cookie) -> chưa đăng nhập
+      setUser(null);
+      setLoading(false);
+      return;
     }
 
     try {

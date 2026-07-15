@@ -239,7 +239,7 @@ REST_FRAMEWORK = {
 SIMPLE_JWT = {
     'SIGNING_KEY': os.getenv('JWT_SECRET') or SECRET_KEY,
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True,
     'ALGORITHM': 'HS256',
