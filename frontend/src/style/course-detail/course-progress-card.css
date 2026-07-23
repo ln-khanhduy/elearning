@@ -1,104 +1,84 @@
-/* ===== COURSE PROGRESS CARD (Sidebar) ===== */
+/* ===== COURSE PROGRESS CARD (Sidebar) - Compact Version ===== */
 .course-progress-card {
   background: var(--course-card-bg);
   border-radius: var(--course-radius);
   border: 1px solid var(--course-border);
-  padding: 20px;
+  padding: 14px;
   box-shadow: var(--course-shadow);
+  font-size: 13px;
 }
 
-/* Price */
+/* Price - compact */
 .progress-card-price {
   text-align: center;
-  margin-bottom: 16px;
-  padding-bottom: 16px;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
   border-bottom: 1px solid var(--course-border-light);
 }
 
 .progress-card-price .price-current {
   display: block;
-  font-size: 28px;
+  font-size: 22px;
   font-weight: 800;
   color: var(--course-text);
 }
 
 .progress-card-price .price-original {
   display: inline-block;
-  font-size: 14px;
+  font-size: 12px;
   color: var(--course-text-muted);
   text-decoration: line-through;
-  margin-top: 4px;
+  margin-top: 3px;
 }
 
-/* Progress */
+/* Progress - compact, no icon/header */
 .progress-card-progress {
-  margin-bottom: 16px;
-  padding-bottom: 16px;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
   border-bottom: 1px solid var(--course-border-light);
 }
 
-.progress-header {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--course-text);
-  margin-bottom: 10px;
-}
-
-.progress-header i {
-  color: var(--course-primary);
-  font-size: 16px;
-}
-
 .progress-bar-container {
-  height: 8px;
+  height: 6px;
   background: #e9ecef;
-  border-radius: 4px;
+  border-radius: 3px;
   overflow: hidden;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 .progress-bar-fill {
   height: 100%;
   background: linear-gradient(90deg, var(--course-primary), #1a5fa8);
-  border-radius: 4px;
+  border-radius: 3px;
   transition: width 0.4s ease;
 }
 
 .progress-stats {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: center;
 }
 
-.progress-percent {
-  font-size: 18px;
-  font-weight: 800;
-  color: var(--course-primary);
-}
-
 .progress-lessons {
-  font-size: 12px;
+  font-size: 11px;
   color: var(--course-text-muted);
 }
 
-/* CTA Button */
+/* CTA Button - compact */
 .progress-card-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 6px;
   width: 100%;
-  padding: 12px 20px;
+  padding: 10px 16px;
   border: none;
-  border-radius: 8px;
-  font-size: 15px;
+  border-radius: 6px;
+  font-size: 13px;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.2s;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 
 .progress-card-btn:disabled {
@@ -114,7 +94,7 @@
 .btn-primary:hover:not(:disabled) {
   background: var(--course-primary-dark);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(15, 61, 117, 0.3);
+  box-shadow: 0 3px 10px rgba(15, 61, 117, 0.3);
 }
 
 .btn-success {
@@ -125,15 +105,15 @@
 .btn-success:hover:not(:disabled) {
   background: #157347;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(25, 135, 84, 0.3);
+  box-shadow: 0 3px 10px rgba(25, 135, 84, 0.3);
 }
 
 
-/* Wishlist + Cart actions */
+/* Wishlist + Cart actions - compact */
 .progress-card-actions {
   display: flex;
-  gap: 8px;
-  margin-bottom: 16px;
+  gap: 6px;
+  margin-bottom: 12px;
 }
 
 .progress-card-action-btn {
@@ -141,13 +121,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  padding: 8px 12px;
+  gap: 4px;
+  padding: 6px 10px;
   border: 1.5px solid var(--course-border, #e2e8f0);
-  border-radius: 8px;
+  border-radius: 6px;
   background: #fff;
   color: var(--course-text-muted, #64748b);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;
@@ -169,25 +149,25 @@
   cursor: not-allowed;
 }
 
-/* Info items */
+/* Info items - compact */
 .progress-card-info {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
 .info-item {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 12px;
+  gap: 6px;
+  font-size: 11px;
   color: var(--course-text-muted);
 }
 
 .info-item i {
-  font-size: 14px;
+  font-size: 12px;
   color: var(--course-success);
-  width: 18px;
+  width: 16px;
   text-align: center;
 }
 
@@ -196,8 +176,8 @@
   .course-progress-card {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 16px;
-    padding: 16px;
+    gap: 12px;
+    padding: 12px;
   }
 
   .progress-card-price {
@@ -205,19 +185,19 @@
     text-align: left;
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding-bottom: 12px;
+    gap: 10px;
+    padding-bottom: 10px;
     margin-bottom: 0;
     border-bottom: none;
   }
 
   .progress-card-price .price-current {
-    font-size: 22px;
+    font-size: 18px;
   }
 
   .progress-card-progress {
     grid-column: 1 / -1;
-    padding-bottom: 12px;
+    padding-bottom: 10px;
     margin-bottom: 0;
   }
 
@@ -228,7 +208,7 @@
   .progress-card-info {
     flex-direction: row;
     flex-wrap: wrap;
-    gap: 12px;
+    gap: 10px;
   }
 }
 

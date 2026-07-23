@@ -116,6 +116,7 @@ CHANNEL_LAYERS = {
         "BACKEND": "channels.layers.InMemoryChannelLayer",
     },
 }
+
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 # DATABASES configuration
@@ -199,6 +200,14 @@ USE_I18N = True
 
 USE_TZ = True
 
+# Celery Configuration (async tasks: email, certificate generation)
+CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', 'memory://')
+CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND', 'cache')
+CELERY_CACHE_BACKEND = 'default'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = TIME_ZONE
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
@@ -232,7 +241,28 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.AllowAny',
     ],
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '100/hour',
+        'user': '1000/hour',
+        'login': '5/m',
+    },
     'EXCEPTION_HANDLER': 'apps.common.exception_handler.custom_exception_handler',
+}
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'LMS Learn API',
+    'DESCRIPTION': 'E-learning platform API - Hệ thống quản lý học tập trực tuyến',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+    'SCHEMA_PATH_PREFIX': '/api/',
+    'SWAGGER_UI_SETTINGS': {
+        'persistAuthorization': True,
+    },
 }
 
 # Simple JWT configuration
@@ -304,8 +334,5 @@ CSRF_TRUSTED_ORIGINS = list(CORS_ALLOWED_ORIGINS) + [
 STRIPE_SECRET_KEY = os.getenv('STRIPE_SECRET_KEY')
 STRIPE_PUBLISHABLE_KEY = os.getenv('STRIPE_PUBLISHABLE_KEY')
 STRIPE_WEBHOOK_SECRET = os.getenv('STRIPE_WEBHOOK_SECRET')
-
-PAYMENT_HOLD_DAYS = int(os.getenv('PAYMENT_HOLD_DAYS', '7'))
-PLATFORM_FEE_PERCENT = int(os.getenv('PLATFORM_FEE_PERCENT', '30'))
 
 

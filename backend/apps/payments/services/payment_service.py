@@ -1,5 +1,4 @@
 from decimal import Decimal, ROUND_HALF_UP
-from django.conf import settings
 from django.utils import timezone
 from apps.payments.repositories import payment_repository 
 from apps.payments.models import PaymentTransaction
@@ -7,6 +6,7 @@ from apps.system.repositories import system_config_repository
 from apps.enrollments.repositories import enrollment_repository
 from apps.lessons.repositories import lesson_repository
 from apps.courses.models import Course
+from apps.enrollments.models import Enrollment
 
 
 def calculate_fees(gross_amount, provider):
@@ -15,7 +15,7 @@ def calculate_fees(gross_amount, provider):
     - payment_fee: phí provider (%)
     - tax_amount: 0 (chưa áp dụng)
     - net_amount: gross - payment_fee - tax
-    - platform_fee: net * PLATFORM_FEE_PERCENT%
+    - platform_fee: net * platform_fee_percent%
     - instructor_share: net - platform_fee
     """
     gross = Decimal(str(gross_amount))
@@ -72,10 +72,10 @@ def mark_transaction_hold(transaction):
     """
     Chuyển transaction từ PENDING -> HOLD.
     - paid_at = now
-    - hold_time = now + PAYMENT_HOLD_DAYS
+    - hold_time = now + payment_hold_days (từ SystemConfig)
     """
     now = timezone.now()
-    hold_days = settings.PAYMENT_HOLD_DAYS
+    hold_days = int(system_config_repository.get_decimal("payment_hold_days", "7"))
     hold_time = now + timezone.timedelta(days=hold_days)
 
     return payment_repository.update(
@@ -93,15 +93,15 @@ def grant_course_access(transaction):
     course = transaction.course
 
     defaults = {
-        "status": "ACTIVE",
+        "status": Enrollment.Status.ACTIVE,
         "payment_transaction": transaction,
         "enrolled_at": timezone.now(),
         "access_granted_at": timezone.now(),
     }
     enrollment, created = enrollment_repository.get_or_create_enrollment(student, course, defaults)
 
-    if not created and enrollment.status not in ["ACTIVE", "COMPLETED"]:
-        enrollment.status = "ACTIVE"
+    if not created and enrollment.status not in [Enrollment.Status.ACTIVE, Enrollment.Status.COMPLETED]:
+        enrollment.status = Enrollment.Status.ACTIVE
         enrollment.payment_transaction = transaction
         enrollment.enrolled_at = timezone.now()
         enrollment.access_granted_at = timezone.now()

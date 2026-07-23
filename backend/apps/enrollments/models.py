@@ -45,6 +45,9 @@ class Enrollment(models.Model):
             models.Index(fields=['course', 'status']),   # Lọc học viên của khóa học theo trạng thái
         ]
 
+    def __str__(self):
+        return f"{self.student.email} - {self.course.title} ({self.status})"
+
 
 class LessonProgress(models.Model):
     """
@@ -79,3 +82,6 @@ class CourseProgress(models.Model):
 
     class Meta:
         db_table = 'course_progress'
+
+    def __str__(self):
+        return f"Progress {self.enrollment}: {self.progress_percent}%"

@@ -16,11 +16,13 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.token_blacklist.models import OutstandingToken
 
 from apps.common.permissions import HasRequiredPermission
-from apps.users.models import InstructorProfile
+from apps.users.models import User, InstructorProfile
 from apps.users.repositories import user_repository
 from apps.users.repositories import instructor_repository
 from apps.users.utils.cookies import REFRESH_COOKIE_NAME
 from apps.users.services import google_oauth_service
+from apps.users.serializers.user_serializer import InstructorCertificateSerializer
+from apps.users.serializers.auth_serializer import UserSerializer
 
 
 ROLE_HIERARCHY = {
@@ -32,6 +34,24 @@ ROLE_HIERARCHY = {
     "INSTRUCTOR": 2,
     "STUDENT": 2,
 }
+
+
+def enrich_user_response_data(user_data: dict, user: User) -> dict:
+    """
+    Enrich user response data with instructor profile information (bank, bio, cv, certificates).
+    This DRYs up the repeated code pattern found in multiple auth views.
+    """
+    if user.role and user.role.code == "INSTRUCTOR" and hasattr(user, 'instructor_profile'):
+        profile = user.instructor_profile
+        user_data["bank_name"] = profile.bank_name
+        user_data["bank_account_number"] = profile.bank_account_number
+        user_data["bank_account_name"] = profile.bank_account_name
+        user_data["bio"] = profile.bio
+        user_data["portfolio_link"] = profile.portfolio_link
+        user_data["cv_file"] = profile.cv_file.url if profile.cv_file else None
+        certificates_qs = profile.certificates.all()
+        user_data["certificates"] = InstructorCertificateSerializer(certificates_qs, many=True).data
+    return user_data
 
 
 def _blacklist_user_tokens(user):

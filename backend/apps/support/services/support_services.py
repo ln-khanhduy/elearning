@@ -1,5 +1,6 @@
 from apps.support import repositories as support_repo
 from apps.payments.models import PaymentTransaction
+from apps.system.repositories import system_config_repository
 from django.utils import timezone
 from rest_framework.exceptions import PermissionDenied, ValidationError
 
@@ -17,9 +18,8 @@ def create_request(user, data):
         transaction = PaymentTransaction.objects.filter(id=transaction_id, student=user).first()
         if not transaction:
             raise ValidationError("Không tìm thấy giao dịch.")
-        # Kiểm tra giao dịch không quá 7 ngày
-        from django.conf import settings
-        hold_days = getattr(settings, 'PAYMENT_HOLD_DAYS', 7)
+        # Kiểm tra giao dịch không quá số ngày quy định (từ SystemConfig)
+        hold_days = int(system_config_repository.get_decimal("payment_hold_days", "7"))
         if transaction.status not in [PaymentTransaction.Status.HOLD, PaymentTransaction.Status.PAID]:
             raise ValidationError("Giao dịch không đủ điều kiện hoàn tiền.")
         if transaction.status == PaymentTransaction.Status.HOLD:

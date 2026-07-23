@@ -16,6 +16,7 @@ Including another URLconf
 """
 
 from django.urls import include, path
+from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
 urlpatterns = [
     # Health check cho Render (ping giữ service thức)
@@ -50,4 +51,8 @@ urlpatterns = [
     # Promotions & Cart
     path("api/promotions/", include("apps.promotions.urls")),
     path("api/cart/", include("apps.cart.urls")),
+
+    # API Documentation (drf-spectacular)
+    path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
+    path("api/docs/", SpectacularSwaggerView.as_view(url_name="schema"), name="swagger-ui"),
 ]

@@ -1005,95 +1005,28 @@
   }
 }
 
-/* ===== COURSE COMPLETION BOX ===== */
+/* ===== COURSE COMPLETION BOX - Compact ===== */
 .learning-completion-box {
-  margin: 16px;
-  padding: 16px;
-  border-radius: 14px;
+  margin: 12px;
+  padding: 10px;
+  border-radius: 10px;
   background: var(--bg, #f5f7fb);
   border: 1px solid var(--course-border, #e5e7eb);
   text-align: center;
-}
-
-.completion-title {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--course-text-muted, #6c757d);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-bottom: 4px;
-}
-
-.completion-percent {
-  font-size: 28px;
-  font-weight: 700;
-  color: var(--primary, #0f3d75);
-  margin-bottom: 12px;
-}
-
-.complete-course-btn {
-  width: 100%;
-  padding: 10px 16px;
-  border-radius: 10px;
-  background: var(--primary, #0f3d75);
-  color: #fff;
-  border: none;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: var(--course-transition, all 0.2s ease);
-}
-
-.complete-course-btn:hover {
-  background: var(--course-primary-dark, #0a2d55);
-}
-
-.complete-course-btn:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
-}
-
-.course-completed-badge {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  color: var(--course-success, #16a34a);
-  font-weight: 700;
-  font-size: 14px;
-  padding: 8px 0;
-}
-
-.course-completed-badge i {
-  font-size: 18px;
-}
-
-.certificate-info {
-  margin-top: 8px;
-  padding: 10px;
-  background: var(--course-card-bg, #ffffff);
-  border-radius: 8px;
-  border: 1px solid var(--course-border, #e5e7eb);
-}
-
-.certificate-date {
-  font-size: 11px;
-  color: var(--course-text-muted, #6c757d);
-  margin-bottom: 8px;
 }
 
 .certificate-view-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 6px;
   width: 100%;
-  padding: 10px 16px;
-  border-radius: 10px;
+  padding: 8px 12px;
+  border-radius: 8px;
   background: var(--primary, #0f3d75);
   color: #fff;
   border: none;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   transition: var(--course-transition, all 0.2s ease);

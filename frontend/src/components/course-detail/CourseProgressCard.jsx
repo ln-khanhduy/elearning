@@ -93,15 +93,10 @@ function CourseProgressCard({
       {/* Thanh tiến độ - chỉ hiển thị khi đã enroll */}
       {isEnrolled && (
         <div className="progress-card-progress">
-          <div className="progress-header">
-            <i className="bi bi-graph-up-arrow"></i>
-            <span>Tiến độ học tập</span>
-          </div>
           <div className="progress-bar-container">
             <div className="progress-bar-fill" style={{ width: `${Math.min(progressPercent || 0, 100)}%` }}></div>
           </div>
           <div className="progress-stats">
-            <span className="progress-percent">{progressPercent || 0}%</span>
             <span className="progress-lessons">{completedCount}/{totalLessons} bài học</span>
           </div>
         </div>

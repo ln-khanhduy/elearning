@@ -4,10 +4,12 @@ from django.utils import timezone
 from rest_framework.exceptions import NotFound, PermissionDenied, ValidationError
 import logging
 
+from apps.enrollments.models import Enrollment
 from apps.enrollments.repositories import enrollment_repository
 from apps.courses.repositories import course_repository
 from apps.lessons.repositories import chapter_repository, lesson_repository
 from apps.lessons.models import Lesson
+from apps.quizzes.models import QuizAttempt
 from apps.quizzes.repositories import quiz_repository
 from apps.certificates.repositories import certificate_repository
 from apps.certificates.services import certificate_image_service
@@ -128,7 +130,7 @@ def get_learning_curriculum(user, course_id):
     progress.progress_percent = progress_percent
     progress.save()
 
-    course_completed = enrollment.status == "COMPLETED" and progress.progress_percent >= 100
+    course_completed = enrollment.status == Enrollment.Status.COMPLETED and progress.progress_percent >= 100
     certificate = None
     if course_completed:
         cert = certificate_repository.get_by_enrollment(enrollment)
@@ -176,9 +178,9 @@ def mark_lesson_complete(user, course_id, lesson_id):
         latest_attempt = quiz_repository.get_latest_attempt(quiz, user)
         if not latest_attempt:
             raise ValidationError("Cần hoàn thành tất cả bài tập trước khi đánh dấu hoàn thành bài học.")
-        if latest_attempt.status == "SUBMITTED":
+        if latest_attempt.status == QuizAttempt.Status.SUBMITTED:
             raise ValidationError("Cần hoàn thành tất cả bài tập trước khi đánh dấu hoàn thành bài học.")
-        if float(latest_attempt.score) < float(quiz.passing_score):
+        if latest_attempt.score and float(latest_attempt.score) < float(quiz.passing_score):
             raise ValidationError("Cần hoàn thành tất cả bài tập trước khi đánh dấu hoàn thành bài học.")
 
     with transaction.atomic():
@@ -216,7 +218,7 @@ def complete_course(user, course_id):
     if progress_percent < 100:
         raise ValidationError("Bạn cần hoàn thành tất cả bài học trước khi hoàn thành khóa học.")
 
-    if enrollment.status == "COMPLETED":
+    if enrollment.status == Enrollment.Status.COMPLETED:
         certificate = certificate_repository.get_by_enrollment(enrollment)
         if not certificate:
             certificate = certificate_repository.create(
@@ -351,9 +353,9 @@ def submit_quiz(user, course_id, quiz_id, answers):
 
         attempt.score = total_score
         if quiz_repository.has_essay_questions(quiz):
-            attempt.status = "SUBMITTED"
+            attempt.status = QuizAttempt.Status.SUBMITTED
         else:
-            attempt.status = "GRADED"
+            attempt.status = QuizAttempt.Status.GRADED
             attempt.graded_at = timezone.now()
         attempt.save()
 

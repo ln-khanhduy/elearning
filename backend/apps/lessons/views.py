@@ -158,7 +158,7 @@ class LessonUpdateAPIView(BasePermissionAPIView):
             return success_response(LessonSerializer(lesson).data, "Cập nhật bài học thành công.")
         except Exception as e:
             logger.exception(f"Lesson update error (lesson_id={lesson_id}): {e}")
-            return Response({"success": False, "message": str(e)}, status=500)
+            return error_response(str(e), http_status=500)
 
 
 class LessonDeleteAPIView(BasePermissionAPIView):

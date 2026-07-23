@@ -11,6 +11,7 @@ from apps.system.services import admin_log_service
 
 from apps.users.services import user_service
 from apps.notifications import services as notif_service
+from apps.users.serializers.user_serializer import InstructorCertificateSerializer
 
 from apps.users.serializers.user_serializer import (
     UserListSerializer, UserDetailSerializer, UpdateProfileSerializer,
@@ -70,7 +71,6 @@ class CurrentUserAPIView(APIView):
             user_data["cv_file"] = profile.cv_file.url if profile.cv_file else None
             # Lấy danh sách chứng chỉ
             certificates = profile.certificates.all()
-            from apps.users.serializers.user_serializer import InstructorCertificateSerializer
             user_data["certificates"] = InstructorCertificateSerializer(certificates, many=True).data
 
         return Response(user_data, status=status.HTTP_200_OK)

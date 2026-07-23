@@ -65,41 +65,17 @@ function LearningSidebar({
           ))}
         </div>
 
-        {/* Course completion box */}
-        <div className="learning-completion-box">
-          <div className="completion-title">Tiến độ khóa học</div>
-          <div className="completion-percent">{Math.round(progressPercent)}%</div>
-
-          {progressPercent >= 100 && !courseCompleted && (
+        {/* Certificate section - shown at bottom when course is completed */}
+        {certificate && certificate.image_url && (
+          <div className="learning-completion-box">
             <button
-              className="complete-course-btn"
-              onClick={handleCompleteCourse}
-              disabled={completing}
+              className="certificate-view-btn"
+              onClick={() => window.open(certificate.image_url, "_blank")}
             >
-              {completing ? "Đang hoàn tất..." : "Hoàn thành khóa học"}
+              Xem chứng chỉ
             </button>
-          )}
-
-          {courseCompleted && progressPercent >= 100 && (
-            <div className="course-completed-badge">
-              <i className="bi bi-check-circle-fill"></i> Đã hoàn thành khóa học
-            </div>
-          )}
-
-          {certificate && certificate.image_url && (
-            <div className="certificate-info">
-              <div className="certificate-date">
-                Cấp ngày: {new Date(certificate.issued_at).toLocaleDateString("vi-VN")}
-              </div>
-              <button
-                className="certificate-view-btn"
-                onClick={() => window.open(certificate.image_url, "_blank")}
-              >
-                <i className="bi bi-award-fill"></i> Xem chứng chỉ
-              </button>
-            </div>
-          )}
-        </div>
+          </div>
+        )}
       </aside>
     </>
   );

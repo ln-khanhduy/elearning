@@ -16,6 +16,9 @@ class Category(models.Model):
         db_table = 'course_category'
         ordering = ['name']
 
+    def __str__(self):
+        return self.name
+
 
 class Course(models.Model):
     """
@@ -68,6 +71,9 @@ class Course(models.Model):
             models.Index(fields=['status', 'created_at']),              # Lọc khóa học theo trạng thái + mới nhất
             models.Index(fields=['category']),          # Lọc khóa học theo danh mục
         ]
+
+    def __str__(self):
+        return self.title
 
 
 class WishlistItem(models.Model):

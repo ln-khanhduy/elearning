@@ -5,6 +5,7 @@ from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 
 from apps.common.base_api_view import BasePermissionAPIView
+from apps.common.response_helpers import success_response, error_response
 from apps.system.services import admin_log_service
 from apps.system.serializers.dashboard_serializer import DashboardDataSerializer
 from apps.system.services import dashboard_service
@@ -15,22 +16,6 @@ from apps.system.serializers.admin_user_serializer import (
     AdminUserChangeRoleSerializer,
 )
 from apps.users.repositories import user_repository
-
-
-def success_response(data=None, message="Success", http_status=status.HTTP_200_OK):
-    return Response({
-        "success": True,
-        "message": message,
-        "data": data,
-    }, status=http_status)
-
-
-def error_response(message="Error", errors=None, http_status=status.HTTP_400_BAD_REQUEST):
-    return Response({
-        "success": False,
-        "message": message,
-        "errors": errors or {},
-    }, status=http_status)
 
 
 # ==================== DASHBOARD ====================
