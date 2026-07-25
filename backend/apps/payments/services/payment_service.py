@@ -96,7 +96,6 @@ def grant_course_access(transaction):
         "status": Enrollment.Status.ACTIVE,
         "payment_transaction": transaction,
         "enrolled_at": timezone.now(),
-        "access_granted_at": timezone.now(),
     }
     enrollment, created = enrollment_repository.get_or_create_enrollment(student, course, defaults)
 
@@ -104,7 +103,6 @@ def grant_course_access(transaction):
         enrollment.status = Enrollment.Status.ACTIVE
         enrollment.payment_transaction = transaction
         enrollment.enrolled_at = timezone.now()
-        enrollment.access_granted_at = timezone.now()
         enrollment.save()
 
     total_lessons = lesson_repository.count_by_course(course.id)

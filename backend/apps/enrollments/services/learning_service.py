@@ -14,7 +14,6 @@ from apps.quizzes.repositories import quiz_repository
 from apps.certificates.repositories import certificate_repository
 from apps.certificates.services import certificate_image_service
 from apps.notifications import services as notif_service
-from apps.enrollments.serializers.learning_serializer import ChapterLearningSerializer
 
 
 def get_enrollment_or_404(user, course_id):
@@ -233,7 +232,7 @@ def complete_course(user, course_id):
             except Exception as e:
                 logger = logging.getLogger(__name__)
                 logger.error(f"Failed to generate certificate image for {certificate.id}: {e}")
-        return {"course_completed": True, "completed_at": enrollment.completed_at.isoformat(),
+        return {"course_completed": True, "completed_at": progress.completed_at.isoformat(),
                 "certificate": {"id": str(certificate.id), "certificate_code": certificate.certificate_code, "issued_at": certificate.issued_at.isoformat(), "image_url": certificate.image_url or ""}}
 
     with transaction.atomic():
@@ -259,7 +258,7 @@ def complete_course(user, course_id):
     except Exception:
         pass
 
-    return {"course_completed": True, "completed_at": enrollment.completed_at.isoformat(),
+    return {"course_completed": True, "completed_at": progress.completed_at.isoformat(),
             "certificate": {"id": str(certificate.id), "certificate_code": certificate.certificate_code, "issued_at": certificate.issued_at.isoformat(), "image_url": certificate.image_url or ""}}
 
 

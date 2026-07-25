@@ -9,13 +9,11 @@ Nguyên tắc: Không thay đổi models hiện có, chỉ mở rộng services.
 
 import logging
 from datetime import timedelta
-from decimal import Decimal
 
 from django.db import transaction
 from django.utils import timezone
 from django.conf import settings
 
-from apps.notifications import services as notif_service
 from apps.notifications.models import Notification
 from apps.notifications.services import notification_service as notif_svc
 
@@ -23,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 
 # =============================================================================
-# 1. 🎯 TỰ ĐỘNG HOÀN THÀNH KHÓA HỌC & CẤP CHỨNG CHỈ
+# 1.TỰ ĐỘNG HOÀN THÀNH KHÓA HỌC & CẤP CHỨNG CHỈ
 # =============================================================================
 
 def auto_complete_course(enrollment, course_progress):
@@ -87,14 +85,14 @@ def auto_complete_course(enrollment, course_progress):
 
     return {
         'course_completed': True,
-        'completed_at': enrollment.completed_at.isoformat() if enrollment.completed_at else None,
+        'completed_at': course_progress.completed_at.isoformat() if course_progress.completed_at else None,
         'certificate_code': cert.certificate_code,
         'certificate_id': str(cert.id),
     }
 
 
 # =============================================================================
-# 2. 🏆 TỰ ĐỘNG CHÚC MỪNG CỘT MỐC (MILESTONE CELEBRATION)
+# 2. TỰ ĐỘNG CHÚC MỪNG CỘT MỐC (MILESTONE CELEBRATION)
 # =============================================================================
 
 MILESTONES = [25, 50, 75, 90]
@@ -152,7 +150,7 @@ def check_and_celebrate_milestone(enrollment, course_progress, course_title, old
 
 
 # =============================================================================
-# 3. 🔔 NHẮC NHỞ HỌC VIÊN VẮNG MẶT (INACTIVITY RE-ENGAGEMENT)
+# 3. NHẮC NHỞ HỌC VIÊN VẮNG MẶT (INACTIVITY RE-ENGAGEMENT)
 # =============================================================================
 
 def process_inactivity_reminders():
@@ -186,7 +184,7 @@ def process_inactivity_reminders():
             if days_since >= 30:
                 _send_inactivity_notification(
                     student, course_title, days_since,
-                    '🚨 Bạn đã vắng mặt 30 ngày!',
+                    ' Bạn đã vắng mặt 30 ngày!',
                     f'Đã 30 ngày kể từ lần cuối bạn học "{course_title}". '
                     f'Đừng bỏ lỡ kiến thức! Hãy quay lại học ngay hôm nay. '
                     f'Chúng tôi luôn đồng hành cùng bạn! 💪',
@@ -197,7 +195,7 @@ def process_inactivity_reminders():
             elif days_since >= 14:
                 _send_inactivity_notification(
                     student, course_title, days_since,
-                    '⏰ Đã 2 tuần bạn chưa học!',
+                    ' Đã 2 tuần bạn chưa học!',
                     f'Đã 14 ngày kể từ lần cuối bạn học "{course_title}". '
                     f'Kiến thức cũ sẽ nhanh quên đấy! Hãy dành 15 phút để ôn lại nhé. 📚',
                     is_email=True,
@@ -207,7 +205,7 @@ def process_inactivity_reminders():
             elif days_since >= 7:
                 _send_inactivity_notification(
                     student, course_title, days_since,
-                    '💡 Bạn đã học gì hôm nay chưa?',
+                    ' Bạn đã học gì hôm nay chưa?',
                     f'Đã 7 ngày kể từ lần cuối bạn học "{course_title}". '
                     f'Chỉ cần 10 phút mỗi ngày là bạn đã tiến bộ rồi! 🚀',
                     is_email=False,
@@ -234,7 +232,7 @@ def _send_inactivity_notification(student, course_title, days, title, body, is_e
 
 
 # =============================================================================
-# 4. 📉 CẢNH BÁO GIẢM GIÁ CHO WISHLIST (PRICE DROP ALERT)
+# 4. CẢNH BÁO GIẢM GIÁ CHO WISHLIST (PRICE DROP ALERT)
 # =============================================================================
 
 def notify_wishlist_price_drop(course, old_price, new_price):
@@ -242,8 +240,6 @@ def notify_wishlist_price_drop(course, old_price, new_price):
     Khi giá khóa học giảm, gửi notification cho tất cả học viên 
     đã thêm khóa học vào wishlist.
     """
-    from apps.courses.repositories import course_repository
-
     if new_price >= old_price:
         logger.info(f"Price did not drop for course {course.id}. Skipping.")
         return 0
@@ -418,10 +414,11 @@ def process_review_reminders():
     completed_enrollments = enrollment_repository.get_completed_enrollments()
 
     for enrollment in completed_enrollments:
-        if not enrollment.completed_at:
+        progress = getattr(enrollment, 'progress', None)
+        if not progress or not progress.completed_at:
             continue
 
-        days_since = (now - enrollment.completed_at).days
+        days_since = (now - progress.completed_at).days
         student = enrollment.student
         course = course_repository.get_by_id(enrollment.course_id)
         course_title = course.title if course else 'Khóa học'

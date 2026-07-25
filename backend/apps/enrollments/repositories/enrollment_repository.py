@@ -61,7 +61,6 @@ def mark_completed(enrollment):
     """Đánh dấu enrollment là COMPLETED."""
     from django.utils import timezone
     enrollment.status = "COMPLETED"
-    enrollment.completed_at = timezone.now()
     enrollment.save()
     return enrollment
 

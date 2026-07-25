@@ -11,28 +11,19 @@ class Enrollment(models.Model):
         ACTIVE = 'ACTIVE', 'Active'
         COMPLETED = 'COMPLETED', 'Completed'
 
-    class RefundStatus(models.TextChoices):
-        NONE = 'NONE', 'None'
-        REQUESTED = 'REQUESTED', 'Requested'
-        APPROVED = 'APPROVED', 'Approved'
-        REJECTED = 'REJECTED', 'Rejected'
-        REFUNDED = 'REFUNDED', 'Refunded'
-
+    # Học viên (User) đã đăng ký khóa học
     student = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='enrollments')
+    # Khóa học được đăng ký
     course = models.ForeignKey('courses.Course', on_delete=models.CASCADE, related_name='enrollments')
+    # Giao dịch thanh toán tương ứng với đăng ký này (một đăng ký có thể không có payment nếu là free)
     payment_transaction = models.ForeignKey('payments.PaymentTransaction', on_delete=models.SET_NULL, null=True, blank=True, related_name='enrollments')
-    # Trạng thái đăng ký
+    # Trạng thái đăng ký: ACTIVE - đang học, COMPLETED - đã hoàn thành
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.ACTIVE)
-    # Trạng thái hoàn tiền
-    refund_status = models.CharField(max_length=20, choices=RefundStatus.choices, default=RefundStatus.NONE)
-    refund_requested_at = models.DateTimeField(null=True, blank=True)
-    refund_reason = models.TextField(null=True, blank=True)
-    refunded_at = models.DateTimeField(null=True, blank=True)
-    # Thời điểm học viên chính thức đăng ký (sau khi thanh toán)
+    # Thời điểm học viên chính thức đăng ký và được cấp quyền truy cập khóa học (sau khi thanh toán thành công)
     enrolled_at = models.DateTimeField(null=True, blank=True)
-    access_granted_at = models.DateTimeField(null=True, blank=True)
-    completed_at = models.DateTimeField(null=True, blank=True)
+    # Thời điểm tạo bản ghi
     created_at = models.DateTimeField(auto_now_add=True)
+    # Thời điểm cập nhật bản ghi gần nhất
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:

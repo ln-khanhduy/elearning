@@ -16,9 +16,9 @@ class EnrollmentSerializer(serializers.ModelSerializer):
         model = Enrollment
         fields = [
             "id", "course", "course_title", "course_thumbnail", "instructor_name",
-            "status", "refund_status", "progress_percent",
+            "status", "progress_percent",
             "completed_lessons_count", "total_lessons_count", "last_completed_lesson",
-            "enrolled_at", "completed_at", "created_at",
+            "enrolled_at", "created_at",
         ]
 
     def get_instructor_name(self, obj):
