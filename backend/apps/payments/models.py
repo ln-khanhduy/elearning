@@ -49,5 +49,5 @@ class PaymentTransaction(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        db_table = 'payment_transaction'
+        db_table = 'payment'
         ordering = ['-created_at']

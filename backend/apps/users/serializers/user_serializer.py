@@ -33,7 +33,7 @@ class UserDetailSerializer(serializers.ModelSerializer):
             "id", "email", "first_name", "last_name",
             "phone", "avatar_url", "is_active",
             "account_status_reason", "account_status_changed_at", "account_status_changed_by",
-            "date_joined", "last_login", "role", "google_email",
+            "date_joined", "last_login", "role",
             "permissions",
         ]
 
@@ -205,16 +205,6 @@ class InstructorApplicationSerializer(serializers.ModelSerializer):
         if obj.reviewed_by:
             return obj.reviewed_by.get_full_name() or obj.reviewed_by.first_name
         return None
-
-
-class LinkGoogleSerializer(serializers.Serializer):
-    """Serializer cho liên kết Google Account - nhận id_token từ Google."""
-
-    id_token = serializers.CharField(
-        write_only=True,
-        allow_blank=False,
-        trim_whitespace=True,
-    )
 
 
 class InstructorReviewSerializer(serializers.Serializer):

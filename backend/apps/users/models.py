@@ -50,8 +50,6 @@ class User(AbstractUser):
     email = models.EmailField(unique=True)                # Email đăng nhập
     phone = models.CharField(max_length=15, null=True, blank=True)  # Số điện thoại
     avatar = models.ImageField(upload_to='avatars/', null=True, blank=True)  # Ảnh đại diện
-    # Liên kết Google Account
-    google_email = models.EmailField(null=True, blank=True, unique=True)
     account_status_reason = models.TextField(null=True, blank=True)  # Lý do khóa
     account_status_changed_at = models.DateTimeField(null=True, blank=True)  # Thời gian khóa/mở
     account_status_changed_by = models.ForeignKey(

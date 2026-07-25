@@ -115,4 +115,4 @@ class QuizAttemptAnswer(models.Model):
     graded_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
-        db_table = 'quiz_attempt_answer'
+        db_table = 'attempt_answer'

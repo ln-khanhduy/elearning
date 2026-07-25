@@ -20,7 +20,6 @@ from apps.users.view.user_views import (
     InstructorCertificateDeleteAPIView,
     DownloadInstructorCertificateAPIView,
     PreviewInstructorCertificateAPIView,
-    LinkGoogleAPIView,
     MyInstructorCertificateUploadAPIView,
     MyInstructorCertificateListAPIView,
     MyInstructorCertificateDeleteAPIView,
@@ -33,8 +32,6 @@ urlpatterns = [
     path("me/", CurrentUserAPIView.as_view(), name="current-user"),
     path("me/update/", UpdateProfileAPIView.as_view(), name="update-profile"),
     path("me/change-password/", ChangePasswordAPIView.as_view(), name="change-password"),
-
-    path("link-google/", LinkGoogleAPIView.as_view(), name="link-google"),
 
     path("<uuid:user_id>/change-role/", ChangeUserRoleAPIView.as_view(), name="change-user-role"),
     path("<uuid:user_id>/lock/", LockUserAPIView.as_view(), name="lock-user"),

@@ -32,16 +32,6 @@ def get_role_by_code(code):
     return get_object_or_404(Role, code=code)
 
 
-def get_user_by_google_email(google_email):
-    return User.objects.filter(google_email=google_email.lower()).first()
-
-
-def link_google_account(user, google_email):
-    user.google_email = google_email
-    user.save(update_fields=["google_email"])
-    return user
-
-
 def update_last_login(user):
     user.last_login = timezone.now()
     user.save(update_fields=["last_login"])

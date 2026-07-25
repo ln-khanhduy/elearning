@@ -15,7 +15,7 @@ class Chapter(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        db_table = 'course_chapter'
+        db_table = 'chapter'
         ordering = ['order', 'id']
         unique_together = ('course', 'order')  # Không trùng thứ tự trong cùng khóa học
 

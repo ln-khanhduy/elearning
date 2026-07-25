@@ -5,7 +5,7 @@ def get_by_user(user_id):
     """Lấy danh sách enrollment của một user (kèm course)."""
     return Enrollment.objects.select_related("course", "course__assigned_instructor").filter(
         student_id=user_id
-    ).exclude(status=Enrollment.Status.CANCELLED).order_by("-created_at")
+    ).order_by("-created_at")
 
 
 def get_by_id(enrollment_id):

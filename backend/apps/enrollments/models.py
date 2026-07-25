@@ -8,10 +8,8 @@ class Enrollment(models.Model):
     Mỗi học viên có thể đăng ký nhiều khóa học.
     """
     class Status(models.TextChoices):
-        PENDING_PAYMENT = 'PENDING_PAYMENT', 'Pending payment'
         ACTIVE = 'ACTIVE', 'Active'
         COMPLETED = 'COMPLETED', 'Completed'
-        CANCELLED = 'CANCELLED', 'Cancelled'
 
     class RefundStatus(models.TextChoices):
         NONE = 'NONE', 'None'
@@ -24,7 +22,7 @@ class Enrollment(models.Model):
     course = models.ForeignKey('courses.Course', on_delete=models.CASCADE, related_name='enrollments')
     payment_transaction = models.ForeignKey('payments.PaymentTransaction', on_delete=models.SET_NULL, null=True, blank=True, related_name='enrollments')
     # Trạng thái đăng ký
-    status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING_PAYMENT)
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.ACTIVE)
     # Trạng thái hoàn tiền
     refund_status = models.CharField(max_length=20, choices=RefundStatus.choices, default=RefundStatus.NONE)
     refund_requested_at = models.DateTimeField(null=True, blank=True)

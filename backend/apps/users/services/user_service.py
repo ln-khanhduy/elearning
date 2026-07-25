@@ -139,21 +139,6 @@ def update_profile(user, validated_data):
     return user
 
 
-@transaction.atomic
-def link_google_account(user, id_token_value):
-    google_info = google_oauth_service.verify_google_token(id_token_value)
-    google_email = google_info["email"].lower()
-
-    existing_user = user_repository.get_user_by_google_email(google_email)
-    if existing_user and existing_user.id != user.id:
-        raise DRFValidationError({"google_email": "Google Account này đã được liên kết với tài khoản khác."})
-
-    try:
-        return user_repository.link_google_account(user, google_email)
-    except IntegrityError:
-        raise DRFValidationError({"google_email": "Google Account này đã được liên kết với tài khoản khác."})
-
-
 def change_password(user, old_password, new_password):
     if not user.check_password(old_password):
         raise DRFValidationError({"old_password": "Mật khẩu cũ không đúng."})

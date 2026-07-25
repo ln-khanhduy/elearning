@@ -16,7 +16,7 @@ class UserSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'email', 'first_name', 'last_name', 'full_name',
             'phone', 'role', 'avatar_url', 'date_joined', 'last_login',
-            'google_email', 'is_active', 'permissions',
+            'is_active', 'permissions',
         ]
 
     def get_full_name(self, obj):

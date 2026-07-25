@@ -13,7 +13,7 @@ class Category(models.Model):
     slug = models.SlugField(unique=True)       # Đường dẫn URL (VD: "lap-trinh")
 
     class Meta:
-        db_table = 'course_category'
+        db_table = 'category'
         ordering = ['name']
 
     def __str__(self):
