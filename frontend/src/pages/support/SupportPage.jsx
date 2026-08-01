@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import { createRequestApi, getMyRequestsApi } from "../../api/supportAPI";
+import { formatDate } from "../../utils/formatDate";
 
 const REQUEST_TYPE_LABELS = {
   REFUND: "Yêu cầu hoàn tiền",
@@ -23,6 +24,7 @@ const STATUS_CLASSES = {
   REJECTED: "badge-danger-bg",
 };
 
+// Trang hỗ trợ: tạo yêu cầu hỗ trợ mới và xem danh sách yêu cầu của người dùng hiện tại
 function SupportPage() {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -37,6 +39,7 @@ function SupportPage() {
     loadRequests();
   }, []);
 
+  // Tải danh sách yêu cầu hỗ trợ của người dùng từ server
   const loadRequests = async () => {
     try {
       setLoading(true);
@@ -50,6 +53,7 @@ function SupportPage() {
     }
   };
 
+  // Gửi yêu cầu hỗ trợ mới lên server
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.description.trim()) {
@@ -69,11 +73,6 @@ function SupportPage() {
     } catch (err) {
       toast.error(err.message || "Không thể gửi yêu cầu.");
     }
-  };
-
-  const formatDate = (d) => {
-    if (!d) return "";
-    return new Date(d).toLocaleDateString("vi-VN");
   };
 
   return (

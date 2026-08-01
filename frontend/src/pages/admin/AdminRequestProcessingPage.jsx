@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import { getAdminRequestsApi, processRequestApi } from "../../api/supportAPI";
+import { formatDate } from "../../utils/formatDate";
 
 const REQUEST_TYPE_LABELS = {
   REFUND: "Hoàn tiền",
@@ -23,6 +24,7 @@ const STATUS_CLASSES = {
   REJECTED: "badge-danger-bg",
 };
 
+// Trang xử lý yêu cầu hỗ trợ: xem và xử lý các yêu cầu từ người dùng
 function AdminRequestProcessingPage() {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -65,11 +67,6 @@ function AdminRequestProcessingPage() {
     } catch (err) {
       toast.error(err.message || "Không thể xử lý yêu cầu.");
     }
-  };
-
-  const formatDate = (d) => {
-    if (!d) return "";
-    return new Date(d).toLocaleDateString("vi-VN");
   };
 
   return (

@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 
+// Trang 404: hiển thị khi người dùng truy cập đường dẫn không tồn tại
 function NotFoundPage() {
   return (
     <div className="not-found-page d-flex flex-column align-items-center justify-content-center" style={{ minHeight: "60vh" }}>

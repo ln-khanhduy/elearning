@@ -12,30 +12,19 @@ const request = async (callback) => {
 // ==================== LEARNING ====================
 // BE: /api/learning/
 
-/**
- * Lấy curriculum cho learning page (yêu cầu đã enroll).
- * GET /api/learning/courses/{courseId}/curriculum/
- */
+// Lấy curriculum cho trang học tập (yêu cầu đã đăng ký khóa học)
 export const getLearningCurriculumApi = async (courseId) => {
   return request(() => apiClient.get(`/api/learning/courses/${courseId}/curriculum/`));
 };
 
-/**
- * Đánh dấu hoàn thành bài học.
- * POST /api/learning/courses/{courseId}/lessons/complete/
- * Body: { lesson_id: number }
- */
+// Đánh dấu hoàn thành một bài học
 export const markLessonCompleteApi = async (courseId, lessonId) => {
   return request(() =>
     apiClient.post(`/api/learning/courses/${courseId}/lessons/complete/`, { lesson_id: lessonId })
   );
 };
 
-/**
- * Nộp bài quiz.
- * POST /api/learning/courses/{courseId}/quizzes/submit/
- * Body: { quiz_id: number, answers: [{ question_id, selected_option_id }] }
- */
+// Nộp bài quiz và nhận kết quả chấm điểm
 export const submitQuizApi = async (courseId, quizId, answers) => {
   return request(() =>
     apiClient.post(`/api/learning/courses/${courseId}/quizzes/submit/`, {
@@ -45,10 +34,7 @@ export const submitQuizApi = async (courseId, quizId, answers) => {
   );
 };
 
-/**
- * Hoàn thành khóa học và cấp chứng chỉ.
- * POST /api/learning/courses/{courseId}/complete/
- */
+// Hoàn thành khóa học và cấp chứng chỉ
 export const completeCourseApi = async (courseId) => {
   return request(() => apiClient.post(`/api/learning/courses/${courseId}/complete/`));
 };

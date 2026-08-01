@@ -1,5 +1,6 @@
 import React from "react";
 
+// Trang liên hệ: hiển thị các kênh liên lạc (điện thoại, email, github, facebook, zalo)
 function ContactPage() {
   const contacts = [
     {

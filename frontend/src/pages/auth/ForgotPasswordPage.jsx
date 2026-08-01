@@ -4,12 +4,14 @@ import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { forgotPassword } from "../../services/authService";
 
+// Trang quên mật khẩu: nhập email để nhận mã OTP đặt lại mật khẩu
 function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
+  // Xử lý gửi yêu cầu khôi phục mật khẩu bằng email
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");

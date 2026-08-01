@@ -9,16 +9,7 @@ const request = async (callback) => {
   }
 };
 
-/**
- * Lấy danh sách người dùng (Student, Instructor) có phân trang, tìm kiếm, lọc.
- * @param {Object} params - Query params
- * @param {string} params.search - Tìm kiếm theo họ tên hoặc email
- * @param {string} params.role - 'all' | 'student' | 'instructor'
- * @param {string} params.status - 'all' | 'active' | 'locked'
- * @param {number} params.page - Trang hiện tại
- * @param {number} params.page_size - Số lượng item mỗi trang
- * @returns {Promise<Object>} { results, total, page, page_size, total_pages }
- */
+// Lấy danh sách người dùng (học viên, giảng viên) có phân trang, tìm kiếm, lọc
 export const getUsersApi = async (params = {}) => {
   const query = new URLSearchParams();
   if (params.search) query.append("search", params.search);
@@ -30,12 +21,7 @@ export const getUsersApi = async (params = {}) => {
   return request(() => apiClient.get(`/api/admin/users/${qs ? `?${qs}` : ""}`));
 };
 
-/**
- * Khóa hoặc mở khóa tài khoản người dùng.
- * @param {string} id - UUID của người dùng
- * @param {string} [reason] - Lý do khóa (chỉ cần khi khóa)
- * @returns {Promise<Object>} { id, is_active, message }
- */
+// Khóa hoặc mở khóa tài khoản người dùng (cần lý do khi khóa)
 export const toggleUserActiveApi = async (id, reason) => {
   const payload = {};
   if (reason) payload.reason = reason;

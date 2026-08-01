@@ -8,6 +8,7 @@ import {
 
 const UserContext = createContext();
 
+// Provider quản lý trạng thái người dùng và token toàn cục cho toàn bộ ứng dụng
 export function UserProvider({ children }) {
   const hasLoadedRef = useRef(false);
 
@@ -15,6 +16,7 @@ export function UserProvider({ children }) {
   const [accessToken, setAccessTokenState] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Lưu access token vào state và localStorage
   const setAccessToken = (token) => {
     setAccessTokenState(token || null);
 
@@ -23,6 +25,7 @@ export function UserProvider({ children }) {
     }
   };
 
+  // Xóa toàn bộ dữ liệu phiên đăng nhập (token + user)
   const clearUserSession = () => {
     clearAuthSessionData();
     setAccessTokenState(null);
@@ -67,11 +70,13 @@ export function UserProvider({ children }) {
     }
   };
 
+  // Tải lại thông tin người dùng (dùng sau khi cập nhật hồ sơ)
   const reloadUser = async () => {
     setLoading(true);
     await loadUser();
   };
 
+  // Chỉ tải người dùng một lần khi component mount
   useEffect(() => {
     if (hasLoadedRef.current) return;
 
@@ -93,4 +98,5 @@ export function UserProvider({ children }) {
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>;
 }
 
+// Hook tiện ích để truy cập context người dùng từ bất kỳ component nào
 export const useUser = () => useContext(UserContext);

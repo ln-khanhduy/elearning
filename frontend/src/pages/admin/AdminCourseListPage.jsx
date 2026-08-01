@@ -15,6 +15,7 @@ const STATUS_MAP = {
   HIDDEN: { label: "Đã ẩn", color: "#6f42c1", icon: "bi-eye-slash" },
 };
 
+// Trang danh sách khóa học quản trị: hiển thị, tìm kiếm, lọc và thao tác khóa học
 function AdminCourseListPage() {
   const navigate = useNavigate();
   const [courses, setCourses] = useState([]);

@@ -3,10 +3,12 @@ import { getMyCertificates } from "../../services/certificateService";
 import { Link } from "react-router-dom";
 import "../../style/student/certificates-page.css";
 
+// Trang chứng chỉ của tôi: hiển thị danh sách chứng chỉ đã đạt được từ các khóa học
 function CertificatesPage() {
   const [certificates, setCertificates] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // Tải danh sách chứng chỉ của người dùng từ server
   const loadCertificates = useCallback(async () => {
     try {
       setLoading(true);

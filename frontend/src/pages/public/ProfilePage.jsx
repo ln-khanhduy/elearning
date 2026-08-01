@@ -4,6 +4,7 @@ import { toast } from "react-toastify";
 import { useUser } from "../../context/UserContext";
 import { updateProfileApi, changePasswordApi, uploadInstructorCertificateApi, deleteInstructorCertificateApi } from "../../api/userAPI";
 
+// Trang hồ sơ cá nhân: quản lý thông tin cá nhân, hồ sơ giảng viên, thông tin thanh toán, chứng chỉ và đổi mật khẩu
 function ProfilePage() {
   const navigate = useNavigate();
   const { user, reloadUser } = useUser();
@@ -254,18 +255,21 @@ function ProfilePage() {
   };
 
   // ===== Helpers =====
+  // Định dạng ngày tháng theo kiểu Việt Nam (vd: 5 Th07, 2026)
   const formatDate = (dateStr) => {
     if (!dateStr) return "—";
     const d = new Date(dateStr);
     return `${d.getDate()} Th${String(d.getMonth() + 1).padStart(2, "0")}, ${d.getFullYear()}`;
   };
 
+  // Lấy chữ cái đầu tiên của họ tên hoặc email để hiển thị avatar mặc định
   const getInitial = () => {
     if (user?.first_name) return user.first_name.charAt(0).toUpperCase();
     if (user?.email) return user.email.charAt(0).toUpperCase();
     return "U";
   };
 
+  // Ghép họ và tên, nếu thiếu thì hiển thị email hoặc "Người dùng"
   const getFullName = () => {
     if (user?.first_name || user?.last_name) {
       return `${user.first_name || ""} ${user.last_name || ""}`.trim();
@@ -281,6 +285,7 @@ function ProfilePage() {
     return null;
   };
 
+  // Chuyển đổi role code sang tên hiển thị tiếng Việt
   const getRoleName = (roleCode) => {
     const roleMap = {
       SUPERADMIN: "SUPER ADMIN",

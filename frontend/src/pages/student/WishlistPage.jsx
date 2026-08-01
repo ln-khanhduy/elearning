@@ -4,10 +4,12 @@ import { toast } from "react-toastify";
 import { getWishlistApi, removeFromWishlistApi } from "../../api/wishlistAPI";
 import { addToCartApi } from "../../api/cartAPI";
 
+// Trang danh sách khóa học yêu thích: hiển thị, xóa khỏi yêu thích và thêm vào giỏ hàng
 function WishlistPage() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // Tải danh sách khóa học yêu thích từ server
   const loadWishlist = useCallback(async () => {
     try {
       setLoading(true);
@@ -24,6 +26,7 @@ function WishlistPage() {
     loadWishlist();
   }, [loadWishlist]);
 
+  // Xóa khóa học khỏi danh sách yêu thích
   const handleRemove = async (courseId) => {
     try {
       await removeFromWishlistApi(courseId);
@@ -34,6 +37,7 @@ function WishlistPage() {
     }
   };
 
+  // Thêm khóa học từ danh sách yêu thích vào giỏ hàng
   const handleAddToCart = async (courseId) => {
     try {
       await addToCartApi(courseId);
@@ -43,6 +47,7 @@ function WishlistPage() {
     }
   };
 
+  // Định dạng giá tiền theo chuẩn Việt Nam
   const formatPrice = (val) => {
     if (!val && val !== 0) return null;
     return Number(val).toLocaleString("vi-VN") + "₫";

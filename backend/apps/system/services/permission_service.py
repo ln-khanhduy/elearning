@@ -1,7 +1,7 @@
 """PermissionService - Quản lý Permission và gán quyền cho Role."""
 from rest_framework.exceptions import ValidationError
 from apps.users.models import Role, RolePermission
-from apps.common.management.commands.seed_permissions import PERMISSIONS
+from apps.common.management.commands.seed_permissions import PERMISSIONS, PERMISSION_DEPS
 
 
 def get_all_permissions():
@@ -87,15 +87,21 @@ def update_role_permissions(role_id, permission_codes):
     if not role:
         raise ValidationError({"detail": "Không tìm thấy role."})
 
+    # Tự động bổ sung các permission phụ thuộc (VD: student.cart.manage -> student.cart.view)
+    resolved = set(permission_codes)
+    for code in permission_codes:
+        deps = PERMISSION_DEPS.get(code, [])
+        resolved.update(deps)
+
     # Xóa tất cả permissions cũ
     RolePermission.objects.filter(role=role).delete()
 
-    # Thêm permissions mới
-    for code in permission_codes:
+    # Thêm permissions mới (đã bao gồm deps)
+    for code in sorted(resolved):
         RolePermission.objects.create(
             role=role,
             code=code,
             name=PERMISSIONS.get(code, code),
         )
 
-    return permission_codes
+    return sorted(resolved)

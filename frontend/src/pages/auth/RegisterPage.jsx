@@ -4,6 +4,7 @@ import InputField from "../../components/common/InputField";
 import TermsModal from "../../components/common/TermsModal";
 import { sendRegisterOtp } from "../../services/authService";
 
+// Trang đăng ký tài khoản mới (họ tên, email, mật khẩu, xác nhận mật khẩu, điều khoản)
 function RegisterPage() {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -15,6 +16,7 @@ function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
+  // Xử lý gửi thông tin đăng ký và gửi mã OTP xác thực
   const handleSubmit = async (event) => {
     event.preventDefault();
     setError("");

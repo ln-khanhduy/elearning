@@ -5,6 +5,7 @@ import InputField from "../../components/common/InputField";
 import { Link, useNavigate } from "react-router-dom";
 import { resetPassword } from "../../services/authService";
 
+// Trang đặt lại mật khẩu mới sau khi xác thực mã OTP
 function ResetPasswordPage() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -14,6 +15,7 @@ function ResetPasswordPage() {
   const location = useLocation();
   const token =location.state?.resetToken;
 
+  // Kiểm tra token đặt lại mật khẩu, nếu thiếu thì quay về trang quên mật khẩu
   useEffect(() => {
   if (!token) {
     navigate(
@@ -25,6 +27,7 @@ function ResetPasswordPage() {
   }
 }, [token, navigate]);
 
+  // Xử lý đặt lại mật khẩu mới và chuyển về trang đăng nhập
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");

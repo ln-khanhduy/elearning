@@ -7,11 +7,13 @@ import { getInstructorCourseDetailApi } from "../../api/courseAPI";
 const STATUS_LABEL = { OPEN: "Chờ trả lời", ANSWERED: "Đã trả lời", CLOSED: "Đã đóng" };
 const STATUS_BADGE = { OPEN: "bg-warning text-dark", ANSWERED: "bg-success", CLOSED: "bg-secondary" };
 
+// Modal trả lời câu hỏi Q&A của học viên
 function QuestionReplyModal({ show, question, onClose, onReplied }) {
   const [content, setContent] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const { courseId } = useParams();
   if (!show) return null;
+  // Gửi nội dung trả lời cho câu hỏi
   const handleSubmit = async () => {
     if (!content.trim()) { toast.warning("Vui lòng nhập nội dung trả lời."); return; }
     setSubmitting(true);
@@ -55,6 +57,7 @@ function QuestionReplyModal({ show, question, onClose, onReplied }) {
   );
 }
 
+// Trang quản lý Hỏi & Đáp cho giảng viên: xem và trả lời câu hỏi của học viên
 function InstructorCourseQAPage() {
   const { courseId } = useParams();
   const navigate = useNavigate();
@@ -67,6 +70,7 @@ function InstructorCourseQAPage() {
   const [total, setTotal] = useState(0);
   const [replyQuestion, setReplyQuestion] = useState(null);
 
+  // Tải thông tin khóa học để hiển thị tiêu đề
   const loadCourse = useCallback(async () => {
     try {
       const res = await getInstructorCourseDetailApi(courseId);
@@ -74,6 +78,7 @@ function InstructorCourseQAPage() {
     } catch (err) { toast.error("Không thể tải thông tin khóa học."); }
   }, [courseId]);
 
+  // Tải danh sách câu hỏi Q&A của khóa học (có lọc trạng thái và phân trang)
   const loadQuestions = useCallback(async () => {
     setLoading(true);
     try {
@@ -89,6 +94,7 @@ function InstructorCourseQAPage() {
   useEffect(() => { loadCourse(); }, [loadCourse]);
   useEffect(() => { loadQuestions(); }, [loadQuestions]);
 
+  // Thay đổi bộ lọc trạng thái câu hỏi và quay về trang đầu
   const handleFilterChange = (newStatus) => { setStatusFilter(newStatus); setPage(1); };
 
   return (

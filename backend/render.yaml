@@ -1,14 +1,49 @@
 # Render Blueprint - Deploy Django Backend
-# KHÔNG dùng file này. Đọc hướng dẫn bên dưới.
-# 
-# ⚠️ Cách deploy đúng (không dùng render.yaml):
-# 1. Vào Render Dashboard → + New → Web Service
+# KHÔNG dùng file này để deploy tự động. Đọc hướng dẫn bên dưới.
+#
+#  LƯU Ý QUAN TRỌNG:
+# Tài khoản Render Free KHÔNG có tùy chọn "New → Redis" (Redis chỉ có từ plan
+# Starter trở lên). Thay vào đó, Render Free CÓ sẵn "New → Cron Job" - đây chính
+# là cách ĐƠN GIẢN VÀ MIỄN PHÍ để chạy `run_automation` hàng ngày.
+#
+# ============================================================
+# CÁCH DEPLOY TRÊN RENDER FREE (KHÔNG CẦN REDIS):
+# ============================================================
+#
+# ---- BƯỚC 1: Deploy Web Service (Backend API) ----
+# 1. Render Dashboard → + New → Web Service
 # 2. Chọn repo: ln-khanhduy/elearning
 # 3. Cấu hình:
 #    - Name: elearning-backend
-#    - Root Directory: backend    ← QUAN TRỌNG
+#    - Root Directory: backend        ← QUAN TRỌNG
 #    - Runtime: Docker
 #    - Region: Singapore
 #    - Plan: Free
-# 4. Add Environment Variables (thủ công)
+# 4. Environment Variables: copy từ backend/.env.example
+#    (DB_*, SECRET_KEY, EMAIL_*, CLOUDINARY_*, STRIPE_*, FRONTEND_URL...)
 # 5. Deploy
+#
+# ---- BƯỚC 2: Tạo Cron Job để chạy automation hàng ngày ----
+# 1. Render Dashboard → + New → Cron Job
+# 2. Chọn repo: ln-khanhduy/elearning
+# 3. Cấu hình:
+#    - Name: elearning-automation
+#    - Root Directory: backend        ← QUAN TRỌNG
+#    - Runtime: Docker
+#    - Region: Singapore
+#    - Plan: Free
+#    - Command: python manage.py run_automation   ← lệnh sẽ chạy
+#    - Schedule: 0 2 * * *                        ← 02:00 sáng mỗi ngày
+# 4. Environment Variables: GIỐNG HỆT Web Service ở BƯỚC 1
+#    (đặc biệt là DB_* - vì run_automation truy cập database)
+# 5. Create Cron Job
+#
+#  XONG! Mỗi ngày lúc 02:00, Render sẽ tự khởi động container tạm,
+#    chạy `python manage.py run_automation` (5 tác vụ: cấp chứng chỉ,
+#    nhắc nhở, payout HOLD→PAID, mời đánh giá, báo cáo tuần) rồi tắt.
+#
+# ============================================================
+# NẾU BẠN DÙNG PAID PLAN (Starter+):
+# ============================================================
+# Có thể tạo Redis: + New → Redis → dán Internal Connection String vào
+# env var REDIS_URL + CELERY_BROKER_URL của Web Service.

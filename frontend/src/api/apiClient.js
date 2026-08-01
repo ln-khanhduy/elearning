@@ -3,6 +3,7 @@ import { getAccessToken, setAccessToken, clearAuthSessionData } from "../utils/a
 
 const API_URL = import.meta.env.VITE_API_URL || "";
 
+// Đọc giá trị cookie theo tên (dùng để lấy CSRF token)
 const getCookie = (name) => {
   const cookieValue = document.cookie
     .split("; ")
@@ -76,11 +77,13 @@ export const getErrorMessage = (error) => {
   return "Có lỗi xảy ra. Vui lòng thử lại.";
 };
 
+// Tạo instance axios dùng chung với baseURL từ biến môi trường và gửi kèm cookie
 const apiClient = axios.create({
   baseURL: API_URL,
   withCredentials: true,
 });
 
+// Interceptor request: tự động gắn Authorization (Bearer token) và CSRF token vào mọi yêu cầu
 apiClient.interceptors.request.use(
   (config) => {
     const accessToken = getAccessToken();
@@ -99,6 +102,7 @@ apiClient.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
+// Interceptor response: khi gặp 401 sẽ tự động refresh token và thử lại yêu cầu
 apiClient.interceptors.response.use(
   (response) => response,
   async (error) => {

@@ -8,6 +8,7 @@ import {
 } from "../../api/courseAPI";
 import { getManagedInstructorsApi } from "../../api/instructorManagerAPI";
 
+// Trang gán giảng viên cho khóa học: chọn giảng viên phụ trách từ danh sách
 function AdminCourseAssignPage() {
   const { courseId } = useParams();
   const navigate = useNavigate();

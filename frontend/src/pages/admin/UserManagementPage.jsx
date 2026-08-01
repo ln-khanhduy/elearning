@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { toast } from "react-toastify";
 import { getUsersApi, toggleUserActiveApi } from "../../api/userManagementAPI";
 
+// Trang quản lý người dùng: hiển thị, tìm kiếm, lọc, khóa/mở khóa tài khoản người dùng
 function UserManagementPage() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);

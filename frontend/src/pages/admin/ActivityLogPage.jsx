@@ -26,6 +26,7 @@ const ACTION_TYPE_LABELS = {
   SYSTEM_CONFIG_UPDATE: "Cập nhật cấu hình hệ thống",
 };
 
+// Trang nhật ký hoạt động quản trị: xem và lọc lịch sử hoạt động trong hệ thống
 function ActivityLogPage() {
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);

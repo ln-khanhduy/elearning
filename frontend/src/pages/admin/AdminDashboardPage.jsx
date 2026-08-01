@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { getDashboardDataApi } from "../../api/dashboardAPI";
 
+// Trang tổng quan quản trị: hiển thị thống kê hạ tầng, người dùng, doanh thu và hoạt động hệ thống
 function AdminDashboardPage() {
   const navigate = useNavigate();
   const [dashboardData, setDashboardData] = useState(null);

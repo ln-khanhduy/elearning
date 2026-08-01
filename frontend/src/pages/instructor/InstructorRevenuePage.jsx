@@ -11,6 +11,7 @@ const STATUS_LABELS = {
   PENDING: { label: "Chờ xử lý", className: "pending" },
 };
 
+// Trang doanh thu của giảng viên: hiển thị tổng quan doanh thu và lịch sử giao dịch
 function InstructorRevenuePage() {
   const [revenue, setRevenue] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -19,6 +20,7 @@ function InstructorRevenuePage() {
     loadRevenue();
   }, []);
 
+  // Tải dữ liệu doanh thu và giao dịch của giảng viên từ server
   const loadRevenue = async () => {
     try {
       setLoading(true);
@@ -33,11 +35,13 @@ function InstructorRevenuePage() {
     }
   };
 
+  // Định dạng số tiền theo chuẩn Việt Nam
   const formatPrice = (val) => {
     if (!val && val !== 0) return "0₫";
     return Number(val).toLocaleString("vi-VN") + "₫";
   };
 
+  // Định dạng ngày giờ hiển thị theo chuẩn Việt Nam
   const formatDate = (dateStr) => {
     if (!dateStr) return "—";
     return new Date(dateStr).toLocaleDateString("vi-VN", {

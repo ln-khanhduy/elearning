@@ -2,13 +2,6 @@ import { memo, useState, useEffect, useCallback } from "react";
 import { toast } from "react-toastify";
 import { validateQuizForm, buildQuizPayload } from "../../../services/quizService";
 
-// Định nghĩa nhãn hiển thị cho từng loại câu hỏi
-const QUIZ_TYPE_LABELS = {
-  MCQ: "Trắc nghiệm",
-  ESSAY: "Tự luận",
-  FILL_BLANK: "Điền khuyết",
-};
-
 function QuizEditorPanel({ quiz, sectionId, onClose, onSave, saving, onImportQuestions }) {
   // === Khai báo state ===
   // form: lưu dữ liệu nhập từ người dùng

@@ -3,6 +3,7 @@ import { toast } from "react-toastify";
 import { getAdminTransactionsApi } from "../../api/paymentAPI";
 import "../../style/payment/payment.css";
 
+// Trang báo cáo tài chính: hiển thị và xuất các báo cáo tài chính của hệ thống
 function FinanceReportsPage() {
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);

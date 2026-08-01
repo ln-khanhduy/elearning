@@ -11,12 +11,14 @@ const request = async (callback) => {
 
 // ==================== STRIPE ====================
 
+// Tạo phiên thanh toán Stripe cho khóa học
 export const createStripeCheckoutApi = async (courseId) => {
   return request(() =>
     apiClient.post(`/api/payments/stripe/courses/${courseId}/checkout/`)
   );
 };
 
+// Xác minh thanh toán Stripe sau khi chuyển hướng về
 export const verifyStripePaymentApi = async (sessionId) => {
   return request(() =>
     apiClient.post("/api/payments/stripe/verify/", { session_id: sessionId })
@@ -25,6 +27,7 @@ export const verifyStripePaymentApi = async (sessionId) => {
 
 // ==================== TRANSACTIONS ====================
 
+// Lấy chi tiết một giao dịch
 export const getTransactionDetailApi = async (transactionId) => {
   return request(() =>
     apiClient.get(`/api/payments/transactions/${transactionId}/`)
@@ -33,12 +36,14 @@ export const getTransactionDetailApi = async (transactionId) => {
 
 // ==================== INSTRUCTOR ====================
 
+// Lấy dữ liệu doanh thu của giảng viên
 export const getInstructorRevenueApi = async () => {
   return request(() => apiClient.get("/api/payments/instructor/revenue/"));
 };
 
 // ==================== ADMIN ====================
 
+// Lấy danh sách giao dịch quản trị (có lọc theo trạng thái, nhà cung cấp, khóa học, học viên, ngày)
 export const getAdminTransactionsApi = async (params = {}) => {
   const query = new URLSearchParams();
   if (params.status) query.append("status", params.status);
@@ -53,6 +58,7 @@ export const getAdminTransactionsApi = async (params = {}) => {
   );
 };
 
+// Đánh dấu giao dịch đã thanh toán
 export const markTransactionPaidApi = async (transactionId) => {
   return request(() =>
     apiClient.post(
@@ -63,6 +69,7 @@ export const markTransactionPaidApi = async (transactionId) => {
 
 // ==================== FREE ENROLLMENT ====================
 
+// Đăng ký khóa học miễn phí
 export const enrollFreeCourseApi = async (courseId) => {
   return request(() =>
     apiClient.post(`/api/enrollments/courses/${courseId}/enroll-free/`)

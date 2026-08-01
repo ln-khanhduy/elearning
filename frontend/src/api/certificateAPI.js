@@ -12,6 +12,7 @@ const request = async (callback) => {
 // ==================== CERTIFICATES ====================
 // BE: /api/certificates/
 
+// Lấy danh sách chứng chỉ của người dùng hiện tại
 export const getMyCertificatesApi = async () => {
   return request(() => apiClient.get("/api/certificates/my-certificates/"));
 };

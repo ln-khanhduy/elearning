@@ -9,6 +9,7 @@ import {
 import { useUser } from "../../context/UserContext";
 import { toast } from "react-toastify";
 
+// Trang nhập mã OTP xác thực (dùng cho đăng ký và quên mật khẩu)
 function VerifyOtpPage() {
   const [otp, setOtp] = useState(new Array(6).fill(""));
   const [error, setError] = useState("");

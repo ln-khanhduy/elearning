@@ -12,7 +12,7 @@ function ProtectedRoute({ children, allowedPermissions }) {
     return <Navigate to="/login" replace />;
   }
 
-  // Lay role code tu user
+  // Lấy mã vai trò từ user
   const getRoleCode = (role) => {
     if (!role) return null;
     if (typeof role === "string") return role;
@@ -22,12 +22,12 @@ function ProtectedRoute({ children, allowedPermissions }) {
 
   const userRoleCode = getRoleCode(user?.role);
 
-  // SUPERADMIN luon duoc phep truy cap moi chuc nang
+  // SUPERADMIN luôn được phép truy cập mọi chức năng
   if (userRoleCode === "SUPERADMIN") {
     return children;
   }
 
-  // Kiem tra theo permission
+  // Kiểm tra theo quyền
   if (allowedPermissions && allowedPermissions.length > 0) {
     const userPermissions = user?.permissions || [];
     const hasPermission = allowedPermissions.some(p => userPermissions.includes(p));
@@ -37,7 +37,7 @@ function ProtectedRoute({ children, allowedPermissions }) {
     return children;
   }
 
-  // Neu khong co allowedPermissions, cho phep truy cap
+  // Nếu không có allowedPermissions, cho phép truy cập
   return children;
 }
 

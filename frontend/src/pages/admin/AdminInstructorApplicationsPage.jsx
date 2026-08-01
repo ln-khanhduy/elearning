@@ -7,6 +7,7 @@ import {
   previewCvApi,
 } from "../../api/userAPI";
 
+// Trang quản lý hồ sơ đăng ký giảng viên: xem và duyệt/từ chối các đơn đăng ký
 function AdminInstructorApplicationsPage() {
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);

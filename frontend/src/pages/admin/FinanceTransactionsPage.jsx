@@ -17,6 +17,7 @@ const STATUS_LABELS = {
   REFUNDED: { label: "Đã hoàn tiền", className: "refunded" },
 };
 
+// Trang danh sách giao dịch: xem và lọc các giao dịch thanh toán trong hệ thống
 function FinanceTransactionsPage() {
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);

@@ -8,6 +8,7 @@ import { login } from "../../services/authService";
 import { useUser } from "../../context/UserContext";
 import { setAccessToken as saveAccessToken } from "../../utils/authToken";
 
+// Trang đăng nhập: xử lý đăng nhập email/mật khẩu và đăng nhập bằng Google
 function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

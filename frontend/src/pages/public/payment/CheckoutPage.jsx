@@ -5,13 +5,14 @@ import { useCourseDetail } from "../../../hooks/course-detail/useCourseDetail";
 import { createStripeCheckoutApi } from "../../../api/paymentAPI";
 import "../../../style/payment/payment.css";
 
+// Trang thanh toán khóa học: hiển thị tóm tắt khóa học và tạo phiên thanh toán Stripe
 function CheckoutPage() {
   const { courseId } = useParams();
   const navigate = useNavigate();
   const { course, loading, error } = useCourseDetail(courseId);
   const [processing, setProcessing] = useState(false);
 
-  // Redirect if course is free
+  // Nếu khóa học miễn phí thì chuyển hướng về trang khóa học
   useEffect(() => {
     if (course && (!course.price || Number(course.price) <= 0)) {
       toast.info("Khóa học miễn phí. Vui lòng sử dụng đăng ký miễn phí.");
@@ -19,11 +20,13 @@ function CheckoutPage() {
     }
   }, [course, courseId, navigate]);
 
+  // Định dạng giá tiền theo chuẩn Việt Nam
   const formatPrice = (val) => {
     if (!val && val !== 0) return null;
     return Number(val).toLocaleString("vi-VN") + "₫";
   };
 
+  // Tạo phiên thanh toán Stripe và chuyển hướng đến trang thanh toán
   const handlePayment = async () => {
     if (!course) return;
     setProcessing(true);

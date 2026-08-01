@@ -4,6 +4,7 @@ import { toast } from "react-toastify";
 import { verifyStripePaymentApi } from "../../../api/paymentAPI";
 import "../../../style/payment/payment.css";
 
+// Trang kết quả thanh toán thành công: xác thực giao dịch Stripe và chuyển hướng học
 function SuccessPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -11,7 +12,9 @@ function SuccessPage() {
   const [errorMsg, setErrorMsg] = useState("");
   const [courseId, setCourseId] = useState(null);
 
+  // Xác thực phiên thanh toán Stripe khi trang được mở
   useEffect(() => {
+    // Kiểm tra và xác thực giao dịch thanh toán
     const verifyPayment = async () => {
       const sessionId = searchParams.get("session_id");
 
@@ -47,6 +50,7 @@ function SuccessPage() {
     verifyPayment();
   }, [searchParams, navigate]);
 
+  // Chuyển đến trang học khóa học sau khi thanh toán thành công
   const handleGoToCourse = () => {
     if (courseId) {
       navigate(`/courses/${courseId}/learn`, { replace: true });
@@ -55,6 +59,7 @@ function SuccessPage() {
     }
   };
 
+  // Quay lại trang chi tiết khóa học hoặc danh sách khóa học
   const handleGoBack = () => {
     if (courseId) {
       navigate(`/courses/${courseId}`, { replace: true });
