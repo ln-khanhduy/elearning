@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { getMyCoursesApi } from "../../api/enrollmentAPI";
 
+// Trang trung tâm học tập: hiển thị khóa học đang học, chưa bắt đầu và đã hoàn thành
 function MyLearningPage() {
   const navigate = useNavigate();
   const [enrollments, setEnrollments] = useState([]);
@@ -49,6 +50,7 @@ function MyLearningPage() {
     );
   }
 
+  // Xác định màu sắc thanh tiến độ dựa trên phần trăm hoàn thành
   const getProgressColor = (pct) => {
     if (pct >= 80) return "#198754";
     if (pct >= 40) return "#ffc107";

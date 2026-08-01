@@ -3,13 +3,16 @@ import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { getInstructorCourseAnalyticsApi } from "../../api/courseAPI";
 
+// Trang phân tích khóa học cho giảng viên: hiển thị thống kê học viên, tiến độ, doanh thu và đăng ký gần đây
 function InstructorCourseAnalyticsPage() {
   const { courseId } = useParams();
   const navigate = useNavigate();
   const [analytics, setAnalytics] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Tải dữ liệu phân tích khóa học khi trang được mở
   useEffect(() => {
+    // Lấy dữ liệu thống kê từ server
     const load = async () => {
       try {
         const res = await getInstructorCourseAnalyticsApi(courseId);

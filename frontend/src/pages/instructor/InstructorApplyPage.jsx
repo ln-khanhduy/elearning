@@ -3,6 +3,7 @@ import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import { applyInstructorApi } from "../../api/userAPI";
 
+// Trang đăng ký trở thành giảng viên: form 2 bước gồm thông tin chuyên môn và thông tin thanh toán
 function InstructorApplyPage() {
   const navigate = useNavigate();
 
@@ -28,6 +29,7 @@ function InstructorApplyPage() {
   const fileInputRef = useRef(null);
   const certFileInputRef = useRef(null);
 
+  // Xử lý chọn file CV (chỉ chấp nhận PDF, tối đa 10MB)
   const handleCvChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -45,6 +47,7 @@ function InstructorApplyPage() {
     setCvFileName(file.name);
   };
 
+  // Xử lý chọn nhiều file chứng chỉ (chỉ nhận PDF, tối đa 10MB mỗi file)
   const handleCertificateChange = (e) => {
     const files = Array.from(e.target.files);
     const newCerts = [];
@@ -66,10 +69,12 @@ function InstructorApplyPage() {
     e.target.value = "";
   };
 
+  // Xóa một chứng chỉ khỏi danh sách đã chọn
   const removeCertificate = (index) => {
     setCertificates((prev) => prev.filter((_, i) => i !== index));
   };
 
+  // Kiểm tra điều kiện, gửi hồ sơ đăng ký lên server và hiển thị thông báo thành công
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -114,6 +119,7 @@ function InstructorApplyPage() {
     }
   };
 
+  // Kiểm tra các trường bắt buộc ở bước 1 rồi chuyển sang bước 2
   const nextStep = () => {
     if (!name.trim()) {
       toast.error("Vui lòng nhập họ và tên.");
@@ -134,6 +140,7 @@ function InstructorApplyPage() {
     setStep(2);
   };
 
+  // Quay lại bước 1 (thông tin chuyên môn)
   const prevStep = () => setStep(1);
 
   // Hiển thị thông báo thành công sau khi submit

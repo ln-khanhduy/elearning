@@ -7,12 +7,14 @@ import {
   deleteCouponApi,
 } from "../../api/promotionAPI";
 import ConfirmModal from "../../components/common/ConfirmModal";
+import { formatDate } from "../../utils/formatDate";
 
 const DISCOUNT_TYPE_MAP = {
   PERCENTAGE: { label: "Phần trăm", symbol: "%" },
   FIXED: { label: "Số tiền cố định", symbol: "₫" },
 };
 
+// Trang quản lý mã giảm giá: tạo, sửa, xóa mã giảm giá cho khóa học
 function AdminCouponPage() {
   const [coupons, setCoupons] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -144,11 +146,6 @@ function AdminCouponPage() {
         }
       },
     });
-  };
-
-  const formatDate = (dateStr) => {
-    if (!dateStr) return "—";
-    return new Date(dateStr).toLocaleDateString("vi-VN");
   };
 
   const formatPrice = (val) => {

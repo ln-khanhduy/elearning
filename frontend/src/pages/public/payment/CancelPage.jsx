@@ -2,12 +2,14 @@ import React from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import "../../../style/payment/payment.css";
 
+// Trang kết quả thanh toán bị hủy: thông báo và cung cấp hành động quay lại
 function CancelPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const transactionId = searchParams.get("transaction_id");
   const courseId = searchParams.get("courseId");
 
+  // Quay lại trang chi tiết khóa học hoặc danh sách khóa học tương ứng
   const handleGoBack = () => {
     if (courseId) {
       navigate(`/courses/${courseId}`, { replace: true });

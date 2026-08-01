@@ -8,6 +8,7 @@ import QuestionDetailModal from "../../components/student/QuestionDetailModal";
 const STATUS_LABEL = { OPEN: "Chờ trả lời", ANSWERED: "Đã trả lời", CLOSED: "Đã đóng" };
 const STATUS_BADGE = { OPEN: "bg-warning text-dark", ANSWERED: "bg-success", CLOSED: "bg-secondary" };
 
+// Trang Hỏi & Đáp dành cho học viên: đặt câu hỏi, xem và lọc câu hỏi của khóa học
 function StudentCourseQAPage() {
   const { courseId } = useParams();
   const navigate = useNavigate();
@@ -20,6 +21,7 @@ function StudentCourseQAPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [detailQuestionId, setDetailQuestionId] = useState(null);
 
+  // Tải danh sách câu hỏi Q&A của khóa học (có lọc theo trạng thái và phân trang)
   const loadQuestions = useCallback(async () => {
     setLoading(true);
     try {
@@ -34,6 +36,7 @@ function StudentCourseQAPage() {
 
   useEffect(() => { loadQuestions(); }, [loadQuestions]);
 
+  // Thay đổi bộ lọc trạng thái câu hỏi và quay về trang đầu
   const handleFilterChange = (newStatus) => { setStatusFilter(newStatus); setPage(1); };
 
   return (

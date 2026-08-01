@@ -6,10 +6,10 @@ import { useNotificationSocket } from "../../hooks/notification/useNotificationS
 import NotificationItem from "../../components/notification/NotificationItem";
 import ConfirmModal from "../../components/common/ConfirmModal";
 
+// Trang quản lý thông báo: hiển thị danh sách thông báo, đánh dấu đã đọc và xóa thông báo
 function NotificationsPage() {
   const navigate = useNavigate();
 
-  // Get sendRequest from WebSocket hook
   const { sendRequest } = useNotificationSocket({});
 
   const {
@@ -30,14 +30,17 @@ function NotificationsPage() {
     fetchUnreadCount();
   }, [fetchNotifications, fetchUnreadCount]);
 
+  // Chuyển trang danh sách thông báo
   const handlePageChange = (page) => {
     fetchNotifications(page);
   };
 
+  // Mở hộp thoại xác nhận xóa tất cả thông báo
   const handleDeleteAllClick = () => {
     setShowDeleteConfirm(true);
   };
 
+  // Xác nhận xóa toàn bộ thông báo và đóng hộp thoại
   const confirmDeleteAll = () => {
     handleDeleteAll();
     setShowDeleteConfirm(false);

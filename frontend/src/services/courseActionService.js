@@ -1,3 +1,4 @@
+// Xác định hành động và nhãn nút hiển thị trên thẻ khóa học dựa trên trạng thái học viên
 export function getCourseAction({
   isEnrolled,
   progressPercent = 0,

@@ -5,6 +5,7 @@ import {
   getAllPermissionsApi, getRolePermissionsApi, updateRolePermissionsApi,
 } from "../../api/adminAPI";
 
+// Trang quản lý vai trò và quyền: tạo, sửa, xóa vai trò và phân quyền
 function RoleManagePage() {
   const [activeTab, setActiveTab] = useState("roles");
   const [roles, setRoles] = useState([]);

@@ -11,6 +11,7 @@ const currentYear = new Date().getFullYear();
 const years = [];
 for (let y = currentYear; y >= currentYear - 5; y--) years.push(String(y));
 
+// Trang tổng quan doanh thu quản trị: hiển thị thống kê doanh thu theo ngày, tháng, năm
 function FinanceRevenuePage() {
   const {
     transactions, loading, totals,

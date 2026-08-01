@@ -4,6 +4,7 @@ import { getPayoutsApi, batchPayoutApi } from "../../api/payoutAPI";
 import { formatPrice } from "../../utils/formatPrice";
 import "../../style/finance/finance-payout.css";
 
+// Trang thanh toán giảng viên: xem giao dịch đủ điều kiện và thực hiện chi trả hàng loạt
 function FinancePayoutPage() {
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);

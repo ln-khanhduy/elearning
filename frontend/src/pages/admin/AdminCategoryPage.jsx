@@ -5,6 +5,7 @@ import {
 } from "../../api/courseAPI";
 import ConfirmModal from "../../components/common/ConfirmModal";
 
+// Trang quản lý danh mục khóa học: thêm, sửa, xóa danh mục
 function AdminCategoryPage() {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -45,6 +46,7 @@ function AdminCategoryPage() {
   }, []);
 
   // ==================== CATEGORY ====================
+  // Thêm mới danh mục khóa học
   const handleAddCategory = async () => {
     if (!catForm.name.trim()) {
       toast.error("Tên danh mục không được để trống.");
@@ -63,11 +65,13 @@ function AdminCategoryPage() {
     }
   };
 
+  // Chọn danh mục để chuyển sang chế độ chỉnh sửa
   const handleEditCategory = (cat) => {
     setEditingCat(cat.id);
     setCatForm({ name: cat.name });
   };
 
+  // Cập nhật tên danh mục đang chỉnh sửa
   const handleUpdateCategory = async () => {
     if (!catForm.name.trim()) {
       toast.error("Tên danh mục không được để trống.");
@@ -87,6 +91,7 @@ function AdminCategoryPage() {
     }
   };
 
+  // Xóa danh mục sau khi xác nhận
   const handleDeleteCategory = async (catId) => {
     showConfirm(
       "Xóa danh mục",
@@ -103,6 +108,7 @@ function AdminCategoryPage() {
     );
   };
 
+  // Hủy chế độ chỉnh sửa danh mục
   const handleCancelCatEdit = () => {
     setEditingCat(null);
     setCatForm({ name: "" });

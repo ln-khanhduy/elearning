@@ -52,3 +52,52 @@ export const buildQuizPayload = (form, quiz, sectionId) => ({
   section_id: sectionId,
   lesson_id: quiz?.lesson_id || quiz?.lesson,
 });
+
+/**
+ * Tách payload gửi lên API khỏi các field chỉ dùng cho UI.
+ * - Map question_type -> quiz_type (tương thích backend)
+ * - Tách prompt & correct_text_answer để tạo/update Question riêng
+ * - Loại bỏ các field không gửi lên server
+ * Trả về { payload, prompt, correctTextAnswer }.
+ */
+export const buildQuizApiPayload = (quizData) => {
+  const payload = { ...quizData };
+
+  // Map question_type to quiz_type for backend compatibility
+  if (payload.question_type && !payload.quiz_type) {
+    payload.quiz_type = payload.question_type;
+  }
+
+  // Tách prompt và correct_text_answer để tạo Question riêng (cho ESSAY/FILL_BLANK)
+  const prompt = payload.prompt || "";
+  const correctTextAnswer = payload.correct_text_answer || "";
+
+  delete payload.question_type;
+  delete payload.prompt;
+  delete payload.correct_text_answer;
+  delete payload.section_id;
+  delete payload.lesson_id;
+  delete payload.id;
+  delete payload.questions_count;
+
+  return { payload, prompt, correctTextAnswer };
+};
+
+/**
+ * Xây dựng payload cho Question (dùng cho ESSAY/FILL_BLANK).
+ */
+export const buildQuestionPayload = (quizType, prompt, correctTextAnswer = "") => {
+  const questionPayload = {
+    prompt: prompt,
+    points: 10,
+    order: 1,
+    question_type: quizType,
+  };
+
+  // FILL_BLANK cần có correct_text_answer
+  if (quizType === "FILL_BLANK" && correctTextAnswer) {
+    questionPayload.correct_text_answer = correctTextAnswer;
+  }
+
+  return questionPayload;
+};

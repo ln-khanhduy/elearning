@@ -15,5 +15,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 EXPOSE 8000
 
-# Seed permissions + start Daphne
-CMD python manage.py seed_permissions --noinput 2>/dev/null; daphne -b 0.0.0.0 -p $PORT elearning.asgi:application
+# Đảm bảo entrypoint.sh có quyền thực thi
+# và strip CRLF (an toàn khi build trên Windows - tránh lỗi `\r: not found`)
+RUN sed -i 's/\r$//' /app/entrypoint.sh && chmod +x /app/entrypoint.sh
+
+# Chạy entrypoint: seed permissions + Daphne (web) + Celery worker/beat (tự động hóa)
+CMD ["/app/entrypoint.sh"]

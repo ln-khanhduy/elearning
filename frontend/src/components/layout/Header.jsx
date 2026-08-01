@@ -4,6 +4,7 @@ import logoSrc from "../../img/logo.png";
 import { logoutApi } from "../../api/authAPI";
 import { useUser } from "../../context/UserContext";
 import NotificationBell from "../notification/NotificationBell";
+import { hasPermission } from "../../utils/permissions";
 
 function Header({ onToggleSidebar }) {
   const [openMenu, setOpenMenu] = useState(false);
@@ -15,6 +16,10 @@ function Header({ onToggleSidebar }) {
   const { user, isAuthenticated, loading, clearUserSession } = useUser();
   const searchTimeoutRef = useRef(null);
   const mobileSearchInputRef = useRef(null);
+
+  // Chỉ hiển thị icon + gọi API khi user có quyền tương ứng
+  const canViewWishlist = hasPermission(user, "student.wishlist.manage");
+  const canViewCart = hasPermission(user, "student.cart.view");
 
   const refreshWishlistCount = useCallback(() => {
     import("../../api/wishlistAPI").then(({ getWishlistCountApi }) => {
@@ -35,10 +40,10 @@ function Header({ onToggleSidebar }) {
 
   useEffect(() => {
     if (isAuthenticated) {
-      refreshWishlistCount();
-      refreshCartCount();
+      if (canViewWishlist) refreshWishlistCount();
+      if (canViewCart) refreshCartCount();
     }
-  }, [isAuthenticated, refreshWishlistCount, refreshCartCount]);
+  }, [isAuthenticated, canViewWishlist, canViewCart, refreshWishlistCount, refreshCartCount]);
 
   useEffect(() => {
     const handleWishlistChange = () => refreshWishlistCount();
@@ -140,14 +145,18 @@ function Header({ onToggleSidebar }) {
             <div className="header-auth-loading"></div>
           ) : isAuthenticated ? (
             <div className="user-actions">
-              <Link to="/my-wishlist" className="header-icon-link position-relative" title="Yêu thích">
-                <i className="bi bi-heart"></i>
-                {wishlistCount > 0 && <span className="wishlist-badge">{wishlistCount > 99 ? "99+" : wishlistCount}</span>}
-              </Link>
-              <Link to="/cart" className="header-icon-link position-relative" title="Giỏ hàng">
-                <i className="bi bi-cart3"></i>
-                {cartCount > 0 && <span className="wishlist-badge">{cartCount > 99 ? "99+" : cartCount}</span>}
-              </Link>
+              {canViewWishlist && (
+                <Link to="/my-wishlist" className="header-icon-link position-relative" title="Yêu thích">
+                  <i className="bi bi-heart"></i>
+                  {wishlistCount > 0 && <span className="wishlist-badge">{wishlistCount > 99 ? "99+" : wishlistCount}</span>}
+                </Link>
+              )}
+              {canViewCart && (
+                <Link to="/cart" className="header-icon-link position-relative" title="Giỏ hàng">
+                  <i className="bi bi-cart3"></i>
+                  {cartCount > 0 && <span className="wishlist-badge">{cartCount > 99 ? "99+" : cartCount}</span>}
+                </Link>
+              )}
               <NotificationBell />
               <span className="user-email d-none d-md-inline">{user?.email}</span>
               <div className="user-menu">

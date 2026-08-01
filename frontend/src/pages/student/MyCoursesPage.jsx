@@ -4,6 +4,7 @@ import { toast } from "react-toastify";
 import { getMyCoursesApi } from "../../api/enrollmentAPI";
 import ConfirmModal from "../../components/common/ConfirmModal";
 
+// Trang khóa học của tôi: hiển thị danh sách khóa học đã đăng ký, lọc, tìm kiếm và phân trang
 function MyCoursesPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -15,6 +16,7 @@ function MyCoursesPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 12;
 
+  // Tải danh sách khóa học đã đăng ký từ server
   const loadEnrollments = useCallback(async () => {
     try {
       setLoading(true);
@@ -31,6 +33,7 @@ function MyCoursesPage() {
     loadEnrollments();
   }, [loadEnrollments]);
 
+  // Lấy phần trăm tiến độ học tập của khóa học
   const getProgressPercent = (enr) => {
     if (enr.progress_percent !== undefined && enr.progress_percent !== null) {
       return Math.round(Number(enr.progress_percent));
@@ -44,7 +47,7 @@ function MyCoursesPage() {
     return "#dc3545";
   };
 
-  // Filter + search + sort
+  // Lọc danh sách khóa học theo tìm kiếm, trạng thái và sắp xếp
   const filteredEnrollments = useMemo(() => {
     let result = [...enrollments];
 

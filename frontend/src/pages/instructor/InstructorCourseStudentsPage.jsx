@@ -3,13 +3,16 @@ import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { getInstructorCourseStudentsApi } from "../../api/courseAPI";
 
+// Trang danh sách học viên của khóa học: hiển thị thông tin và tiến độ học viên đã đăng ký
 function InstructorCourseStudentsPage() {
   const { courseId } = useParams();
   const navigate = useNavigate();
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // Tải danh sách học viên của khóa học khi trang được mở
   useEffect(() => {
+    // Lấy danh sách học viên từ server
     const load = async () => {
       try {
         const res = await getInstructorCourseStudentsApi(courseId);

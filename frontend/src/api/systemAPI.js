@@ -11,6 +11,7 @@ const request = async (callback) => {
 
 // ==================== ACTIVITY LOGS ====================
 
+// Lấy danh sách nhật ký hoạt động quản trị (có phân trang, lọc theo loại hành động và ngày)
 export const getActivityLogsApi = async (params = {}) => {
   const query = new URLSearchParams();
   if (params.action_type) query.append("action_type", params.action_type);
@@ -21,16 +22,19 @@ export const getActivityLogsApi = async (params = {}) => {
   return request(() => apiClient.get(`/api/admin/activity-logs/${qs ? `?${qs}` : ""}`));
 };
 
+// Lấy danh sách các loại hành động khả dụng cho nhật ký
 export const getActivityLogTypesApi = async () => {
   return request(() => apiClient.get("/api/admin/activity-logs/action-types/"));
 };
 
 // ==================== SYSTEM CONFIGS ====================
 
+// Lấy cấu hình hệ thống hiện tại
 export const getSystemConfigsApi = async () => {
   return request(() => apiClient.get("/api/admin/configs/"));
 };
 
+// Cập nhật cấu hình hệ thống
 export const updateSystemConfigsApi = async (configs) => {
   return request(() => apiClient.put("/api/admin/configs/update/", { configs }));
 };

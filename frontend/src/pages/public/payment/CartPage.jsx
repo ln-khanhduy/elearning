@@ -5,6 +5,7 @@ import { getCartApi, removeFromCartApi, clearCartApi } from "../../../api/cartAP
 import { createStripeCheckoutApi } from "../../../api/paymentAPI";
 import ConfirmModal from "../../../components/common/ConfirmModal";
 
+// Trang giỏ hàng: hiển thị danh sách khóa học đã chọn, chọn mục và thanh toán lần lượt
 function CartPage() {
   const navigate = useNavigate();
   const [cart, setCart] = useState(null);
@@ -13,6 +14,7 @@ function CartPage() {
   const [selectedIds, setSelectedIds] = useState([]);
   const [confirmModal, setConfirmModal] = useState({ show: false, type: null, courseId: null });
 
+  // Tải giỏ hàng từ server và tự chọn tất cả mục khi tải xong
   const loadCart = useCallback(async () => {
     try {
       setLoading(true);
@@ -34,6 +36,7 @@ function CartPage() {
     loadCart();
   }, [loadCart]);
 
+  // Xóa một khóa học khỏi giỏ hàng
   const handleRemove = async (courseId) => {
     try {
       await removeFromCartApi(courseId);
@@ -46,6 +49,7 @@ function CartPage() {
     }
   };
 
+  // Xóa toàn bộ giỏ hàng
   const handleClear = async () => {
     try {
       await clearCartApi();
@@ -92,7 +96,7 @@ function CartPage() {
     }
   };
 
-  // Checkout selected items
+  // Thanh toán các khóa học đã chọn (tạo phiên Stripe lần lượt)
   const handleCheckout = async () => {
     const selectedItems = cart?.items?.filter(item => selectedIds.includes(item.course_id)) || [];
     if (selectedItems.length === 0) {
@@ -119,6 +123,7 @@ function CartPage() {
     }
   };
 
+  // Định dạng giá tiền theo chuẩn Việt Nam
   const formatPrice = (val) => {
     if (!val && val !== 0) return null;
     return Number(val).toLocaleString("vi-VN") + "₫";

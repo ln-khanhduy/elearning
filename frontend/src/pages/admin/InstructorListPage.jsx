@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { toast } from "react-toastify";
 import { getManagedInstructorsApi, lockInstructorApi, unlockInstructorApi } from "../../api/instructorManagerAPI";
 
+// Trang danh sách giảng viên: hiển thị, tìm kiếm và quản lý trạng thái tài khoản giảng viên
 function InstructorListPage() {
   const [instructors, setInstructors] = useState([]);
   const [loading, setLoading] = useState(true);

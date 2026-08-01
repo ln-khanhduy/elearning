@@ -3,6 +3,7 @@ import { toast } from "react-toastify";
 import { getReviewsApi, updateReviewStatusApi } from "../../api/reviewAPI";
 import ConfirmModal from "../../components/common/ConfirmModal";
 
+// Trang quản lý đánh giá: duyệt, ẩn hoặc xóa các đánh giá khóa học
 function AdminReviewsPage() {
   const STATUS_MAP = {
     PUBLISHED: { label: "Công khai", color: "#198754" },

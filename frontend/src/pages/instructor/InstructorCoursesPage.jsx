@@ -3,11 +3,13 @@ import { useNavigate, Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import { getInstructorCoursesApi } from "../../api/instructorCourseAPI";
 
+// Trang danh sách khóa học giảng dạy: hiển thị các khóa học được phân công và trạng thái của chúng
 function InstructorCoursesPage() {
   const navigate = useNavigate();
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // Tải danh sách khóa học giảng dạy của giảng viên từ server
   const loadCourses = useCallback(async () => {
     try {
       setLoading(true);
@@ -24,11 +26,13 @@ function InstructorCoursesPage() {
     loadCourses();
   }, [loadCourses]);
 
+  // Xác định màu badge Bootstrap cho trạng thái khóa học
   const getStatusBadge = (status) => {
     const m = { PUBLISHED: "success", DRAFT: "secondary", HIDDEN: "warning" };
     return m[status] || "secondary";
   };
 
+  // Chuyển mã trạng thái sang nhãn tiếng Việt hiển thị
   const getStatusText = (status) => {
     const m = { PUBLISHED: "Đã đăng", DRAFT: "Bản nháp", HIDDEN: "Đã ẩn" };
     return m[status] || status;

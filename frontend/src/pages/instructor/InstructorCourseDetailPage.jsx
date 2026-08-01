@@ -21,6 +21,7 @@ const TAB_COMPONENTS = {
   report: LearningReportTab,
 };
 
+// Trang chi tiết khóa học cho giảng viên: hiển thị thông tin khóa học và các tab quản lý
 function InstructorCourseDetailPage() {
   const { courseId } = useParams();
   const navigate = useNavigate();
@@ -28,7 +29,9 @@ function InstructorCourseDetailPage() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("content");
 
+  // Tải thông tin chi tiết khóa học khi trang được mở
   useEffect(() => {
+    // Lấy thông tin khóa học từ server
     const load = async () => {
       try {
         const res = await getInstructorCourseDetailApi(courseId);
