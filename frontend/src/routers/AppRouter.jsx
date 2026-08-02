@@ -10,7 +10,7 @@ import { getRoutePermissions } from "../utils/permissions";
 const RegisterPage = lazy(() => import("../pages/auth/RegisterPage"));
 const ForgotPasswordPage = lazy(() => import("../pages/auth/ForgotPasswordPage"));
 const LoginPage = lazy(() => import("../pages/auth/LoginPage"));
-const VerifyOtpPage = lazy(() => import("../pages/auth/VerifyOtpPage"));
+const VerifyotpPage = lazy(() => import("../pages/auth/VerifyotpPage"));
 const ResetPasswordPage = lazy(() => import("../pages/auth/ResetPasswordPage"));
 const HomePage = lazy(() => import("../pages/public/HomePage"));
 const CoursesPage = lazy(() => import("../pages/public/CoursesPage"));
@@ -87,8 +87,8 @@ function AppRouter() {
           <Route path="/register" element={<Page><RegisterPage /></Page>} />
           <Route path="/login" element={<Page><LoginPage /></Page>} />
           <Route path="/forgot-password" element={<Page><ForgotPasswordPage /></Page>} />
-          <Route path="/verify-otp" element={<Page><VerifyOtpPage /></Page>} />
-          <Route path="/register/verify-otp" element={<Page><VerifyOtpPage /></Page>} />
+          <Route path="/verify-otp" element={<Page><VerifyotpPage /></Page>} />
+          <Route path="/register/verify-otp" element={<Page><VerifyotpPage /></Page>} />
           <Route path="/reset-password" element={<Page><ResetPasswordPage /></Page>} />
           <Route path="/instructor/apply" element={<Page><InstructorApplyPage /></Page>} />
         </Route>
