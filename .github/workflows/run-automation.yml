@@ -65,14 +65,7 @@ jobs:
       - name: "Kiểm tra kết nối database"
         working-directory: backend
         run: |
-          python -c "
-import django, os
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'elearning.settings')
-django.setup()
-from django.db import connection
-connection.ensure_connection()
-print('OK: Kết nối database thành công')
-"
+          python -c "import django, os; os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'elearning.settings'); django.setup(); from django.db import connection; connection.ensure_connection(); print('DB OK')"
 
       - name: "Chạy tác vụ tự động hóa"
         working-directory: backend
