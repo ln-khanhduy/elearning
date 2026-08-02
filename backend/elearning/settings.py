@@ -180,8 +180,8 @@ USE_I18N = True
 
 USE_TZ = True
 
-# Celery Configuration (async tasks: email, certificate generation)
-# Lưu ý: nếu biến env tồn tại nhưng rỗng thì fallback về memory:// (dev/test).
+# Celery Configuration (async tasks: email, certificate generation, automation)
+# Nếu biến env tồn tại nhưng rỗng → fallback về memory:// (dev/test).
 _CELERY_BROKER_ENV = (os.getenv('CELERY_BROKER_URL') or '').strip()
 CELERY_BROKER_URL = _CELERY_BROKER_ENV or 'memory://'
 CELERY_RESULT_BACKEND = (os.getenv('CELERY_RESULT_BACKEND') or '').strip() or 'cache'
@@ -190,57 +190,6 @@ CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = TIME_ZONE
-
-# Cache Configuration (OTP, rate limit, dashboard, Celery result backend)
-# Nếu có REDIS_URL hoặc CELERY_BROKER_URL dạng redis:// hợp lệ → dùng Redis cache.
-# Nếu không → fallback LocMemCache (chỉ dùng cho dev/test, KHÔNG dùng production).
-from urllib.parse import urlparse
-
-
-def _is_redis_url(value: str | None) -> bool:
-    """
-    Kiểm tra URL Redis hợp lệ: scheme redis/rediss, có hostname thật sự
-    và có credential dạng redis://user:pass@host:port (chuẩn Redis Cloud/Render).
-    URL thiếu host:port (ví dụ: redis://default:pass) sẽ bị coi là không hợp lệ
-    để tránh crash khi cache được truy cập.
-    """
-    if not value:
-        return False
-    parsed = urlparse(value)
-    return (
-        parsed.scheme in ('redis', 'rediss')
-        and bool(parsed.hostname)
-        and '@' in parsed.netloc
-    )
-
-_REDIS_CACHE_URL = os.getenv('REDIS_URL') or _CELERY_BROKER_ENV
-if not _is_redis_url(_REDIS_CACHE_URL):
-    _REDIS_CACHE_URL = None
-if _is_redis_url(_REDIS_CACHE_URL):
-    # Celery broker và result backend nên dùng Redis ở production
-    if not os.getenv('CELERY_BROKER_URL'):
-        CELERY_BROKER_URL = _REDIS_CACHE_URL
-    if not os.getenv('CELERY_RESULT_BACKEND'):
-        CELERY_RESULT_BACKEND = 'cache'
-    CACHES = {
-        'default': {
-            'BACKEND': 'django.core.cache.backends.redis.RedisCache',
-            'LOCATION': _REDIS_CACHE_URL,
-            'KEY_PREFIX': 'elearning',
-            'TIMEOUT': 300,
-            'OPTIONS': {
-                'socket_timeout': 5,
-                'retry_on_timeout': True,
-            },
-        }
-    }
-else:
-    # Không có Redis hợp lệ → giữ memory:// broker mặc định + LocMemCache (dev/test)
-    CACHES = {
-        'default': {
-            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-        }
-    }
 
 # Celery Beat Schedule - Tác vụ tự động hóa chạy hàng ngày lúc 02:00 (Asia/Ho_Chi_Minh)
 CELERY_BEAT_SCHEDULE = {
@@ -380,5 +329,3 @@ CSRF_TRUSTED_ORIGINS = list(CORS_ALLOWED_ORIGINS) + [
 STRIPE_SECRET_KEY = os.getenv('STRIPE_SECRET_KEY')
 STRIPE_PUBLISHABLE_KEY = os.getenv('STRIPE_PUBLISHABLE_KEY')
 STRIPE_WEBHOOK_SECRET = os.getenv('STRIPE_WEBHOOK_SECRET')
-
-
