@@ -1,0 +1,81 @@
+name: "Run Automation Daily"
+
+# Chạy mỗi ngày lúc 02:00 sáng giờ Việt Nam (UTC+7)
+# GitHub Actions schedule luôn tính theo UTC nên: 02:00 VN = 19:00 UTC hôm trước
+on:
+  schedule:
+    - cron: "0 19 * * *"
+  # Cho phép chạy tay từ tab Actions để test
+  workflow_dispatch:
+
+jobs:
+  run-automation:
+    name: "Chạy run_automation (5 tác vụ tự động hóa)"
+    runs-on: ubuntu-latest
+
+    env:
+      PYTHONUNBUFFERED: "1"
+      DJANGO_SETTINGS_MODULE: elearning.settings
+      DEBUG: "False"
+      # Database (Supabase/PostgreSQL)
+      DB_NAME: ${{ secrets.DB_NAME }}
+      DB_USER: ${{ secrets.DB_USER }}
+      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+      DB_HOST: ${{ secrets.DB_HOST }}
+      DB_PORT: ${{ secrets.DB_PORT }}
+      # Ứng dụng
+      SECRET_KEY: ${{ secrets.SECRET_KEY }}
+      JWT_SECRET: ${{ secrets.JWT_SECRET }}
+      # Email
+      EMAIL_HOST: ${{ secrets.EMAIL_HOST }}
+      EMAIL_PORT: ${{ secrets.EMAIL_PORT }}
+      EMAIL_USE_TLS: ${{ secrets.EMAIL_USE_TLS }}
+      EMAIL_HOST_USER: ${{ secrets.EMAIL_HOST_USER }}
+      EMAIL_HOST_PASSWORD: ${{ secrets.EMAIL_HOST_PASSWORD }}
+      # Cloudinary
+      CLOUDINARY_CLOUD_NAME: ${{ secrets.CLOUDINARY_CLOUD_NAME }}
+      CLOUDINARY_API_KEY: ${{ secrets.CLOUDINARY_API_KEY }}
+      CLOUDINARY_API_SECRET: ${{ secrets.CLOUDINARY_API_SECRET }}
+      # Stripe
+      STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+      STRIPE_PUBLISHABLE_KEY: ${{ secrets.STRIPE_PUBLISHABLE_KEY }}
+      STRIPE_WEBHOOK_SECRET: ${{ secrets.STRIPE_WEBHOOK_SECRET }}
+      # Google OAuth
+      GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+      GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+      # URL
+      FRONTEND_URL: ${{ secrets.FRONTEND_URL }}
+      BACKEND_URL: ${{ secrets.BACKEND_URL }}
+      # Chương trình
+      PAYMENT_HOLD_DAYS: ${{ secrets.PAYMENT_HOLD_DAYS }}
+
+    steps:
+      - name: "Checkout code"
+        uses: actions/checkout@v4
+
+      - name: "Cài Python 3.12"
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+          cache-dependency-path: backend/requirements.txt
+
+      - name: "Cài dependencies"
+        working-directory: backend
+        run: pip install --no-cache-dir -r requirements.txt
+
+      - name: "Kiểm tra kết nối database"
+        working-directory: backend
+        run: |
+          python -c "
+import django, os
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'elearning.settings')
+django.setup()
+from django.db import connection
+connection.ensure_connection()
+print('OK: Kết nối database thành công')
+"
+
+      - name: "Chạy tác vụ tự động hóa"
+        working-directory: backend
+        run: python manage.py run_automation
