@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 from datetime import timedelta
 from pathlib import Path
 import os
+from celery.schedules import crontab
 from dotenv import load_dotenv
 
 
@@ -123,38 +124,19 @@ CHANNEL_LAYERS = {
 # Render cung cấp DATABASE_URL, fallback sang cấu hình tay
 import re
 
-_DATABASE_URL = os.getenv('DATABASE_URL')
-if _DATABASE_URL:
-    # Parse DATABASE_URL từ Render dạng: postgresql://user:pass@host:port/dbname
-    match = re.match(r'postgres(?:ql)?://(.+):(.+)@(.+):(\d+)/(.+)', _DATABASE_URL)
-    if match:
-        DATABASES = {
-            'default': {
-                'ENGINE': 'django.db.backends.postgresql',
-                'NAME': match.group(5),
-                'USER': match.group(1),
-                'PASSWORD': match.group(2),
-                'HOST': match.group(3),
-                'PORT': match.group(4),
-                'OPTIONS': {
-                    'sslmode': 'require',
-                },
-            }
+match = re.match(r'postgres(?:ql)?://(.+):(.+)@(.+):(\d+)/(.+)', os.getenv('DATABASE_URL', ''))
+if match:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': match.group(5),
+            'USER': match.group(1),
+            'PASSWORD': match.group(2),
+            'HOST': match.group(3),
+            'PORT': match.group(4),
+            'OPTIONS': {'sslmode': 'require'},
         }
-    else:
-        DATABASES = {
-            'default': {
-                'ENGINE': 'django.db.backends.postgresql',
-                'NAME': os.getenv('DB_NAME'),
-                'USER': os.getenv('DB_USER'),
-                'PASSWORD': os.getenv('DB_PASSWORD'),
-                'HOST': os.getenv('DB_HOST'),
-                'PORT': os.getenv('DB_PORT'),
-                'OPTIONS': {
-                    'sslmode': 'require',
-                },
-            }
-        }
+    }
 else:
     DATABASES = {
         'default': {
@@ -164,9 +146,7 @@ else:
             'PASSWORD': os.getenv('DB_PASSWORD'),
             'HOST': os.getenv('DB_HOST'),
             'PORT': os.getenv('DB_PORT'),
-            'OPTIONS': {
-                'sslmode': 'require',
-            },
+            'OPTIONS': {'sslmode': 'require'},
         }
     }
 # Password validation
@@ -200,14 +180,29 @@ USE_I18N = True
 
 USE_TZ = True
 
-# Celery Configuration (async tasks: email, certificate generation)
-CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', 'memory://')
-CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND', 'cache')
+# Celery Configuration (async tasks: email, certificate generation, automation)
+# Nếu biến env tồn tại nhưng rỗng → fallback về memory:// (dev/test).
+_CELERY_BROKER_ENV = (os.getenv('CELERY_BROKER_URL') or '').strip()
+CELERY_BROKER_URL = _CELERY_BROKER_ENV or 'memory://'
+CELERY_RESULT_BACKEND = (os.getenv('CELERY_RESULT_BACKEND') or '').strip() or 'cache'
 CELERY_CACHE_BACKEND = 'default'
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = TIME_ZONE
+
+# Celery Beat Schedule - Tác vụ tự động hóa chạy hàng ngày lúc 02:00 (Asia/Ho_Chi_Minh)
+CELERY_BEAT_SCHEDULE = {
+    'run-automation-daily': {
+        'task': 'apps.common.tasks.run_automation_task',
+        'schedule': crontab(hour=2, minute=0),
+        'options': {
+            'expires': 3600,  # Task hết hạn sau 1 giờ nếu không chạy được
+        },
+    },
+}
+# Lưu ý: CELERY_BEAT_SCHEDULE chạy lúc 02:00 theo Asia/Ho_Chi_Minh.
+# Đảm bảo Celery beat được chạy bằng lệnh `celery -A elearning beat -l info`.
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
@@ -334,5 +329,3 @@ CSRF_TRUSTED_ORIGINS = list(CORS_ALLOWED_ORIGINS) + [
 STRIPE_SECRET_KEY = os.getenv('STRIPE_SECRET_KEY')
 STRIPE_PUBLISHABLE_KEY = os.getenv('STRIPE_PUBLISHABLE_KEY')
 STRIPE_WEBHOOK_SECRET = os.getenv('STRIPE_WEBHOOK_SECRET')
-
-

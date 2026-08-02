@@ -25,7 +25,6 @@ jobs:
       DB_PORT: ${{ secrets.DB_PORT }}
       # Ứng dụng
       SECRET_KEY: ${{ secrets.SECRET_KEY }}
-      JWT_SECRET: ${{ secrets.JWT_SECRET }}
       # Email
       EMAIL_HOST: ${{ secrets.EMAIL_HOST }}
       EMAIL_PORT: ${{ secrets.EMAIL_PORT }}
@@ -46,8 +45,7 @@ jobs:
       # URL
       FRONTEND_URL: ${{ secrets.FRONTEND_URL }}
       BACKEND_URL: ${{ secrets.BACKEND_URL }}
-      # Chương trình
-      PAYMENT_HOLD_DAYS: ${{ secrets.PAYMENT_HOLD_DAYS }}
+
 
     steps:
       - name: "Checkout code"
