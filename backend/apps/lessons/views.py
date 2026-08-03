@@ -18,6 +18,7 @@ from apps.common.response_helpers import success_response
 # ==================== CHAPTER ====================
 
 class CourseChapterListAPIView(APIView):
+    """GET /api/courses/{course_id}/chapters/ - Danh sách chương học của khóa học (công khai)."""
     permission_classes = [AllowAny]
 
     def get(self, request, course_id):
@@ -27,7 +28,8 @@ class CourseChapterListAPIView(APIView):
 
 
 class ChapterCreateAPIView(BasePermissionAPIView):
-    required_permission = "course.lesson.create"
+    """POST /api/courses/{course_id}/chapters/create/ - Tạo chương học mới trong khóa học."""
+    required_permission = "course.lesson.manage"
 
     def post(self, request, course_id):
         serializer = ChapterCreateUpdateSerializer(data=request.data)
@@ -45,7 +47,8 @@ class ChapterCreateAPIView(BasePermissionAPIView):
 
 
 class ChapterUpdateAPIView(BasePermissionAPIView):
-    required_permission = "course.lesson.update"
+    """PATCH /api/chapters/{chapter_id}/ - Cập nhật chương học."""
+    required_permission = "course.lesson.manage"
 
     def patch(self, request, chapter_id):
         serializer = ChapterCreateUpdateSerializer(data=request.data, partial=True)
@@ -63,7 +66,8 @@ class ChapterUpdateAPIView(BasePermissionAPIView):
 
 
 class ChapterDeleteAPIView(BasePermissionAPIView):
-    required_permission = "course.lesson.delete"
+    """DELETE /api/chapters/{chapter_id}/ - Xóa chương học."""
+    required_permission = "course.lesson.manage"
 
     def delete(self, request, chapter_id):
         chapter_obj = chapter_service.get_chapters_by_course(chapter_id).filter(id=chapter_id).first()
@@ -85,7 +89,8 @@ class ChapterDeleteAPIView(BasePermissionAPIView):
 
 
 class ChapterReorderAPIView(BasePermissionAPIView):
-    required_permission = "course.lesson.update"
+    """PATCH /api/courses/{course_id}/chapters/reorder/ - Sắp xếp lại thứ tự các chương học."""
+    required_permission = "course.lesson.manage"
 
     def patch(self, request, course_id):
         serializer = ChapterReorderSerializer(data=request.data)
@@ -105,6 +110,7 @@ class ChapterReorderAPIView(BasePermissionAPIView):
 # ==================== LESSON ====================
 
 class ChapterLessonListAPIView(APIView):
+    """GET /api/chapters/{chapter_id}/lessons/ - Danh sách bài học của một chương (công khai)."""
     permission_classes = [AllowAny]
 
     def get(self, request, chapter_id):
@@ -113,6 +119,7 @@ class ChapterLessonListAPIView(APIView):
 
 
 class LessonDetailAPIView(APIView):
+    """GET /api/lessons/{lesson_id}/ - Chi tiết bài học (công khai)."""
     permission_classes = [AllowAny]
 
     def get(self, request, lesson_id):
@@ -121,7 +128,8 @@ class LessonDetailAPIView(APIView):
 
 
 class LessonCreateAPIView(BasePermissionAPIView):
-    required_permission = "course.lesson.create"
+    """POST /api/chapters/{chapter_id}/lessons/create/ - Tạo bài học mới trong chương."""
+    required_permission = "course.lesson.manage"
 
     def post(self, request, chapter_id):
         serializer = LessonCreateUpdateSerializer(data=request.data)
@@ -139,7 +147,8 @@ class LessonCreateAPIView(BasePermissionAPIView):
 
 
 class LessonUpdateAPIView(BasePermissionAPIView):
-    required_permission = "course.lesson.update"
+    """PATCH /api/lessons/{lesson_id}/ - Cập nhật bài học."""
+    required_permission = "course.lesson.manage"
 
     def patch(self, request, lesson_id):
         import logging
@@ -162,7 +171,8 @@ class LessonUpdateAPIView(BasePermissionAPIView):
 
 
 class LessonDeleteAPIView(BasePermissionAPIView):
-    required_permission = "course.lesson.delete"
+    """DELETE /api/lessons/{lesson_id}/ - Xóa bài học."""
+    required_permission = "course.lesson.manage"
 
     def delete(self, request, lesson_id):
         lesson = lesson_repository.get_by_id(lesson_id)
@@ -181,7 +191,8 @@ class LessonDeleteAPIView(BasePermissionAPIView):
 
 
 class LessonReorderAPIView(BasePermissionAPIView):
-    required_permission = "course.lesson.update"
+    """PATCH /api/chapters/{chapter_id}/lessons/reorder/ - Sắp xếp lại thứ tự các bài học trong chương."""
+    required_permission = "course.lesson.manage"
 
     def patch(self, request, chapter_id):
         serializer = LessonReorderSerializer(data=request.data)

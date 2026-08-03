@@ -10,7 +10,7 @@ on:
 
 jobs:
   run-automation:
-    name: "Chạy run_automation (5 tác vụ tự động hóa)"
+    name: "Chạy run_automation (4 tác vụ tự động hóa)"
     runs-on: ubuntu-latest
 
     env:

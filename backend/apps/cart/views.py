@@ -1,10 +1,12 @@
+from rest_framework.views import APIView
+
 from apps.common.base_api_view import BasePermissionAPIView
 from apps.common.response_helpers import success_response, error_response
 from apps.cart.services import cart_service
 
 
 class CartDetailAPIView(BasePermissionAPIView):
-    """API xem giỏ hàng."""
+    """GET /api/cart/ - Xem giỏ hàng của user hiện tại."""
     required_permission = "student.cart.view"
 
     def get(self, request):
@@ -13,7 +15,7 @@ class CartDetailAPIView(BasePermissionAPIView):
 
 
 class CartAddItemAPIView(BasePermissionAPIView):
-    """API thêm khóa học vào giỏ hàng."""
+    """POST /api/cart/add/{course_id}/ - Thêm khóa học vào giỏ hàng."""
     required_permission = "student.cart.manage"
 
     def post(self, request, course_id):
@@ -24,7 +26,7 @@ class CartAddItemAPIView(BasePermissionAPIView):
 
 
 class CartRemoveItemAPIView(BasePermissionAPIView):
-    """API xóa khóa học khỏi giỏ hàng."""
+    """DELETE /api/cart/remove/{course_id}/ - Xóa khóa học khỏi giỏ hàng."""
     required_permission = "student.cart.manage"
 
     def delete(self, request, course_id):
@@ -35,7 +37,7 @@ class CartRemoveItemAPIView(BasePermissionAPIView):
 
 
 class CartClearAPIView(BasePermissionAPIView):
-    """API xóa toàn bộ giỏ hàng."""
+    """DELETE /api/cart/clear/ - Xóa toàn bộ giỏ hàng."""
     required_permission = "student.cart.manage"
 
     def delete(self, request):

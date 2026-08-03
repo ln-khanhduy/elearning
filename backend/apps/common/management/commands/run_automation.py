@@ -4,11 +4,10 @@ Có thể chạy thủ công: python manage.py run_automation
 Hoặc cấu hình cron/task scheduler để chạy hàng ngày.
 
 Các tác vụ:
-1. Tự động cấp chứng chỉ cho học viên hoàn thành khóa học
-2. Tự động gửi nhắc nhở học viên không hoạt động
-3. Tự động chuyển HOLD → PAID khi hết thời gian giữ tiền
-4. Tự động gửi email mời đánh giá khi hoàn thành
-5. Tự động tổng hợp báo cáo hàng tuần
+1. Tự động gửi nhắc nhở học viên không hoạt động
+2. Tự động chuyển HOLD → PAID khi hết thời gian giữ tiền
+3. Tự động gửi email mời đánh giá khi hoàn thành
+4. Tự động tổng hợp báo cáo hàng tuần
 """
 import logging
 from datetime import timedelta
@@ -26,7 +25,7 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument('--tasks', nargs='+', type=str, default=None,
-                          help='Chạy tác vụ cụ thể: certificates|reminders|payouts|reviews|reports')
+                          help='Chạy tác vụ cụ thể: reminders|payouts|reviews|reports')
 
     def handle(self, *args, **options):
         tasks = options.get('tasks')
@@ -38,8 +37,6 @@ class Command(BaseCommand):
 
         results = {}
 
-        if run_all or 'certificates' in tasks:
-            results['certificates'] = self._auto_issue_certificates()
         if run_all or 'reminders' in tasks:
             results['reminders'] = self._auto_send_reminders()
         if run_all or 'payouts' in tasks:
@@ -54,55 +51,7 @@ class Command(BaseCommand):
 
         self.stdout.write(self.style.SUCCESS('[AUTO] === HOÀN THÀNH ==='))
 
-    # ==================== 1. TỰ ĐỘNG CẤP CHỨNG CHỈ ====================
-    def _auto_issue_certificates(self):
-        """Tự động cấp chứng chỉ cho học viên hoàn thành 100% khóa học."""
-        from apps.enrollments.models import CourseProgress, Enrollment
-        from apps.certificates.models import CourseCertificate
-
-        completed_progress = CourseProgress.objects.filter(
-            progress_percent__gte=Decimal('100.00'),
-        ).select_related('enrollment__student', 'enrollment__course')
-
-        count = 0
-        for progress in completed_progress:
-            enrollment = progress.enrollment
-            if not enrollment or not enrollment.student or not enrollment.course:
-                continue
-
-            # Kiểm tra chứng chỉ đã tồn tại chưa
-            existing = CourseCertificate.objects.filter(
-                student=enrollment.student,
-                course=enrollment.course,
-            ).first()
-
-            if existing:
-                continue  # Đã có rồi, bỏ qua
-
-            try:
-                from uuid6 import uuid7
-                import hashlib
-                code_str = f"{enrollment.student.id}-{enrollment.course.id}-{timezone.now().timestamp()}"
-                CourseCertificate.objects.create(
-                    student=enrollment.student,
-                    course=enrollment.course,
-                    enrollment=enrollment,
-                    certificate_code=f"CERT-{hashlib.md5(code_str.encode()).hexdigest()[:8].upper()}",
-                )
-                # Gửi thông báo
-                from apps.notifications.services.notification_service import notify_course_completed
-                try:
-                    notify_course_completed(enrollment.student, enrollment.course.title)
-                except Exception:
-                    pass
-                count += 1
-            except Exception as e:
-                logger.error(f"Lỗi cấp chứng chỉ cho {enrollment.student.email}: {e}")
-
-        self.stdout.write(f'[AUTO] Cấp chứng chỉ: Đã cấp {count} chứng chỉ mới')
-        return {'issued': count}
-
-    # ==================== 2. NHẮC NHỞ HỌC VIÊN KHÔNG HOẠT ĐỘNG ====================
+    # ==================== 1. NHẮC NHỞ HỌC VIÊN KHÔNG HOẠT ĐỘNG ====================
     def _auto_send_reminders(self):
         """Gửi nhắc nhở cho học viên không hoạt động > 7 ngày."""
         from apps.enrollments.models import Enrollment, CourseProgress
@@ -164,7 +113,7 @@ class Command(BaseCommand):
         self.stdout.write(f'[AUTO] Nhắc nhở: {reminder_count} nhắc nhở + {escalation_count} cảnh báo')
         return {'reminders': reminder_count, 'escalations': escalation_count}
 
-    # ==================== 3. CHUYỂN HOLD → PAID ====================
+    # ==================== 2. CHUYỂN HOLD → PAID ====================
     def _auto_process_payouts(self):
         """Tự động chuyển các giao dịch HOLD hết hạn sang PAID."""
         from apps.payments.models import PaymentTransaction
@@ -200,7 +149,7 @@ class Command(BaseCommand):
         self.stdout.write(f'[AUTO] Payout: Đã thanh toán {paid_count} giao dịch')
         return {'paid': paid_count}
 
-    # ==================== 4. MỜI ĐÁNH GIÁ ====================
+    # ==================== 3. MỜI ĐÁNH GIÁ ====================
     def _auto_send_review_invitations(self):
         """Gửi email mời đánh giá cho học viên hoàn thành khóa học."""
         from apps.enrollments.models import Enrollment, CourseProgress
@@ -245,7 +194,7 @@ class Command(BaseCommand):
         self.stdout.write(f'[AUTO] Mời đánh giá: Đã gửi {invited} lời mời')
         return {'invited': invited}
 
-    # ==================== 5. BÁO CÁO HÀNG TUẦN ====================
+    # ==================== 4. BÁO CÁO HÀNG TUẦN ====================
     def _generate_weekly_report(self):
         """Tổng hợp báo cáo hàng tuần gửi cho admin."""
         from apps.enrollments.models import Enrollment, CourseProgress
@@ -284,7 +233,7 @@ class Command(BaseCommand):
         report = f"""
 === BÁO CÁO HÀNG TUẦN ({week_ago.strftime('%d/%m')} - {now.strftime('%d/%m/%Y')}) ===
 
-📊 TỔNG QUAN:
+TỔNG QUAN:
 - Học viên mới: {new_students}
 - Đăng ký mới: {new_enrollments}
 - Khóa học mới: {new_courses}
@@ -318,7 +267,6 @@ class Command(BaseCommand):
     # ==================== LOG SUMMARY ====================
     def _log_automation_summary(self, results):
         """Ghi log tổng kết vào database."""
-        from apps.system.models import AdminActivityLog
 
         try:
             summary = []
@@ -329,7 +277,6 @@ class Command(BaseCommand):
 
             # Log system
             from apps.system.services import admin_log_service
-            from django.contrib.auth import get_user_model
             admin_log_service.log(
                 admin=None,
                 action_type='AUTOMATION_RUN',

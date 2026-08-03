@@ -4,20 +4,20 @@ export const sidebarItems = [
   { type: "item", label: "Dashboard", path: "/dashboard", icon: "bi-grid", requiredPermissions: getRoutePermissions("/dashboard") },
 
   { type: "group", label: "Quản lý học tập" },
-  { type: "item", label: "Khóa học", path: "/courses", icon: "bi-mortarboard", requiredPermissions: getRoutePermissions("/courses") },
+  { type: "item", label: "Khóa học", path: "/courses", icon: "bi-mortarboard" },
   { type: "item", label: "Trung tâm học tập", path: "/my-learning", icon: "bi-play-circle" },
-  { type: "item", label: "Khóa học của tôi", path: "/my-courses", icon: "bi-journal-bookmark", requiredPermissions: getRoutePermissions("/my-courses") },
-  { type: "item", label: "Yêu thích", path: "/my-wishlist", icon: "bi-heart" },
-  { type: "item", label: "Giỏ hàng", path: "/cart", icon: "bi-cart3" },
+  { type: "item", label: "Khóa học của tôi", path: "/my-courses", icon: "bi-journal-bookmark", requiredPermissions: ["student.my_course.view"] },
+  { type: "item", label: "Yêu thích", path: "/my-wishlist", icon: "bi-heart", requiredPermissions: ["student.wishlist.view"] },
+  { type: "item", label: "Giỏ hàng", path: "/cart", icon: "bi-cart3", requiredPermissions: ["student.cart.view"] },
   { type: "item", label: "Chứng chỉ của tôi", path: "/my-certificates", icon: "bi-award" },
 
   // Quản trị khóa học
-  { type: "item", label: "Quản lý khóa học", path: "/admin/courses", icon: "bi-tools", requiredPermissions: getRoutePermissions("/admin/courses") },
-  { type: "item", label: "Danh mục khóa học", path: "/admin/courses/categories", icon: "bi-folder", requiredPermissions: getRoutePermissions("/admin/courses/categories") },
+  { type: "item", label: "Quản lý khóa học", path: "/admin/courses", icon: "bi-tools", requiredPermissions: ["course.course.manage"] },
+  { type: "item", label: "Danh mục khóa học", path: "/admin/courses/categories", icon: "bi-folder", requiredPermissions: ["course.category.manage"] },
 
   // Khóa học của giảng viên
   { type: "item", label: "Khóa học giảng dạy", path: "/instructor/courses", icon: "bi-journal-bookmark", requiredPermissions: getRoutePermissions("/instructor/courses") },
-  { type: "item", label: "Doanh thu của tôi", path: "/instructor/revenue", icon: "bi-cash-coin", requiredPermissions: getRoutePermissions("/instructor/revenue") },
+  { type: "item", label: "Doanh thu của tôi", path: "/instructor/revenue", icon: "bi-cash-coin", allowedRoles: ["INSTRUCTOR", "SUPERADMIN"] },
 
   { type: "group", label: "Người dùng & Giảng viên" },
   { type: "item", label: "Quản lý người dùng", path: "/admin/users", icon: "bi-people", requiredPermissions: getRoutePermissions("/admin/users") },
@@ -36,8 +36,8 @@ export const sidebarItems = [
   { type: "item", label: "Cấu hình hệ thống", path: "/super-admin/settings", icon: "bi-sliders", requiredPermissions: getRoutePermissions("/super-admin/settings") },
 
   { type: "group", label: "Hỗ trợ" },
-  { type: "item", label: "Hỗ trợ & Yêu cầu", path: "/support", icon: "bi-headset", requiredPermissions: getRoutePermissions("/support") },
-  { type: "item", label: "Xử lý yêu cầu", path: "/admin/requests", icon: "bi-inbox", requiredPermissions: getRoutePermissions("/admin/requests") },
+  { type: "item", label: "Hỗ trợ & Yêu cầu", path: "/support", icon: "bi-headset", requiredPermissions: ["support.request.create"] },
+  { type: "item", label: "Xử lý yêu cầu", path: "/admin/requests", icon: "bi-inbox", requiredPermissions: ["support.request.process"] },
 
   { type: "group", label: "Tài khoản" },
   { type: "item", label: "Thông báo", path: "/notifications", icon: "bi-bell" },

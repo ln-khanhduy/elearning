@@ -11,12 +11,12 @@ from apps.reviews.serializers.review_serializer import (
 )
 
 
-class ReviewListAPIView(BasePermissionAPIView):
+class ReviewListAPIView(APIView):
     """
-    GET /api/reviews/ - Lấy danh sách tất cả đánh giá (cho admin).
-    Yêu cầu quyền: course.review.view
+    GET /api/reviews/ - Lấy danh sách tất cả đánh giá.
+    Mọi người đều xem được đánh giá (không yêu cầu permission).
     """
-    required_permission = "course.review.view"
+    permission_classes = [IsAuthenticated]
 
     def get(self, request):
         reviews = review_service.get_all_reviews()
@@ -66,7 +66,7 @@ class ReviewDetailAPIView(APIView):
 class ReviewCreateAPIView(APIView):
     """
     POST /api/reviews/create/ - Tạo đánh giá / bình luận mới.
-    Yêu cầu đăng nhập.
+    Mọi người đều có thể bình luận (yêu cầu đăng nhập).
     """
     permission_classes = [IsAuthenticated]
 
@@ -93,25 +93,23 @@ class ReviewUpdateAPIView(APIView):
 
 class ReviewDeleteAPIView(APIView):
     """
-    DELETE /api/reviews/{review_id}/delete/ - Xóa đánh giá (chủ sở hữu).
-    Yêu cầu đăng nhập.
+    DELETE /api/reviews/{review_id}/delete/ - Xóa đánh giá.
+    Chỉ: tác giả của đánh giá, role COURSE_ADMIN hoặc SUPERADMIN mới được xóa.
     """
     permission_classes = [IsAuthenticated]
 
     def delete(self, request, review_id):
+        review = review_service.get_review_or_404(review_id)
+        user_role = request.user.role.code if request.user.role else None
+
+        is_author = review.user_id == request.user.id
+        is_course_admin = user_role in ("COURSE_ADMIN", "SUPERADMIN")
+
+        if not is_author and not is_course_admin:
+            return error_response(
+                "Bạn không có quyền xóa đánh giá này.",
+                http_status=status.HTTP_403_FORBIDDEN,
+            )
+
         review_service.delete_review(review_id, request.user)
         return success_response(None, "Đã xóa đánh giá.")
-
-
-class ReviewUpdateStatusAPIView(BasePermissionAPIView):
-    """
-    PATCH /api/reviews/{review_id}/update-status/ - Cập nhật trạng thái đánh giá (PUBLISHED/HIDDEN/DELETED).
-    Yêu cầu quyền: course.comment.hide
-    """
-    required_permission = "course.comment.hide"
-
-    def patch(self, request, review_id):
-        serializer = ReviewStatusSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        review = review_service.update_review_status(review_id, serializer.validated_data["status"])
-        return Response(ReviewSerializer(review).data, status=status.HTTP_200_OK)

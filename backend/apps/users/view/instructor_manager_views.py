@@ -64,7 +64,7 @@ class InstructorLockAPIView(BasePermissionAPIView):
     PATCH /api/instructors/manage/<uuid:user_id>/lock/
     Khóa tài khoản giảng viên.
     """
-    required_permission = "user.instructor.lock"
+    required_permission = "user.instructor.manage"
 
     def patch(self, request, user_id):
         serializer = LockInstructorSerializer(data=request.data)
@@ -90,7 +90,7 @@ class InstructorUnlockAPIView(BasePermissionAPIView):
     PATCH /api/instructors/manage/<uuid:user_id>/unlock/
     Mở khóa tài khoản giảng viên.
     """
-    required_permission = "user.instructor.lock"
+    required_permission = "user.instructor.manage"
 
     def patch(self, request, user_id):
         try:

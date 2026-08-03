@@ -26,12 +26,13 @@ def _is_finance_admin(user):
 
 # ==================== STRIPE ====================
 
-class StripeCheckoutAPIView(APIView):
+class StripeCheckoutAPIView(BasePermissionAPIView):
     """
     POST /api/payments/stripe/courses/{course_id}/checkout/
     Tạo Stripe Checkout Session.
+    Yêu cầu quyền mua khóa học: student.course.buy
     """
-    permission_classes = [IsAuthenticated]
+    required_permission = "student.course.buy"
 
     def post(self, request, course_id):
         try:
@@ -304,12 +305,12 @@ class AdminBatchPayoutAPIView(BasePermissionAPIView):
 
 # ==================== INSTRUCTOR REVENUE ====================
 
-class InstructorRevenueAPIView(BasePermissionAPIView):
+class InstructorRevenueAPIView(APIView):
     """
     GET /api/payments/instructor/revenue/
-    Xem doanh thu của instructor hiện tại.
+    Xem doanh thu của instructor hiện tại (chức năng cá nhân — chỉ cần đăng nhập).
     """
-    required_permission = "user.instructor.sales_history"
+    permission_classes = [IsAuthenticated]
 
     def get(self, request):
         revenue = payment_service.get_instructor_revenue(request.user.id)

@@ -7,8 +7,8 @@ from apps.courses.repositories import course_repository
 
 
 class WishlistListAPIView(BasePermissionAPIView):
-    """API danh sách yêu thích của học viên."""
-    required_permission = "student.wishlist.manage"
+    """GET /api/courses/wishlist/ - Danh sách khóa học yêu thích của học viên."""
+    required_permission = "student.wishlist.view"
 
     def get(self, request):
         items = wishlist_repository.get_user_wishlist(request.user)
@@ -34,7 +34,7 @@ class WishlistListAPIView(BasePermissionAPIView):
 
 
 class WishlistAddAPIView(BasePermissionAPIView):
-    """API thêm khóa học vào danh sách yêu thích."""
+    """POST /api/courses/wishlist/{course_id}/add/ - Thêm khóa học vào danh sách yêu thích."""
     required_permission = "student.wishlist.manage"
 
     def post(self, request, course_id):
@@ -50,7 +50,7 @@ class WishlistAddAPIView(BasePermissionAPIView):
 
 
 class WishlistRemoveAPIView(BasePermissionAPIView):
-    """API xóa khóa học khỏi danh sách yêu thích."""
+    """DELETE /api/courses/wishlist/{course_id}/remove/ - Xóa khóa học khỏi danh sách yêu thích."""
     required_permission = "student.wishlist.manage"
 
     def delete(self, request, course_id):
@@ -61,8 +61,8 @@ class WishlistRemoveAPIView(BasePermissionAPIView):
 
 
 class WishlistCheckAPIView(BasePermissionAPIView):
-    """API kiểm tra khóa học đã yêu thích chưa."""
-    required_permission = "student.wishlist.manage"
+    """GET /api/courses/wishlist/{course_id}/check/ - Kiểm tra khóa học đã yêu thích chưa."""
+    required_permission = "student.wishlist.view"
 
     def get(self, request, course_id):
         is_wishlisted = wishlist_repository.is_wishlisted(request.user, course_id)
@@ -70,8 +70,8 @@ class WishlistCheckAPIView(BasePermissionAPIView):
 
 
 class WishlistCountAPIView(BasePermissionAPIView):
-    """API đếm số lượng yêu thích."""
-    required_permission = "student.wishlist.manage"
+    """GET /api/courses/wishlist/count/ - Đếm số lượng khóa học yêu thích."""
+    required_permission = "student.wishlist.view"
 
     def get(self, request):
         count = wishlist_repository.count_user_wishlist(request.user)

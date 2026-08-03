@@ -14,6 +14,11 @@ def get_course_reviews(course_id):
     return review_repository.get_by_course(course_id)
 
 
+def get_review_or_404(review_id):
+    """Lấy một review theo id, trả về None nếu không tồn tại."""
+    return review_repository.get_by_id(review_id)
+
+
 def get_review_detail(review_id):
     """Lấy chi tiết một review kèm replies."""
     review = review_repository.get_by_id(review_id)
@@ -96,10 +101,17 @@ def update_review(review_id, user, data):
 
 
 def delete_review(review_id, user):
-    """Xóa review (soft delete) - chỉ chủ sở hữu."""
+    """Xóa review (soft delete).
+
+    - Chủ sở hữu review được xóa review của mình.
+    - COURSE_ADMIN / SUPERADMIN được xóa bất kỳ review nào.
+    """
     review = review_repository.get_by_id(review_id)
 
-    if review.user_id != user.id:
+    user_role = user.role.code if user.role else None
+    is_admin = user_role in ("COURSE_ADMIN", "SUPERADMIN")
+
+    if review.user_id != user.id and not is_admin:
         raise PermissionDenied("Bạn không có quyền xóa đánh giá này.")
 
     return review_repository.update_status(review_id, "DELETED")

@@ -18,7 +18,7 @@ function Header({ onToggleSidebar }) {
   const mobileSearchInputRef = useRef(null);
 
   // Chỉ hiển thị icon + gọi API khi user có quyền tương ứng
-  const canViewWishlist = hasPermission(user, "student.wishlist.manage");
+  const canViewWishlist = hasPermission(user, "student.wishlist.view");
   const canViewCart = hasPermission(user, "student.cart.view");
 
   const refreshWishlistCount = useCallback(() => {

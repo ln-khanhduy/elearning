@@ -1,8 +1,6 @@
 import json
 from rest_framework import status
 from rest_framework.response import Response
-from rest_framework.views import APIView
-from rest_framework.permissions import IsAuthenticated
 
 from apps.common.base_api_view import BasePermissionAPIView
 from apps.common.response_helpers import success_response, error_response
@@ -22,6 +20,7 @@ from apps.users.repositories import user_repository
 
 
 class AdminDashboardView(BasePermissionAPIView):
+    """GET /api/admin/dashboard/ - Dữ liệu tổng quan hệ thống (stats, biểu đồ, hoạt động gần đây)."""
     required_permission = "admin.dashboard.view"
 
     def get(self, request):
@@ -41,6 +40,7 @@ class AdminDashboardView(BasePermissionAPIView):
 
 
 class AdminUserListAPIView(BasePermissionAPIView):
+    """GET /api/admin/users/ - Danh sách người dùng (tìm kiếm, lọc role/status, phân trang)."""
     required_permission = "user.user.view"
 
     def get(self, request):
@@ -74,6 +74,7 @@ class AdminUserListAPIView(BasePermissionAPIView):
 
 
 class AdminUserDetailAPIView(BasePermissionAPIView):
+    """GET /api/admin/users/{user_id}/ - Chi tiết một người dùng."""
     required_permission = "user.user.view"
 
     def get(self, request, user_id):
@@ -85,7 +86,8 @@ class AdminUserDetailAPIView(BasePermissionAPIView):
 
 
 class AdminUserToggleActiveAPIView(BasePermissionAPIView):
-    required_permission = "user.user.lock"
+    """PATCH /api/admin/users/{user_id}/toggle-active/ - Khóa hoặc mở khóa tài khoản người dùng."""
+    required_permission = "user.user.manage"
 
     def patch(self, request, user_id):
         target_user = user_repository.get_user_by_id(user_id)
@@ -196,6 +198,7 @@ class SystemConfigUpdateAPIView(BasePermissionAPIView):
 
 
 class AdminUserChangeRoleAPIView(BasePermissionAPIView):
+    """PATCH /api/admin/users/{user_id}/change-role/ - Thay đổi vai trò (role) của người dùng."""
     required_permission = "admin.admin.change_role"
 
     def patch(self, request, user_id):
@@ -230,7 +233,7 @@ class RoleListAPIView(BasePermissionAPIView):
 
 class RoleCreateAPIView(BasePermissionAPIView):
     """POST /api/admin/roles/ - Tạo role mới."""
-    required_permission = "admin.role.create"
+    required_permission = "admin.role.manage"
 
     def post(self, request):
         from apps.system.services import role_service
@@ -266,7 +269,7 @@ class RoleDetailAPIView(BasePermissionAPIView):
 
 class RoleUpdateAPIView(BasePermissionAPIView):
     """PATCH /api/admin/roles/{id}/ - Cập nhật role."""
-    required_permission = "admin.role.update"
+    required_permission = "admin.role.manage"
 
     def patch(self, request, role_id):
         from apps.system.services import role_service
@@ -287,7 +290,7 @@ class RoleUpdateAPIView(BasePermissionAPIView):
 
 class RoleDeleteAPIView(BasePermissionAPIView):
     """DELETE /api/admin/roles/{id}/ - Xóa role."""
-    required_permission = "admin.role.delete"
+    required_permission = "admin.role.manage"
 
     def delete(self, request, role_id):
         from apps.system.services import role_service
@@ -338,7 +341,7 @@ class RolePermissionUpdateAPIView(BasePermissionAPIView):
     PUT /api/admin/roles/{id}/permissions/ - Cập nhật toàn bộ permissions cho role.
     Body: { "permission_codes": ["course.course.create", "user.user.view", ...] }
     """
-    required_permission = "admin.role.assign_permission"
+    required_permission = "admin.role.manage"
 
     def put(self, request, role_id):
         from apps.system.services import permission_service

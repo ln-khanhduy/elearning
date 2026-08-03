@@ -4,6 +4,7 @@ import {
   getRolesApi, createRoleApi, updateRoleApi, deleteRoleApi,
   getAllPermissionsApi, getRolePermissionsApi, updateRolePermissionsApi,
 } from "../../api/adminAPI";
+import "../../style/admin-role-management.css";
 
 // Trang quản lý vai trò và quyền: tạo, sửa, xóa vai trò và phân quyền
 function RoleManagePage() {
@@ -47,11 +48,10 @@ function RoleManagePage() {
       setAllPermissions(perms);
       const groups = [...new Set(perms.map((p) => p.group))].sort();
       setPermGroups(groups);
-      if (groups.length > 0 && !activeGroup) setActiveGroup(groups[0]);
     } catch (err) {
       toast.error("Không thể tải danh sách permission.");
     }
-  }, [activeGroup]);
+  }, []);
 
   useEffect(() => {
     fetchRoles();
@@ -158,14 +158,14 @@ function RoleManagePage() {
   });
 
   return (
-    <div className="admin-role-page" style={{ padding: "24px" }}>
-      <div className="inst-page-header" style={{ marginBottom: 20 }}>
+    <div className="admin-role-page">
+      <div className="inst-page-header role-page-header">
         <h2>Quản lý Role & Permission</h2>
         <p>Quản lý vai trò và phân quyền trong hệ thống.</p>
       </div>
 
       {/* Tabs */}
-      <div className="inst-filter-group" style={{ marginBottom: 20 }}>
+      <div className="inst-filter-group role-tabs">
         <button className={`inst-filter-btn ${activeTab === "roles" ? "active" : ""}`} onClick={() => setActiveTab("roles")}>
           <i className="bi bi-shield-lock me-1"></i> Quản lý Role
         </button>
@@ -180,7 +180,7 @@ function RoleManagePage() {
       {/* Tab: Quản lý Role */}
       {activeTab === "roles" && (
         <div>
-          <div style={{ marginBottom: 16, display: "flex", justifyContent: "flex-end" }}>
+          <div className="role-actions-bar">
             <button className="btn-save" onClick={openCreateModal}>
               <i className="bi bi-plus-lg me-1"></i> Tạo Role mới
             </button>
@@ -190,7 +190,7 @@ function RoleManagePage() {
           ) : roles.length === 0 ? (
             <div className="inst-empty"><p className="text-muted">Chưa có role nào.</p></div>
           ) : (
-            <div className="inst-table-wrapper">
+            <div className="inst-table-wrapper role-table-wrapper">
               <table className="inst-table">
                 <thead>
                   <tr>
@@ -228,7 +228,7 @@ function RoleManagePage() {
       {/* Tab: Danh sách Permission */}
       {activeTab === "permissions" && (
         <div>
-          <div className="inst-filter-group" style={{ marginBottom: 16, flexWrap: "wrap" }}>
+          <div className="inst-filter-group role-perm-filter">
             <button className={`inst-filter-btn ${!activeGroup ? "active" : ""}`} onClick={() => setActiveGroup("")}>Tất cả</button>
             {permGroups.map((g) => (
               <button key={g} className={`inst-filter-btn ${activeGroup === g ? "active" : ""}`} onClick={() => setActiveGroup(g)}>
@@ -236,7 +236,7 @@ function RoleManagePage() {
               </button>
             ))}
           </div>
-          <div className="inst-table-wrapper">
+          <div className="inst-table-wrapper role-table-wrapper">
             <table className="inst-table">
               <thead>
                 <tr>
@@ -265,30 +265,18 @@ function RoleManagePage() {
 
       {/* Tab: Gán quyền cho Role */}
       {activeTab === "assign" && (
-        <div style={{ display: "flex", gap: 20, alignItems: "flex-start" }}>
+        <div className="assign-layout">
           {/* Left: Role List */}
-          <div style={{ width: 220, minWidth: 220, background: "#fff", borderRadius: 10, border: "1px solid #e8ecf1", overflow: "hidden" }}>
-            <div style={{ padding: "12px 14px", borderBottom: "1px solid #eef0f4", fontWeight: 600, fontSize: "0.88rem", color: "#333" }}>
+          <div className="assign-role-panel">
+            <div className="assign-role-panel-title">
               Chọn Role
             </div>
-            <div style={{ maxHeight: 400, overflowY: "auto", padding: 4 }}>
+            <div className="assign-role-list">
               {roles.map((role) => (
                 <div
                   key={role.id}
+                  className={`role-list-item ${selectedRoleId === role.id ? "active" : ""}`}
                   onClick={() => handleSelectRole(role.id)}
-                  style={{
-                    padding: "8px 14px",
-                    cursor: "pointer",
-                    fontSize: "0.85rem",
-                    color: selectedRoleId === role.id ? "var(--primary, #0f3d75)" : "#555",
-                    background: selectedRoleId === role.id ? "#eef3fa" : "transparent",
-                    fontWeight: selectedRoleId === role.id ? 600 : 400,
-                    borderRadius: 4,
-                    margin: 2,
-                    transition: "all 0.15s",
-                  }}
-                  onMouseEnter={(e) => { if (selectedRoleId !== role.id) e.target.style.background = "#f5f7fb"; }}
-                  onMouseLeave={(e) => { if (selectedRoleId !== role.id) e.target.style.background = "transparent"; }}
                 >
                   {role.code}
                 </div>
@@ -297,16 +285,16 @@ function RoleManagePage() {
           </div>
 
           {/* Right: Permissions */}
-          <div style={{ flex: 1, minWidth: 0 }}>
+          <div className="assign-perm-panel">
             {!selectedRoleId ? (
-              <div style={{ textAlign: "center", padding: "60px 20px", color: "#999" }}>
-                <i className="bi bi-arrow-left" style={{ fontSize: 36 }}></i>
-                <p style={{ marginTop: 12 }}>Chọn một role để xem và gán quyền.</p>
+              <div className="assign-placeholder">
+                <i className="bi bi-arrow-left assign-placeholder-icon"></i>
+                <p className="assign-placeholder-text">Chọn một role để xem và gán quyền.</p>
               </div>
             ) : (
               <div>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-                  <h5 style={{ margin: 0 }}>
+                <div className="assign-header">
+                  <h5 className="assign-title">
                     Quyền của role: <strong>{selectedRoleName}</strong>
                   </h5>
                   <button className="btn-save" onClick={handleSavePermissions} disabled={assignLoading}>
@@ -314,7 +302,7 @@ function RoleManagePage() {
                   </button>
                 </div>
                 {assignLoading ? (
-                  <div style={{ textAlign: "center", padding: 20 }}>
+                  <div className="assign-loading">
                     <div className="spinner-border spinner-border-sm text-primary" role="status"></div>
                   </div>
                 ) : (
@@ -322,21 +310,21 @@ function RoleManagePage() {
                     const groupChecked = perms.every((p) => rolePerms.includes(p.code));
                     const groupPartial = perms.some((p) => rolePerms.includes(p.code)) && !groupChecked;
                     return (
-                      <div key={group} style={{ border: "1px solid #e8ecf1", borderRadius: 8, marginBottom: 8, overflow: "hidden" }}>
-                        <div style={{ padding: "8px 14px", background: "#f8f9fc", borderBottom: "1px solid #e8ecf1", display: "flex", alignItems: "center" }}>
-                          <label className="cat-checkbox" style={{ fontWeight: 600, marginBottom: 0 }}>
+                      <div key={group} className="perm-group-card">
+                        <div className="perm-group-header">
+                          <label className="cat-checkbox perm-group-checkbox">
                             <input
                               type="checkbox"
                               checked={groupChecked}
                               ref={(el) => { if (el) el.indeterminate = groupPartial; }}
                               onChange={(e) => toggleGroupPermissions(group, e.target.checked)}
                             />
-                            <span style={{ textTransform: "capitalize", fontSize: "0.85rem" }}>{group}</span>
+                            <span className="perm-group-name">{group}</span>
                           </label>
                         </div>
-                        <div style={{ padding: "8px 14px", display: "flex", flexWrap: "wrap", gap: 4 }}>
+                        <div className="perm-group-body">
                           {perms.map((p) => (
-                            <label key={p.code} className="cat-checkbox" style={{ fontSize: "0.78rem", marginBottom: 2 }}>
+                            <label key={p.code} className="cat-checkbox perm-item-checkbox">
                               <input
                                 type="checkbox"
                                 checked={rolePerms.includes(p.code)}
@@ -359,7 +347,7 @@ function RoleManagePage() {
       {/* Modal Create/Edit Role */}
       {showModal && (
         <div className="inst-modal-overlay" onClick={() => setShowModal(false)}>
-          <div className="inst-modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 450 }}>
+          <div className="inst-modal-content role-modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="inst-modal-header">
               <h3 className="inst-modal-title">{editRole ? "Sửa Role" : "Tạo Role mới"}</h3>
               <button className="inst-modal-close" onClick={() => setShowModal(false)}><i className="bi bi-x-lg"></i></button>
@@ -384,20 +372,6 @@ function RoleManagePage() {
         </div>
       )}
 
-      <style>{`
-        .cat-checkbox { display: inline-flex; align-items: center; gap: 4px; padding: 3px 6px; cursor: pointer; font-size: 0.78rem; color: #555; border-radius: 4px; transition: all 0.15s; user-select: none; margin-bottom: 0; }
-        .cat-checkbox:hover { background: #f5f7fb; color: var(--primary, #0f3d75); }
-        .cat-checkbox.active { background: #eef3fa; color: var(--primary, #0f3d75); font-weight: 600; }
-        .cat-checkbox input[type=checkbox] { appearance: none; -webkit-appearance: none; width: 13px; height: 13px; border: 1.5px solid #d0d5dd; border-radius: 2px; cursor: pointer; flex-shrink: 0; margin: 0; position: relative; }
-        .cat-checkbox input[type=checkbox]:checked { border-color: var(--primary, #0f3d75); background-color: var(--primary, #0f3d75); }
-        .cat-checkbox input[type=checkbox]:checked::after { content: ""; position: absolute; left: 3px; top: 0; width: 4px; height: 8px; border: solid #fff; border-width: 0 1.5px 1.5px 0; transform: rotate(45deg); }
-        .cat-checkbox input[type=checkbox]:indeterminate { border-color: var(--primary, #0f3d75); background-color: #eef3fa; }
-        .cat-checkbox input[type=checkbox]:indeterminate::after { content: ""; position: absolute; left: 2px; top: 5px; width: 7px; height: 1.5px; background: var(--primary, #0f3d75); }
-        .btn-save { display: inline-flex; align-items: center; gap: 6px; padding: 9px 22px; background: #0f3d75; color: #fff; border: none; border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: background 0.2s; }
-        .btn-save:hover { background: #0a2d55; }
-        .btn-save:disabled { opacity: 0.6; cursor: not-allowed; }
-        .inst-modal-input { width: 100%; padding: 8px 12px; border: 1px solid #d0d5dd; border-radius: 6px; font-size: 0.85rem; }
-      `}</style>
     </div>
   );
 }

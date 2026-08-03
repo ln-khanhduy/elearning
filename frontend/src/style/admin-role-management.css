@@ -1,0 +1,283 @@
+/* ==================== ROLE & PERMISSION MANAGEMENT ==================== */
+
+/* Checkbox tùy chỉnh cho permission */
+.cat-checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 6px;
+  cursor: pointer;
+  font-size: 0.78rem;
+  color: #555;
+  border-radius: 4px;
+  transition: all 0.15s;
+  user-select: none;
+  margin-bottom: 0;
+}
+
+.cat-checkbox:hover {
+  background: #f5f7fb;
+  color: var(--primary, #0f3d75);
+}
+
+.cat-checkbox.active {
+  background: #eef3fa;
+  color: var(--primary, #0f3d75);
+  font-weight: 600;
+}
+
+.cat-checkbox input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 13px;
+  height: 13px;
+  border: 1.5px solid #d0d5dd;
+  border-radius: 2px;
+  cursor: pointer;
+  flex-shrink: 0;
+  margin: 0;
+  position: relative;
+}
+
+.cat-checkbox input[type="checkbox"]:checked {
+  border-color: var(--primary, #0f3d75);
+  background-color: var(--primary, #0f3d75);
+}
+
+.cat-checkbox input[type="checkbox"]:checked::after {
+  content: "";
+  position: absolute;
+  left: 3px;
+  top: 0;
+  width: 4px;
+  height: 8px;
+  border: solid #fff;
+  border-width: 0 1.5px 1.5px 0;
+  transform: rotate(45deg);
+}
+
+.cat-checkbox input[type="checkbox"]:indeterminate {
+  border-color: var(--primary, #0f3d75);
+  background-color: #eef3fa;
+}
+
+.cat-checkbox input[type="checkbox"]:indeterminate::after {
+  content: "";
+  position: absolute;
+  left: 2px;
+  top: 5px;
+  width: 7px;
+  height: 1.5px;
+  background: var(--primary, #0f3d75);
+}
+
+/* Nút lưu chính */
+.btn-save {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 22px;
+  background: #0f3d75;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-save:hover {
+  background: #0a2d55;
+}
+
+.btn-save:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Ô input trong modal */
+.inst-modal-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #d0d5dd;
+  border-radius: 6px;
+  font-size: 0.85rem;
+}
+
+/* ==================== LAYOUT PAGE ==================== */
+
+/* Trang quản lý role */
+.admin-role-page {
+  padding: 24px;
+}
+
+/* Header trang */
+.role-page-header {
+  margin-bottom: 20px;
+}
+
+/* Thanh tab chính */
+.role-tabs {
+  margin-bottom: 20px;
+}
+
+/* Thanh hành động phía trên bảng */
+.role-actions-bar {
+  margin-bottom: 16px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* Bảng cuộn */
+.role-table-wrapper {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+/* Bộ lọc permission */
+.role-perm-filter {
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+/* ==================== TAB GÁN QUYỀN ==================== */
+
+/* Layout hai cột */
+.assign-layout {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+}
+
+/* Panel danh sách role */
+.assign-role-panel {
+  width: 220px;
+  min-width: 220px;
+  background: #fff;
+  border-radius: 10px;
+  border: 1px solid #e8ecf1;
+  overflow: hidden;
+}
+
+.assign-role-panel-title {
+  padding: 12px 14px;
+  border-bottom: 1px solid #eef0f4;
+  font-weight: 600;
+  font-size: 0.88rem;
+  color: #333;
+}
+
+.assign-role-list {
+  max-height: 400px;
+  overflow-y: auto;
+  padding: 4px;
+}
+
+/* Item role trong danh sách chọn */
+.role-list-item {
+  padding: 8px 14px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: #555;
+  border-radius: 4px;
+  margin: 2px;
+  transition: all 0.15s;
+}
+
+.role-list-item:hover {
+  background: #f5f7fb;
+}
+
+.role-list-item.active {
+  color: var(--primary, #0f3d75);
+  background: #eef3fa;
+  font-weight: 600;
+}
+
+/* Panel quyền bên phải */
+.assign-perm-panel {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Trạng thái chưa chọn role */
+.assign-placeholder {
+  text-align: center;
+  padding: 60px 20px;
+  color: #999;
+}
+
+.assign-placeholder-icon {
+  font-size: 36px;
+}
+
+.assign-placeholder-text {
+  margin-top: 12px;
+}
+
+/* Header của panel quyền */
+.assign-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.assign-title {
+  margin: 0;
+}
+
+/* Trạng thái loading */
+.assign-loading {
+  text-align: center;
+  padding: 20px;
+}
+
+/* ==================== NHÓM PERMISSION ==================== */
+
+/* Card nhóm permission */
+.perm-group-card {
+  border: 1px solid #e8ecf1;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  overflow: hidden;
+}
+
+/* Header nhóm */
+.perm-group-header {
+  padding: 8px 14px;
+  background: #f8f9fc;
+  border-bottom: 1px solid #e8ecf1;
+  display: flex;
+  align-items: center;
+}
+
+.perm-group-checkbox {
+  font-weight: 600;
+  margin-bottom: 0;
+}
+
+.perm-group-name {
+  text-transform: capitalize;
+  font-size: 0.85rem;
+}
+
+/* Body nhóm chứa các permission */
+.perm-group-body {
+  padding: 8px 14px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.perm-item-checkbox {
+  font-size: 0.78rem;
+  margin-bottom: 2px;
+}
+
+/* ==================== MODAL ==================== */
+
+.role-modal-content {
+  max-width: 450px;
+}

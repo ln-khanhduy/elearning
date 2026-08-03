@@ -1,5 +1,4 @@
 from rest_framework.permissions import AllowAny
-from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
@@ -31,6 +30,7 @@ from apps.common.response_helpers import success_response, error_response
 
 
 class CourseListAPIView(APIView):
+    """GET /api/courses/ - Danh sách khóa học công khai (có tìm kiếm, lọc theo trạng thái/category, phân trang)."""
     permission_classes = [AllowAny]
 
     def get(self, request):
@@ -58,6 +58,7 @@ class CourseListAPIView(APIView):
 
 
 class CourseDetailAPIView(APIView):
+    """GET /api/courses/{course_id}/ - Chi tiết khóa học công khai."""
     permission_classes = [AllowAny]
 
     def get(self, request, course_id):
@@ -71,8 +72,9 @@ class CourseDetailAPIView(APIView):
 # ==================== ADMIN COURSE API ====================
 
 
-class AdminCourseListAPIView(BasePermissionAPIView):
-    required_permission = "course.course.view"
+class AdminCourseListAPIView(APIView):
+    """GET /api/admin/courses/ - Danh sách khóa học cho admin."""
+    permission_classes = [IsAuthenticated]
 
     def get(self, request):
         page = int(request.GET.get("page", 1))
@@ -98,7 +100,8 @@ class AdminCourseListAPIView(BasePermissionAPIView):
 
 
 class AdminCourseCreateAPIView(BasePermissionAPIView):
-    required_permission = "course.course.create"
+    """POST /api/admin/courses/ - Tạo khóa học mới."""
+    required_permission = "course.course.manage"
 
     def post(self, request):
         serializer = CourseCreateUpdateSerializer(data=request.data)
@@ -118,8 +121,9 @@ class AdminCourseCreateAPIView(BasePermissionAPIView):
         )
 
 
-class AdminCourseDetailAPIView(BasePermissionAPIView):
-    required_permission = "course.course.view"
+class AdminCourseDetailAPIView(APIView):
+    """GET /api/admin/courses/{course_id}/ - Chi tiết khóa học cho admin."""
+    permission_classes = [IsAuthenticated]
 
     def get(self, request, course_id):
         course = course_service.get_course_detail(course_id)
@@ -127,7 +131,8 @@ class AdminCourseDetailAPIView(BasePermissionAPIView):
 
 
 class AdminCourseUpdateAPIView(BasePermissionAPIView):
-    required_permission = "course.course.update"
+    """PATCH /api/admin/courses/{course_id}/ - Cập nhật thông tin khóa học."""
+    required_permission = "course.course.manage"
 
     def patch(self, request, course_id):
         serializer = CourseCreateUpdateSerializer(data=request.data, partial=True)
@@ -147,7 +152,8 @@ class AdminCourseUpdateAPIView(BasePermissionAPIView):
 
 
 class AdminCourseDeleteAPIView(BasePermissionAPIView):
-    required_permission = "course.course.delete"
+    """DELETE /api/admin/courses/{course_id}/ - Xóa khóa học."""
+    required_permission = "course.course.manage"
 
     def delete(self, request, course_id):
         course = course_service.get_course_detail(course_id)
@@ -165,6 +171,7 @@ class AdminCourseDeleteAPIView(BasePermissionAPIView):
 
 
 class AdminCoursePublishAPIView(BasePermissionAPIView):
+    """PATCH /api/admin/courses/{course_id}/publish/ - Xuất bản khóa học lên công khai."""
     required_permission = "course.course.publish"
 
     def patch(self, request, course_id):
@@ -185,7 +192,8 @@ class AdminCoursePublishAPIView(BasePermissionAPIView):
 
 
 class AdminCourseHideAPIView(BasePermissionAPIView):
-    required_permission = "course.course.publish"
+    """PATCH /api/admin/courses/{course_id}/hide/ - Ẩn khóa học khỏi công khai."""
+    required_permission = "course.course.hide"
 
     def patch(self, request, course_id):
         course = course_service.hide_course(course_id, request.user)
@@ -206,6 +214,7 @@ class AdminCourseHideAPIView(BasePermissionAPIView):
 
 
 class AdminCourseAssignInstructorAPIView(BasePermissionAPIView):
+    """PATCH /api/admin/courses/{course_id}/assign/ - Phân công hoặc gỡ giảng viên phụ trách khóa học."""
     required_permission = "course.instructor.assign"
 
     def patch(self, request, course_id):
@@ -235,8 +244,9 @@ class AdminCourseAssignInstructorAPIView(BasePermissionAPIView):
             return success_response(CourseDetailSerializer(course).data, "Phân công giảng viên thành công.")
 
 
-class AdminCourseAssignedInstructorAPIView(BasePermissionAPIView):
-    required_permission = "course.course.view"
+class AdminCourseAssignedInstructorAPIView(APIView):
+    """GET /api/admin/courses/{course_id}/assigned-instructor/ - Lấy thông tin giảng viên được phân công."""
+    permission_classes = [IsAuthenticated]
 
     def get(self, request, course_id):
         course = course_service.get_course_detail(course_id)
@@ -251,8 +261,9 @@ class AdminCourseAssignedInstructorAPIView(BasePermissionAPIView):
 # ==================== INSTRUCTOR COURSE API ====================
 
 
-class InstructorCourseListAPIView(APIView):
-    permission_classes = [IsAuthenticated]
+class InstructorCourseListAPIView(BasePermissionAPIView):
+    """GET /api/instructor/courses/ - Danh sách khóa học được phân công giảng dạy cho instructor hiện tại."""
+    required_permission = "instructor.course.view_own"
 
     def get(self, request):
         courses = course_assignment_service.get_assigned_courses(request.user)
@@ -260,8 +271,9 @@ class InstructorCourseListAPIView(APIView):
         return success_response(serializer.data)
 
 
-class InstructorCourseDetailAPIView(APIView):
-    permission_classes = [IsAuthenticated]
+class InstructorCourseDetailAPIView(BasePermissionAPIView):
+    """GET /api/instructor/courses/{course_id}/ - Chi tiết khóa học giảng dạy của instructor."""
+    required_permission = "instructor.course.view_own"
 
     def get(self, request, course_id):
         course = course_service.get_course_detail(course_id)
@@ -270,8 +282,9 @@ class InstructorCourseDetailAPIView(APIView):
         return success_response(CourseDetailSerializer(course).data)
 
 
-class InstructorCourseStudentsAPIView(APIView):
-    permission_classes = [IsAuthenticated]
+class InstructorCourseStudentsAPIView(BasePermissionAPIView):
+    """GET /api/instructor/courses/{course_id}/students/ - Danh sách học viên đã đăng ký khóa học (kèm tiến độ)."""
+    required_permission = "instructor.course.view_own"
 
     def get(self, request, course_id):
         from apps.enrollments.models import Enrollment
@@ -294,8 +307,9 @@ class InstructorCourseStudentsAPIView(APIView):
         return success_response(students_data)
 
 
-class InstructorCourseAnalyticsAPIView(APIView):
-    permission_classes = [IsAuthenticated]
+class InstructorCourseAnalyticsAPIView(BasePermissionAPIView):
+    """GET /api/instructor/courses/{course_id}/analytics/ - Thống kê phân tích khóa học (số học viên, tiến độ trung bình)."""
+    required_permission = "instructor.course.view_own"
 
     def get(self, request, course_id):
         from apps.enrollments.models import Enrollment, CourseProgress
@@ -319,6 +333,7 @@ class InstructorCourseAnalyticsAPIView(APIView):
 
 
 class CourseCurriculumAPIView(APIView):
+    """GET /api/courses/{course_id}/curriculum/ - Lấy cấu trúc công khai (chương/bài) cho khách xem thử."""
     permission_classes = [AllowAny]
 
     def get(self, request, course_id):
@@ -327,6 +342,7 @@ class CourseCurriculumAPIView(APIView):
 
 
 class CourseCurriculumPreviewAPIView(APIView):
+    """GET /api/courses/{course_id}/curriculum/preview/ - Lấy cấu trúc đầy đủ cho user đã đăng ký học."""
     permission_classes = [IsAuthenticated]
 
     def get(self, request, course_id):
@@ -341,6 +357,7 @@ class CourseCurriculumPreviewAPIView(APIView):
 
 
 class CategoryListAPIView(APIView):
+    """GET /api/categories/ - Danh sách danh mục công khai."""
     permission_classes = [AllowAny]
 
     def get(self, request):
@@ -350,7 +367,8 @@ class CategoryListAPIView(APIView):
 
 
 class CategoryCreateAPIView(BasePermissionAPIView):
-    required_permission = "course.category.create"
+    """POST /api/categories/ - Tạo danh mục mới."""
+    required_permission = "course.category.manage"
 
     def post(self, request):
         serializer = CategorySerializer(data=request.data)
@@ -361,7 +379,8 @@ class CategoryCreateAPIView(BasePermissionAPIView):
 
 
 class CategoryUpdateAPIView(BasePermissionAPIView):
-    required_permission = "course.category.update"
+    """PATCH /api/categories/{category_id}/ - Cập nhật danh mục."""
+    required_permission = "course.category.manage"
 
     def patch(self, request, category_id):
         category = Category.objects.filter(id=category_id).first()
@@ -378,7 +397,8 @@ class CategoryUpdateAPIView(BasePermissionAPIView):
 
 
 class CategoryDeleteAPIView(BasePermissionAPIView):
-    required_permission = "course.category.delete"
+    """DELETE /api/categories/{category_id}/ - Xóa danh mục."""
+    required_permission = "course.category.manage"
 
     def delete(self, request, category_id):
         category = Category.objects.filter(id=category_id).first()
@@ -391,8 +411,9 @@ class CategoryDeleteAPIView(BasePermissionAPIView):
 # ==================== INSTRUCTOR ESSAY GRADING ====================
 
 
-class InstructorCourseEssaySubmissionsAPIView(APIView):
-    permission_classes = [IsAuthenticated]
+class InstructorCourseEssaySubmissionsAPIView(BasePermissionAPIView):
+    """GET /api/instructor/courses/{course_id}/essays/ - Danh sách bài tập tự luận cần chấm của khóa học."""
+    required_permission = "instructor.course.teaching"
 
     def get(self, request, course_id):
         course = course_service.get_course_detail(course_id)
@@ -402,8 +423,9 @@ class InstructorCourseEssaySubmissionsAPIView(APIView):
         return success_response(data)
 
 
-class InstructorCourseGradeEssayAPIView(APIView):
-    permission_classes = [IsAuthenticated]
+class InstructorCourseGradeEssayAPIView(BasePermissionAPIView):
+    """POST /api/instructor/courses/{course_id}/essays/{answer_id}/grade/ - Chấm điểm bài tập tự luận."""
+    required_permission = "instructor.course.teaching"
 
     def post(self, request, course_id):
         course = course_service.get_course_detail(course_id)
@@ -422,8 +444,9 @@ class InstructorCourseGradeEssayAPIView(APIView):
 # ==================== INSTRUCTOR SEND NOTIFICATION ====================
 
 
-class InstructorCourseSendNotificationAPIView(APIView):
-    permission_classes = [IsAuthenticated]
+class InstructorCourseSendNotificationAPIView(BasePermissionAPIView):
+    """POST /api/instructor/courses/{course_id}/notify/ - Gửi thông báo tới toàn bộ học viên của khóa học."""
+    required_permission = "instructor.course.teaching"
 
     def post(self, request, course_id):
         course = course_service.get_course_detail(course_id)
@@ -441,6 +464,7 @@ class InstructorCourseSendNotificationAPIView(APIView):
 
 
 class InstructorCourseQAAPIView(APIView):
+    """GET /api/instructor/courses/{course_id}/qa/ - Danh sách câu hỏi Q&A của khóa học (giảng viên xem)."""
     permission_classes = [IsAuthenticated]
 
     def get(self, request, course_id):
@@ -459,8 +483,9 @@ class InstructorCourseQAAPIView(APIView):
         })
 
 
-class InstructorCourseQAReplyAPIView(APIView):
-    permission_classes = [IsAuthenticated]
+class InstructorCourseQAReplyAPIView(BasePermissionAPIView):
+    """POST /api/instructor/courses/{course_id}/qa/{question_id}/reply/ - Giảng viên trả lời câu hỏi của học viên."""
+    required_permission = "instructor.course.teaching"
 
     def post(self, request, course_id, question_id):
         course = course_service.get_course_detail(course_id)
@@ -479,6 +504,7 @@ class InstructorCourseQAReplyAPIView(APIView):
 
 
 class StudentCourseQuestionListAPIView(APIView):
+    """GET /api/student/courses/{course_id}/qa/ - Danh sách câu hỏi Q&A của khóa học (học viên xem)."""
     permission_classes = [IsAuthenticated]
 
     def get(self, request, course_id):
@@ -498,6 +524,7 @@ class StudentCourseQuestionListAPIView(APIView):
 
 
 class StudentCourseQuestionCreateAPIView(APIView):
+    """POST /api/student/courses/{course_id}/qa/ - Học viên đặt câu hỏi mới trong khóa học."""
     permission_classes = [IsAuthenticated]
 
     def post(self, request, course_id):
@@ -511,6 +538,7 @@ class StudentCourseQuestionCreateAPIView(APIView):
 
 
 class StudentCourseQuestionDetailAPIView(APIView):
+    """GET /api/student/courses/{course_id}/qa/{question_id}/ - Chi tiết câu hỏi + các câu trả lời."""
     permission_classes = [IsAuthenticated]
 
     def get(self, request, course_id, question_id):
@@ -524,6 +552,7 @@ class StudentCourseQuestionDetailAPIView(APIView):
 
 
 class StudentCourseQuestionReplyAPIView(APIView):
+    """POST /api/student/courses/{course_id}/qa/{question_id}/reply/ - Học viên trả lời câu hỏi Q&A."""
     permission_classes = [IsAuthenticated]
 
     def post(self, request, course_id, question_id):
@@ -540,6 +569,7 @@ class StudentCourseQuestionReplyAPIView(APIView):
 
 
 class StudentCourseQuestionCloseAPIView(APIView):
+    """POST /api/student/courses/{course_id}/qa/{question_id}/close/ - Chủ câu hỏi đóng câu hỏi Q&A."""
     permission_classes = [IsAuthenticated]
 
     def post(self, request, course_id, question_id):
@@ -557,8 +587,9 @@ class StudentCourseQuestionCloseAPIView(APIView):
 
 # ==================== INSTRUCTOR LEARNING REPORT ====================
 
-class InstructorCourseLearningReportAPIView(APIView):
-    permission_classes = [IsAuthenticated]
+class InstructorCourseLearningReportAPIView(BasePermissionAPIView):
+    """GET /api/instructor/courses/{course_id}/report/ - Báo cáo tình hình học tập của học viên trong khóa học."""
+    required_permission = "instructor.course.teaching"
 
     def get(self, request, course_id):
         course = course_service.get_course_detail(course_id)

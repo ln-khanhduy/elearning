@@ -3,7 +3,7 @@ from apps.users.models import Role, RolePermission
 
 
 PERMISSIONS = {
-    # Admin
+    # ADMIN HỆ THỐNG 
     "admin.admin.create": "Tạo admin",
     "admin.admin.assign_role": "Gán role cho admin",
     "admin.admin.change_role": "Thay đổi role admin",
@@ -11,73 +11,40 @@ PERMISSIONS = {
     "admin.admin.delete": "Xóa admin",
     "admin.admin.view": "Xem thông tin admin",
 
-    # Role
-    "admin.role.create": "Tạo role",
-    "admin.role.update": "Sửa role",
-    "admin.role.delete": "Xóa role",
+    # ROLE & PERMISSION 
     "admin.role.view": "Xem danh sách role",
     "admin.role.view_permissions": "Xem danh sách permission của role",
-    "admin.role.assign_permission": "Gán permission cho role",
-    "admin.role.revoke_permission": "Thu hồi permission của role",
+    "admin.role.manage": "Quản lý role (tạo/sửa/xóa/gán/thu hồi)",
 
-    # Dashboard
+    # DASHBOARD 
     "admin.dashboard.view": "Xem dashboard",
 
-    # Course
-    "course.course.view": "Xem danh sách khóa học",
-    "course.course.create": "Tạo khóa học",
-    "course.course.update": "Cập nhật khóa học",
-    "course.course.delete": "Xóa khóa học",
-    "course.course.publish": "Xuất bản/Ẩn khóa học",
+    # KHOÁ HỌC (COURSE) 
+    "course.course.manage": "Quản lý khóa học (tạo/sửa/xóa)",
+    "course.course.publish": "Xuất bản khóa học",
     "course.course.hide": "Ẩn khóa học",
     "course.course.feedback_instructor": "Gửi phản hồi cho instructor",
     "course.instructor.assign": "Phân công giảng viên",
 
-    # Lesson
-    "course.lesson.create": "Tạo bài học",
-    "course.lesson.update": "Cập nhật bài học",
-    "course.lesson.delete": "Xóa bài học",
+    # BÀI HỌC (LESSON) 
+    "course.lesson.manage": "Quản lý bài học",
 
-    # Quiz
-    "course.quiz.create": "Tạo quiz",
-    "course.quiz.update": "Cập nhật quiz",
-    "course.quiz.delete": "Xóa quiz",
+    # QUIZ 
+    "course.quiz.manage": "Quản lý quiz",
 
-    # Category
-    "course.category.create": "Tạo danh mục",
-    "course.category.update": "Sửa danh mục",
-    "course.category.delete": "Xóa danh mục",
-    "course.category.view": "Xem danh mục",
+    # DANH MỤC (CATEGORY) 
+    "course.category.manage": "Quản lý danh mục",
 
-    # Comment
-    "course.comment.create": "Bình luận",
-    "course.comment.reply": "Phản hồi bình luận",
-    "course.comment.hide": "Ẩn bình luận",
-    "course.comment.delete": "Xóa bình luận",
-
-    # Review
-    "course.review.view": "Xem đánh giá",
-    "course.review.create": "Tạo đánh giá",
-
-    # Instructor
+    # GIẢNG VIÊN (INSTRUCTOR) 
     "user.instructor.view": "Xem danh sách instructor",
     "user.instructor.manage": "Quản lý tài khoản instructor",
-    "user.instructor.lock": "Khóa tài khoản instructor",
-    "user.instructor.support": "Hỗ trợ instructor",
-    "user.instructor.approve": "Duyệt hồ sơ instructor",
-    "user.instructor.reject": "Từ chối hồ sơ instructor",
-    "user.instructor.sales_history": "Xem lịch sử bán hàng",
     "user.instructor.withdraw_request": "Yêu cầu rút tiền",
 
-    # User
+    # NGƯỜI DÙNG (USER) 
     "user.user.view": "Xem thông tin user",
-    "user.user.update": "Cập nhật thông tin user",
-    "user.user.lock": "Khóa tài khoản user",
-    "user.user.unlock": "Mở khóa tài khoản user",
-    "user.user.notify": "Gửi thông báo cho user",
-    "user.user.complaint_resolve": "Giải quyết khiếu nại user",
+    "user.user.manage": "Quản lý tài khoản user",
 
-    # Finance
+    # TÀI CHÍNH (FINANCE) 
     "finance.finance.revenue_view": "Xem doanh thu",
     "finance.finance.payout": "Thanh toán cho giảng viên",
     "finance.finance.withdraw_approve": "Duyệt lệnh rút tiền",
@@ -87,114 +54,59 @@ PERMISSIONS = {
     "finance.finance.refund": "Duyệt yêu cầu hoàn tiền",
     "finance.coupon.view": "Xem mã giảm giá",
     "finance.coupon.manage": "Quản lý mã giảm giá",
-    "finance.coupon.create": "Tạo mã giảm giá",
-    "finance.coupon.update": "Cập nhật mã giảm giá",
-    "finance.coupon.delete": "Xóa mã giảm giá",
 
-    # Student permissions
-    "student.course.search": "Tìm kiếm khóa học",
-    "student.course.preview": "Xem thử khóa học",
+    # HỌC VIÊN (STUDENT) 
     "student.course.buy": "Mua khóa học",
-    "student.payment.create": "Thanh toán",
-    "student.learning.view": "Học bài",
-    "student.assignment.submit": "Làm bài tập",
-    "student.profile.manage": "Quản lý thông tin cá nhân",
     "student.my_course.view": "Xem khóa học đã mua",
     "student.wallet.deposit": "Yêu cầu hoàn tiền",
-    "student.wishlist.manage": "Quản lý danh sách yêu thích",
+    "student.wishlist.view": "Xem danh sách yêu thích",
+    "student.wishlist.manage": "Quản lý danh sách yêu thích (thêm/xóa)",
     "student.cart.view": "Xem giỏ hàng",
-    "student.cart.manage": "Quản lý giỏ hàng",
+    "student.cart.manage": "Quản lý giỏ hàng (thêm/xóa)",
 
-    # Instructor finance
+    # GIẢNG VIÊN - TÀI CHÍNH 
     "instructor.wallet.view_balance": "Xem số dư ví",
 
-    # Instructor course management
+    # GIẢNG VIÊN - KHOÁ HỌC 
     "instructor.course.view_own": "Xem khóa học giảng dạy",
-    "instructor.course.manage_own": "Quản lý khóa học giảng dạy",
+    "instructor.course.teaching": "Giảng dạy (chấm điểm, trả lời câu hỏi,...)",
 
-    # Support & Request
+    # HỖ TRỢ (SUPPORT) 
     "support.request.create": "Gửi yêu cầu hỗ trợ",
     "support.request.process": "Xử lý yêu cầu hỗ trợ",
 }
 
-# ==================== PERMISSION DEPENDENCIES ====================
+# PERMISSION DEPENDENCIES 
 # Các quyền phụ thuộc: khi cấp một quyền, role phải có các quyền trong danh sách
 # tương ứng thì mới hoạt động đúng chức năng.
 PERMISSION_DEPS = {
-    # ===== HỌC VIÊN (STUDENT) =====
-    # Xem giỏ hàng cần có quyền tìm kiếm khóa học (để hiển thị sản phẩm)
-    "student.cart.view": ["student.course.search"],
-    # Quản lý giỏ hàng luôn kèm Xem giỏ hàng
+    #  ROLE & PERMISSION 
+    "admin.role.manage": ["admin.role.view", "admin.role.view_permissions"],
+
+    #  QUIZ nằm trong Lesson → cấp quiz cần kèm quyền lesson 
+    "course.quiz.manage": ["course.lesson.manage"],
+
+    #  HỌC VIÊN — muốn quản lý thì cần kèm quyền xem 
     "student.cart.manage": ["student.cart.view"],
-    # Quản lý wishlist luôn kèm tìm kiếm khóa học
-    "student.wishlist.manage": ["student.course.search"],
-    # Mua khóa học cần đầy đủ: tìm kiếm, xem giỏ, quản lý giỏ, thanh toán
-    "student.course.buy": [
-        "student.course.search",
-        "student.cart.view",
-        "student.cart.manage",
-        "student.payment.create",
-    ],
-    # Học bài & làm bài tập cần có quyền xem khóa học đã mua
-    "student.learning.view": ["student.my_course.view"],
-    "student.assignment.submit": ["student.learning.view"],
+    "student.wishlist.manage": ["student.wishlist.view"],
+    # Mua khóa cần kèm quyền giỏ hàng (thêm vào giỏ rồi thanh toán)
+    "student.course.buy": ["student.cart.view", "student.cart.manage"],
+    # Yêu cầu hoàn tiền cần kèm quyền xem khóa học đã mua
+    "student.wallet.deposit": ["student.my_course.view"],
 
-    # ===== ĐÁNH GIÁ (REVIEW) =====
-    # Tạo đánh giá cần xem đánh giá để hiểu ngữ cảnh
-    "course.review.create": ["course.review.view"],
+    #  GIẢNG VIÊN — giảng dạy cần kèm quyền xem khóa học giảng dạy 
+    "instructor.course.teaching": ["instructor.course.view_own"],
 
-    # ===== COMMENT / BÌNH LUẬN =====
-    # Bình luận + phản hồi đi kèm nhau
-    "course.comment.create": ["course.course.view"],
-    "course.comment.reply": ["course.comment.create"],
+    #  HỖ TRỢ — người xử lý yêu cầu cũng có thể tạo yêu cầu 
+    "support.request.process": ["support.request.create"],
 
-    # ===== DANH MỤC (CATEGORY) =====
-    "course.category.create": ["course.category.view"],
-    "course.category.update": ["course.category.view"],
-    "course.category.delete": ["course.category.view"],
-
-    # ===== KHÓA HỌC (COURSE) — thao tác cần kèm xem =====
-    "course.course.create": ["course.course.view"],
-    "course.course.update": ["course.course.view"],
-    "course.course.delete": ["course.course.view"],
-    "course.course.publish": ["course.course.view"],
-    "course.course.hide": ["course.course.view"],
-    "course.course.approve": ["course.course.view"],
-    "course.course.feedback_instructor": ["course.course.view"],
-    "course.instructor.assign": ["course.course.view"],
-
-    # ===== LESSON / QUIZ — cần có quyền xem khóa học chứa chúng =====
-    "course.lesson.create": ["course.course.view"],
-    "course.lesson.update": ["course.course.view"],
-    "course.lesson.delete": ["course.course.view"],
-    "course.quiz.create": ["course.course.view"],
-    "course.quiz.update": ["course.course.view"],
-    "course.quiz.delete": ["course.course.view"],
-
-    # ===== GIẢNG VIÊN (INSTRUCTOR) — thao tác cần kèm xem =====
+    #  GIẢNG VIÊN (INSTRUCTOR) — thao tác cần kèm xem 
     "user.instructor.manage": ["user.instructor.view"],
-    "user.instructor.lock": ["user.instructor.view"],
-    "user.instructor.support": ["user.instructor.view"],
-    "user.instructor.approve": ["user.instructor.view"],
-    "user.instructor.reject": ["user.instructor.view"],
-    "user.instructor.sales_history": ["instructor.wallet.view_balance"],
 
-    # ===== NGƯỜI DÙNG (USER) — thao tác cần kèm xem =====
-    "user.user.update": ["user.user.view"],
-    "user.user.lock": ["user.user.view"],
-    "user.user.unlock": ["user.user.view"],
-    "user.user.notify": ["user.user.view"],
-    "user.user.complaint_resolve": ["user.user.view"],
+    #  NGƯỜI DÙNG (USER) — thao tác cần kèm xem 
+    "user.user.manage": ["user.user.view"],
 
-    # ===== ROLE & PERMISSION =====
-    "admin.role.create": ["admin.role.view"],
-    "admin.role.update": ["admin.role.view"],
-    "admin.role.delete": ["admin.role.view"],
-    # Cấp/thu hồi quyền cần xem cả role lẫn danh sách permission
-    "admin.role.assign_permission": ["admin.role.view", "admin.role.view_permissions"],
-    "admin.role.revoke_permission": ["admin.role.view", "admin.role.view_permissions"],
-
-    # ===== TÀI CHÍNH (FINANCE) — thao tác cần kèm xem doanh thu =====
+    #  TÀI CHÍNH (FINANCE) — thao tác cần kèm xem doanh thu 
     "finance.finance.payout": ["finance.finance.revenue_view"],
     "finance.finance.withdraw_approve": ["finance.finance.revenue_view"],
     "finance.finance.discount_config": ["finance.finance.revenue_view"],
@@ -202,23 +114,12 @@ PERMISSION_DEPS = {
     "finance.finance.report_export": ["finance.finance.revenue_view"],
     "finance.finance.refund": ["finance.finance.revenue_view"],
 
-    # ===== MÃ GIẢM GIÁ (COUPON) =====
-    "finance.coupon.manage": ["finance.coupon.view", "finance.coupon.create"],
-    "finance.coupon.create": ["finance.coupon.view"],
-    "finance.coupon.update": ["finance.coupon.view"],
-    "finance.coupon.delete": ["finance.coupon.view"],
-
-    # ===== GIẢNG VIÊN PHỤ TRÁCH KHÓA HỌC =====
-    # Quản lý khóa học giảng dạy cần kèm quyền xem khóa học của mình
-    "instructor.course.manage_own": ["instructor.course.view_own"],
+    #  MÃ GIẢM GIÁ (COUPON) 
+    "finance.coupon.manage": ["finance.coupon.view"],
 }
-
-
 
 ROLE_PERMISSIONS = {
     "SUPERADMIN": [
-        "support.request.create",
-        "support.request.process",
         "admin.admin.create",
         "admin.admin.assign_role",
         "admin.admin.change_role",
@@ -226,132 +127,85 @@ ROLE_PERMISSIONS = {
         "admin.admin.delete",
         "admin.admin.view",
 
-        "admin.role.create",
-        "admin.role.update",
-        "admin.role.delete",
         "admin.role.view",
         "admin.role.view_permissions",
-        "admin.role.assign_permission",
-        "admin.role.revoke_permission",
+        "admin.role.manage",
 
         "admin.dashboard.view",
 
-        "course.course.view",
-        "course.course.create",
-        "course.course.update",
-        "course.course.delete",
+        "course.course.manage",
         "course.course.publish",
         "course.course.hide",
         "course.course.feedback_instructor",
         "course.instructor.assign",
 
-        "course.lesson.create",
-        "course.lesson.update",
-        "course.lesson.delete",
+        "course.lesson.manage",
+        "course.quiz.manage",
 
-        "course.quiz.create",
-        "course.quiz.update",
-        "course.quiz.delete",
-
-        "course.category.create",
-        "course.category.update",
-        "course.category.delete",
-        "course.category.view",
-
-        "course.comment.create",
-        "course.comment.reply",
-        "course.comment.hide",
-        "course.comment.delete",
-
-        "course.review.view",
+        "course.category.manage",
 
         "user.instructor.view",
-        "user.instructor.lock",
-        "user.instructor.support",
-        "user.instructor.approve",
-        "user.instructor.reject",
-        "user.instructor.sales_history",
+        "user.instructor.manage",
+        "user.instructor.withdraw_request",
 
         "user.user.view",
-        "user.user.update",
-        "user.user.lock",
-        "user.user.unlock",
-        "user.user.notify",
-        "user.user.complaint_resolve",
+        "user.user.manage",
 
         "finance.finance.revenue_view",
         "finance.finance.payout",
+        "finance.finance.withdraw_approve",
         "finance.finance.discount_config",
         "finance.finance.fee_config",
+        "finance.finance.report_export",
+        "finance.finance.refund",
         "finance.coupon.view",
         "finance.coupon.manage",
-        "finance.coupon.create",
-        "finance.coupon.update",
-        "finance.coupon.delete",
 
-        "student.course.search",
-        "student.course.preview",
         "student.course.buy",
-        "student.payment.create",
-        "student.learning.view",
-        "student.assignment.submit",
-        "student.profile.manage",
         "student.my_course.view",
+        "student.wallet.deposit",
+        "student.wishlist.view",
+        "student.wishlist.manage",
+        "student.cart.view",
+        "student.cart.manage",
+        "instructor.wallet.view_balance",
+        "instructor.course.view_own",
+        "instructor.course.teaching",
+        "support.request.create",
+        "support.request.process",
     ],
 
     "COURSE_ADMIN": [
+        "support.request.create",
         "support.request.process",
-
-        "course.course.view",
-        "course.course.create",
-        "course.course.update",
+        "course.course.manage",
         "course.course.publish",
         "course.course.hide",
-        "course.course.delete",
         "course.course.feedback_instructor",
         "course.instructor.assign",
 
-        "course.lesson.create",
-        "course.lesson.update",
-        "course.lesson.delete",
+        "course.lesson.manage",
+        "course.quiz.manage",
 
-        "course.quiz.create",
-        "course.quiz.update",
-        "course.quiz.delete",
-
-        "course.category.create",
-        "course.category.update",
-        "course.category.delete",
-        "course.category.view",
-
-        "course.comment.hide",
-        "course.comment.delete",
-
-        "course.review.view",
+        "course.category.manage",
     ],
 
     "INSTRUCTOR_MANAGER": [
-        "support.request.process",
-        "user.user.view",
         "user.instructor.view",
         "user.instructor.manage",
-        "user.instructor.lock",
-        "user.instructor.support",
-        "user.instructor.approve",
-        "user.instructor.reject",
+        "support.request.create",
+        "support.request.process",
     ],
 
     "USER_MANAGER": [
-        "support.request.process",
         "user.user.view",
-        "user.user.update",
-        "user.user.lock",
-        "user.user.unlock",
-        "user.user.notify",
-        "user.user.complaint_resolve",
+        "user.user.manage",
+        "support.request.create",
+        "support.request.process",
     ],
 
     "FINANCE_ADMIN": [
+        "support.request.create",
         "support.request.process",
         "finance.finance.revenue_view",
         "finance.finance.payout",
@@ -360,50 +214,35 @@ ROLE_PERMISSIONS = {
         "finance.finance.fee_config",
         "finance.finance.report_export",
         "finance.finance.refund",
+        "finance.coupon.view",
+        "finance.coupon.manage",
     ],
-
 
     "INSTRUCTOR": [
-        "support.request.create",
         "instructor.course.view_own",
+        "instructor.course.teaching",
         "instructor.wallet.view_balance",
-        "user.instructor.sales_history",
         "user.instructor.withdraw_request",
-        "course.comment.reply",
-        "student.profile.manage",
+        "student.my_course.view",
+        "student.wallet.deposit",
+        "support.request.create",
     ],
 
-
     "STUDENT": [
-        "support.request.create",
-        "student.course.search",
-        "student.course.preview",
         "student.course.buy",
-
-        "student.wallet.deposit",
-        "student.payment.create",
-
-        "student.learning.view",
-        "student.assignment.submit",
-
-        "course.review.create",
-        "course.review.view",
-
-        "course.comment.create",
-        "course.comment.reply",
-
-        "student.profile.manage",
         "student.my_course.view",
-
+        "student.wallet.deposit",
+        "student.wishlist.view",
         "student.wishlist.manage",
         "student.cart.view",
         "student.cart.manage",
+        "support.request.create",
     ],
 }
 
 
 class Command(BaseCommand):
-    help = "Seed permissions for roles"
+    help = "Seed permissions cho các role"
 
     def handle(self, *args, **kwargs):
         for role_code, permission_codes in ROLE_PERMISSIONS.items():
@@ -411,7 +250,7 @@ class Command(BaseCommand):
 
             if not role:
                 self.stdout.write(
-                    self.style.WARNING(f"Role not found: {role_code}")
+                    self.style.WARNING(f"Không tìm thấy role: {role_code}")
                 )
                 continue
 
@@ -431,5 +270,5 @@ class Command(BaseCommand):
                 )
 
             self.stdout.write(
-                self.style.SUCCESS(f"Permissions assigned to role: {role_code}")
+                self.style.SUCCESS(f"Permisson đã được gán vào vai trò: {role_code}")
             )

@@ -152,7 +152,7 @@ class LockUserAPIView(BasePermissionAPIView):
     PATCH /api/users/{user_id}/lock/ - Khóa tài khoản người dùng.
     Yêu cầu quyền: user.user.lock
     """
-    required_permission = "user.user.lock"
+    required_permission = "user.user.manage"
 
     def patch(self, request, user_id):
         serializer = LockUnlockUserSerializer(data=request.data)
@@ -179,7 +179,7 @@ class UnlockUserAPIView(BasePermissionAPIView):
     PATCH /api/users/{user_id}/unlock/ - Mở khóa tài khoản người dùng.
     Yêu cầu quyền: user.user.unlock
     """
-    required_permission = "user.user.unlock"
+    required_permission = "user.user.manage"
 
     def patch(self, request, user_id):
         user = user_service.unlock_user(user_id, request.user)
@@ -281,9 +281,9 @@ class InstructorApplicationReviewAPIView(BasePermissionAPIView):
         """Xác định quyền dựa trên hành động trong body request."""
         status_value = request.data.get("status")
         if status_value == "APPROVED":
-            return "user.instructor.approve"
+            return "user.instructor.manage"
         elif status_value == "REJECTED":
-            return "user.instructor.reject"
+            return "user.instructor.manage"
         return None
 
     def initial(self, request, *args, **kwargs):

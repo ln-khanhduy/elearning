@@ -1,13 +1,12 @@
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "react-toastify";
-import { getReviewsApi, updateReviewStatusApi } from "../../api/reviewAPI";
+import { getReviewsApi, deleteReviewApi } from "../../api/reviewAPI";
 import ConfirmModal from "../../components/common/ConfirmModal";
 
-// Trang quản lý đánh giá: duyệt, ẩn hoặc xóa các đánh giá khóa học
+// Trang quản lý đánh giá: xóa các đánh giá vi phạm
 function AdminReviewsPage() {
   const STATUS_MAP = {
     PUBLISHED: { label: "Công khai", color: "#198754" },
-    HIDDEN: { label: "Đã ẩn", color: "#6f42c1" },
     DELETED: { label: "Đã xóa", color: "#dc3545" },
   };
   const [reviews, setReviews] = useState([]);
@@ -47,19 +46,19 @@ function AdminReviewsPage() {
     loadReviews();
   }, [loadReviews]);
 
-  const handleUpdateStatus = async (reviewId, status) => {
-    const action = status === "HIDDEN" ? "ẩn" : status === "PUBLISHED" ? "hiện" : "xóa";
+  // Xóa đánh giá (chỉ course_admin / super_admin / tác giả được phép - backend kiểm tra)
+  const handleDelete = (reviewId) => {
     showConfirm(
-      `Xác nhận ${action} đánh giá`,
-      `Xác nhận ${action} đánh giá này?`,
+      "Xóa đánh giá",
+      "Bạn có chắc muốn xóa đánh giá này? Hành động không thể hoàn tác.",
       async () => {
         try {
-          setActionLoading(`${status}-${reviewId}`);
-          await updateReviewStatusApi(reviewId, status);
-          toast.success(`Đã ${action} đánh giá thành công!`);
+          setActionLoading(`delete-${reviewId}`);
+          await deleteReviewApi(reviewId);
+          toast.success("Đã xóa đánh giá thành công!");
           loadReviews();
         } catch (error) {
-          toast.error(error.message);
+          toast.error(error.message || "Không thể xóa đánh giá.");
         } finally {
           setActionLoading(null);
         }
@@ -100,7 +99,7 @@ function AdminReviewsPage() {
       <div className="admin-reviews-header">
         <div>
           <h2>Bình luận / Đánh giá</h2>
-          <p className="text-muted">Quản lý tất cả đánh giá và bình luận trong hệ thống.</p>
+          <p className="text-muted">Quản lý đánh giá trong hệ thống. Chỉ xóa các đánh giá vi phạm.</p>
         </div>
       </div>
 
@@ -113,7 +112,6 @@ function AdminReviewsPage() {
         >
           <option value="">Tất cả trạng thái</option>
           <option value="PUBLISHED">Công khai</option>
-          <option value="HIDDEN">Đã ẩn</option>
           <option value="DELETED">Đã xóa</option>
         </select>
         <span className="admin-rv-count">{filteredReviews.length} đánh giá</span>
@@ -151,7 +149,7 @@ function AdminReviewsPage() {
                   {getStars(review.rating)}
                   {getStatusBadge(review.status)}
                   <small className="text-muted">
-                    {new Date(review.created_at).toLocaleDateString("vi-VN")}
+                    {review.created_at ? new Date(review.created_at).toLocaleDateString("vi-VN") : ""}
                   </small>
                 </div>
               </div>
@@ -159,29 +157,11 @@ function AdminReviewsPage() {
                 <p>{review.content}</p>
               </div>
               <div className="admin-rv-actions">
-                {review.status === "PUBLISHED" && (
-                  <button
-                    className="admin-rv-btn-hide"
-                    onClick={() => handleUpdateStatus(review.id, "HIDDEN")}
-                    disabled={actionLoading === `HIDDEN-${review.id}`}
-                  >
-                    <i className="bi bi-eye-slash"></i> Ẩn
-                  </button>
-                )}
-                {review.status === "HIDDEN" && (
-                  <button
-                    className="admin-rv-btn-show"
-                    onClick={() => handleUpdateStatus(review.id, "PUBLISHED")}
-                    disabled={actionLoading === `PUBLISHED-${review.id}`}
-                  >
-                    <i className="bi bi-eye"></i> Hiện lại
-                  </button>
-                )}
                 {review.status !== "DELETED" && (
                   <button
                     className="admin-rv-btn-delete"
-                    onClick={() => handleUpdateStatus(review.id, "DELETED")}
-                    disabled={actionLoading === `DELETED-${review.id}`}
+                    onClick={() => handleDelete(review.id)}
+                    disabled={actionLoading === `delete-${review.id}`}
                   >
                     <i className="bi bi-trash"></i> Xóa
                   </button>

@@ -1,6 +1,7 @@
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 
+from apps.common.base_api_view import BasePermissionAPIView
 from apps.common.response_helpers import success_response, error_response
 from apps.enrollments.services import learning_service
 from apps.enrollments.services import enrollment_service
@@ -11,9 +12,9 @@ from apps.enrollments.serializers.learning_serializer import (
 )
 
 
-class MyCourseListAPIView(APIView):
+class MyCourseListAPIView(BasePermissionAPIView):
     """GET /api/enrollments/my-courses/ - Lấy danh sách khóa học đã đăng ký."""
-    permission_classes = [IsAuthenticated]
+    required_permission = "student.my_course.view"
 
     def get(self, request):
         enrollments = enrollment_service.get_my_courses(request.user)

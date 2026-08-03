@@ -9,12 +9,11 @@ from apps.support.serializers import (
 )
 
 
-class MyRequestListAPIView(APIView):
+class MyRequestListAPIView(BasePermissionAPIView):
     """
     GET /api/support/my-requests/ - Danh sách yêu cầu của tôi.
-    Yêu cầu đăng nhập.
     """
-    permission_classes = [IsAuthenticated]
+    required_permission = "support.request.create"
 
     def get(self, request):
         requests = support_service.get_my_requests(request.user)
@@ -22,12 +21,11 @@ class MyRequestListAPIView(APIView):
         return success_response(serializer.data)
 
 
-class RequestCreateAPIView(APIView):
+class RequestCreateAPIView(BasePermissionAPIView):
     """
     POST /api/support/requests/create/ - Tạo yêu cầu hỗ trợ mới.
-    Yêu cầu đăng nhập.
     """
-    permission_classes = [IsAuthenticated]
+    required_permission = "support.request.create"
 
     def post(self, request):
         serializer = SupportRequestCreateSerializer(data=request.data)
@@ -44,6 +42,7 @@ class RequestProcessAPIView(BasePermissionAPIView):
     """
     PATCH /api/support/requests/{request_id}/process/ - Xử lý yêu cầu.
     """
+    required_permission = "support.request.process"
     def patch(self, request, request_id):
         serializer = SupportRequestProcessSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -59,6 +58,7 @@ class AdminRequestListAPIView(BasePermissionAPIView):
     GET /api/support/admin/requests/ - Danh sách yêu cầu cho admin.
     Lọc theo request_type, status.
     """
+    required_permission = "support.request.process"
     def get(self, request):
         request_type = request.GET.get("request_type")
         if request_type:

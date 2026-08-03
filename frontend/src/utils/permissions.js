@@ -5,28 +5,24 @@
  */
 export const ROUTE_PERMISSIONS = {
   "/dashboard": ["admin.dashboard.view"],
-  "/courses": ["student.course.search"],
+  "/courses": ["student.my_course.view"],
   "/my-courses": ["student.my_course.view"],
-  "/courses/:courseId/qa": ["course.comment.create"],
+  "/my-wishlist": ["student.wishlist.view"],
+  "/cart": ["student.cart.view"],
   "/courses/:courseId/checkout": ["student.course.buy"],
-  "/admin/courses": ["course.course.view"],
-  "/admin/courses/create": ["course.course.create"],
-  "/admin/courses/:courseId/edit": ["course.course.update"],
+  "/admin/courses/create": ["course.course.manage"],
+  "/admin/courses/:courseId/edit": ["course.course.manage"],
   "/admin/courses/:courseId/assign": ["course.instructor.assign"],
-  "/admin/courses/categories": ["course.category.view"],
-  "/admin/reviews": ["course.review.view"],
   "/admin/users": ["user.user.view"],
-  "/admin/instructor-support": ["user.instructor.support"],
-  "/admin/register-instructor": ["user.instructor.approve"],
+  "/admin/instructor-support": ["user.instructor.view"],
+  "/admin/register-instructor": ["user.instructor.view"],
   "/instructor/courses": ["instructor.course.view_own"],
   "/instructor/courses/:courseId": ["instructor.course.view_own"],
   "/instructor/courses/:courseId/students": ["instructor.course.view_own"],
   "/instructor/courses/:courseId/analytics": ["instructor.course.view_own"],
-  "/instructor/courses/:courseId/qa": ["course.comment.reply"],
-  "/instructor/revenue": ["user.instructor.sales_history"],
   "/finance/transactions": ["finance.finance.revenue_view"],
   "/finance/revenue": ["finance.finance.revenue_view"],
-  "/finance/reports": ["finance.finance.report_export"],
+  "/finance/reports": ["finance.finance.revenue_view"],
   "/finance/payouts": ["finance.finance.payout"],
   "/admin/coupons": ["finance.coupon.view"],
   "/super-admin/roles": ["admin.role.view"],
@@ -34,8 +30,7 @@ export const ROUTE_PERMISSIONS = {
   "/super-admin/settings": ["admin.dashboard.view"],
   "/support": ["support.request.create"],
   "/admin/requests": ["support.request.process"],
-  "/admin/complaints": ["user.user.complaint_resolve"],
-  // Lưu ý: /profile không cần permission — mọi người dùng đã đăng nhập đều truy cập được
+  "/admin/complaints": ["support.request.process"],
 };
 
 /** Lấy danh sách quyền tương ứng với đường dẫn route */
@@ -68,9 +63,7 @@ export const hasPermission = (user, permissionCode) => {
   return permissions.includes(permissionCode);
 };
 
-
-//Kiểm tra user có ít nhất một trong các quyền đã cho.
-
+// Kiểm tra user có ít nhất một trong các quyền đã cho.
 export const hasAnyPermission = (user, permissionCodes = []) => {
   return permissionCodes.some((code) => hasPermission(user, code));
 };

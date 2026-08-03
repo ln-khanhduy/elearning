@@ -17,6 +17,7 @@ from apps.promotions.serializers.coupon_serializer import (
 
 
 class AdminCouponListAPIView(BasePermissionAPIView):
+    """GET /api/admin/coupons/ - Danh sách mã giảm giá."""
     required_permission = "finance.coupon.view"
 
     def get(self, request):
@@ -26,6 +27,7 @@ class AdminCouponListAPIView(BasePermissionAPIView):
 
 
 class AdminCouponCreateAPIView(BasePermissionAPIView):
+    """POST /api/admin/coupons/ - Tạo mã giảm giá mới."""
     required_permission = "finance.coupon.manage"
 
     def post(self, request):
@@ -47,6 +49,7 @@ class AdminCouponCreateAPIView(BasePermissionAPIView):
 
 
 class AdminCouponDetailAPIView(BasePermissionAPIView):
+    """GET /api/admin/coupons/{coupon_id}/ - Chi tiết mã giảm giá."""
     required_permission = "finance.coupon.view"
 
     def get(self, request, coupon_id):
@@ -55,6 +58,7 @@ class AdminCouponDetailAPIView(BasePermissionAPIView):
 
 
 class AdminCouponUpdateAPIView(BasePermissionAPIView):
+    """PATCH /api/admin/coupons/{coupon_id}/ - Cập nhật mã giảm giá."""
     required_permission = "finance.coupon.manage"
 
     def patch(self, request, coupon_id):
@@ -75,6 +79,7 @@ class AdminCouponUpdateAPIView(BasePermissionAPIView):
 
 
 class AdminCouponDeleteAPIView(BasePermissionAPIView):
+    """DELETE /api/admin/coupons/{coupon_id}/ - Xóa mã giảm giá."""
     required_permission = "finance.coupon.manage"
 
     def delete(self, request, coupon_id):

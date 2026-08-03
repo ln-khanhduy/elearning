@@ -12,23 +12,32 @@ function Sidebar({ isOpen, onClose }) {
   const userPermissions = user?.permissions || [];
   const isSuperAdmin = roleCode === "SUPERADMIN";
 
+  // Kiểm tra item có thuộc role của user hiện tại hay không
+  const matchesRole = (item) => {
+    if (item.allowedRoles && item.allowedRoles.length > 0) {
+      return item.allowedRoles.includes(roleCode);
+    }
+    return true;
+  };
+
+  const matchesPermission = (item) => {
+    if (item.requiredPermissions && item.requiredPermissions.length > 0) {
+      return item.requiredPermissions.some(p => userPermissions.includes(p));
+    }
+    return true;
+  };
+
   // Lọc: chỉ giữ item hợp lệ, và chỉ giữ group nếu có ít nhất 1 item hợp lệ trong group đó
     const visibleItems = sidebarItems.filter((item, index) => {
       if (item.type === "group") {
         for (let i = index + 1; i < sidebarItems.length; i++) {
           const next = sidebarItems[i];
           if (next.type === "group") break;
-          // Không có requiredPermissions → ai cũng thấy
-          if (!next.requiredPermissions || next.requiredPermissions.length === 0) return true;
-          // Check permission
-          if (next.requiredPermissions.some(p => userPermissions.includes(p))) return true;
+          if (matchesRole(next) && matchesPermission(next)) return true;
         }
         return false;
       }
-      // Không có requiredPermissions → ai cũng thấy
-      if (!item.requiredPermissions || item.requiredPermissions.length === 0) return true;
-      // Check permission
-      return item.requiredPermissions.some(p => userPermissions.includes(p));
+      return matchesRole(item) && matchesPermission(item);
     });
 
   const hasItemAfterGroup = (index) => {

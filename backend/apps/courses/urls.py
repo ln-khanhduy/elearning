@@ -1,9 +1,9 @@
 from django.urls import path
-from apps.courses.views_wishlist import (
+from apps.courses.views.views_wishlist import (
     WishlistListAPIView, WishlistAddAPIView, WishlistRemoveAPIView,
     WishlistCheckAPIView, WishlistCountAPIView,
 )
-from apps.courses.views import (
+from apps.courses.views.views import (
     # Public
     CourseListAPIView, CourseDetailAPIView,
     CourseCurriculumAPIView, CourseCurriculumPreviewAPIView,

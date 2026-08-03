@@ -2,7 +2,6 @@ import os
 from django.conf import settings
 from django.http import HttpResponse
 from rest_framework.permissions import AllowAny
-from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.parsers import MultiPartParser, FormParser
@@ -53,7 +52,7 @@ class QuizCreateAPIView(BasePermissionAPIView):
     """
     POST /api/lessons/{lesson_id}/quizzes/create/ - Tạo quiz mới trong bài học.
     """
-    required_permission = "course.lesson.create"
+    required_permission = "course.quiz.manage"
 
     def post(self, request, lesson_id):
         serializer = QuizCreateUpdateSerializer(data=request.data)
@@ -74,7 +73,7 @@ class QuizUpdateAPIView(BasePermissionAPIView):
     """
     PATCH /api/quizzes/{quiz_id}/ - Cập nhật thông tin quiz.
     """
-    required_permission = "course.lesson.update"
+    required_permission = "course.quiz.manage"
 
     def patch(self, request, quiz_id):
         serializer = QuizCreateUpdateSerializer(data=request.data, partial=True)
@@ -95,7 +94,7 @@ class QuizDeleteAPIView(BasePermissionAPIView):
     """
     DELETE /api/quizzes/{quiz_id}/ - Xóa quiz.
     """
-    required_permission = "course.lesson.delete"
+    required_permission = "course.quiz.manage"
 
     def delete(self, request, quiz_id):
         quiz = quiz_repository.get_by_id(quiz_id)
@@ -130,7 +129,7 @@ class QuestionCreateAPIView(BasePermissionAPIView):
     """
     POST /api/quizzes/{quiz_id}/questions/ - Tạo câu hỏi mới trong quiz.
     """
-    required_permission = "course.lesson.create"
+    required_permission = "course.quiz.manage"
 
     def post(self, request, quiz_id):
         serializer = QuestionCreateUpdateSerializer(data=request.data)
@@ -151,7 +150,7 @@ class QuestionUpdateAPIView(BasePermissionAPIView):
     """
     PATCH /api/questions/{question_id}/ - Cập nhật câu hỏi.
     """
-    required_permission = "course.lesson.update"
+    required_permission = "course.quiz.manage"
 
     def patch(self, request, question_id):
         serializer = QuestionCreateUpdateSerializer(data=request.data, partial=True)
@@ -172,7 +171,7 @@ class QuestionDeleteAPIView(BasePermissionAPIView):
     """
     DELETE /api/questions/{question_id}/ - Xóa câu hỏi.
     """
-    required_permission = "course.lesson.delete"
+    required_permission = "course.quiz.manage"
 
     def delete(self, request, question_id):
         question = question_repository.get_by_id(question_id)
@@ -198,7 +197,7 @@ class QuestionImportPreviewAPIView(BasePermissionAPIView):
     POST /api/quizzes/{quiz_id}/questions/import/preview/
     Upload file CSV/XLSX để preview dữ liệu trước khi import.
     """
-    required_permission = "course.lesson.create"
+    required_permission = "course.quiz.manage"
     parser_classes = [MultiPartParser, FormParser]
 
     def post(self, request, quiz_id):
@@ -250,7 +249,7 @@ class QuestionImportExecuteAPIView(BasePermissionAPIView):
     Import câu hỏi từ dữ liệu đã preview.
     Body: { "rows": [...] }
     """
-    required_permission = "course.lesson.create"
+    required_permission = "course.quiz.manage"
 
     def post(self, request, quiz_id):
         rows = request.data.get("rows")
