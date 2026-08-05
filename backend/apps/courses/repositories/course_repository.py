@@ -1,13 +1,13 @@
-from django.db.models import Count, Subquery, OuterRef, Q, Prefetch
+from django.db.models import Count, Subquery, OuterRef, Q
 from rest_framework.exceptions import NotFound
 from apps.courses.models import Course
 from apps.lessons.models import Chapter, Lesson
 from apps.enrollments.models import Enrollment
-from apps.common.cache_utils import cached, invalidate_cache
+from apps.common.cache_utils import invalidate_cache
 
 
 def _base_queryset():
-    """Base queryset with select_related for common FK fields."""
+    """Base queryset với select_related cho các trường khóa ngoại thông dụng."""
     return Course.objects.select_related(
         "created_by", "assigned_instructor", "category"
     ).only(
@@ -22,7 +22,7 @@ def _base_queryset():
 
 
 def _annotate_counts(qs):
-    """Annotate chapter_count, lesson_count, student_count."""
+    """Ghi chú chapter_count, lesson_count, student_count."""
     return qs.annotate(
         _chapter_count=Count("chapters", distinct=True),
         _lesson_count=Subquery(
@@ -39,7 +39,7 @@ def _annotate_counts(qs):
 
 
 def get_all():
-    """Get all courses with counts."""
+    """Lấy tất cả khóa học kèm số liệu thống kê."""
     return _annotate_counts(
         _base_queryset()
         .exclude(status="ARCHIVED")
@@ -48,7 +48,7 @@ def get_all():
 
 
 def get_published():
-    """Get published courses."""
+    """Lấy các khóa học đã xuất bản."""
     return _annotate_counts(
         _base_queryset()
         .filter(status=Course.Status.PUBLISHED)
@@ -57,15 +57,24 @@ def get_published():
 
 
 def get_by_id(course_id):
-    """Get course detail by ID. Returns 404 if not found."""
+    """Lấy chi tiết khóa học theo ID. Trả về 404 nếu không tìm thấy."""
     course = _base_queryset().filter(id=course_id).first()
     if not course:
         raise NotFound("Không tìm thấy khóa học.")
     return course
 
 
+def get_cartable_by_ids(course_ids):
+    """Lấy các khóa học đã xuất bản, có phí (>0) theo danh sách ID (dùng cho thanh toán giỏ hàng)."""
+    return Course.objects.filter(
+        id__in=course_ids,
+        status=Course.Status.PUBLISHED,
+        price__gt=0,
+    )
+
+
 def create(data):
-    """Create a new course."""
+    """Tạo mới một khóa học."""
     invalidate_cache("courses:all")
     invalidate_cache("courses:published")
     return Course.objects.create(**data)
@@ -73,12 +82,12 @@ def create(data):
 
 def search(keyword=None, status_value=None, category_id=None, instructor_id=None, assigned_instructor_id=None):
     """
-    Search courses by keyword, filter by status and category.
-    - keyword: case-insensitive search in title
-    - status_value: filter by status
-    - category_id: filter by category
-    - instructor_id: filter by instructor
-    - assigned_instructor_id: filter by assigned instructor
+    Tìm kiếm khóa học theo từ khóa, lọc theo trạng thái và danh mục.
+    - keyword: tìm kiếm không phân biệt hoa thường trong tiêu đề
+    - status_value: lọc theo trạng thái
+    - category_id: lọc theo danh mục
+    - instructor_id: lọc theo giảng viên
+    - assigned_instructor_id: lọc theo giảng viên được phân công
     """
     listcourse = get_all()
 
@@ -101,12 +110,12 @@ def search(keyword=None, status_value=None, category_id=None, instructor_id=None
 
 
 def exists_by_id(course_id):
-    """Check if course exists by ID."""
+    """Kiểm tra khóa học có tồn tại theo ID hay không."""
     return Course.objects.filter(id=course_id).exists()
 
 
 def get_by_instructor(instructor_id):
-    """Get courses by instructor with counts."""
+    """Lấy các khóa học theo giảng viên kèm số liệu thống kê."""
     return _annotate_counts(
         _base_queryset()
         .filter(assigned_instructor_id=instructor_id)
@@ -116,15 +125,15 @@ def get_by_instructor(instructor_id):
 
 
 def count_chapters(course_id):
-    """Count chapters of a course."""
+    """Đếm số chương của một khóa học."""
     return Chapter.objects.filter(course_id=course_id).count()
 
 
 def count_lessons(course_id):
-    """Count lessons of a course."""
+    """Đếm số bài học của một khóa học."""
     return Lesson.objects.filter(chapter__course_id=course_id).count()
 
 
 def count_students(course_id):
-    """Count active students of a course."""
+    """Đếm số học viên đang hoạt động của một khóa học."""
     return Enrollment.objects.filter(course_id=course_id, status=Enrollment.Status.ACTIVE).count()

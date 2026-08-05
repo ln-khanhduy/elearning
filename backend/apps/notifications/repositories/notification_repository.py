@@ -4,6 +4,7 @@ from apps.notifications.models import Notification
 
 
 def create(recipient, title, body, notification_type, channel, link=None):
+    """Tạo mới một thông báo và gửi realtime qua WebSocket cho người nhận."""
     notification = Notification.objects.create(
         recipient=recipient,
         title=title,
@@ -51,6 +52,10 @@ def _broadcast_notification(notification):
 
 
 def get_by_user(user_id, page=1, page_size=20):
+    """Lấy danh sách thông báo của một người dùng, hỗ trợ phân trang.
+
+    Trả về dict chứa: items, total, page, page_size, total_pages, has_next, has_previous.
+    """
     from django.core.paginator import Paginator
     from apps.notifications.serializers.notification_serializer import NotificationSerializer
     qs = Notification.objects.filter(recipient_id=user_id).order_by("-created_at")
@@ -69,20 +74,25 @@ def get_by_user(user_id, page=1, page_size=20):
 
 
 def get_unread_count(user_id):
+    """Đếm số thông báo chưa đọc của một người dùng."""
     return Notification.objects.filter(recipient_id=user_id, is_read=False).count()
 
 
 def mark_as_read(notification_id, user_id):
+    """Đánh dấu một thông báo là đã đọc (chỉ thông báo thuộc về user)."""
     return Notification.objects.filter(id=notification_id, recipient_id=user_id).update(is_read=True)
 
 
 def mark_all_as_read(user_id):
+    """Đánh dấu tất cả thông báo chưa đọc của một người dùng là đã đọc."""
     return Notification.objects.filter(recipient_id=user_id, is_read=False).update(is_read=True)
 
 
 def delete_all(user_id):
+    """Xóa toàn bộ thông báo của một người dùng."""
     return Notification.objects.filter(recipient_id=user_id).delete()
 
 
 def get_recent(user_id, limit=5):
+    """Lấy danh sách thông báo gần nhất của một người dùng (mặc định 5 bản ghi)."""
     return Notification.objects.filter(recipient_id=user_id).order_by("-created_at")[:limit]

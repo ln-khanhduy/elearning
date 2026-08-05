@@ -5,12 +5,6 @@ Fallback về chạy đồng bộ nếu Celery không khả dụng.
 from celery import shared_task
 
 
-def _safe_delay(task, *args, **kwargs):
-    """Chạy tác vụ: bất đồng bộ qua Celery nếu worker đang chạy, nếu không thì chạy đồng bộ."""
-    try:
-        task.delay(*args, **kwargs)
-    except Exception:
-        task(*args, **kwargs)
 
 
 @shared_task(bind=True, max_retries=3, default_retry_delay=60)

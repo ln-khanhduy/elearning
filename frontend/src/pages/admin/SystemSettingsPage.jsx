@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "react-toastify";
 import { getSystemConfigsApi, updateSystemConfigsApi } from "../../api/systemAPI";
-import "../../style/admin-system-settings.css";
+import "../../style/admin/system-settings.css";
 
 // Trang cấu hình hệ thống: xem và cập nhật các cấu hình của hệ thống
 function SystemSettingsPage() {

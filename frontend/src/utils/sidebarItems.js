@@ -29,6 +29,7 @@ export const sidebarItems = [
   { type: "item", label: "Giao dịch", path: "/finance/transactions", icon: "bi-receipt", requiredPermissions: getRoutePermissions("/finance/transactions") },
   { type: "item", label: "Báo cáo tài chính", path: "/finance/reports", icon: "bi-file-earmark-bar-graph", requiredPermissions: getRoutePermissions("/finance/reports") },
   { type: "item", label: "Thanh toán GV", path: "/finance/payouts", icon: "bi-cash-stack", requiredPermissions: getRoutePermissions("/finance/payouts") },
+  { type: "item", label: "Hoàn tiền", path: "/finance/refunds", icon: "bi-arrow-counterclockwise", requiredPermissions: getRoutePermissions("/finance/refunds") },
 
   { type: "group", label: "Super Admin" },
   { type: "item", label: "Role & Permission", path: "/super-admin/roles", icon: "bi-shield-lock", requiredPermissions: getRoutePermissions("/super-admin/roles") },

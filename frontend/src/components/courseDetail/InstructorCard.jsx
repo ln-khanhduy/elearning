@@ -1,5 +1,5 @@
 import React from "react";
-import "../../style/course-detail/instructor-card.css";
+import "../../style/courseDetail/instructor-card.css";
 
 /**
  * InstructorCard - Card thông tin giảng viên (tab Giảng viên)

@@ -9,8 +9,8 @@ export const validateQuizForm = (form) => {
   }
 
   const minutes = Number(form.time_limit_minutes);
-  if (minutes <= 0 || minutes > 120) {
-    return { valid: false, message: "Thời gian làm bài tối đa là 120 phút." };
+  if (minutes <= 5 || minutes > 120) {
+    return { valid: false, message: "Thời gian làm bài ít nhất 5 phút và tối đa là 120 phút." };
   }
 
   const score = Number(form.passing_score);

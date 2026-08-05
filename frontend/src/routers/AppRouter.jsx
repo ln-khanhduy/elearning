@@ -10,12 +10,12 @@ import { getRoutePermissions } from "../utils/permissions";
 const RegisterPage = lazy(() => import("../pages/auth/RegisterPage"));
 const ForgotPasswordPage = lazy(() => import("../pages/auth/ForgotPasswordPage"));
 const LoginPage = lazy(() => import("../pages/auth/LoginPage"));
-const VerifyotpPage = lazy(() => import("../pages/auth/VerifyotpPage"));
+const VerifyOtpPage = lazy(() => import("../pages/auth/VerifyOtpPage"));
 const ResetPasswordPage = lazy(() => import("../pages/auth/ResetPasswordPage"));
 const HomePage = lazy(() => import("../pages/public/HomePage"));
 const CoursesPage = lazy(() => import("../pages/public/CoursesPage"));
 const ContactPage = lazy(() => import("../pages/public/ContactPage"));
-const CourseDetailPage = lazy(() => import("../pages/public/course-detail/CourseDetailPage"));
+const CourseDetailPage = lazy(() => import("../pages/public/courseDetail/CourseDetailPage"));
 const AdminDashboardPage = lazy(() => import("../pages/admin/AdminDashboardPage"));
 const ProfilePage = lazy(() => import("../pages/public/ProfilePage"));
 const InstructorApplyPage = lazy(() => import("../pages/instructor/InstructorApplyPage"));
@@ -26,7 +26,7 @@ const InstructorCourseStudentsPage = lazy(() => import("../pages/instructor/Inst
 const InstructorCourseAnalyticsPage = lazy(() => import("../pages/instructor/InstructorCourseAnalyticsPage"));
 const InstructorCourseQAPage = lazy(() => import("../pages/instructor/InstructorCourseQAPage"));
 const AdminCourseListPage = lazy(() => import("../pages/admin/AdminCourseListPage"));
-const CourseBuilderPage = lazy(() => import("../pages/course-builder/CourseBuilderPage"));
+const CourseBuilderPage = lazy(() => import("../pages/courseBuilder/CourseBuilderPage"));
 const AdminCourseAssignPage = lazy(() => import("../pages/admin/AdminCourseAssignPage"));
 const AdminCategoryPage = lazy(() => import("../pages/admin/AdminCategoryPage"));
 const MyCoursesPage = lazy(() => import("../pages/student/MyCoursesPage"));
@@ -44,10 +44,11 @@ const CheckoutPage = lazy(() => import("../pages/public/payment/CheckoutPage"));
 const SuccessPage = lazy(() => import("../pages/public/payment/SuccessPage"));
 const CancelPage = lazy(() => import("../pages/public/payment/CancelPage"));
 const InstructorRevenuePage = lazy(() => import("../pages/instructor/InstructorRevenuePage"));
-const FinanceTransactionsPage = lazy(() => import("../pages/admin/FinanceTransactionsPage"));
-const FinanceRevenuePage = lazy(() => import("../pages/admin/FinanceRevenuePage"));
-const FinanceReportsPage = lazy(() => import("../pages/admin/FinanceReportsPage"));
-const FinancePayoutPage = lazy(() => import("../pages/admin/FinancePayoutPage"));
+const FinanceTransactionsPage = lazy(() => import("../pages/admin/finance/TransactionsPage"));
+const FinanceRevenuePage = lazy(() => import("../pages/admin/finance/RevenuePage"));
+const FinanceReportsPage = lazy(() => import("../pages/admin/finance/ReportsPage"));
+const FinancePayoutPage = lazy(() => import("../pages/admin/finance/PayoutPage"));
+const FinanceRefundPage = lazy(() => import("../pages/admin/finance/RefundPage"));
 const SupportPage = lazy(() => import("../pages/support/SupportPage"));
 const AdminRequestProcessingPage = lazy(() => import("../pages/admin/AdminRequestProcessingPage"));
 const NotificationsPage = lazy(() => import("../pages/notification/NotificationsPage"));
@@ -87,8 +88,8 @@ function AppRouter() {
           <Route path="/register" element={<Page><RegisterPage /></Page>} />
           <Route path="/login" element={<Page><LoginPage /></Page>} />
           <Route path="/forgot-password" element={<Page><ForgotPasswordPage /></Page>} />
-          <Route path="/verify-otp" element={<Page><VerifyotpPage /></Page>} />
-          <Route path="/register/verify-otp" element={<Page><VerifyotpPage /></Page>} />
+          <Route path="/verify-otp" element={<Page><VerifyOtpPage /></Page>} />
+          <Route path="/register/verify-otp" element={<Page><VerifyOtpPage /></Page>} />
           <Route path="/reset-password" element={<Page><ResetPasswordPage /></Page>} />
           <Route path="/instructor/apply" element={<Page><InstructorApplyPage /></Page>} />
         </Route>
@@ -128,6 +129,7 @@ function AppRouter() {
           <Route path="/finance/revenue" element={<ProtectedRoute allowedPermissions={getRoutePermissions("/finance/revenue")}><Page><FinanceRevenuePage /></Page></ProtectedRoute>} />
           <Route path="/finance/reports" element={<ProtectedRoute allowedPermissions={getRoutePermissions("/finance/reports")}><Page><FinanceReportsPage /></Page></ProtectedRoute>} />
           <Route path="/finance/payouts" element={<ProtectedRoute allowedPermissions={getRoutePermissions("/finance/payouts")}><Page><FinancePayoutPage /></Page></ProtectedRoute>} />
+          <Route path="/finance/refunds" element={<ProtectedRoute allowedPermissions={getRoutePermissions("/finance/refunds")}><Page><FinanceRefundPage /></Page></ProtectedRoute>} />
           <Route path="/instructor/revenue" element={<ProtectedRoute allowedPermissions={getRoutePermissions("/instructor/revenue")}><Page><InstructorRevenuePage /></Page></ProtectedRoute>} />
           <Route path="/super-admin/roles" element={<ProtectedRoute allowedPermissions={getRoutePermissions("/super-admin/roles")}><Page><RoleManagePage /></Page></ProtectedRoute>} />
           <Route path="/super-admin/activity-logs" element={<ProtectedRoute allowedPermissions={getRoutePermissions("/super-admin/activity-logs")}><Page><ActivityLogPage /></Page></ProtectedRoute>} />

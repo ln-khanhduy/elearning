@@ -5,7 +5,7 @@ import { formatPrice } from "../../utils/formatPrice";
 import { addToWishlistApi, removeFromWishlistApi } from "../../api/wishlistAPI";
 import { addToCartApi } from "../../api/cartAPI";
 import { useUser } from "../../context/UserContext";
-import "../../style/course-detail/course-progress-card.css";
+import "../../style/courseDetail/course-progress-card.css";
 
 /**
  * CourseProgressCard - Sidebar hiển thị tiến độ học tập tại trang chi tiết khóa học

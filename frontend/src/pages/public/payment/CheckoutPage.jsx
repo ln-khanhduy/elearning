@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { useCourseDetail } from "../../../hooks/course-detail/useCourseDetail";
+import { useCourseDetail } from "../../../hooks/courseDetail/useCourseDetail";
 import { createStripeCheckoutApi } from "../../../api/paymentAPI";
+import { validateCouponApi } from "../../../api/promotionAPI";
 import "../../../style/payment/payment.css";
 
 // Trang thanh toán khóa học: hiển thị tóm tắt khóa học và tạo phiên thanh toán Stripe
@@ -11,6 +12,10 @@ function CheckoutPage() {
   const navigate = useNavigate();
   const { course, loading, error } = useCourseDetail(courseId);
   const [processing, setProcessing] = useState(false);
+  const [couponCode, setCouponCode] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [couponError, setCouponError] = useState("");
+  const [discountInfo, setDiscountInfo] = useState(null);
 
   // Nếu khóa học miễn phí thì chuyển hướng về trang khóa học
   useEffect(() => {
@@ -26,13 +31,40 @@ function CheckoutPage() {
     return Number(val).toLocaleString("vi-VN") + "₫";
   };
 
+  const handleApplyCoupon = async () => {
+    if (!couponCode.trim()) return setCouponError("Vui lòng nhập mã giảm giá.");
+    try {
+      const res = await validateCouponApi(couponCode.trim(), [Number(courseId)], Number(course.price));
+      const data = res?.data;
+      if (!res?.success && !data) throw new Error(res?.message || "Mã giảm giá không hợp lệ.");
+      setAppliedCoupon({ code: couponCode.trim(), id: data?.id });
+      const total = Number(course.price);
+      const dVal = Number(data?.discount_value || 0);
+      const dAmt = data?.discount_type === "PERCENTAGE" ? Math.floor((total * dVal) / 100) : Math.min(dVal, total);
+      setDiscountInfo({ discount_amount: dAmt, final_total: total - dAmt });
+      setCouponError("");
+      toast.success("Áp dụng mã giảm giá thành công.");
+    } catch (err) {
+      setAppliedCoupon(null);
+      setDiscountInfo(null);
+      setCouponError(err.message || "Mã giảm giá không hợp lệ.");
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null);
+    setDiscountInfo(null);
+    setCouponCode("");
+    setCouponError("");
+  };
+
   // Tạo phiên thanh toán Stripe và chuyển hướng đến trang thanh toán
   const handlePayment = async () => {
     if (!course) return;
     setProcessing(true);
 
     try {
-      const result = await createStripeCheckoutApi(courseId);
+      const result = await createStripeCheckoutApi(courseId, appliedCoupon?.code || "");
       const checkoutUrl = result?.data?.checkout_url;
       if (checkoutUrl) {
         window.location.href = checkoutUrl;
@@ -112,6 +144,56 @@ function CheckoutPage() {
                 </div>
               </div>
 
+              {/* Coupon */}
+              {!appliedCoupon ? (
+                <div className="d-flex gap-2 mb-2">
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="Nhập mã giảm giá"
+                    value={couponCode}
+                    onChange={(e) => setCouponCode(e.target.value)}
+                    disabled={processing}
+                  />
+                  <button
+                    type="button"
+                    className="btn btn-outline-primary"
+                    onClick={handleApplyCoupon}
+                    disabled={processing}
+                  >
+                    Áp dụng
+                  </button>
+                </div>
+              ) : (
+                <div className="d-flex align-items-center justify-content-between mb-2">
+                  <span className="fw-bold text-success">
+                    <i className="bi bi-ticket-perforated me-1"></i>
+                    {appliedCoupon.code}
+                  </span>
+                  <button
+                    type="button"
+                    className="btn btn-sm btn-outline-danger"
+                    onClick={handleRemoveCoupon}
+                    disabled={processing}
+                  >
+                    <i className="bi bi-x-lg"></i>
+                  </button>
+                </div>
+              )}
+              {couponError && <div className="text-danger small mb-2">{couponError}</div>}
+              {discountInfo && (
+                <div className="d-flex flex-column mb-2 small border rounded p-2">
+                  <div className="d-flex justify-content-between">
+                    <span>Giảm giá:</span>
+                    <span className="text-danger">-{formatPrice(discountInfo.discount_amount)}</span>
+                  </div>
+                  <div className="d-flex justify-content-between fw-bold">
+                    <span>Tổng sau giảm:</span>
+                    <span>{formatPrice(discountInfo.final_total)}</span>
+                  </div>
+                </div>
+              )}
+
               {/* Pay Button */}
               <button
                 className="checkout-btn"
@@ -129,7 +211,7 @@ function CheckoutPage() {
                 ) : (
                   <>
                     <i className="bi bi-lock-fill"></i>
-                    Thanh toán {formatPrice(course.price)}
+                    Thanh toán {discountInfo ? formatPrice(discountInfo.final_total) : formatPrice(course.price)}
                   </>
                 )}
               </button>

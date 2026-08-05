@@ -1,20 +1,20 @@
 import { useNavigate } from "react-router-dom";
-import CourseStepper from "../../components/course-wizard/CourseStepper";
-import StickyActionBar from "../../components/course-wizard/StickyActionBar";
-import AutoSaveIndicator from "../../components/course-wizard/shared/AutoSaveIndicator";
-import LoadingSkeleton from "../../components/course-wizard/shared/LoadingSkeleton";
-import QuestionImportModal from "../../components/course-wizard/curriculum/QuestionImportModal";
+import CourseStepper from "../../components/courseWizard/CourseStepper";
+import StickyActionBar from "../../components/courseWizard/StickyActionBar";
+import AutoSaveIndicator from "../../components/courseWizard/shared/AutoSaveIndicator";
+import LoadingSkeleton from "../../components/courseWizard/shared/LoadingSkeleton";
+import QuestionImportModal from "../../components/courseWizard/curriculum/QuestionImportModal";
 import ConfirmModal from "../../components/common/ConfirmModal";
 
-import StepCourseInformation from "../../components/course-wizard/steps/StepCourseInformation";
-import StepCurriculumBuilder from "../../components/course-wizard/steps/StepCurriculumBuilder";
-import StepPricing from "../../components/course-wizard/steps/StepPricing";
-import StepReview from "../../components/course-wizard/steps/StepReview";
-import StepPublish from "../../components/course-wizard/steps/StepPublish";
+import StepCourseInformation from "../../components/courseWizard/steps/StepCourseInformation";
+import StepCurriculumBuilder from "../../components/courseWizard/steps/StepCurriculumBuilder";
+import StepPricing from "../../components/courseWizard/steps/StepPricing";
+import StepReview from "../../components/courseWizard/steps/StepReview";
+import StepPublish from "../../components/courseWizard/steps/StepPublish";
 
-import { useCourseBuilder } from "../../hooks/course-builder/useCourseBuilder";
+import { useCourseBuilder } from "../../hooks/courseBuilder/useCourseBuilder";
 
-import "../../style/course-wizard.css";
+import "../../style/courseWizard/courseWizard.css";
 
 function CourseBuilderPage({ mode = "create" }) {
   const navigate = useNavigate();

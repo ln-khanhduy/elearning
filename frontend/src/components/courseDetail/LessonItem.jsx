@@ -1,5 +1,5 @@
 import React from "react";
-import "../../style/course-detail/lesson-item.css";
+import "../../style/courseDetail/lesson-item.css";
 
 /**
  * LessonItem - Item bài học trong danh sách nội dung khóa học

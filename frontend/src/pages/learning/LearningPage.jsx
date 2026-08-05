@@ -90,8 +90,10 @@ function LearningPage() {
     );
   }
 
-  // Kiểm tra xem user có enrolled không
-  const isEnrolled = data.enrollment_id != null;
+  // Kiểm tra xem user có enrolled không.
+  // Owner (người tạo khóa, instructor được phân công, SUPERADMIN, COURSE_ADMIN)
+  // được backend cấp quyền truy cập đầy đủ nên coi như đã enrolled.
+  const isEnrolled = data.enrollment_id != null || data.is_owner === true;
 
   const handleCompleteCourseWithToast = async () => {
     try {

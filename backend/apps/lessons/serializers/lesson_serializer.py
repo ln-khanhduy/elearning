@@ -60,7 +60,7 @@ class LessonCreateUpdateSerializer(serializers.ModelSerializer):
 
     """Serializer cho tạo/cập nhật bài học - validate title, order, content_type, video_url, material_file."""
 
-    title = serializers.CharField(min_length=3, max_length=50, trim_whitespace=True)
+    title = serializers.CharField(min_length=3, max_length=100, trim_whitespace=True)
     order = serializers.IntegerField(required=False, allow_null=True)
 
     class Meta:

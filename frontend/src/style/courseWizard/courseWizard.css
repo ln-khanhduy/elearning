@@ -5,7 +5,8 @@
 
 /* ==================== WIZARD LAYOUT ==================== */
 .cw-page {
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
   background: #f8f9fc;
   display: flex;
   flex-direction: column;
@@ -226,6 +227,8 @@
   margin: 0 auto;
   width: 100%;
   box-sizing: border-box;
+  overflow-y: auto;
+  min-height: 0;
 }
 
 .cw-card {
@@ -549,7 +552,7 @@
 .cw-curriculum-layout {
   display: flex;
   gap: 0;
-  min-height: calc(100vh - 200px);
+  height: calc(100% + 48px);
   margin: -24px;
   width: calc(100% + 48px);
   background: #fff;
@@ -1429,7 +1432,7 @@
   border: 1px solid #e9ecef;
   padding: 24px;
   position: sticky;
-  top: 140px;
+  top: 0;
 }
 
 .cw-checklist-title {
@@ -1875,12 +1878,14 @@
     flex-direction: column;
     margin: -16px;
     width: auto;
+    height: auto;
   }
 
   .cw-curriculum-sidebar {
     width: 100%;
     min-width: 0;
     max-width: none;
+    max-height: 50vh;
     border-right: none;
     border-bottom: 1px solid #e9ecef;
   }

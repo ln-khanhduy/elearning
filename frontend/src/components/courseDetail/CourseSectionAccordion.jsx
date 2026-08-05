@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import LessonItem from "./LessonItem";
-import "../../style/course-detail/course-section-accordion.css";
+import "../../style/courseDetail/course-section-accordion.css";
 
 /**
  * CourseSectionAccordion - Accordion hiển thị từng chương học
@@ -11,14 +11,9 @@ function CourseSectionAccordion({ chapter, index, completedLessons, isEnrolled }
   const [isOpen, setIsOpen] = useState(index === 0); // Mở chương đầu tiên mặc định
   const lessons = chapter.lessons || [];
 
-  // Gộp lessons + quizzes thành 1 danh sách phẳng để đếm và kiểm tra hoàn thành
-  const allItems = lessons.flatMap((lesson) => {
-    const items = [lesson];
-    if (lesson.quizzes?.length) lesson.quizzes.forEach((quiz) => items.push({ ...quiz, _isQuiz: true, _parentLessonId: lesson.id }));
-    return items;
-  });
-  const totalItems = allItems.length;
-  const completedInChapter = allItems.filter((item) => completedLessons.has(item.id)).length;
+  // Chỉ đếm lessons, không gộp quizzes vào danh sách đếm hoàn thành
+  const totalItems = lessons.length;
+  const completedInChapter = lessons.filter((lesson) => completedLessons.has(lesson.id)).length;
 
   return (
     <div className={`course-section ${isOpen ? "section-open" : ""}`}>

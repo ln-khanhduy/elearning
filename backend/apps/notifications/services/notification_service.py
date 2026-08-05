@@ -3,34 +3,42 @@ from apps.notifications.models import Notification
 
 
 def get_user_notifications(user_id, page=1, page_size=20):
+    """Lấy danh sách thông báo của người dùng, hỗ trợ phân trang."""
     return notif_repo.get_by_user(user_id, page, page_size)
 
 
 def get_unread_count(user_id):
+    """Đếm số thông báo chưa đọc của người dùng."""
     return notif_repo.get_unread_count(user_id)
 
 
 def mark_as_read(notification_id, user_id):
+    """Đánh dấu một thông báo là đã đọc."""
     return notif_repo.mark_as_read(notification_id, user_id)
 
 
 def mark_all_as_read(user_id):
+    """Đánh dấu tất cả thông báo chưa đọc của người dùng là đã đọc."""
     return notif_repo.mark_all_as_read(user_id)
 
 
 def get_recent(user_id, limit=5):
+    """Lấy danh sách thông báo gần nhất của người dùng."""
     return notif_repo.get_recent(user_id, limit)
 
 
 def delete_all(user_id):
+    """Xóa toàn bộ thông báo của người dùng."""
     return notif_repo.delete_all(user_id)
 
 
 def _create(recipient, title, body, notification_type, channel, link=None):
+    """Tạo mới một thông báo (nội bộ dùng chung cho các hàm notify_*)."""
     return notif_repo.create(recipient, title, body, notification_type, channel, link)
 
 
 def notify_login(user):
+    """Gửi thông báo chào mừng khi người dùng đăng nhập, kèm số thông báo chưa đọc."""
     unread = get_unread_count(user.id)
     return _create(
         recipient=user, title="Chào mừng bạn quay lại",
@@ -40,6 +48,7 @@ def notify_login(user):
 
 
 def notify_password_change(user):
+    """Gửi thông báo cho người dùng khi mật khẩu được thay đổi."""
     return _create(
         recipient=user, title="Mật khẩu đã được thay đổi",
         body="Mật khẩu của bạn đã được thay đổi thành công. Nếu bạn không thực hiện, vui lòng liên hệ admin ngay.",
@@ -48,6 +57,7 @@ def notify_password_change(user):
 
 
 def notify_profile_update(user):
+    """Gửi thông báo cho người dùng khi thông tin cá nhân được cập nhật."""
     return _create(
         recipient=user, title="Cập nhật thông tin thành công",
         body="Thông tin cá nhân của bạn đã được cập nhật thành công.",
@@ -56,6 +66,7 @@ def notify_profile_update(user):
 
 
 def notify_account_locked(user, reason, admin_email):
+    """Gửi thông báo cho người dùng khi tài khoản bị khóa, kèm lý do và email admin."""
     return _create(
         recipient=user, title="Tài khoản đã bị khóa",
         body=f"Tài khoản của bạn đã bị khóa. Lý do: {reason}. Vui lòng liên hệ {admin_email} để được hỗ trợ.",
@@ -64,6 +75,7 @@ def notify_account_locked(user, reason, admin_email):
 
 
 def notify_account_unlocked(user):
+    """Gửi thông báo cho người dùng khi tài khoản được mở khóa."""
     return _create(
         recipient=user, title="Tài khoản đã được mở khóa",
         body="Tài khoản của bạn đã được mở khóa. Bạn có thể đăng nhập và tiếp tục học tập.",
@@ -72,6 +84,7 @@ def notify_account_unlocked(user):
 
 
 def notify_instructor_approved(user):
+    """Gửi thông báo cho giảng viên khi hồ sơ giảng viên được phê duyệt."""
     return _create(
         recipient=user, title="Hồ sơ giảng viên đã được duyệt",
         body="Hồ sơ giảng viên của bạn đã được phê duyệt. Bạn có thể bắt đầu tạo khóa học và giảng dạy ngay hôm nay.",
@@ -80,6 +93,7 @@ def notify_instructor_approved(user):
 
 
 def notify_instructor_rejected(user, reason):
+    """Gửi thông báo cho giảng viên khi hồ sơ giảng viên bị từ chối, kèm lý do."""
     return _create(
         recipient=user, title="Hồ sơ giảng viên bị từ chối",
         body=f"Hồ sơ giảng viên của bạn đã bị từ chối. Lý do: {reason}. Vui lòng chỉnh sửa và gửi lại.",
@@ -88,6 +102,7 @@ def notify_instructor_rejected(user, reason):
 
 
 def notify_payment_success(user, course_title, price):
+    """Gửi thông báo cho học viên khi thanh toán khóa học thành công."""
     return _create(
         recipient=user, title="Thanh toán thành công",
         body=f'Bạn đã thanh toán thành công {price} cho khóa học "{course_title}". Chúc bạn học tập vui vẻ!',
@@ -96,6 +111,7 @@ def notify_payment_success(user, course_title, price):
 
 
 def notify_refund_approved(user, course_title):
+    """Gửi thông báo cho học viên khi yêu cầu hoàn tiền được duyệt."""
     return _create(
         recipient=user, title="Hoàn tiền được duyệt",
         body=f'Yêu cầu hoàn tiền cho khóa học "{course_title}" đã được duyệt. Số tiền sẽ được hoàn lại trong 5-7 ngày làm việc.',
@@ -104,6 +120,7 @@ def notify_refund_approved(user, course_title):
 
 
 def notify_refund_rejected(user, course_title, reason):
+    """Gửi thông báo cho học viên khi yêu cầu hoàn tiền bị từ chối, kèm lý do."""
     return _create(
         recipient=user, title="Hoàn tiền bị từ chối",
         body=f'Yêu cầu hoàn tiền cho khóa học "{course_title}" đã bị từ chối. Lý do: {reason}',
@@ -112,6 +129,7 @@ def notify_refund_rejected(user, course_title, reason):
 
 
 def notify_instructor_paid(instructor, amount, course_title):
+    """Gửi thông báo cho giảng viên khi khoản thanh toán được giải ngân."""
     return _create(
         recipient=instructor, title="Đã giải ngân",
         body=f'Khoản thanh toán {amount} từ khóa học "{course_title}" đã được giải ngân vào tài khoản của bạn.',
@@ -120,6 +138,7 @@ def notify_instructor_paid(instructor, amount, course_title):
 
 
 def notify_course_published(instructor, course_title):
+    """Gửi thông báo cho giảng viên khi khóa học được admin xuất bản."""
     return _create(
         recipient=instructor, title='Khóa học đã được xuất bản',
         body=f'Khóa học "{course_title}" đã được admin xuất bản. Học viên có thể đăng ký và học ngay.',
@@ -128,6 +147,7 @@ def notify_course_published(instructor, course_title):
 
 
 def notify_course_hidden(instructor, course_title):
+    """Gửi thông báo cho giảng viên khi khóa học bị admin tạm ẩn."""
     return _create(
         recipient=instructor, title="Khóa học bị tạm ẩn",
         body=f'Khóa học "{course_title}" đã bị admin tạm ẩn. Vui lòng liên hệ admin để biết chi tiết.',
@@ -136,6 +156,7 @@ def notify_course_hidden(instructor, course_title):
 
 
 def notify_instructor_assigned(instructor, course_title):
+    """Gửi thông báo cho giảng viên khi được phân công giảng dạy khóa học mới."""
     return _create(
         recipient=instructor, title="Phân công giảng dạy mới",
         body=f'Bạn được phân công giảng dạy khóa học "{course_title}". Hãy kiểm tra và chuẩn bị bài giảng.',
@@ -144,6 +165,7 @@ def notify_instructor_assigned(instructor, course_title):
 
 
 def notify_student_enrolled(instructor, student_name, course_title):
+    """Gửi thông báo cho giảng viên khi có học viên mới đăng ký khóa học."""
     return _create(
         recipient=instructor, title="Có học viên mới",
         body=f'Học viên {student_name} vừa đăng ký khóa học "{course_title}" của bạn.',
@@ -152,6 +174,7 @@ def notify_student_enrolled(instructor, student_name, course_title):
 
 
 def notify_course_completed(student, course_title):
+    """Gửi thông báo cho học viên khi hoàn thành 100% khóa học và được cấp chứng chỉ."""
     return _create(
         recipient=student, title="Hoàn thành khóa học",
         body=f'Chúc mừng! Bạn đã hoàn thành 100% khóa học "{course_title}". Chứng chỉ đã được cấp, kiểm tra trong mục Chứng chỉ của tôi.',
@@ -160,6 +183,7 @@ def notify_course_completed(student, course_title):
 
 
 def notify_essay_graded(student, quiz_title, course_title, score, max_score):
+    """Gửi thông báo cho học viên khi bài tập tự luận được chấm điểm."""
     return _create(
         recipient=student, title="Bài tập đã được chấm điểm",
         body=f'Bài tập "{quiz_title}" trong khóa học "{course_title}" đã được chấm điểm: {score}/{max_score}.',
@@ -168,6 +192,7 @@ def notify_essay_graded(student, quiz_title, course_title, score, max_score):
 
 
 def notify_support_request_created(admin, user_name, request_type, title):
+    """Gửi thông báo cho admin khi có yêu cầu hỗ trợ mới từ người dùng."""
     return _create(
         recipient=admin, title="Yêu cầu hỗ trợ mới",
         body=f'{user_name} đã gửi yêu cầu {request_type}: {title}. Nhấp để xem chi tiết và xử lý.',
@@ -176,6 +201,7 @@ def notify_support_request_created(admin, user_name, request_type, title):
 
 
 def notify_support_request_processed(user, title, status, resolution_note):
+    """Gửi thông báo cho người dùng khi yêu cầu hỗ trợ được admin xử lý."""
     return _create(
         recipient=user, title=f"Yêu cầu đã được xử lý: {status}",
         body=f'Yêu cầu "{title}" đã được xử lý: {status}. Phản hồi từ admin: {resolution_note}',
@@ -184,7 +210,7 @@ def notify_support_request_processed(user, title, status, resolution_note):
 
 
 def notify_payout_completed(instructor, amount, course_title):
-    """#27: Thanh toán cho giảng viên"""
+    """#27: Gửi thông báo cho giảng viên khi thanh toán (giải ngân) hoàn tất."""
     return _create(
         recipient=instructor, title="Đã nhận được thanh toán",
         body=f'Khoản thanh toán {amount} từ khóa học "{course_title}" đã được giải ngân vào tài khoản của bạn.',
@@ -192,10 +218,10 @@ def notify_payout_completed(instructor, amount, course_title):
     )
 
 
-# ====== REVIEW NOTIFICATIONS ======
+# ====== THÔNG BÁO ĐÁNH GIÁ ======
 
 def notify_new_review(instructor, student_name, course_title, rating, content):
-    """#25: Có đánh giá mới - gửi cho giảng viên"""
+    """#25: Gửi thông báo cho giảng viên khi có đánh giá mới từ học viên."""
     return _create(
         recipient=instructor, title="Có đánh giá mới",
         body=f'{student_name} đã đánh giá {rating}/5 sao cho khóa học "{course_title}". Nội dung: {content}',
@@ -204,7 +230,7 @@ def notify_new_review(instructor, student_name, course_title, rating, content):
 
 
 def notify_review_replied(student, instructor_name, course_title):
-    """#26: Giảng viên phản hồi đánh giá - gửi cho học viên"""
+    """#26: Gửi thông báo cho học viên khi giảng viên phản hồi đánh giá."""
     return _create(
         recipient=student, title="Phản hồi đánh giá của bạn",
         body=f'Giảng viên {instructor_name} đã phản hồi đánh giá của bạn về khóa học "{course_title}".',
@@ -213,7 +239,7 @@ def notify_review_replied(student, instructor_name, course_title):
 
 
 def notify_question_asked(instructor, student_name, course_title, question_title):
-    """#23: Học viên đặt câu hỏi mới - gửi cho giảng viên"""
+    """#23: Gửi thông báo cho giảng viên khi học viên đặt câu hỏi mới trong khóa học."""
     return _create(
         recipient=instructor, title="Câu hỏi mới từ học viên",
         body=f'{student_name} đã đặt câu hỏi trong khóa học "{course_title}": {question_title}',

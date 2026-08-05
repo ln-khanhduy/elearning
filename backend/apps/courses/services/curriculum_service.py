@@ -1,22 +1,19 @@
 """
-CurriculumService - Service xây dựng dữ liệu curriculum cho khóa học.
-Optimized with prefetch_related to eliminate N+1 queries.
+CurriculumService - Service xây dựng dữ liệu chương trình giảng dạy (curriculum) cho khóa học.
+Được tối ưu bằng prefetch_related để loại bỏ các truy vấn N+1.
 """
-from django.db.models import Prefetch
-
+from apps.courses.repositories import curriculum_repository
 from apps.courses.services.course_service import get_course_detail
 from apps.courses.serializers.course_serializer import CourseDetailSerializer
-from apps.lessons.models import Lesson, Chapter
 from apps.lessons.serializers.chapter_serializer import ChapterSerializer
 from apps.lessons.serializers.lesson_serializer import LessonPreviewSerializer, LessonSerializer
-from apps.quizzes.models import Quiz, Question, QuestionOption
 from apps.quizzes.serializers.quiz_serializer import QuizPreviewSerializer, QuizSerializer
 
 
 def _build_question_data(questions):
     """
-    Build question data dict from a list of Question objects.
-    Expects questions to have their options prefetched.
+    Xây dựng dữ liệu câu hỏi từ danh sách các đối tượng Question.
+    Yêu cầu các câu hỏi đã được prefetch phần options (các lựa chọn trả lời).
     """
     questions_data = []
     for q in questions:
@@ -40,49 +37,17 @@ def _build_question_data(questions):
     return questions_data
 
 
-def _get_chapter_prefetch(lesson_qs: Lesson, quiz_prefetch: Prefetch | None = None) -> Prefetch:
-    """Create a Prefetch for Chapter with nested lessons and quizzes."""
-    if quiz_prefetch:
-        return Prefetch(
-            "chapters",
-            queryset=Chapter.objects.prefetch_related(
-                Prefetch(
-                    "lessons",
-                    queryset=lesson_qs.prefetch_related(quiz_prefetch),
-                )
-            ).order_by("order", "id"),
-        )
-    return Prefetch(
-        "chapters",
-        queryset=Chapter.objects.prefetch_related(
-            Prefetch("lessons", queryset=lesson_qs)
-        ).order_by("order", "id"),
-    )
-
-
 def build_public_curriculum(course_id: int) -> dict:
     """
-    Build public curriculum data for a course.
-    Only includes PUBLISHED lessons.
-    Optimized: uses prefetch_related to avoid N+1 queries.
+    Xây dựng dữ liệu chương trình giảng dạy công khai (public) cho khóa học.
+    Chỉ bao gồm các bài học đã xuất bản (PUBLISHED).
+    Được tối ưu: sử dụng prefetch_related để tránh các truy vấn N+1.
     """
     course = get_course_detail(course_id)
     course_data = CourseDetailSerializer(course).data
 
-    # Prefetch: Chapters -> PUBLISHED Lessons -> Quizzes
-    chapters = Chapter.objects.filter(course_id=course_id).prefetch_related(
-        Prefetch(
-            "lessons",
-            queryset=Lesson.objects.filter(status=Lesson.Status.PUBLISHED)
-            .order_by("order", "id")
-            .prefetch_related(
-                Prefetch(
-                    "quizzes",
-                    queryset=Quiz.objects.filter(is_active=True),
-                )
-            ),
-        )
-    ).order_by("order", "id")
+    # Repository: Chapters -> PUBLISHED Lessons -> Quizzes
+    chapters = curriculum_repository.get_public_chapters(course_id)
 
     chapters_data = []
     for chapter in chapters:
@@ -101,33 +66,16 @@ def build_public_curriculum(course_id: int) -> dict:
 
 def build_full_curriculum(course_id: int) -> dict:
     """
-    Build full curriculum data for a course (includes all lessons and quiz details).
-    Used by course admin/instructor.
-    Optimized: uses prefetch_related to avoid N+1 queries.
+    Xây dựng dữ liệu chương trình giảng dạy đầy đủ cho khóa học (bao gồm tất cả bài học và chi tiết bài kiểm tra).
+    Được sử dụng bởi quản trị viên/giảng viên khóa học.
+    Được tối ưu: sử dụng prefetch_related để tránh các truy vấn N+1.
     """
     course = get_course_detail(course_id)
     course_data = CourseDetailSerializer(course).data
 
-    # Prefetch: Chapters -> Lessons -> Quizzes -> Questions -> Options
+    # Repository: Chapters -> Lessons -> Quizzes -> Questions -> Options
     # This reduces queries from O(N*M*K) to just 5 queries total.
-    chapters = Chapter.objects.filter(course_id=course_id).prefetch_related(
-        Prefetch(
-            "lessons",
-            queryset=Lesson.objects.order_by("order", "id").prefetch_related(
-                Prefetch(
-                    "quizzes",
-                    queryset=Quiz.objects.prefetch_related(
-                        Prefetch(
-                            "questions",
-                            queryset=Question.objects.prefetch_related(
-                                "options"
-                            ).order_by("order", "id"),
-                        )
-                    ),
-                )
-            ),
-        )
-    ).order_by("order", "id")
+    chapters = curriculum_repository.get_full_chapters(course_id)
 
     chapters_data = []
     for chapter in chapters:

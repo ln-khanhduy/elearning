@@ -7,6 +7,7 @@ from apps.common.response_helpers import success_response, error_response
 from apps.system.services import admin_log_service
 
 from apps.promotions.services import coupon_service
+from apps.promotions.services.course_dormancy_service import get_stale_courses_detail
 from apps.promotions.serializers.coupon_serializer import (
     CouponListSerializer, CouponDetailSerializer,
     CouponCreateUpdateSerializer, CouponValidateSerializer, CouponApplySerializer,
@@ -109,12 +110,22 @@ class CouponValidateAPIView(APIView):
         serializer.is_valid(raise_exception=True)
         code = serializer.validated_data["code"]
         course_ids = serializer.validated_data.get("course_ids")
+        cart_total = serializer.validated_data.get("cart_total")
 
-        is_valid, error, coupon_info = coupon_service.validate_coupon(code, request.user, course_ids)
+        is_valid, error, coupon_info = coupon_service.validate_coupon(code, request.user, course_ids, cart_total)
         if not is_valid:
             return error_response(error)
 
         return success_response(coupon_info, "Mã giảm giá hợp lệ.")
+
+
+class StaleCourseListAPIView(BasePermissionAPIView):
+    """GET /api/promotions/coupons/stale-courses/ - Danh sách khóa học thiếu học viên mới 3 tháng."""
+    required_permission = "finance.coupon.manage"
+
+    def get(self, request):
+        courses = get_stale_courses_detail(days=90)
+        return success_response(courses)
 
 
 class CouponApplyAPIView(APIView):

@@ -5,6 +5,7 @@ import {
   createCouponApi,
   updateCouponApi,
   deleteCouponApi,
+  getStaleCoursesApi,
 } from "../../api/promotionAPI";
 import ConfirmModal from "../../components/common/ConfirmModal";
 import { formatDate } from "../../utils/formatDate";
@@ -44,6 +45,9 @@ function AdminCouponPage() {
     onConfirm: () => {},
   });
 
+  const [staleCourses, setStaleCourses] = useState([]);
+  const [staleCoursesLoading, setStaleCoursesLoading] = useState(false);
+
   const showConfirm = ({ title, message, variant = "primary", confirmLabel = "Xác nhận", onConfirm }) => {
     setConfirmModal({ show: true, title, message, variant, confirmLabel, onConfirm });
   };
@@ -51,6 +55,18 @@ function AdminCouponPage() {
   const hideConfirm = () => {
     setConfirmModal((prev) => ({ ...prev, show: false }));
   };
+
+  const loadStaleCourses = useCallback(async () => {
+    try {
+      setStaleCoursesLoading(true);
+      const data = await getStaleCoursesApi();
+      setStaleCourses(data?.data || []);
+    } catch (error) {
+      setStaleCourses([]);
+    } finally {
+      setStaleCoursesLoading(false);
+    }
+  }, []);
 
   const loadCoupons = useCallback(async () => {
     try {
@@ -88,6 +104,7 @@ function AdminCouponPage() {
 
   const handleEdit = (coupon) => {
     setEditingCoupon(coupon);
+    loadStaleCourses();
     setFormData({
       code: coupon.code,
       discount_type: coupon.discount_type,
@@ -161,7 +178,7 @@ function AdminCouponPage() {
     <div className="admin-coupon-page">
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h4 className="mb-0">Quản lý mã giảm giá</h4>
-        <button className="btn btn-primary" onClick={() => { resetForm(); setShowForm(true); }}>
+        <button className="btn btn-primary" onClick={() => { resetForm(); setShowForm(true); loadStaleCourses(); }}>
           <i className="bi bi-plus-lg me-1"></i>Tạo mã giảm giá
         </button>
       </div>
@@ -230,7 +247,7 @@ function AdminCouponPage() {
                   />
                 </div>
                 <div className="col-md-3">
-                  <label className="form-label">Đơn tối thiểu</label>
+                  <label className="form-label">Giá tối thiểu để sử dụng mã</label>
                   <input
                     type="number"
                     className="form-control"
@@ -269,6 +286,31 @@ function AdminCouponPage() {
                     <option value="true">Kích hoạt</option>
                     <option value="false">Vô hiệu</option>
                   </select>
+                </div>
+                <div className="col-12">
+                  <label className="form-label">Khóa học áp dụng (bỏ trống = áp dụng tất cả)</label>
+                  {staleCoursesLoading ? (
+                    <div className="text-muted small py-2"><span className="spinner-border spinner-border-sm me-2" role="status"></span>Đang tải...</div>
+                  ) : staleCourses.length === 0 ? (
+                    <div className="text-muted small py-2">Hiện không có khóa học nào thiếu học viên mới trong 3 tháng qua.</div>
+                  ) : (
+                    <select
+                      multiple
+                      className="form-select stale-course-select"
+                      value={formData.applicable_courses.map(String)}
+                      onChange={(e) => {
+                        const selected = Array.from(e.target.selectedOptions, (opt) => Number(opt.value));
+                        setFormData({ ...formData, applicable_courses: selected });
+                      }}
+                    >
+                      {staleCourses.map((course) => (
+                        <option key={course.id} value={course.id}>
+                          {course.title} (đăng ký cuối: {course.last_enrollment_date})
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                  <div className="form-text">Giữ Ctrl/Cmd để chọn nhiều khóa học.</div>
                 </div>
                 <div className="col-12">
                   <label className="form-label">Mô tả</label>

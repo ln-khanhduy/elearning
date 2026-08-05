@@ -31,3 +31,20 @@ export const getAdminRequestsApi = async (params = {}) => {
   const qs = query.toString();
   return request(() => apiClient.get(`/api/support/admin/requests/${qs ? `?${qs}` : ""}`));
 };
+
+// ==================== HOÀN TIỀN (REFUND) ====================
+
+// Lấy giao dịch của học viên hiện tại đủ điều kiện yêu cầu hoàn tiền
+export const getMyRefundableTransactionsApi = async () => {
+  return request(() => apiClient.get("/api/payments/my/refundable-transactions/"));
+};
+
+// Lấy danh sách yêu cầu hoàn tiền cho Finance (permission finance.finance.refund)
+export const getFinanceRefundsApi = async () => {
+  return request(() => apiClient.get("/api/support/finance/refunds/"));
+};
+
+// Duyệt/từ chối yêu cầu hoàn tiền (permission finance.finance.refund)
+export const processFinanceRefundApi = async (requestId, data) => {
+  return request(() => apiClient.patch(`/api/support/finance/refunds/${requestId}/process/`, data));
+};

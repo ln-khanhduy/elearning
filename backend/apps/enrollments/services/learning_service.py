@@ -16,19 +16,29 @@ from apps.certificates.services import certificate_image_service
 from apps.notifications import services as notif_service
 
 
+def _is_admin(user):
+    """SUPERADMIN và COURSE_ADMIN được truy cập mọi khóa học."""
+    return bool(user and user.role and user.role.code in ("SUPERADMIN", "COURSE_ADMIN"))
+
+
 def get_enrollment_or_404(user, course_id):
     """
     Kiểm tra user có quyền truy cập khóa học không.
-    - Instructor (được phân công) luôn được truy cập, không cần enrollment.
+    - Người tạo khóa học, instructor (được phân công), SUPERADMIN, COURSE_ADMIN:
+      luôn được truy cập, không cần enrollment.
     - Các user khác cần enrollment ACTIVE/COMPLETED.
     """
     course = course_repository.get_by_id(course_id)
-    if course and course.assigned_instructor_id == user.id:
-        return None
     enrollment = enrollment_repository.get_active_by_user_and_course(user.id, course_id)
-    if not enrollment:
-        raise PermissionDenied("Bạn cần đăng ký khóa học trước khi học.")
-    return enrollment
+    if enrollment:
+        return enrollment
+    if course and (
+        course.assigned_instructor_id == user.id
+        or course.created_by_id == user.id
+        or _is_admin(user)
+    ):
+        return None
+    raise PermissionDenied("Bạn cần đăng ký khóa học trước khi học.")
 
 
 def _build_quiz_data(lesson, user, enrollment):
@@ -62,10 +72,21 @@ def _build_quiz_data(lesson, user, enrollment):
     return quiz_list
 
 
+def _can_access_all(user, course):
+    """Người tạo, instructor được phân công, SUPERADMIN, COURSE_ADMIN xem được toàn bộ."""
+    if not course:
+        return False
+    return (
+        course.assigned_instructor_id == user.id
+        or course.created_by_id == user.id
+        or _is_admin(user)
+    )
+
+
 def get_learning_curriculum(user, course_id):
     """Lấy toàn bộ curriculum cho learning page."""
     course = course_repository.get_by_id(course_id)
-    is_owner = course is not None and course.assigned_instructor_id == user.id
+    is_owner = _can_access_all(user, course)
 
     enrollment = None
     is_enrolled = False
@@ -120,7 +141,7 @@ def get_learning_curriculum(user, course_id):
         return {
             "enrollment_id": None, "course_id": course_id, "chapters": result,
             "progress": {"completed_lessons_count": 0, "total_lessons_count": total_lessons, "progress_percent": 0, "last_completed_lesson_id": None},
-            "course_completed": False, "certificate": None,
+            "course_completed": False, "certificate": None, "is_owner": is_owner,
         }
 
     progress = enrollment_repository.get_or_create_course_progress(enrollment)
@@ -152,7 +173,7 @@ def get_learning_curriculum(user, course_id):
     return {
         "enrollment_id": enrollment.id, "course_id": course_id, "chapters": result,
         "progress": {"completed_lessons_count": completed_count, "total_lessons_count": total_lessons, "progress_percent": progress_percent, "last_completed_lesson_id": progress.last_completed_lesson_id},
-        "course_completed": course_completed, "certificate": certificate,
+        "course_completed": course_completed, "certificate": certificate, "is_owner": is_owner,
     }
 
 

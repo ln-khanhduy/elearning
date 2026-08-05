@@ -38,8 +38,10 @@ ROLE_HIERARCHY = {
 
 def enrich_user_response_data(user_data: dict, user: User) -> dict:
     """
-    Enrich user response data with instructor profile information (bank, bio, cv, certificates).
-    This DRYs up the repeated code pattern found in multiple auth views.
+    Làm phong phú dữ liệu phản hồi người dùng với thông tin hồ sơ giảng viên
+    (ngân hàng, bio, CV, chứng chỉ).
+
+    Giúp tái sử dụng (DRY) đoạn code lặp lại trong nhiều view xác thực.
     """
     if user.role and user.role.code == "INSTRUCTOR" and hasattr(user, 'instructor_profile'):
         profile = user.instructor_profile
@@ -55,6 +57,7 @@ def enrich_user_response_data(user_data: dict, user: User) -> dict:
 
 
 def _blacklist_user_tokens(user):
+    """Đưa tất cả refresh token đang hoạt động của người dùng vào blacklist."""
     outstanding_tokens = OutstandingToken.objects.filter(user=user)
     for token in outstanding_tokens:
         try:
@@ -65,14 +68,20 @@ def _blacklist_user_tokens(user):
 
 
 def get_all_users():
+    """Lấy danh sách tất cả người dùng."""
     return user_repository.get_all_users()
 
 
 def get_user_by_id(user_id):
+    """Lấy thông tin người dùng theo ID."""
     return user_repository.get_user_by_id(user_id)
 
 
 def change_role(user_id, role_id):
+    """Thay đổi vai trò (role) của người dùng.
+
+    - Không cho phép gán quyền SUPERADMIN qua API.
+    """
     user = user_repository.get_user_by_id(user_id)
     role = user_repository.get_role_by_id(role_id)
     if role.code == "SUPERADMIN":
@@ -85,6 +94,12 @@ def change_role(user_id, role_id):
 
 
 def lock_user(user_id, admin_user, reason=""):
+    """Khóa tài khoản người dùng bởi admin.
+
+    - Không cho phép tự khóa tài khoản của mình hoặc khóa Super Admin.
+    - Chỉ admin có cấp bậc cao hơn (theo ROLE_HIERARCHY) mới được khóa.
+    - Sau khi khóa, đưa toàn bộ token của người dùng vào blacklist.
+    """
     user = user_repository.get_user_by_id(user_id)
 
     if user.id == admin_user.id:
@@ -112,6 +127,7 @@ def lock_user(user_id, admin_user, reason=""):
 
 
 def unlock_user(user_id, admin_user):
+    """Mở khóa tài khoản người dùng và xóa các thông tin khóa trước đó."""
     user = user_repository.get_user_by_id(user_id)
     user.is_active = True
     user.account_status_reason = None
@@ -122,6 +138,11 @@ def unlock_user(user_id, admin_user):
 
 
 def update_profile(user, validated_data):
+    """Cập nhật thông tin hồ sơ người dùng.
+
+    - Các trường thuộc hồ sơ giảng viên (ngân hàng, bio, portfolio, CV)
+      được cập nhật riêng trên instructor_profile nếu có.
+    """
     instructor_profile_fields = {"bank_name", "bank_account_number", "bank_account_name", "bio", "portfolio_link", "cv_file"}
     profile_data = {k: v for k, v in validated_data.items() if k in instructor_profile_fields}
     user_data = {k: v for k, v in validated_data.items() if k not in instructor_profile_fields}
@@ -140,6 +161,11 @@ def update_profile(user, validated_data):
 
 
 def change_password(user, old_password, new_password):
+    """Đổi mật khẩu cho người dùng.
+
+    - Kiểm tra mật khẩu cũ đúng và mật khẩu mới khác mật khẩu cũ.
+    - Kiểm tra độ mạnh mật khẩu mới theo validate_password.
+    """
     if not user.check_password(old_password):
         raise DRFValidationError({"old_password": "Mật khẩu cũ không đúng."})
 
@@ -157,11 +183,13 @@ def change_password(user, old_password, new_password):
 
 
 def _generate_random_password(length=12):
+    """Sinh mật khẩu ngẫu nhiên (loại bỏ các ký tự dễ nhầm lẫn như 0/O, 1/l)."""
     alphabet = 'abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789'
     return get_random_string(length=length, allowed_chars=alphabet)
 
 
 def _send_account_created_email(profile, password):
+    """Gửi email cho giảng viên khi hồ sơ được duyệt, kèm thông tin tài khoản và mật khẩu tạm thời."""
     subject = "Tài khoản giảng viên LMS Learn của bạn đã được kích hoạt"
     message = (
         f"Xin chào {profile.name},\n\n"
@@ -182,6 +210,7 @@ def _send_account_created_email(profile, password):
 
 
 def _send_application_rejected_email(profile):
+    """Gửi email cho giảng viên khi hồ sơ đăng ký bị từ chối, kèm lý do.""" 
     subject = "Hồ sơ đăng ký giảng viên LMS Learn chưa được phê duyệt"
     message = (
         f"Xin chào {profile.name},\n\n"
@@ -197,6 +226,13 @@ def _send_application_rejected_email(profile):
 
 @transaction.atomic
 def apply(validated_data):
+    """Gửi hồ sơ đăng ký giảng viên.
+
+    - Nếu email đã có tài khoản hệ thống, báo lỗi.
+    - Nếu đã có hồ sơ PENDING/APPROVED, báo lỗi tương ứng.
+    - Nếu đã có hồ sơ bị từ chối trước đó, cập nhật lại thành PENDING.
+    - Ngược lại, tạo mới hồ sơ đăng ký trạng thái PENDING.
+    """
     email = validated_data.get("email", "").lower().strip()
 
     existing_user = user_repository.get_user_by_email(email)
@@ -230,19 +266,29 @@ def apply(validated_data):
 
 
 def get_application_by_email(email):
+    """Lấy hồ sơ đăng ký giảng viên theo email."""
     return instructor_repository.get_application_by_email(email)
 
 
 def get_all_applications(status_filter=None):
+    """Lấy danh sách hồ sơ đăng ký giảng viên, có thể lọc theo trạng thái."""
     return instructor_repository.get_all_applications(status_filter)
 
 
 def get_application_detail(application_id):
+    """Lấy chi tiết hồ sơ đăng ký giảng viên theo ID."""
     return instructor_repository.get_application_by_id(application_id)
 
 
 @transaction.atomic
 def review_application(application_id, admin_user, review_status, rejection_reason=None):
+    """Xét duyệt hồ sơ đăng ký giảng viên.
+
+    - Chỉ hồ sơ đang PENDING mới được xử lý.
+    - Nếu APPROVED: tạo tài khoản giảng viên, gửi email kèm mật khẩu tạm thời.
+    - Nếu REJECTED: lưu lý do từ chối và gửi email thông báo.
+    - Trả về (application, detail_message).
+    """
     application = instructor_repository.get_application_by_id(application_id)
 
     if application.status != InstructorProfile.Status.PENDING:
@@ -286,22 +332,32 @@ def review_application(application_id, admin_user, review_status, rejection_reas
 
 
 def add_certificate(application, title, file):
+    """Thêm một chứng chỉ cho hồ sơ giảng viên."""
     return instructor_repository.create_certificate(application, title, file)
 
 
 def get_certificates(application):
+    """Lấy danh sách chứng chỉ của hồ sơ giảng viên."""
     return instructor_repository.get_certificates_by_application(application)
 
 
 def delete_certificate(application, certificate_id):
+    """Xóa một chứng chỉ của hồ sơ giảng viên."""
     instructor_repository.delete_certificate(application, certificate_id)
 
 
 def get_certificate_by_id(application, certificate_id):
+    """Lấy chứng chỉ theo ID thuộc hồ sơ giảng viên."""
     return instructor_repository.get_certificate_by_id(application, certificate_id)
 
 
 def _authenticate_request(request):
+    """Xác thực người dùng từ request.
+
+    - Thử xác thực qua JWT trong header trước.
+    - Nếu không có, thử dùng refresh token trong cookie để lấy access token mới.
+    - Trả về User hoặc None nếu không xác thực được.
+    """
     try:
         jwt_auth = JWTAuthentication()
         result = jwt_auth.authenticate(request)
@@ -325,6 +381,11 @@ def _authenticate_request(request):
 
 
 def check_application_access(application, request_user, permission_code="user.instructor.view"):
+    """Kiểm tra quyền truy cập vào hồ sơ giảng viên.
+
+    - Admin có quyền (permission_code) được truy cập.
+    - Chính chủ sở hữu hồ sơ (email khớp) cũng được truy cập.
+    """
     class TempView:
         required_permission = permission_code
         permission_classes = []
@@ -342,6 +403,7 @@ def check_application_access(application, request_user, permission_code="user.in
 
 
 def _get_signed_url(file_field):
+    """Tạo signed URL cho file trên Cloudinary dựa trên loại tài nguyên (image/video/raw)."""
     public_id = file_field.name
     ext = os.path.splitext(public_id)[1].lower()
     image_exts = {'.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg', '.bmp', '.ico'}
@@ -366,6 +428,7 @@ def _get_signed_url(file_field):
 
 
 def download_file_from_cloudinary(file_field, default_filename="file"):
+    """Tạo phản hồi tải file từ Cloudinary dưới dạng attachment (tải về)."""
     filename = file_field.name.split('/')[-1] or default_filename
     signed_url = _get_signed_url(file_field)
     response = HttpResponseRedirect(signed_url)
@@ -374,11 +437,17 @@ def download_file_from_cloudinary(file_field, default_filename="file"):
 
 
 def preview_file_from_cloudinary(file_field, default_filename="file"):
+    """Tạo phản hồi mở/xem trước file từ Cloudinary (mở trong tab mới)."""
     signed_url = _get_signed_url(file_field)
     return HttpResponseRedirect(signed_url)
 
 
 def upload_certificates(application, titles, files):
+    """Tải lên nhiều chứng chỉ cho hồ sơ giảng viên.
+
+    - Nếu không có title, dùng tên file làm title mặc định.
+    - Trả về (certificates, errors) với danh sách chứng chỉ thành công và lỗi từng file.
+    """
     certificates = []
     errors = []
 
@@ -400,6 +469,11 @@ def upload_certificates(application, titles, files):
 
 
 def process_upload_request(application, request):
+    """Xử lý yêu cầu tải lên chứng chỉ từ FormData.
+
+    - Đọc danh sách titles và files từ request.
+    - Kiểm tra có file được chọn và số lượng titles khớp với files.
+    """
     titles = request.data.getlist("titles[]") or [request.data.get("title", "")]
     files = request.FILES.getlist("files[]") or ([request.FILES.get("file")] if request.FILES.get("file") else [])
     # Filter out None values

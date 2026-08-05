@@ -1,6 +1,6 @@
 import React, {useMemo} from "react";
 import CourseSectionAccordion from "./CourseSectionAccordion";
-import "../../style/course-detail/course-content-list.css";
+import "../../style/courseDetail/course-content-list.css";
 
 /**
  * CourseContentList - Hiển thị danh sách nội dung(tab Nội dung) khóa học tại trang chi tiết khóa học

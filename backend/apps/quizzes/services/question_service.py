@@ -5,10 +5,18 @@ from apps.courses.services.course_permission_service import can_manage_course
 
 
 def get_questions_by_quiz(quiz_id):
+    """Lấy danh sách câu hỏi của một bài kiểm tra."""
     return question_repository.get_by_quiz(quiz_id)
 
 
 def create_question(quiz_id, user, validated_data):
+    """Tạo mới một câu hỏi cho bài kiểm tra.
+
+    - Kiểm tra quyền quản lý khóa học của user, nếu không có quyền sẽ báo lỗi PermissionDenied.
+    - Với câu hỏi MCQ/FILL_BLANK: tự động chia điểm 10 cho tổng số câu hỏi cùng loại.
+    - Với MCQ: yêu cầu tối thiểu 2 đáp án và ít nhất 1 đáp án đúng.
+    - Với FILL_BLANK: yêu cầu có đáp án đúng (correct_text_answer).
+    """
     quiz = quiz_repository.get_by_id(quiz_id)
 
     if not can_manage_course(quiz.lesson.chapter.course, user):
@@ -56,6 +64,12 @@ def create_question(quiz_id, user, validated_data):
 
 
 def update_question(question_id, user, validated_data):
+    """Cập nhật thông tin một câu hỏi.
+
+    - Kiểm tra quyền quản lý khóa học của user, nếu không có quyền sẽ báo lỗi PermissionDenied.
+    - Với câu hỏi MCQ: nếu có thay đổi options, yêu cầu tối thiểu 2 đáp án và ít nhất 1 đáp án đúng,
+      đồng thời xóa các lựa chọn cũ và tạo lại từ dữ liệu mới.
+    """
     question = question_repository.get_by_id(question_id)
 
     if not can_manage_course(question.quiz.lesson.chapter.course, user):
@@ -85,6 +99,11 @@ def update_question(question_id, user, validated_data):
 
 
 def delete_question(question_id, user):
+    """Xóa một câu hỏi.
+
+    - Kiểm tra quyền quản lý khóa học của user, nếu không có quyền sẽ báo lỗi PermissionDenied.
+    - Sau khi xóa, tự động chia lại điểm 10 cho số câu hỏi MCQ/FILL_BLANK còn lại của bài kiểm tra.
+    """
     question = question_repository.get_by_id(question_id)
     quiz_id = question.quiz_id
 

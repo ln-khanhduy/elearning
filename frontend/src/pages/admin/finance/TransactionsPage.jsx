@@ -1,10 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { toast } from "react-toastify";
-import {
-  getAdminTransactionsApi,
-  markTransactionPaidApi,
-} from "../../api/paymentAPI";
-import "../../style/payment/payment.css";
+import { getAdminTransactionsApi } from "../../../api/paymentAPI";
+import "../../../style/payment/payment.css";
 
 const STATUS_LABELS = {
   PENDING: { label: "Chờ thanh toán", className: "pending" },
@@ -21,7 +18,6 @@ const STATUS_LABELS = {
 function FinanceTransactionsPage() {
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [processingId, setProcessingId] = useState(null);
   const [filters, setFilters] = useState({
     status: "",
     provider: "",
@@ -53,21 +49,6 @@ function FinanceTransactionsPage() {
     loadTransactions();
   }, [loadTransactions]);
 
-  const handleMarkPaid = async (transactionId) => {
-    try {
-      setProcessingId(transactionId);
-      await markTransactionPaidApi(transactionId);
-      toast.success("Đã đánh dấu thanh toán cho giảng viên thành công.");
-      loadTransactions();
-    } catch (err) {
-      toast.error(
-        err.message || "Không thể đánh dấu thanh toán. Vui lòng thử lại."
-      );
-    } finally {
-      setProcessingId(null);
-    }
-  };
-
   const handleFilterChange = (key, value) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
   };
@@ -95,24 +76,6 @@ function FinanceTransactionsPage() {
       hour: "2-digit",
       minute: "2-digit",
     });
-  };
-
-  const canMarkPaid = (transaction) => {
-    if (transaction.status !== "HOLD") return false;
-    if (!transaction.hold_time) return false;
-    const holdTime = new Date(transaction.hold_time);
-    const now = new Date();
-    return holdTime <= now;
-  };
-
-  const getHoldRemainingDays = (transaction) => {
-    if (!transaction.hold_time) return null;
-    const holdTime = new Date(transaction.hold_time);
-    const now = new Date();
-    if (holdTime <= now) return null;
-    const diffMs = holdTime - now;
-    const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
-    return diffDays;
   };
 
   return (
@@ -200,9 +163,6 @@ function FinanceTransactionsPage() {
                   label: t.status,
                   className: "pending",
                 };
-                const canMark = canMarkPaid(t);
-                const holdDays = getHoldRemainingDays(t);
-
                 return (
                   <tr key={t.id}>
                     <td>
@@ -232,28 +192,9 @@ function FinanceTransactionsPage() {
                     <td>{formatDate(t.hold_time)}</td>
                     <td>
                       {t.status === "HOLD" && (
-                        <div className="mark-paid-btn-wrapper">
-                          <button
-                            className="mark-paid-btn"
-                            onClick={() => handleMarkPaid(t.id)}
-                            disabled={!canMark || processingId === t.id}
-                          >
-                            {processingId === t.id ? (
-                              <span
-                                className="spinner-border spinner-border-sm"
-                                role="status"
-                              ></span>
-                            ) : (
-                              "Đánh dấu đã thanh toán"
-                            )}
-                          </button>
-                          {!canMark && holdDays && (
-                            <span className="tooltip-text">
-                              Giao dịch vẫn đang trong thời gian giữ tiền 7
-                              ngày (còn {holdDays} ngày)
-                            </span>
-                          )}
-                        </div>
+                        <span className="status-badge hold">
+                          Chờ thanh toán qua Payout
+                        </span>
                       )}
                     </td>
                   </tr>

@@ -38,7 +38,6 @@ PERMISSIONS = {
     # GIẢNG VIÊN (INSTRUCTOR) 
     "user.instructor.view": "Xem danh sách instructor",
     "user.instructor.manage": "Quản lý tài khoản instructor",
-    "user.instructor.withdraw_request": "Yêu cầu rút tiền",
 
     # NGƯỜI DÙNG (USER) 
     "user.user.view": "Xem thông tin user",
@@ -47,7 +46,6 @@ PERMISSIONS = {
     # TÀI CHÍNH (FINANCE) 
     "finance.finance.revenue_view": "Xem doanh thu",
     "finance.finance.payout": "Thanh toán cho giảng viên",
-    "finance.finance.withdraw_approve": "Duyệt lệnh rút tiền",
     "finance.finance.discount_config": "Cấu hình giảm giá",
     "finance.finance.fee_config": "Cấu hình thu phí",
     "finance.finance.report_export": "Xuất báo cáo tài chính",
@@ -108,7 +106,6 @@ PERMISSION_DEPS = {
 
     #  TÀI CHÍNH (FINANCE) — thao tác cần kèm xem doanh thu 
     "finance.finance.payout": ["finance.finance.revenue_view"],
-    "finance.finance.withdraw_approve": ["finance.finance.revenue_view"],
     "finance.finance.discount_config": ["finance.finance.revenue_view"],
     "finance.finance.fee_config": ["finance.finance.revenue_view"],
     "finance.finance.report_export": ["finance.finance.revenue_view"],
@@ -146,14 +143,12 @@ ROLE_PERMISSIONS = {
 
         "user.instructor.view",
         "user.instructor.manage",
-        "user.instructor.withdraw_request",
 
         "user.user.view",
         "user.user.manage",
 
         "finance.finance.revenue_view",
         "finance.finance.payout",
-        "finance.finance.withdraw_approve",
         "finance.finance.discount_config",
         "finance.finance.fee_config",
         "finance.finance.report_export",
@@ -209,7 +204,6 @@ ROLE_PERMISSIONS = {
         "support.request.process",
         "finance.finance.revenue_view",
         "finance.finance.payout",
-        "finance.finance.withdraw_approve",
         "finance.finance.discount_config",
         "finance.finance.fee_config",
         "finance.finance.report_export",
@@ -222,7 +216,6 @@ ROLE_PERMISSIONS = {
         "instructor.course.view_own",
         "instructor.course.teaching",
         "instructor.wallet.view_balance",
-        "user.instructor.withdraw_request",
         "student.my_course.view",
         "student.wallet.deposit",
         "support.request.create",

@@ -4,6 +4,7 @@ from apps.promotions import views
 urlpatterns = [
     # Admin coupon management
     path("coupons/", views.AdminCouponListAPIView.as_view(), name="admin-coupon-list"),
+    path("coupons/stale-courses/", views.StaleCourseListAPIView.as_view(), name="coupon-stale-courses"),
     path("coupons/create/", views.AdminCouponCreateAPIView.as_view(), name="admin-coupon-create"),
     path("coupons/<int:coupon_id>/", views.AdminCouponDetailAPIView.as_view(), name="admin-coupon-detail"),
     path("coupons/<int:coupon_id>/update/", views.AdminCouponUpdateAPIView.as_view(), name="admin-coupon-update"),

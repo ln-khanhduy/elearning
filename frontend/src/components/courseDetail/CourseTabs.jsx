@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import "../../style/course-detail/course-tabs.css";
+import "../../style/courseDetail/course-tabs.css";
 
 /**
  * CourseTabs - Tabs điều hướng nội dung khóa học

@@ -9,26 +9,32 @@ from apps.payments.models import PaymentTransaction as PaymentTransactionModel
 
 
 def count_users():
+    """Đếm tổng số người dùng."""
     return User.objects.count()
 
 
 def count_admins():
+    """Đếm số quản trị viên (loại trừ role STUDENT và INSTRUCTOR)."""
     return User.objects.exclude(role__code__in=["STUDENT", "INSTRUCTOR"]).count()
 
 
 def count_instructors():
+    """Đếm số giảng viên (role INSTRUCTOR)."""
     return User.objects.filter(role__code="INSTRUCTOR").count()
 
 
 def count_students():
+    """Đếm số học viên (role STUDENT)."""
     return User.objects.filter(role__code="STUDENT").count()
 
 
 def count_courses():
+    """Đếm tổng số khóa học."""
     return Course.objects.count()
 
 
 def get_users_by_role():
+    """Thống kê số lượng người dùng theo từng vai trò (role)."""
     return (
         Role.objects
         .annotate(total=Count("user"))
@@ -38,6 +44,7 @@ def get_users_by_role():
 
 
 def get_new_users_by_month(year=None):
+    """Thống kê số người dùng mới đăng ký theo từng tháng của một năm (mặc định là năm hiện tại)."""
     if year is None:
         year = timezone.now().year
     return (
@@ -51,6 +58,7 @@ def get_new_users_by_month(year=None):
 
 
 def get_courses_by_status():
+    """Thống kê số lượng khóa học theo từng trạng thái."""
     return (
         Course.objects
         .values("status")
@@ -60,10 +68,12 @@ def get_courses_by_status():
 
 
 def count_pending_instructor_applications():
+    """Đếm số hồ sơ giảng viên đang chờ duyệt (PENDING)."""
     return InstructorProfile.objects.filter(status=InstructorProfile.Status.PENDING).count()
 
 
 def get_total_revenue():
+    """Lấy tổng doanh thu từ các giao dịch PAID và HOLD."""
     result = PaymentTransaction.objects.filter(
         status__in=[PaymentTransactionModel.Status.PAID, PaymentTransactionModel.Status.HOLD]
     ).aggregate(total=Sum("net_amount"))
@@ -71,6 +81,10 @@ def get_total_revenue():
 
 
 def get_revenue_by_year():
+    """Lấy doanh thu theo từng năm từ 2019 đến năm hiện tại.
+
+    Chỉ tính các giao dịch ở trạng thái PAID và HOLD.
+    """
     revenues = (
         PaymentTransaction.objects
         .filter(status__in=[PaymentTransactionModel.Status.PAID, PaymentTransactionModel.Status.HOLD])
@@ -92,14 +106,17 @@ def get_revenue_by_year():
 
 
 def get_recent_users(limit=5):
+    """Lấy danh sách người dùng mới đăng ký gần đây."""
     return User.objects.select_related("role").order_by("-date_joined")[:limit]
 
 
 def get_recent_courses(limit=5):
+    """Lấy danh sách khóa học mới tạo gần đây."""
     return Course.objects.select_related("created_by", "assigned_instructor").order_by("-created_at")[:limit]
 
 
 def get_recent_instructor_applications(limit=5):
+    """Lấy danh sách hồ sơ giảng viên gửi gần đây."""
     return (
         InstructorProfile.objects
         .select_related("user", "reviewed_by")
@@ -159,7 +176,10 @@ def get_pending_requests_count():
 
 
 def get_top_courses(limit=5):
-    """Lấy top khóa học có nhiều học viên nhất và doanh thu."""
+    """Lấy top khóa học có nhiều học viên nhất kèm tổng doanh thu.
+
+    Chỉ tính các khóa học có ít nhất 1 học viên đang hoạt động.
+    """
     from apps.enrollments.models import Enrollment
     from django.db.models import Q, OuterRef, Subquery, FloatField
 

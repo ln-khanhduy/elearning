@@ -12,9 +12,19 @@ const request = async (callback) => {
 // ==================== STRIPE ====================
 
 // Tạo phiên thanh toán Stripe cho khóa học
-export const createStripeCheckoutApi = async (courseId) => {
+export const createStripeCheckoutApi = async (courseId, couponCode = "") => {
+  const payload = couponCode ? { coupon_code: couponCode } : {};
   return request(() =>
-    apiClient.post(`/api/payments/stripe/courses/${courseId}/checkout/`)
+    apiClient.post(`/api/payments/stripe/courses/${courseId}/checkout/`, payload)
+  );
+};
+
+// Tạo phiên thanh toán Stripe cho nhiều khóa học (thanh toán giỏ hàng) - 1 session duy nhất
+export const createStripeCartCheckoutApi = async (courseIds, couponCode = "") => {
+  const payload = { course_ids: courseIds };
+  if (couponCode) payload.coupon_code = couponCode;
+  return request(() =>
+    apiClient.post("/api/payments/stripe/cart/checkout/", payload)
   );
 };
 
@@ -55,15 +65,6 @@ export const getAdminTransactionsApi = async (params = {}) => {
   const qs = query.toString();
   return request(() =>
     apiClient.get(`/api/payments/admin/transactions/${qs ? `?${qs}` : ""}`)
-  );
-};
-
-// Đánh dấu giao dịch đã thanh toán
-export const markTransactionPaidApi = async (transactionId) => {
-  return request(() =>
-    apiClient.post(
-      `/api/payments/admin/transactions/${transactionId}/mark-paid/`
-    )
   );
 };
 

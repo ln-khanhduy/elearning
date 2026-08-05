@@ -23,14 +23,23 @@ def get_by_code(code):
 
 def create(data):
     """Tạo một coupon mới với dữ liệu đã được validate."""
-    return Coupon.objects.create(**data)
+    data = dict(data)
+    applicable_courses = data.pop("applicable_courses", [])
+    coupon = Coupon.objects.create(**data)
+    if applicable_courses:
+        coupon.applicable_courses.set(applicable_courses)
+    return coupon
 
 
 def update(coupon, data):
     """Cập nhật thông tin coupon."""
+    data = dict(data)
+    applicable_courses = data.pop("applicable_courses", None)
     for key, value in data.items():
         setattr(coupon, key, value)
     coupon.save()
+    if applicable_courses is not None:
+        coupon.applicable_courses.set(applicable_courses)
     return coupon
 
 

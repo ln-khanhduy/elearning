@@ -1,58 +1,58 @@
 /* ===== IMPORTS ===== */
 /* Layout */
-@import url('./layout-css/header.css');
-@import url('./layout-css/sidebar.css');
-@import url('./layout-css/main-layout.css');
-@import url('./layout-css/footer.css');
+@import url('./layout/header.css');
+@import url('./layout/sidebar.css');
+@import url('./layout/main-layout.css');
+@import url('./layout/footer.css');
 
 /* Auth */
-@import url('./auth-css/login.css');
-@import url('./auth-css/register.css');
-@import url('./auth-css/forgot-password.css');
-@import url('./auth-css/verify-otp.css');
-@import url('./auth-css/reset-password.css');
+@import url('./auth/login.css');
+@import url('./auth/register.css');
+@import url('./auth/forgot-password.css');
+@import url('./auth/verify-otp.css');
+@import url('./auth/reset-password.css');
 
 /* Pages */
-@import url('./home.css');
-@import url('./profile.css');
-@import url('./instructor-apply.css');
-@import url('./my-courses.css');
-@import url('./instructor-courses.css');
+@import url('./home/home.css');
+@import url('./student/profile.css');
+@import url('./instructor/apply.css');
+@import url('./student/my-courses.css');
+@import url('./instructor/courses.css');
 
 /* Admin */
 /* Courses */
 @import url('./courses/courses-page.css');
 
 /* Course Detail */
-@import url('./course-detail/course-detail-page.css');
+@import url('./courseDetail/course-detail-page.css');
 
 /* Learning */
 @import url('./learning/learning-page.css');
 
-@import url('./course-detail/course-hero.css');
-@import url('./course-detail/course-progress-card.css');
-@import url('./course-detail/course-content-list.css');
-@import url('./course-detail/course-section-accordion.css');
-@import url('./course-detail/lesson-item.css');
-@import url('./course-detail/instructor-card.css');
-@import url('./course-detail/course-tabs.css');
-@import url('./course-detail/reviews.css');
+@import url('./courseDetail/course-hero.css');
+@import url('./courseDetail/course-progress-card.css');
+@import url('./courseDetail/course-content-list.css');
+@import url('./courseDetail/course-section-accordion.css');
+@import url('./courseDetail/lesson-item.css');
+@import url('./courseDetail/instructor-card.css');
+@import url('./courseDetail/course-tabs.css');
+@import url('./courseDetail/reviews.css');
 
 /* Admin */
-@import url('./admin-courses.css');
-@import url('./admin-dashboard.css');
-@import url('./admin-instructor-applications.css');
-@import url('./admin-instructor-list.css');
-@import url('./admin-reviews.css');
-@import url('./support.css');
+@import url('./admin/courses.css');
+@import url('./admin/dashboard.css');
+@import url('./admin/instructor-applications.css');
+@import url('./admin/instructor-list.css');
+@import url('./admin/reviews.css');
+@import url('./support/support.css');
 @import url('./notification/notification.css');
-@import url('./my-learning.css');
+@import url('./student/my-learning.css');
 @import url('./student/qa-page.css');
-@import url('./contact.css');
-@import url('./wishlist-page.css');
-@import url('./cart-page.css');
-@import url('./admin-coupon.css');
-@import url('./not-found.css');
+@import url('./public/contact.css');
+@import url('./student/wishlist-page.css');
+@import url('./public/cart-page.css');
+@import url('./admin/coupon.css');
+@import url('./public/not-found.css');
 @import url('./finance/finance-revenue.css');
 
 /* ===== CSS VARIABLES ===== */

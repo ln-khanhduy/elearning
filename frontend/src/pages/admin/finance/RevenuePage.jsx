@@ -1,11 +1,11 @@
 import React from "react";
-import { useFinanceData } from "../../hooks/finance/useFinanceData";
-import KpiCard from "../../components/common/KpiCard";
-import BarChart from "../../components/finance/BarChart";
-import PieChart from "../../components/finance/PieChart";
-import TopCourses from "../../components/finance/TopCourses";
-import { formatPrice } from "../../utils/formatPrice";
-import "../../style/finance/finance-revenue.css";
+import { useFinanceData } from "../../../hooks/finance/useFinanceData";
+import KpiCard from "../../../components/common/KpiCard";
+import BarChart from "../../../components/finance/BarChart";
+import PieChart from "../../../components/finance/PieChart";
+import TopCourses from "../../../components/finance/TopCourses";
+import { formatPrice } from "../../../utils/formatPrice";
+import "../../../style/finance/finance-revenue.css";
 
 const currentYear = new Date().getFullYear();
 const years = [];

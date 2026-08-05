@@ -58,27 +58,6 @@
   color: var(--course-text, #1a1a2e);
 }
 
-/* Filter bar */
-.payout-filter-bar {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 16px;
-  flex-wrap: wrap;
-  align-items: flex-end;
-}
-
-.payout-filter-select {
-  height: 36px;
-  border-radius: 8px;
-  border: 1px solid #e9ecef;
-  padding: 0 10px;
-  font-size: var(--font-size-small, 13px);
-  background: var(--card, #fff);
-  color: var(--course-text, #1a1a2e);
-  outline: none;
-  min-width: 160px;
-}
-
 /* Badges */
 .payout-badge {
   display: inline-block;
@@ -98,65 +77,278 @@
   color: #92400e;
 }
 
-/* Table */
-.payout-table-wrap {
+/* ===== INSTRUCTOR LIST ===== */
+.payout-instructor-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.payout-instructor-card {
   background: var(--card, #fff);
   border-radius: var(--card-radius, 10px);
   border: 1px solid #e9ecef;
-  overflow-x: auto;
+  padding: 16px 18px;
 }
 
-.payout-table {
-  font-size: var(--font-size-small, 13px);
-  width: 100%;
-  min-width: 900px;
-}
-
-.payout-table th {
-  background: #f8f9fa;
-  font-weight: 600;
-  padding: 10px 12px;
-  white-space: nowrap;
-  border-bottom: 1px solid #e9ecef;
-}
-
-.payout-table td {
-  padding: 10px 12px;
-  border-bottom: 1px solid #f0f0f0;
-  vertical-align: middle;
-}
-
-.payout-table tr:last-child td {
-  border-bottom: none;
-}
-
-.payout-table tr:hover {
-  background: #f8fafc;
-}
-
-/* Bottom bar */
-.payout-bottom-bar {
-  background: var(--card, #fff);
-  border-radius: var(--card-radius, 10px);
-  border: 1px solid #e9ecef;
-  padding: 12px 16px;
-  margin-top: 16px;
+.payout-instructor-header {
   display: flex;
   justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.payout-instructor-info {
+  min-width: 0;
+}
+
+.payout-instructor-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--course-text, #1a1a2e);
+  display: flex;
   align-items: center;
 }
 
-.finance-status-badge {
+.payout-instructor-name i {
+  color: var(--primary, #0f3d75);
+}
+
+.payout-instructor-email {
+  font-size: var(--font-size-xs, 12px);
+  color: var(--muted, #6c757d);
+  margin-top: 2px;
+}
+
+.payout-instructor-amount {
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.payout-instructor-count {
+  font-size: var(--font-size-xs, 12px);
+  color: var(--muted, #6c757d);
+  margin-top: 2px;
+}
+
+/* Bank info */
+.payout-instructor-bank {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  background: #f8f9fc;
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin-bottom: 14px;
+}
+
+.payout-bank-field {
+  min-width: 0;
+}
+
+.payout-bank-label {
+  display: block;
+  font-size: var(--font-size-xs, 12px);
+  color: var(--muted, #6c757d);
+  margin-bottom: 2px;
+}
+
+.payout-bank-value {
+  font-size: var(--font-size-small, 13px);
+  font-weight: 500;
+  color: var(--course-text, #1a1a2e);
+  word-break: break-all;
+}
+
+/* Footer */
+.payout-instructor-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.payout-instructor-courses {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.payout-course-tag {
   display: inline-block;
-  padding: 3px 10px;
+  background: #eef3fa;
+  color: var(--primary, #0f3d75);
   border-radius: 4px;
   font-size: var(--font-size-xs, 12px);
-  font-weight: 500;
-  color: #fff;
+  padding: 3px 8px;
+  white-space: nowrap;
+}
+
+/* ===== MODAL ===== */
+.payout-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1050;
+  padding: 16px;
+}
+
+.payout-modal {
+  background: var(--card, #fff);
+  border-radius: var(--card-radius, 10px);
+  width: 100%;
+  max-width: 520px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+}
+
+.payout-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.payout-modal-header h4 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--course-text, #1a1a2e);
+}
+
+.payout-modal-close {
+  background: none;
+  border: none;
+  font-size: 18px;
+  color: var(--muted, #6c757d);
+  cursor: pointer;
+  padding: 4px;
+  line-height: 1;
+}
+
+.payout-modal-close:hover {
+  color: var(--course-text, #1a1a2e);
+}
+
+.payout-modal-body {
+  padding: 20px;
+}
+
+.payout-modal-info {
+  font-size: var(--font-size-small, 13px);
+  color: var(--course-text, #1a1a2e);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.payout-modal-amount {
+  font-size: 14px;
+}
+
+.payout-modal-bank {
+  background: #f8f9fc;
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.payout-modal-section-title {
+  font-size: var(--font-size-xs, 12px);
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--muted, #6c757d);
+  margin-bottom: 4px;
+}
+
+.payout-modal-confirm {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.payout-modal-input {
+  width: 100%;
+  height: 38px;
+  border-radius: 8px;
+  border: 1px solid #d0d5dd;
+  padding: 0 12px;
+  font-size: var(--font-size-small, 13px);
+  outline: none;
+}
+
+.payout-modal-input:focus {
+  border-color: var(--primary, #0f3d75);
+}
+
+.payout-modal-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: var(--font-size-small, 13px);
+  color: var(--course-text, #1a1a2e);
+  cursor: pointer;
+  margin: 0;
+}
+
+.payout-modal-check input {
+  margin-top: 2px;
+}
+
+.payout-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 14px 20px;
+  border-top: 1px solid #e9ecef;
+}
+
+.payout-btn-cancel {
+  height: 40px;
+  padding: 0 20px;
+  border-radius: var(--card-radius, 10px);
+  border: 1px solid #d0d5dd;
+  background: var(--card, #fff);
+  color: var(--course-text, #1a1a2e);
+  font-size: var(--font-size-body, 14px);
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.payout-btn-cancel:hover:not(:disabled) {
+  background: #f1f3f5;
+}
+
+.payout-btn-cancel:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 @media (max-width: 768px) {
   .payout-summary-row {
     grid-template-columns: repeat(2, 1fr);
+  }
+
+  .payout-instructor-bank {
+    grid-template-columns: 1fr;
+  }
+
+  .payout-instructor-header {
+    flex-direction: column;
+  }
+
+  .payout-instructor-amount {
+    text-align: left;
   }
 }

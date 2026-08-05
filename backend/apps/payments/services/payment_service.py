@@ -1,6 +1,8 @@
 from decimal import Decimal, ROUND_HALF_UP
+
 from django.utils import timezone
-from apps.payments.repositories import payment_repository 
+
+from apps.payments.repositories import payment_repository
 from apps.payments.models import PaymentTransaction
 from apps.system.repositories import system_config_repository
 from apps.enrollments.repositories import enrollment_repository
@@ -25,24 +27,20 @@ def calculate_fees(gross_amount, provider):
         Decimal("0.01"), rounding=ROUND_HALF_UP
     )
 
-    # Tax từ SystemConfig
     tax_percent = system_config_repository.get_decimal("tax_percent")
     tax = (gross * tax_percent / Decimal("100")).quantize(
         Decimal("0.01"), rounding=ROUND_HALF_UP
     )
 
-    # Net amount
     net = (gross - payment_fee - tax).quantize(
         Decimal("0.01"), rounding=ROUND_HALF_UP
     )
 
-    # Platform fee từ SystemConfig
     pf_percent = system_config_repository.get_decimal("platform_fee_percent")
     platform_fee = (net * pf_percent / Decimal("100")).quantize(
         Decimal("0.01"), rounding=ROUND_HALF_UP
     )
 
-    # Instructor share
     instructor_share = (net - platform_fee).quantize(
         Decimal("0.01"), rounding=ROUND_HALF_UP
     )
@@ -55,9 +53,14 @@ def calculate_fees(gross_amount, provider):
         "platform_fee_amount": platform_fee,
         "instructor_share_amount": instructor_share,
     }
-def create_pending_transaction(user, course, provider):
-    """Tạo PaymentTransaction với status PENDING."""
-    fees = calculate_fees(course.price, provider)
+
+
+def create_pending_transaction(user, course, provider, payable_amount=None):
+    """Tạo PaymentTransaction với status PENDING.
+    payable_amount: số tiền thực thu sau giảm giá coupon; mặc định = course.price.
+    """
+    gross = Decimal(str(payable_amount)) if payable_amount is not None else Decimal(str(course.price))
+    fees = calculate_fees(gross, provider)
 
     transaction = payment_repository.create({
         "student": user,
@@ -68,6 +71,8 @@ def create_pending_transaction(user, course, provider):
         "status": PaymentTransaction.Status.PENDING,
     })
     return transaction
+
+
 def mark_transaction_hold(transaction):
     """
     Chuyển transaction từ PENDING -> HOLD.
@@ -84,6 +89,8 @@ def mark_transaction_hold(transaction):
         paid_at=now,
         hold_time=hold_time,
     )
+
+
 def grant_course_access(transaction):
     """
     Tạo Enrollment ACTIVE và CourseProgress cho transaction.
@@ -115,6 +122,8 @@ def grant_course_access(transaction):
     enrollment_repository.get_or_create_course_progress(enrollment, progress_defaults)
 
     return enrollment
+
+
 def validate_course_for_payment(user, course):
     """
     Kiểm tra course có thể thanh toán không.
@@ -131,6 +140,8 @@ def validate_course_for_payment(user, course):
         return False, "Bạn đã đăng ký khóa học này."
 
     return True, None
+
+
 def get_instructor_revenue(instructor_id):
     """Tính doanh thu cho instructor."""
     transactions = payment_repository.get_by_instructor(instructor_id)

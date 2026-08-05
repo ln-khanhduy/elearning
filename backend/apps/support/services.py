@@ -7,6 +7,13 @@ from apps.notifications import services as notif_service
 
 
 def create_request(user, data):
+    """Tạo mới một yêu cầu hỗ trợ từ người dùng.
+
+    - Với yêu cầu REFUND: bắt buộc có transaction_id, giao dịch phải thuộc về user,
+      ở trạng thái HOLD/PAID và còn trong thời hạn hoàn tiền quy định.
+    - Tự động điền tiêu đề cho yêu cầu hoàn tiền nếu không được cung cấp.
+    - Gửi thông báo cho các admin có quyền xử lý loại yêu cầu này.
+    """
     request_type = data.get("request_type")
     description = data.get("description", "")
     title = data.get("title", "")
@@ -61,14 +68,22 @@ def create_request(user, data):
 
 
 def get_my_requests(user):
+    """Lấy danh sách yêu cầu hỗ trợ của chính người dùng."""
     return support_repo.get_by_user(user.id)
 
 
 def get_requests_by_type(request_type, user):
+    """Lấy danh sách yêu cầu hỗ trợ theo loại yêu cầu."""
     return support_repo.get_by_request_type(request_type)
 
 
 def process_request(request_id, user, data):
+    """Xử lý một yêu cầu hỗ trợ bởi admin.
+
+    - Kiểm tra quyền xử lý dựa trên loại yêu cầu, nếu không có quyền sẽ báo lỗi PermissionDenied.
+    - Với yêu cầu REFUND và trạng thái RESOLVED: chuyển giao dịch sang REFUNDED.
+    - Gửi thông báo cho người tạo yêu cầu về kết quả xử lý.
+    """
     request_obj = support_repo.get_by_id(request_id)
     status = data.get("status")
     resolution_note = data.get("resolution_note")
@@ -99,6 +114,13 @@ def process_request(request_id, user, data):
 
 
 def _can_process(user, request_type):
+    """Kiểm tra user có quyền xử lý loại yêu cầu hỗ trợ hay không.
+
+    - SUPERADMIN: xử lý được tất cả loại yêu cầu.
+    - TECHNICAL/OTHER: chỉ SUPERADMIN.
+    - REFUND: FINANCE_ADMIN hoặc SUPERADMIN.
+    - COMPLAINT: USER_MANAGER, INSTRUCTOR_MANAGER hoặc SUPERADMIN.
+    """
     if not user or not user.is_authenticated:
         return False
     role_code = user.role.code if user.role else None

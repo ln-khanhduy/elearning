@@ -5,9 +5,8 @@ Hoặc cấu hình cron/task scheduler để chạy hàng ngày.
 
 Các tác vụ:
 1. Tự động gửi nhắc nhở học viên không hoạt động
-2. Tự động chuyển HOLD → PAID khi hết thời gian giữ tiền
-3. Tự động gửi email mời đánh giá khi hoàn thành
-4. Tự động tổng hợp báo cáo hàng tuần
+2. Tự động gửi email mời đánh giá khi hoàn thành
+3. Tự động tổng hợp báo cáo hàng tuần
 """
 import logging
 from datetime import timedelta
@@ -25,7 +24,7 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument('--tasks', nargs='+', type=str, default=None,
-                          help='Chạy tác vụ cụ thể: reminders|payouts|reviews|reports')
+                          help='Chạy tác vụ cụ thể: reminders|reviews|reports')
 
     def handle(self, *args, **options):
         tasks = options.get('tasks')
@@ -39,12 +38,12 @@ class Command(BaseCommand):
 
         if run_all or 'reminders' in tasks:
             results['reminders'] = self._auto_send_reminders()
-        if run_all or 'payouts' in tasks:
-            results['payouts'] = self._auto_process_payouts()
         if run_all or 'reviews' in tasks:
             results['reviews'] = self._auto_send_review_invitations()
         if run_all or 'reports' in tasks:
             results['reports'] = self._generate_weekly_report()
+        if run_all or 'stale_courses' in tasks:
+            results['stale_courses'] = self._auto_notify_stale_courses()
 
         if run_all:
             self._log_automation_summary(results)
@@ -113,43 +112,7 @@ class Command(BaseCommand):
         self.stdout.write(f'[AUTO] Nhắc nhở: {reminder_count} nhắc nhở + {escalation_count} cảnh báo')
         return {'reminders': reminder_count, 'escalations': escalation_count}
 
-    # ==================== 2. CHUYỂN HOLD → PAID ====================
-    def _auto_process_payouts(self):
-        """Tự động chuyển các giao dịch HOLD hết hạn sang PAID."""
-        from apps.payments.models import PaymentTransaction
-        from apps.payments.repositories import payment_repository
-
-        now = timezone.now()
-        expired_holds = PaymentTransaction.objects.filter(
-            status=PaymentTransaction.Status.HOLD,
-            hold_time__lte=now,
-        ).select_related('course__assigned_instructor')
-
-        paid_count = 0
-        for t in expired_holds:
-            try:
-                payment_repository.update(t, status=PaymentTransaction.Status.PAID, paid_at=now)
-                paid_count += 1
-
-                # Thông báo cho giảng viên
-                instructor = t.course.assigned_instructor if t.course else None
-                if instructor:
-                    from apps.notifications.services.notification_service import notify_instructor_paid
-                    try:
-                        notify_instructor_paid(
-                            instructor,
-                            f"{t.instructor_share_amount:,.0f}₫",
-                            t.course.title if t.course else "N/A",
-                        )
-                    except Exception:
-                        pass
-            except Exception as e:
-                logger.error(f"Lỗi xử lý payout {t.id}: {e}")
-
-        self.stdout.write(f'[AUTO] Payout: Đã thanh toán {paid_count} giao dịch')
-        return {'paid': paid_count}
-
-    # ==================== 3. MỜI ĐÁNH GIÁ ====================
+    # ==================== 2. MỜI ĐÁNH GIÁ ====================
     def _auto_send_review_invitations(self):
         """Gửi email mời đánh giá cho học viên hoàn thành khóa học."""
         from apps.enrollments.models import Enrollment, CourseProgress
@@ -194,7 +157,7 @@ class Command(BaseCommand):
         self.stdout.write(f'[AUTO] Mời đánh giá: Đã gửi {invited} lời mời')
         return {'invited': invited}
 
-    # ==================== 4. BÁO CÁO HÀNG TUẦN ====================
+    # ==================== 3. BÁO CÁO HÀNG TUẦN ====================
     def _generate_weekly_report(self):
         """Tổng hợp báo cáo hàng tuần gửi cho admin."""
         from apps.enrollments.models import Enrollment, CourseProgress
@@ -263,6 +226,14 @@ TỔNG QUAN:
 
         self.stdout.write(f'[AUTO] Báo cáo: Đã gửi {sent} báo cáo hàng tuần')
         return {'reports_sent': sent}
+
+    # ==================== 4. CẢNH BÁO KHÓA HỌC KHÔNG CÓ HỌC VIÊN MỚI ====================
+    def _auto_notify_stale_courses(self):
+        """Gửi thông báo cho admin (finance.coupon.manage) về khóa học thiếu học viên mới 3 tháng."""
+        from apps.promotions.services.course_dormancy_service import notify_stale_courses
+        result = notify_stale_courses(days=90)
+        self.stdout.write(f'[AUTO] Khóa học nguội: {result["stale_courses"]} khóa học, đã thông báo {result["admins_notified"]} admin')
+        return result
 
     # ==================== LOG SUMMARY ====================
     def _log_automation_summary(self, results):

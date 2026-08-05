@@ -113,14 +113,14 @@ function LessonEditorPanel({ lesson, sectionId, onClose, onSave, saving }) {
                   <button type="button" className="cw-btn cw-btn-outline cw-btn-sm" onClick={() => fileInputRef.current?.click()}><i className="bi bi-arrow-repeat"></i> Đổi file</button>
                   <button type="button" className="cw-btn cw-btn-danger cw-btn-sm" onClick={handleRemoveFile}><i className="bi bi-trash"></i> Xóa</button>
                 </div>
-                <input ref={fileInputRef} type="file" accept=".pdf,.doc,.docx,.ppt,.pptx,.txt" style={{ display: "none" }} onChange={handleFileChange} />
+                <input ref={fileInputRef} type="file" accept=".pdf,.doc,.docx,.ppt,.pptx,.txt,.rar" style={{ display: "none" }} onChange={handleFileChange} />
               </div>
             ) : (
               <div className="cw-dropzone" onClick={() => fileInputRef.current?.click()}>
                 <div className="cw-dropzone-icon"><i className="bi bi-cloud-upload"></i></div>
                 <div className="cw-dropzone-text">Kéo thả file hoặc nhấp để chọn</div>
-                <div className="cw-dropzone-hint">Hỗ trợ: PDF, DOC, DOCX, PPT, TXT</div>
-                <input ref={fileInputRef} type="file" accept=".pdf,.doc,.docx,.ppt,.pptx,.txt" style={{ display: "none" }} onChange={handleFileChange} />
+                <div className="cw-dropzone-hint">Hỗ trợ: PDF, DOC, DOCX, PPT, TXT, RAR</div>
+                <input ref={fileInputRef} type="file" accept=".pdf,.doc,.docx,.ppt,.pptx,.txt,.rar" style={{ display: "none" }} onChange={handleFileChange} />
               </div>
             )}
           </div>

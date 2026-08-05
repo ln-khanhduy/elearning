@@ -65,9 +65,11 @@ class UpdateProfileSerializer(serializers.ModelSerializer):
         ]
 
     def validate_bank_account_number(self, value):
-        """Kiểm tra số tài khoản ngân hàng chỉ chứa chữ số nếu có giá trị."""
-        if value and not value.isdigit():
-            raise serializers.ValidationError("Số tài khoản chỉ được chứa chữ số.")
+        """Kiểm tra số tài khoản ngân hàng. Cho phép số tài khoản thường (chữ số) hoặc Stripe Connected Account ID (dạng acct_...)."""
+        if value:
+            stripped = value.strip()
+            if not stripped.isdigit() and not stripped.startswith("acct_"):
+                raise serializers.ValidationError("Số tài khoản chỉ được chứa chữ số (hoặc Stripe Account ID dạng acct_...).")
         return value
 
     def validate_bank_name(self, value):
@@ -141,10 +143,15 @@ class InstructorApplySerializer(serializers.ModelSerializer):
         ]
 
     def validate_bank_account_number(self, value):
-        """Kiểm tra số tài khoản ngân hàng chỉ chứa chữ số và có độ dài hợp lệ."""
-        if not value.isdigit():
-            raise serializers.ValidationError("Số tài khoản ngân hàng chỉ được chứa chữ số.")
-        if len(value) < 6 or len(value) > 30:
+        """Kiểm tra số tài khoản ngân hàng. Cho phép số tài khoản thường (chữ số, 6-30 ký tự) hoặc Stripe Connected Account ID (dạng acct_...)."""
+        if not value:
+            raise serializers.ValidationError("Số tài khoản ngân hàng là bắt buộc.")
+        stripped = value.strip()
+        if stripped.startswith("acct_"):
+            return value
+        if not stripped.isdigit():
+            raise serializers.ValidationError("Số tài khoản ngân hàng chỉ được chứa chữ số (hoặc Stripe Account ID dạng acct_...).")
+        if len(stripped) < 6 or len(stripped) > 30:
             raise serializers.ValidationError("Số tài khoản ngân hàng phải từ 6 đến 30 chữ số.")
         return value
 

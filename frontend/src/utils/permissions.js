@@ -24,6 +24,7 @@ export const ROUTE_PERMISSIONS = {
   "/finance/revenue": ["finance.finance.revenue_view"],
   "/finance/reports": ["finance.finance.revenue_view"],
   "/finance/payouts": ["finance.finance.payout"],
+  "/finance/refunds": ["finance.finance.refund"],
   "/admin/coupons": ["finance.coupon.view"],
   "/super-admin/roles": ["admin.role.view"],
   "/super-admin/activity-logs": ["admin.dashboard.view"],

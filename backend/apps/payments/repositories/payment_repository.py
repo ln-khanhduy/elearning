@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from django.utils import timezone
 from rest_framework.exceptions import NotFound
 from apps.payments.models import PaymentTransaction
@@ -23,6 +25,25 @@ def get_pending_by_user_and_course(user_id, course_id):
         course_id=course_id,
         status=PaymentTransactionModel.Status.PENDING
     ).first()
+
+
+def get_by_ids(transaction_ids):
+    """Lấy các transaction theo danh sách ID."""
+    return PaymentTransaction.objects.filter(id__in=transaction_ids)
+
+
+def get_by_user_with_provider_id(user_id):
+    """Lấy các transaction của user có provider_transaction_id (đại diện nhóm checkout Stripe).
+
+    Dùng để truy về session_id khi hoàn tiền cho transaction phụ (provider_transaction_id NULL)
+    trong thanh toán giỏ hàng (1 Stripe Session nhiều transaction).
+    """
+    return PaymentTransaction.objects.filter(
+        student_id=user_id,
+        provider_transaction_id__isnull=False,
+    ).exclude(provider_transaction_id="")
+
+
 def get_by_user(user_id):
     """Lấy tất cả transaction của user."""
     return PaymentTransaction.objects.filter(
@@ -84,16 +105,46 @@ def get_eligible_payouts():
         status=PaymentTransactionModel.Status.HOLD,
         hold_time__lte=timezone.now(),
         course__assigned_instructor__isnull=False,
-    ).select_related("student", "course", "course__assigned_instructor").order_by("hold_time")
+    ).select_related(
+        "student",
+        "course",
+        "course__assigned_instructor",
+        "course__assigned_instructor__instructor_profile",
+    ).order_by("hold_time")
 
-def mark_paid_batch(transaction_ids, paid_at=None):
-    """Cập nhật hàng loạt transaction sang PAID."""
-    from django.utils import timezone
+def get_eligible_payouts_grouped_by_instructor():
+    """Group các giao dịch HOLD hết hạn theo giảng viên, kèm thông tin ngân hàng."""
+    transactions = get_eligible_payouts()
+    grouped = {}
+    for t in transactions:
+        instructor = t.course.assigned_instructor
+        if not instructor:
+            continue
+        if instructor.id not in grouped:
+            profile = getattr(instructor, "instructor_profile", None)
+            grouped[instructor.id] = {
+                "instructor_id": str(instructor.id),
+                "instructor_name": instructor.get_full_name() or instructor.email,
+                "instructor_email": instructor.email,
+                "bank_name": profile.bank_name if profile else None,
+                "bank_account_number": profile.bank_account_number if profile else None,
+                "bank_account_name": profile.bank_account_name if profile else None,
+                "total_amount": Decimal("0.00"),
+                "transaction_count": 0,
+                "transactions": [],
+            }
+        grouped[instructor.id]["total_amount"] += t.instructor_share_amount
+        grouped[instructor.id]["transaction_count"] += 1
+        grouped[instructor.id]["transactions"].append(t)
+    return grouped
+
+def mark_paid_for_instructor(instructor_id, transaction_ids, paid_at=None):
+    """Cập nhật hàng loạt transaction HOLD hết hạn của 1 giảng viên sang PAID."""
     now = paid_at or timezone.now()
     updated = PaymentTransaction.objects.filter(
         id__in=transaction_ids,
+        course__assigned_instructor_id=instructor_id,
         status=PaymentTransactionModel.Status.HOLD,
         hold_time__lte=now,
-        course__assigned_instructor__isnull=False,
     ).update(status=PaymentTransactionModel.Status.PAID, paid_at=now)
     return updated

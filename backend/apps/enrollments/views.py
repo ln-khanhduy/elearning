@@ -41,7 +41,9 @@ class CheckEnrolledAPIView(APIView):
         from apps.courses.models import Course
         enrollment = enrollment_service.check_enrolled(request.user, course_id)
         course = Course.objects.filter(id=course_id).first()
-        is_owner = course is not None and course.created_by_id == request.user.id
+        # Người tạo khóa, instructor được phân công, SUPERADMIN, COURSE_ADMIN
+        # được quyền truy cập đầy đủ như owner (khớp với learning_service).
+        is_owner = learning_service._can_access_all(request.user, course)
         can_access = enrollment is not None or is_owner
         return success_response({
             "is_enrolled": enrollment is not None,

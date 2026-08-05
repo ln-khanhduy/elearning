@@ -8,6 +8,11 @@ from apps.courses.services import course_permission_service
 
 
 def _generate_unique_slug(chapter_id, title, exclude_lesson_id=None):
+    """Sinh slug duy nhất cho bài học trong một chương.
+
+    Nếu slug gốc từ tiêu đề đã bị trùng, tự động thêm hậu số -2, -3, ...
+    Có thể loại trừ một bài học nhất định (dùng khi cập nhật).
+    """
     base_slug = slugify(title) or "lesson"
     slug = base_slug
     counter = 2
@@ -27,14 +32,23 @@ def _generate_unique_slug(chapter_id, title, exclude_lesson_id=None):
 
 
 def get_lessons_by_chapter(chapter_id):
+    """Lấy danh sách bài học của một chương."""
     return lesson_repository.get_by_chapter(chapter_id)
 
 
 def get_lesson_detail(lesson_id):
+    """Lấy chi tiết một bài học theo ID."""
     return lesson_repository.get_by_id(lesson_id)
 
 
 def create_lesson(chapter_id, user, data):
+    """Tạo mới một bài học trong chương.
+
+    - Kiểm tra quyền quản lý khóa học của user, nếu không có quyền sẽ báo lỗi PermissionDenied.
+    - Nếu không chỉ định order, tự động lấy thứ tự tiếp theo trong chương.
+    - Nếu order đã tồn tại trong chương, báo lỗi ValidationError.
+    - Tự sinh slug duy nhất từ tiêu đề.
+    """
     chapter = chapter_repository.get_by_id(chapter_id)
 
     if not course_permission_service.can_manage_course(chapter.course, user):
@@ -55,6 +69,13 @@ def create_lesson(chapter_id, user, data):
 
 
 def update_lesson(lesson_id, user, data):
+    """Cập nhật thông tin một bài học.
+
+    - Kiểm tra quyền quản lý khóa học của user, nếu không có quyền sẽ báo lỗi PermissionDenied.
+    - Bỏ qua trường order rỗng gửi từ FormData.
+    - Nếu thay đổi order mà order mới đã tồn tại trong chương, báo lỗi ValidationError.
+    - Tự sinh lại slug duy nhất nếu tiêu đề được thay đổi.
+    """
     lesson = lesson_repository.get_by_id(lesson_id)
 
     if not course_permission_service.can_manage_course(lesson.chapter.course, user):
@@ -85,6 +106,10 @@ def update_lesson(lesson_id, user, data):
 
 
 def delete_lesson(lesson_id, user):
+    """Xóa một bài học.
+
+    - Kiểm tra quyền quản lý khóa học của user, nếu không có quyền sẽ báo lỗi PermissionDenied.
+    """
     lesson = lesson_repository.get_by_id(lesson_id)
 
     if not course_permission_service.can_manage_course(lesson.chapter.course, user):
@@ -94,6 +119,12 @@ def delete_lesson(lesson_id, user):
 
 
 def reorder_lessons(chapter_id, user, lessons_data):
+    """Sắp xếp lại thứ tự các bài học trong một chương.
+
+    - Kiểm tra quyền quản lý khóa học của user, nếu không có quyền sẽ báo lỗi PermissionDenied.
+    - Danh sách id không được trùng, thứ tự các bài học không được trùng nhau.
+    - Thực hiện cập nhật trong giao dịch (transaction) để đảm bảo toàn vẹn dữ liệu.
+    """
     chapter = chapter_repository.get_by_id(chapter_id)
 
     if not course_permission_service.can_manage_course(chapter.course, user):

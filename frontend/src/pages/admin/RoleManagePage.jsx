@@ -4,7 +4,7 @@ import {
   getRolesApi, createRoleApi, updateRoleApi, deleteRoleApi,
   getAllPermissionsApi, getRolePermissionsApi, updateRolePermissionsApi,
 } from "../../api/adminAPI";
-import "../../style/admin-role-management.css";
+import "../../style/admin/role-management.css";
 
 // Trang quản lý vai trò và quyền: tạo, sửa, xóa vai trò và phân quyền
 function RoleManagePage() {

@@ -7,14 +7,22 @@ from apps.courses.services.course_permission_service import can_manage_course, c
 
 
 def search_courses(keyword=None, status_value=None, category_id=None, instructor_id=None):
+    """Tìm kiếm khóa học theo từ khóa, trạng thái, danh mục và giảng viên."""
     return course_repository.search(keyword, status_value, category_id, instructor_id)
 
 
 def get_course_detail(course_id):
+    """Lấy chi tiết khóa học theo ID."""
     return course_repository.get_by_id(course_id)
 
 
 def create_course(user, validated_data):
+    """Tạo mới một khóa học ở trạng thái nháp (DRAFT).
+
+    - Gán user hiện tại làm người tạo khóa học.
+    - Tự sinh slug duy nhất từ tiêu đề (thêm hậu tố -1, -2... nếu trùng).
+    - Trạng thái khóa học được đặt mặc định là DRAFT.
+    """
     validated_data["created_by"] = user
     base_slug = slugify(validated_data["title"])
     slug = base_slug
@@ -29,6 +37,12 @@ def create_course(user, validated_data):
 
 
 def update_course(course_id, user, validated_data):
+    """Cập nhật thông tin khóa học.
+
+    - Kiểm tra quyền quản lý khóa học của user, nếu không có quyền sẽ báo lỗi PermissionDenied.
+    - Cập nhật các trường trong validated_data.
+    - Tự sinh lại slug từ tiêu đề nếu tiêu đề được thay đổi.
+    """
     course = course_repository.get_by_id(course_id)
     if not can_manage_course(course, user):
         raise PermissionDenied("Bạn không có quyền sửa khóa học này.")
@@ -41,6 +55,11 @@ def update_course(course_id, user, validated_data):
 
 
 def delete_course(course_id, user):
+    """Xóa khóa học.
+
+    - Kiểm tra quyền quản lý khóa học của user, nếu không có quyền sẽ báo lỗi PermissionDenied.
+    - Không cho phép xóa khóa học đã xuất bản (PUBLISHED), báo lỗi ValidationError.
+    """
     course = course_repository.get_by_id(course_id)
     if not can_manage_course(course, user):
         raise PermissionDenied("Bạn không có quyền xóa khóa học này.")
@@ -50,6 +69,12 @@ def delete_course(course_id, user):
 
 
 def publish_course(course_id, user):
+    """Xuất bản khóa học (chuyển trạng thái sang PUBLISHED).
+
+    - Kiểm tra quyền xuất bản khóa học của user, nếu không có quyền sẽ báo lỗi PermissionDenied.
+    - Chỉ khóa học ở trạng thái DRAFT hoặc HIDDEN mới được xuất bản, ngược lại báo lỗi ValidationError.
+    - Thiết lập thời gian xuất bản published_at là thời điểm hiện tại.
+    """
     course = course_repository.get_by_id(course_id)
     if not can_publish_course(course, user):
         raise PermissionDenied("Bạn không có quyền public khóa học này.")
@@ -62,6 +87,11 @@ def publish_course(course_id, user):
 
 
 def hide_course(course_id, user):
+    """Ẩn khóa học (chuyển trạng thái sang HIDDEN).
+
+    - Kiểm tra quyền xuất bản khóa học của user, nếu không có quyền sẽ báo lỗi PermissionDenied.
+    - Chỉ khóa học đã xuất bản (PUBLISHED) mới có thể ẩn, ngược lại báo lỗi ValidationError.
+    """
     course = course_repository.get_by_id(course_id)
     if not can_publish_course(course, user):
         raise PermissionDenied("Bạn không có quyền ẩn khóa học này.")

@@ -1,4 +1,11 @@
 /* ==================== ADMIN COUPON PAGE ==================== */
+
+/* Stale course multi-select */
+.admin-coupon-page .stale-course-select {
+  min-height: 120px;
+  height: auto;
+  font-size: 13px;
+}
 .admin-coupon-page {
   padding: 20px;
   max-width: 1200px;

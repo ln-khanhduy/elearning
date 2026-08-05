@@ -16,6 +16,7 @@ from apps.payments.serializers.payment_serializer import (
     PaymentTransactionSerializer,
     AdminTransactionSerializer,
     InstructorRevenueSerializer,
+    InstructorPayoutGroupSerializer,
 )
 from apps.courses.models import Course
 
@@ -50,7 +51,7 @@ class StripeCheckoutAPIView(BasePermissionAPIView):
             )
 
         try:
-            result = stripe_payment_service.create_checkout_session(request.user, course)
+            result = stripe_payment_service.create_checkout_session(request.user, course, coupon_code=request.data.get("coupon_code"))
             return Response({
                 "success": True,
                 "message": "Tạo phiên thanh toán Stripe thành công.",
@@ -63,10 +64,55 @@ class StripeCheckoutAPIView(BasePermissionAPIView):
             )
 
 
+class StripeCartCheckoutAPIView(BasePermissionAPIView):
+    """
+    POST /api/payments/stripe/cart/checkout/
+    Tạo Stripe Checkout Session cho nhiều khóa học (thanh toán giỏ hàng).
+    Body: { "course_ids": [1,2,3], "coupon_code": "..." }
+    Yêu cầu quyền mua khóa học: student.course.buy
+    """
+    required_permission = "student.course.buy"
+
+    def post(self, request):
+        course_ids = request.data.get("course_ids") or []
+        coupon_code = request.data.get("coupon_code") or ""
+        if not course_ids:
+            return Response(
+                {"success": False, "message": "Vui lòng chọn khóa học để thanh toán."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            result = stripe_payment_service.create_cart_checkout_session(
+                request.user, course_ids, coupon_code=coupon_code
+            )
+            return Response({
+                "success": True,
+                "message": "Tạo phiên thanh toán Stripe thành công.",
+                "data": result,
+            }, status=status.HTTP_201_CREATED)
+        except ValueError as e:
+            return Response(
+                {"success": False, "message": str(e)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        except Exception as e:
+            return Response(
+                {"success": False, "message": str(e)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+
 class StripeWebhookAPIView(APIView):
     """
     POST /api/payments/stripe/webhook/
     Xử lý Stripe webhook event.
+
+    Trả về:
+    - 200: xử lý thành công.
+    - 400: signature không hợp lệ → Stripe KHÔNG retry (lỗi không thể sửa).
+    - 500: lỗi xử lý tạm thời → Stripe TỰ ĐỘNG retry event đến khi thành công
+      (đảm bảo giao dịch/coupon được hoàn tất, chống mất dữ liệu như lỗi trước đây).
     """
     permission_classes = [AllowAny]
     authentication_classes = []
@@ -78,10 +124,17 @@ class StripeWebhookAPIView(APIView):
         try:
             result = stripe_payment_service.handle_webhook(payload, sig_header)
             return Response(result, status=status.HTTP_200_OK)
-        except ValueError as e:
+        except stripe_payment_service.InvalidWebhookSignatureError as e:
             return Response(
                 {"error": str(e)},
                 status=status.HTTP_400_BAD_REQUEST,
+            )
+        except Exception as e:
+            # Lỗi xử lý (Stripe tạm lỗi, DB lỗi, ...) → HTTP 500 để Stripe retry.
+            # KHÔNG trả 400 vì Stripe sẽ bỏ event và không bao giờ thử lại.
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
 
@@ -101,13 +154,17 @@ class StripeVerifyAPIView(APIView):
             )
 
         try:
+            is_cart = stripe_payment_service.is_cart_checkout_session(session_id)
             transaction = stripe_payment_service.verify_session(session_id)
             return Response({
                 "success": True,
                 "message": "Thanh toán thành công. Bạn đã được mở quyền học.",
                 "data": {
                     "transaction_id": transaction.id,
-                    "redirect_url": f"/courses/{transaction.course.id}/learn",
+                    "redirect_url": (
+                        "/my-courses" if is_cart
+                        else f"/courses/{transaction.course.id}/learn"
+                    ),
                 },
             }, status=status.HTTP_200_OK)
         except ValueError as e:
@@ -178,71 +235,37 @@ class AdminTransactionListAPIView(BasePermissionAPIView):
         }, status=status.HTTP_200_OK)
 
 
-class MarkTransactionPaidAPIView(BasePermissionAPIView):
-    """
-    POST /api/payments/admin/transactions/{transaction_id}/mark-paid/
-    Finance Admin đánh dấu transaction đã thanh toán cho instructor.
-    """
-    required_permission = "finance.finance.revenue_view"
-
-    def post(self, request, transaction_id):
-        try:
-            transaction = payment_repository.get_by_id(transaction_id)
-        except Exception:
-            return Response(
-                {"success": False, "message": "Không tìm thấy giao dịch."},
-                status=status.HTTP_404_NOT_FOUND,
-            )
-
-        if transaction.status != PaymentTransaction.Status.HOLD:
-            return Response(
-                {"success": False, "message": "Chỉ có thể đánh dấu thanh toán cho giao dịch đang giữ tiền."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        if transaction.hold_time and transaction.hold_time > timezone.now():
-            return Response(
-                {"success": False, "message": "Giao dịch vẫn đang trong thời gian giữ tiền 7 ngày."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        payment_repository.update(transaction, status=PaymentTransaction.Status.PAID)
-        return Response({
-            "success": True,
-            "message": "Đã đánh dấu giao dịch đã thanh toán cho giảng viên.",
-        }, status=status.HTTP_200_OK)
-
-
 # ==================== PAYOUT ====================
 
 class AdminPayoutListAPIView(BasePermissionAPIView):
     """
     GET /api/payments/admin/payouts/
-    Danh sách giao dịch đủ điều kiện thanh toán cho giảng viên.
-    Chỉ HOLD, hold_time <= now, course có assigned_instructor.
+    Danh sách giảng viên đủ điều kiện thanh toán (HOLD đã hết hạn, có giảng viên).
+    Nhóm theo từng giảng viên, kèm thông tin ngân hàng, tổng tiền và danh sách giao dịch.
     """
     required_permission = "finance.finance.payout"
 
     def get(self, request):
-        transactions = payment_repository.get_eligible_payouts()
-        serializer = AdminTransactionSerializer(transactions, many=True)
+        grouped = payment_repository.get_eligible_payouts_grouped_by_instructor()
+        serializer = InstructorPayoutGroupSerializer(list(grouped.values()), many=True)
         return Response({
             "success": True,
             "data": serializer.data,
         }, status=status.HTTP_200_OK)
 
 
-class AdminBatchPayoutAPIView(BasePermissionAPIView):
+class AdminInstructorPayoutAPIView(BasePermissionAPIView):
     """
-    POST /api/payments/admin/payouts/batch/
-    Thanh toán hàng loạt cho giảng viên.
-    Body: { "transaction_ids": ["uuid1", "uuid2", ...] }
-    Chỉ xử lý các transaction HOLD đã hết hạn, có instructor.
-    Đã PAID rồi sẽ không bị ảnh hưởng (backend filter lại status).
+    POST /api/payments/admin/payouts/instructor/{instructor_id}/pay/
+    Thanh toán cho 1 giảng viên - bắt buộc xác nhận thông tin ngân hàng trước khi thanh toán.
+    Body: { "transaction_ids": ["uuid1", "uuid2", ...],
+            "confirmed_bank_name": "...", "confirmed_account_number": "...", "confirmed_account_name": "..." }
+    Chỉ xử lý các transaction HOLD đã hết hạn, thuộc instructor này.
+    Backend kiểm tra lại thông tin ngân hàng xác nhận khớp với hồ sơ giảng viên trước khi chuyển PAID.
     """
     required_permission = "finance.finance.payout"
 
-    def post(self, request):
+    def post(self, request, instructor_id):
         from apps.notifications import services as notif_service
 
         transaction_ids = request.data.get("transaction_ids", [])
@@ -251,54 +274,82 @@ class AdminBatchPayoutAPIView(BasePermissionAPIView):
                 "success": False, "message": "Vui lòng chọn giao dịch cần thanh toán.",
             }, status=status.HTTP_400_BAD_REQUEST)
 
+        confirmed_bank_name = request.data.get("confirmed_bank_name")
+        confirmed_account_number = request.data.get("confirmed_account_number")
+        confirmed_account_name = request.data.get("confirmed_account_name")
+
+        if not confirmed_bank_name or not confirmed_account_number or not confirmed_account_name:
+            return Response({
+                "success": False, "message": "Vui lòng xác nhận đầy đủ thông tin ngân hàng (tên ngân hàng, số tài khoản, tên chủ tài khoản).",
+            }, status=status.HTTP_400_BAD_REQUEST)
+
         now = timezone.now()
-        # Chỉ lấy các transaction đủ điều kiện trong danh sách đã chọn
+        # Chỉ lấy các transaction đủ điều kiện trong danh sách đã chọn, thuộc instructor này
         eligible = PaymentTransaction.objects.filter(
             id__in=transaction_ids,
+            course__assigned_instructor_id=instructor_id,
             status=PaymentTransaction.Status.HOLD,
             hold_time__lte=now,
-            course__assigned_instructor__isnull=False,
-        ).select_related("course__assigned_instructor")
+        ).select_related("student", "course", "course__assigned_instructor")
 
         if not eligible.exists():
             return Response({
-                "success": False, "message": "Không có giao dịch nào đủ điều kiện thanh toán.",
+                "success": False, "message": "Không có giao dịch nào đủ điều kiện thanh toán cho giảng viên này.",
             }, status=status.HTTP_400_BAD_REQUEST)
 
-        # Group by instructor để gửi notification
-        instructor_data = {}
-        for t in eligible:
-            instructor = t.course.assigned_instructor
-            if instructor:
-                if instructor.id not in instructor_data:
-                    instructor_data[instructor.id] = {
-                        "instructor": instructor,
-                        "total": 0,
-                        "courses": [],
-                    }
-                instructor_data[instructor.id]["total"] += float(t.instructor_share_amount or 0)
-                instructor_data[instructor.id]["courses"].append(t.course.title)
+        instructor = eligible.first().course.assigned_instructor
+        if not instructor:
+            return Response({
+                "success": False, "message": "Giảng viên không hợp lệ.",
+            }, status=status.HTTP_400_BAD_REQUEST)
 
-        # Batch update to PAID
-        ids = list(eligible.values_list("id", flat=True))
-        paid_count = payment_repository.mark_paid_batch(ids, paid_at=now)
+        profile = getattr(instructor, "instructor_profile", None)
+        if profile is None or not profile.bank_name or not profile.bank_account_number or not profile.bank_account_name:
+            return Response({
+                "success": False, "message": "Giảng viên chưa cập nhật đầy đủ thông tin ngân hàng. Vui lòng yêu cầu giảng viên cập nhật hồ sơ trước khi thanh toán.",
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        # Kiểm tra thông tin xác nhận khớp với hồ sơ
+        if (confirmed_bank_name.strip() != profile.bank_name.strip()
+                or confirmed_account_number.strip() != profile.bank_account_number.strip()
+                or confirmed_account_name.strip() != profile.bank_account_name.strip()):
+            return Response({
+                "success": False, "message": "Thông tin ngân hàng xác nhận không khớp với hồ sơ giảng viên. Vui lòng kiểm tra lại.",
+            }, status=status.HTTP_400_BAD_REQUEST)
 
         def _fmt(amount):
             return f"{amount:,.0f}₫" if amount % 1 == 0 else f"{amount:,.2f}₫"
 
-        for info in instructor_data.values():
-            for course_title in info["courses"]:
-                try:
-                    notif_service.notify_payout_completed(
-                        info["instructor"], _fmt(info["total"]), course_title,
-                    )
-                except Exception:
-                    pass
-
+        ids = list(eligible.values_list("id", flat=True))
         total_amount = sum(float(t.instructor_share_amount or 0) for t in eligible)
+        course_titles = [t.course.title for t in eligible if t.course]
+
+        # Chuyển tiền thực tế qua Stripe Transfer đến Connected Account của giảng viên
+        # (connected account ID tạm thời lưu trong bank_account_number)
+        try:
+            stripe_payment_service.transfer_to_instructor(
+                profile.bank_account_number,
+                total_amount,
+                metadata={
+                    "instructor_id": str(instructor.id),
+                    "transaction_ids": ",".join(str(i) for i in ids),
+                },
+            )
+        except ValueError as e:
+            return Response({
+                "success": False, "message": str(e),
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        # Batch update to PAID - chỉ sau khi Transfer thành công
+        paid_count = payment_repository.mark_paid_for_instructor(instructor_id, ids, paid_at=now)
+
+        try:
+            notif_service.notify_payout_completed(instructor, _fmt(total_amount), ", ".join(course_titles))
+        except Exception:
+            pass
         return Response({
             "success": True,
-            "message": f"Đã thanh toán {paid_count} giao dịch, tổng {_fmt(total_amount)}.",
+            "message": f"Đã thanh toán {paid_count} giao dịch cho {instructor.get_full_name() or instructor.email}, tổng {_fmt(total_amount)}.",
             "data": {"paid_count": paid_count, "total_amount": total_amount},
         }, status=status.HTTP_200_OK)
 
@@ -315,6 +366,36 @@ class InstructorRevenueAPIView(APIView):
     def get(self, request):
         revenue = payment_service.get_instructor_revenue(request.user.id)
         serializer = InstructorRevenueSerializer(revenue)
+        return Response({
+            "success": True,
+            "data": serializer.data,
+        }, status=status.HTTP_200_OK)
+
+
+class MyRefundableTransactionsAPIView(APIView):
+    """
+    GET /api/payments/my/refundable-transactions/
+    Danh sách giao dịch của học viên hiện tại đủ điều kiện yêu cầu hoàn tiền
+    (trạng thái HOLD còn trong thời hạn, hoặc PAID).
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        from apps.system.repositories import system_config_repository
+
+        now = timezone.now()
+        hold_days = int(system_config_repository.get_decimal("payment_hold_days", "7"))
+        transactions = payment_repository.get_by_user(request.user.id)
+
+        refundable = []
+        for t in transactions:
+            if t.status in [PaymentTransaction.Status.HOLD, PaymentTransaction.Status.PAID]:
+                # Nếu HOLD thì phải còn trong thời hạn
+                if t.status == PaymentTransaction.Status.HOLD and t.hold_time and t.hold_time < now:
+                    continue
+                refundable.append(t)
+
+        serializer = PaymentTransactionSerializer(refundable, many=True)
         return Response({
             "success": True,
             "data": serializer.data,

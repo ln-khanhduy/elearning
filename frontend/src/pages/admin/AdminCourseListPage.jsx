@@ -232,7 +232,7 @@ function AdminCourseListPage() {
           className="courses-btn-create"
           onClick={() => navigate("/admin/courses/create")}
         >
-          <i className="bi bi-plus-lg me-2"></i>
+          <i className="bi  me-2"></i>
           Tạo khóa học mới
         </button>
       </div>
@@ -246,7 +246,7 @@ function AdminCourseListPage() {
             className="courses-btn-create"
             onClick={() => navigate("/admin/courses/create")}
           >
-            <i className="bi bi-plus-lg me-2"></i>
+            <i className="bi me-2"></i>
             Tạo khóa học mới
           </button>
         </div>

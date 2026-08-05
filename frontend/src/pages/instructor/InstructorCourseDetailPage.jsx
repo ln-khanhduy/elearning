@@ -2,14 +2,14 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { getInstructorCourseDetailApi } from "../../api/instructorCourseAPI";
-import { TABS } from "../../components/instructor-course-detail/tabsConfig";
-import CourseContentTab from "../../components/instructor-course-detail/CourseContentTab";
-import StudentProgressTab from "../../components/instructor-course-detail/StudentProgressTab";
-import QuizResultsTab from "../../components/instructor-course-detail/QuizResultsTab";
-import EssayGradingTab from "../../components/instructor-course-detail/EssayGradingTab";
-import SendNotificationTab from "../../components/instructor-course-detail/SendNotificationTab";
-import QATab from "../../components/instructor-course-detail/QATab";
-import LearningReportTab from "../../components/instructor-course-detail/LearningReportTab";
+import { TABS } from "../../components/instructorCourseDetail/tabsConfig";
+import CourseContentTab from "../../components/instructorCourseDetail/CourseContentTab";
+import StudentProgressTab from "../../components/instructorCourseDetail/StudentProgressTab";
+import QuizResultsTab from "../../components/instructorCourseDetail/QuizResultsTab";
+import EssayGradingTab from "../../components/instructorCourseDetail/EssayGradingTab";
+import SendNotificationTab from "../../components/instructorCourseDetail/SendNotificationTab";
+import QATab from "../../components/instructorCourseDetail/QATab";
+import LearningReportTab from "../../components/instructorCourseDetail/LearningReportTab";
 
 const TAB_COMPONENTS = {
   content: CourseContentTab,

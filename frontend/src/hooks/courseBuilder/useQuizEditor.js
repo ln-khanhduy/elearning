@@ -223,7 +223,11 @@ export function useQuizEditor({
         onConfirm: async () => {
           setConfirmModal((prev) => ({ ...prev, show: false }));
           try {
-            await deleteQuizApi(quizId);
+            const isTempId = typeof quizId === "string" && quizId.startsWith("temp_");
+            // Quiz tạm (chưa lưu lên backend) chỉ xóa khỏi curriculum, không gọi API
+            if (!isTempId) {
+              await deleteQuizApi(quizId);
+            }
             setCurriculum((prev) =>
               prev.map((s) =>
                 s.id === sectionId

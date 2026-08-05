@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 def run_automation_task():
     """
     Chạy tất cả tác vụ tự động hóa hệ thống (certificates, reminders,
-    payouts, reviews, reports) thông qua management command run_automation.
+    reviews, reports) thông qua management command run_automation.
     """
     try:
         call_command('run_automation')

@@ -24,6 +24,12 @@ from apps.courses.repositories.qa_repository import (
 
 
 def get_essay_submissions(course_id):
+    """Lấy danh sách bài làm tự luận (ESSAY) của một khóa học.
+
+    Trả về danh sách các dict chứa thông tin: answer_id, tên học viên,
+    tiêu đề bài kiểm tra, nội dung câu hỏi, bài làm, điểm số, trạng thái
+    và thời gian nộp bài.
+    """
     answers = QuizAttemptAnswer.objects.filter(
         question__question_type=Question.QuestionType.ESSAY,
         attempt__quiz__lesson__chapter__course_id=course_id,
@@ -47,6 +53,15 @@ def get_essay_submissions(course_id):
 
 
 def grade_essay(course_id, answer_id, score):
+    """Chấm điểm một bài tự luận.
+
+    - Chỉ chấm được câu trả lời tự luận thuộc khóa học đã cho.
+    - Điểm phải nằm trong khoảng từ 0 đến max_score (tối thiểu 10, hoặc
+      theo số điểm của câu hỏi nếu cao hơn 10).
+    - Sau khi chấm, cập nhật điểm tổng của lượt làm bài. Nếu tất cả câu
+      tự luận đã được chấm, đánh dấu lượt làm bài là GRADED.
+    - Trả về tuple (success, message) với success là True/False.
+    """
     try:
         answer = QuizAttemptAnswer.objects.get(
             id=answer_id, question__question_type=Question.QuestionType.ESSAY,
@@ -79,6 +94,11 @@ def grade_essay(course_id, answer_id, score):
 
 
 def send_notification(course_id, title, body):
+    """Gửi thông báo đến tất cả học viên đang hoạt động (ACTIVE) của khóa học.
+
+    Tạo thông báo loại COURSE qua kênh IN_APP với trạng thái SENT cho từng
+    học viên và dùng bulk_create để tạo hàng loạt. Trả về số lượng thông báo đã gửi.
+    """
     enrollments = Enrollment.objects.filter(course_id=course_id, status=Enrollment.Status.ACTIVE).select_related('student')
     notifications = []
     for enrollment in enrollments:
@@ -93,6 +113,11 @@ def send_notification(course_id, title, body):
 
 
 def get_questions(course_id, status=None, lesson_id=None, page=1, page_size=20):
+    """Lấy danh sách câu hỏi Q&A của khóa học, hỗ trợ lọc theo trạng thái,
+    bài học và phân trang.
+
+    Trả về dict chứa: questions, total, page, total_pages, has_next, has_previous.
+    """
     qs = get_questions_queryset(course_id)
     qs = filter_by_status(qs, status)
     qs = filter_by_lesson(qs, lesson_id)
@@ -109,10 +134,16 @@ def get_questions(course_id, status=None, lesson_id=None, page=1, page_size=20):
 
 
 def get_question_detail(question_id):
+    """Lấy chi tiết một câu hỏi Q&A theo ID."""
     return get_question_by_id(question_id)
 
 
 def create_question(course, student, data):
+    """Tạo mới một câu hỏi Q&A từ học viên cho khóa học.
+
+    Đồng thời gửi thông báo cho giảng viên được phân công của khóa học
+    (nếu có) về câu hỏi vừa được đặt. Lỗi thông báo sẽ bị bỏ qua.
+    """
     from apps.notifications import services as notif_service
     from apps.courses.repositories import qa_repository as qa_repo
     qst = qa_repo.create_question(
@@ -129,6 +160,12 @@ def create_question(course, student, data):
 
 
 def reply_question(question, author, content):
+    """Trả lời một câu hỏi Q&A.
+
+    - Xác định tác giả có phải giảng viên của khóa học hay không.
+    - Nếu giảng viên trả lời và câu hỏi đang ở trạng thái OPEN, cập nhật
+      trạng thái thành ANSWERED và gửi thông báo cho học viên hỏi.
+    """
     is_instructor = (
         hasattr(author, 'teaching_courses') and
         author.teaching_courses.filter(id=question.course_id).exists()
@@ -146,14 +183,21 @@ def reply_question(question, author, content):
 
 
 def close_question(question):
+    """Đóng câu hỏi Q&A (chuyển trạng thái sang CLOSED)."""
     update_question_status(question, CourseQuestion.Status.CLOSED)
 
 
 def get_question_count(course_id):
+    """Đếm số lượng câu hỏi Q&A của khóa học theo từng trạng thái."""
     return count_questions(course_id)
 
 
 def get_learning_report(course_id):
+    """Xây dựng báo cáo học tập tổng hợp cho khóa học.
+
+    Trả về dict chứa: tổng số học viên, tiến độ trung bình, tỷ lệ hoàn thành,
+    điểm trung bình và danh sách 10 học viên đăng ký gần nhất.
+    """
     enrollments = Enrollment.objects.filter(
         course_id=course_id,
         status=Enrollment.Status.ACTIVE,

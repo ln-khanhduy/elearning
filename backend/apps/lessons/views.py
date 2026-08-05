@@ -1,5 +1,4 @@
 from rest_framework.permissions import AllowAny
-from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.views import APIView
 
@@ -12,7 +11,7 @@ from apps.lessons.services import chapter_service
 from apps.lessons.serializers.lesson_serializer import LessonSerializer, LessonCreateUpdateSerializer, LessonReorderSerializer
 from apps.lessons.services import lesson_service
 from apps.lessons.repositories import lesson_repository
-from apps.common.response_helpers import success_response
+from apps.common.response_helpers import success_response, error_response
 
 
 # ==================== CHAPTER ====================

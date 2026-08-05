@@ -83,8 +83,9 @@ class CouponValidateSerializer(serializers.Serializer):
     """Serializer cho validate mã giảm giá."""
 
     code = serializers.CharField(max_length=50)
+    cart_total = serializers.DecimalField(max_digits=12, decimal_places=2, required=False, allow_null=True)
     course_ids = serializers.ListField(
-        child=serializers.CharField(), required=False
+        child=serializers.IntegerField(), required=False
     )
 
 
@@ -94,5 +95,5 @@ class CouponApplySerializer(serializers.Serializer):
     code = serializers.CharField(max_length=50)
     cart_total = serializers.DecimalField(max_digits=12, decimal_places=2)
     course_ids = serializers.ListField(
-        child=serializers.CharField(), required=False
+        child=serializers.IntegerField(), required=False
     )

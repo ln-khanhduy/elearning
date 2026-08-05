@@ -2,20 +2,20 @@ import React, { useCallback, useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useUser } from "../../../context/UserContext";
-import { useCourseDetail } from "../../../hooks/course-detail/useCourseDetail";
-import { useCourseProgress } from "../../../hooks/course-detail/useCourseProgress";
-import { useReviews } from "../../../hooks/course-detail/useReviews";
+import { useCourseDetail } from "../../../hooks/courseDetail/useCourseDetail";
+import { useCourseProgress } from "../../../hooks/courseDetail/useCourseProgress";
+import { useReviews } from "../../../hooks/courseDetail/useReviews";
 import { enrollFreeCourseApi } from "../../../api/paymentAPI";
-import CourseHero from "../../../components/course-detail/CourseHero";
-import CourseProgressCard from "../../../components/course-detail/CourseProgressCard";
-import CourseContentList from "../../../components/course-detail/CourseContentList";
-import InstructorCard from "../../../components/course-detail/InstructorCard";
-import CourseTabs, { TabPanel } from "../../../components/course-detail/CourseTabs";
-import ReviewStats from "../../../components/course-detail/ReviewStats";
-import ReviewForm from "../../../components/course-detail/ReviewForm";
-import ReviewItem from "../../../components/course-detail/ReviewItem";
-import "../../../style/course-detail/course-theme.css";
-import "../../../style/course-detail/course-detail-page.css";
+import CourseHero from "../../../components/courseDetail/CourseHero";
+import CourseProgressCard from "../../../components/courseDetail/CourseProgressCard";
+import CourseContentList from "../../../components/courseDetail/CourseContentList";
+import InstructorCard from "../../../components/courseDetail/InstructorCard";
+import CourseTabs, { TabPanel } from "../../../components/courseDetail/CourseTabs";
+import ReviewStats from "../../../components/courseDetail/ReviewStats";
+import ReviewForm from "../../../components/courseDetail/ReviewForm";
+import ReviewItem from "../../../components/courseDetail/ReviewItem";
+import "../../../style/courseDetail/course-theme.css";
+import "../../../style/courseDetail/course-detail-page.css";
 
 
 /**

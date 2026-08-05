@@ -23,8 +23,13 @@ function SuccessPage() {
           // Stripe
           const result = await verifyStripePaymentApi(sessionId);
           const redirectUrl = result?.data?.redirect_url;
-          const cid = redirectUrl?.split("/")[2];
-          if (cid) setCourseId(cid);
+          // Thanh toán giỏ hàng (nhiều khóa) trả về /my-courses
+          if (redirectUrl && redirectUrl.startsWith("/my-courses")) {
+            setCourseId(null);
+          } else {
+            const cid = redirectUrl?.split("/")[2];
+            if (cid) setCourseId(cid);
+          }
 
           toast.success("Thanh toán thành công! Bạn đã được mở quyền học.");
           setStatus("success");
@@ -50,7 +55,7 @@ function SuccessPage() {
     verifyPayment();
   }, [searchParams, navigate]);
 
-  // Chuyển đến trang học khóa học sau khi thanh toán thành công
+  // Chuyển đến trang học khóa học (hoặc danh sách khóa học khi thanh toán giỏ hàng)
   const handleGoToCourse = () => {
     if (courseId) {
       navigate(`/courses/${courseId}/learn`, { replace: true });

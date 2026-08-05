@@ -1,6 +1,6 @@
 import React from "react";
 import { formatPrice } from "../../utils/formatPrice";
-import "../../style/course-detail/course-hero.css";
+import "../../style/courseDetail/course-hero.css";
 import CourseRating from "./CourseRating";
 import CourseInstructor from "./CourseInstructor";
 import CourseHeroMedia from "./CourseHeroMedia";

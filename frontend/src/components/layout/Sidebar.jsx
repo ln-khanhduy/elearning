@@ -3,6 +3,7 @@ import { NavLink, useNavigate } from "react-router-dom";
 import { sidebarItems } from "../../utils/sidebarItems";
 import { useUser } from "../../context/UserContext";
 import { logoutApi } from "../../api/authAPI";
+import { hasPermission } from "../../utils/permissions";
 
 function Sidebar({ isOpen, onClose }) {
   const [collapsed, setCollapsed] = useState(false);
@@ -22,7 +23,7 @@ function Sidebar({ isOpen, onClose }) {
 
   const matchesPermission = (item) => {
     if (item.requiredPermissions && item.requiredPermissions.length > 0) {
-      return item.requiredPermissions.some(p => userPermissions.includes(p));
+      return item.requiredPermissions.some(p => hasPermission(user, p));
     }
     return true;
   };

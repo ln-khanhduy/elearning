@@ -68,3 +68,33 @@ class AdminRequestListAPIView(BasePermissionAPIView):
             requests = support_repo.get_all()
         serializer = SupportRequestSerializer(requests, many=True)
         return success_response(serializer.data)
+
+
+class FinanceRefundListAPIView(BasePermissionAPIView):
+    """
+    GET /api/support/finance/refunds/ - Danh sách yêu cầu hoàn tiền cho Finance.
+    """
+    required_permission = "finance.finance.refund"
+
+    def get(self, request):
+        from apps.support import repositories as support_repo
+        requests = support_repo.get_by_request_type("REFUND")
+        serializer = SupportRequestSerializer(requests, many=True)
+        return success_response(serializer.data)
+
+
+class FinanceRefundProcessAPIView(BasePermissionAPIView):
+    """
+    PATCH /api/support/finance/refunds/{request_id}/process/ - Duyệt/từ chối hoàn tiền.
+    Body: { "status": "RESOLVED"|"REJECTED", "resolution_note": "..." }
+    """
+    required_permission = "finance.finance.refund"
+
+    def patch(self, request, request_id):
+        serializer = SupportRequestProcessSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        request_obj = support_service.process_request(request_id, request.user, serializer.validated_data)
+        return success_response(
+            SupportRequestSerializer(request_obj).data,
+            "Đã xử lý yêu cầu hoàn tiền.",
+        )

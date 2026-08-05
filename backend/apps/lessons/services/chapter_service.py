@@ -6,10 +6,17 @@ from apps.lessons.repositories import chapter_repository
 
 
 def get_chapters_by_course(course_id):
+    """Lấy danh sách chương của một khóa học."""
     return chapter_repository.get_by_course(course_id)
 
 
 def create_chapter(course_id, user, validated_data):
+    """Tạo mới một chương cho khóa học.
+
+    - Kiểm tra quyền quản lý khóa học của user, nếu không có quyền sẽ báo lỗi PermissionDenied.
+    - Nếu không chỉ định order, tự động lấy thứ tự tiếp theo của khóa học.
+    - Nếu order đã tồn tại trong khóa học, báo lỗi ValidationError.
+    """
     course = course_repository.get_by_id(course_id)
 
     if not course_permission_service.can_manage_course(course, user):
@@ -27,6 +34,11 @@ def create_chapter(course_id, user, validated_data):
 
 
 def update_chapter(chapter_id, user, validated_data):
+    """Cập nhật thông tin một chương.
+
+    - Kiểm tra quyền quản lý khóa học của user, nếu không có quyền sẽ báo lỗi PermissionDenied.
+    - Nếu thay đổi order mà order mới đã tồn tại trong khóa học, báo lỗi ValidationError.
+    """
     chapter = chapter_repository.get_by_id(chapter_id)
 
     if not course_permission_service.can_manage_course(chapter.course, user):
@@ -45,6 +57,10 @@ def update_chapter(chapter_id, user, validated_data):
 
 
 def delete_chapter(chapter_id, user):
+    """Xóa một chương.
+
+    - Kiểm tra quyền quản lý khóa học của user, nếu không có quyền sẽ báo lỗi PermissionDenied.
+    """
     chapter = chapter_repository.get_by_id(chapter_id)
 
     if not course_permission_service.can_manage_course(chapter.course, user):
@@ -54,6 +70,12 @@ def delete_chapter(chapter_id, user):
 
 
 def reorder_chapter(course_id, user, chapter_data):
+    """Sắp xếp lại thứ tự các chương của một khóa học.
+
+    - Kiểm tra quyền quản lý khóa học của user, nếu không có quyền sẽ báo lỗi PermissionDenied.
+    - Thứ tự các chương không được trùng nhau và danh sách chương phải hợp lệ.
+    - Thực hiện cập nhật trong giao dịch (transaction) để đảm bảo toàn vẹn dữ liệu.
+    """
     course = course_repository.get_by_id(course_id)
 
     if not course_permission_service.can_manage_course(course, user):
