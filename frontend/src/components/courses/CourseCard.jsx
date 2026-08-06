@@ -4,6 +4,7 @@ import { toast } from "react-toastify";
 import { addToWishlistApi, removeFromWishlistApi } from "../../api/wishlistAPI";
 import { addToCartApi, removeFromCartApi } from "../../api/cartAPI";
 import { useUser } from "../../context/UserContext";
+import {formatPrice} from "../../utils/formatPrice";
 
 /**
  * Card hiển thị thông tin khóa học
@@ -23,22 +24,20 @@ function CourseCard({ course }) {
     student_count,
     duration,
     is_wishlisted: initialWishlisted,
+    is_enrolled: initialEnrolled,
+    is_owned: initialOwned,
   } = course;
   const { isAuthenticated } = useUser();
   const [wishlisted, setWishlisted] = useState(!!initialWishlisted);
   const [wishlistLoading, setWishlistLoading] = useState(false);
   const [cartLoading, setCartLoading] = useState(false);
 
+  // Khóa học đã mua hoặc thuộc sở hữu người dùng
+  const purchased = !!initialEnrolled || !!initialOwned;
+
   const instructor_name = assigned_instructor_name;
   const instructor_avatar = assigned_instructor_avatar;
 
-  // Format giá
-  const formatPrice = (val) => {
-    if (val === undefined || val === null) return null;
-    const num = Number(val);
-    if (num === 0) return "Miễn phí";
-    return `${num.toLocaleString("vi-VN")}₫`;
-  };
 
   // Format đánh giá
   const displayRating = rating ? Number(rating).toFixed(1) : null;
@@ -145,6 +144,12 @@ function CourseCard({ course }) {
           {category_name && (
             <span className="course-card-badge">{category_name}</span>
           )}
+          {/* Badge đã mua/sở hữu */}
+          {purchased && (
+            <span className="course-card-purchased-badge">
+              <i className="bi bi-check-circle-fill"></i> Đã mua
+            </span>
+          )}
           {/* Wishlist button */}
           <button
             className={`course-card-wishlist-btn ${wishlisted ? "active" : ""}`}
@@ -224,12 +229,20 @@ function CourseCard({ course }) {
             className={`course-card-price ${
               Number(price) === 0 ? "free" : ""
             }`}
+            
           >
-            {formatPrice(price) || "Liên hệ"}
+            {purchased ? "Đã sở hữu" : (formatPrice(price) || "Liên hệ")}
           </span>
-          <Link to={`/courses/${id}`} className="course-card-btn">
-            Xem chi tiết
-          </Link>
+          {purchased ? (
+            <Link to={`/courses/${id}/learn`} className="course-card-btn course-card-btn--enrolled">
+              <i className="bi bi-play-circle"></i> Học ngay
+            </Link>
+          ) : (
+            <Link to={`/courses/${id}`} className="course-card-btn">
+              Xem chi tiết
+            </Link>
+          )}
+          
         </div>
       </div>
     </div>

@@ -99,13 +99,20 @@ def send_notification(course_id, title, body):
     Tạo thông báo loại COURSE qua kênh IN_APP với trạng thái SENT cho từng
     học viên và dùng bulk_create để tạo hàng loạt. Trả về số lượng thông báo đã gửi.
     """
-    enrollments = Enrollment.objects.filter(course_id=course_id, status=Enrollment.Status.ACTIVE).select_related('student')
+    from apps.courses.models import Course
+    course = Course.objects.filter(id=course_id).values_list("title", flat=True).first()
+    notif_title = f"{course or 'Khóa học'} - {title}"
+
+    enrollments = Enrollment.objects.filter(
+        course_id=course_id,
+        status__in=[Enrollment.Status.ACTIVE, Enrollment.Status.COMPLETED],
+    ).select_related('student')
     notifications = []
     for enrollment in enrollments:
         notifications.append(Notification(
-            recipient=enrollment.student, title=title, body=body,
+            recipient=enrollment.student, title=notif_title, body=body,
             notification_type=Notification.Type.COURSE, channel=Notification.Channel.IN_APP,
-            link=f"/learning/courses/{course_id}/", send_status=Notification.SendStatus.SENT,
+            link=f"/courses/{course_id}/learn", send_status=Notification.SendStatus.SENT,
         ))
     if notifications:
         Notification.objects.bulk_create(notifications)

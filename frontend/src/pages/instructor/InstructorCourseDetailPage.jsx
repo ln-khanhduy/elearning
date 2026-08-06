@@ -4,6 +4,7 @@ import { toast } from "react-toastify";
 import { getInstructorCourseDetailApi } from "../../api/instructorCourseAPI";
 import { TABS } from "../../components/instructorCourseDetail/tabsConfig";
 import CourseContentTab from "../../components/instructorCourseDetail/CourseContentTab";
+import StudentListTab from "../../components/instructorCourseDetail/StudentListTab";
 import StudentProgressTab from "../../components/instructorCourseDetail/StudentProgressTab";
 import QuizResultsTab from "../../components/instructorCourseDetail/QuizResultsTab";
 import EssayGradingTab from "../../components/instructorCourseDetail/EssayGradingTab";
@@ -13,6 +14,7 @@ import LearningReportTab from "../../components/instructorCourseDetail/LearningR
 
 const TAB_COMPONENTS = {
   content: CourseContentTab,
+  students: StudentListTab,
   progress: StudentProgressTab,
   "quiz-results": QuizResultsTab,
   essay: EssayGradingTab,

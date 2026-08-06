@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useUser } from "../../context/UserContext";
 import { updateProfileApi, changePasswordApi, uploadInstructorCertificateApi, deleteInstructorCertificateApi } from "../../api/userAPI";
+import ConfirmModal from "../../components/common/ConfirmModal";
 
 // Trang hồ sơ cá nhân: quản lý thông tin cá nhân, hồ sơ giảng viên, thông tin thanh toán, chứng chỉ và đổi mật khẩu
 function ProfilePage() {
@@ -44,6 +45,7 @@ function ProfilePage() {
   const [newCertFile, setNewCertFile] = useState(null);
   const [uploadingCert, setUploadingCert] = useState(false);
   const [deletingCertId, setDeletingCertId] = useState(null);
+  const [certToDelete, setCertToDelete] = useState(null); // {id}
 
   // ===== State cho modal đổi mật khẩu =====
   const [showPasswordModal, setShowPasswordModal] = useState(false);
@@ -208,8 +210,6 @@ function ProfilePage() {
 
   // ===== Xử lý xóa chứng chỉ =====
   const handleDeleteCertificate = async (certId) => {
-    if (!window.confirm("Bạn có chắc chắn muốn xóa chứng chỉ này?")) return;
-
     setDeletingCertId(certId);
     try {
       await deleteInstructorCertificateApi(certId);
@@ -219,6 +219,7 @@ function ProfilePage() {
       toast.error(error.message || "Có lỗi xảy ra khi xóa chứng chỉ.");
     } finally {
       setDeletingCertId(null);
+      setCertToDelete(null);
     }
   };
 
@@ -578,7 +579,7 @@ function ProfilePage() {
                       </div>
                       <button
                         className="profile-btn-icon profile-btn-delete"
-                        onClick={() => handleDeleteCertificate(cert.id)}
+                        onClick={() => setCertToDelete({ id: cert.id })}
                         disabled={deletingCertId === cert.id}
                         title="Xóa chứng chỉ"
                       >
@@ -633,6 +634,18 @@ function ProfilePage() {
           )}
         </div>
       </div>
+
+      {/* === MODAL XÁC NHẬN XÓA CHỨNG CHỈ === */}
+      <ConfirmModal
+        show={!!certToDelete}
+        title="Xóa chứng chỉ"
+        message="Bạn có chắc chắn muốn xóa chứng chỉ này? Hành động này không thể hoàn tác."
+        confirmLabel="Xóa"
+        cancelLabel="Hủy"
+        variant="danger"
+        onConfirm={() => certToDelete && handleDeleteCertificate(certToDelete.id)}
+        onCancel={() => setCertToDelete(null)}
+      />
 
       {/* === MODAL ĐỔI MẬT KHẨU === */}
       {showPasswordModal && (

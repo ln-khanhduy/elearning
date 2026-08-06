@@ -20,6 +20,7 @@ function Header({ onToggleSidebar }) {
   // Chỉ hiển thị icon + gọi API khi user có quyền tương ứng
   const canViewWishlist = hasPermission(user, "student.wishlist.view");
   const canViewCart = hasPermission(user, "student.cart.view");
+  const canViewMyCourses = hasPermission(user, "student.my_course.view");
 
   const refreshWishlistCount = useCallback(() => {
     import("../../api/wishlistAPI").then(({ getWishlistCountApi }) => {
@@ -111,7 +112,7 @@ function Header({ onToggleSidebar }) {
           <nav className="nav-menu d-none d-lg-flex">
             <NavLink to="/home" className={({ isActive }) => isActive ? "active" : ""}>Trang chủ</NavLink>
             <NavLink to="/courses" className={({ isActive }) => isActive ? "active" : ""}>Khóa học</NavLink>
-            {isAuthenticated && (
+            {isAuthenticated && canViewMyCourses && (
               <NavLink to="/my-courses" className={({ isActive }) => isActive ? "active" : ""}>Khóa học của tôi</NavLink>
             )}
             {isAuthenticated && (

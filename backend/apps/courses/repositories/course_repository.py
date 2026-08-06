@@ -33,7 +33,11 @@ def _annotate_counts(qs):
         ),
         _student_count=Count(
             "enrollments",
-            filter=Q(enrollments__status=Enrollment.Status.ACTIVE),
+            filter=Q(enrollments__status__in=[
+                Enrollment.Status.ACTIVE,
+                Enrollment.Status.COMPLETED,
+            ]),
+            distinct=True,
         ),
     )
 
@@ -80,14 +84,13 @@ def create(data):
     return Course.objects.create(**data)
 
 
-def search(keyword=None, status_value=None, category_id=None, instructor_id=None, assigned_instructor_id=None):
+def search(keyword=None, status_value=None, category_id=None, instructor_id=None):
     """
     Tìm kiếm khóa học theo từ khóa, lọc theo trạng thái và danh mục.
     - keyword: tìm kiếm không phân biệt hoa thường trong tiêu đề
     - status_value: lọc theo trạng thái
     - category_id: lọc theo danh mục
     - instructor_id: lọc theo giảng viên
-    - assigned_instructor_id: lọc theo giảng viên được phân công
     """
     listcourse = get_all()
 
@@ -102,9 +105,6 @@ def search(keyword=None, status_value=None, category_id=None, instructor_id=None
 
     if instructor_id:
         listcourse = listcourse.filter(assigned_instructor_id=instructor_id)
-
-    if assigned_instructor_id:
-        listcourse = listcourse.filter(assigned_instructor_id=assigned_instructor_id)
 
     return listcourse
 

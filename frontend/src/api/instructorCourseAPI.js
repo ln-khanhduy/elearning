@@ -24,6 +24,11 @@ export const getInstructorCourseStudentsApi = async (courseId) => {
   return request(() => apiClient.get(`/api/courses/instructor/${courseId}/students/`));
 };
 
+// Lấy kết quả bài kiểm tra của khóa học giảng viên
+export const getInstructorCourseQuizResultsApi = async (courseId) => {
+  return request(() => apiClient.get(`/api/courses/instructor/${courseId}/quiz-results/`));
+};
+
 // Lấy dữ liệu phân tích (thống kê) của khóa học giảng viên
 export const getInstructorCourseAnalyticsApi = async (courseId) => {
   return request(() => apiClient.get(`/api/courses/instructor/${courseId}/analytics/`));

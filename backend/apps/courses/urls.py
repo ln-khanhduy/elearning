@@ -17,7 +17,7 @@ from apps.courses.views.views import (
 
     # Instructor
     InstructorCourseListAPIView, InstructorCourseDetailAPIView,
-    InstructorCourseStudentsAPIView, InstructorCourseAnalyticsAPIView,
+    InstructorCourseStudentsAPIView, InstructorCourseQuizResultsAPIView, InstructorCourseAnalyticsAPIView,
     InstructorCourseEssaySubmissionsAPIView, InstructorCourseGradeEssayAPIView,
     InstructorCourseSendNotificationAPIView, InstructorCourseQAAPIView,
     InstructorCourseQAReplyAPIView, InstructorCourseLearningReportAPIView,
@@ -51,6 +51,7 @@ urlpatterns = [
     path("instructor/", InstructorCourseListAPIView.as_view(), name="instructor-course-list"),
     path("instructor/<int:course_id>/", InstructorCourseDetailAPIView.as_view(), name="instructor-course-detail"),
     path("instructor/<int:course_id>/students/", InstructorCourseStudentsAPIView.as_view(), name="instructor-course-students"),
+    path("instructor/<int:course_id>/quiz-results/", InstructorCourseQuizResultsAPIView.as_view(), name="instructor-course-quiz-results"),
     path("instructor/<int:course_id>/analytics/", InstructorCourseAnalyticsAPIView.as_view(), name="instructor-course-analytics"),
     path("instructor/<int:course_id>/essay-submissions/", InstructorCourseEssaySubmissionsAPIView.as_view(), name="instructor-course-essay-submissions"),
     path("instructor/<int:course_id>/grade-essay/", InstructorCourseGradeEssayAPIView.as_view(), name="instructor-course-grade-essay"),

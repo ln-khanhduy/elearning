@@ -15,6 +15,9 @@ class CourseListSerializer(serializers.ModelSerializer):
     chapter_count = serializers.SerializerMethodField()
     lesson_count = serializers.SerializerMethodField()
     student_count = serializers.SerializerMethodField()
+    # Dữ liệu được truyền qua serializer.context để tránh N+1.
+    is_enrolled = serializers.SerializerMethodField()
+    is_owned = serializers.SerializerMethodField()
 
     class Meta:
         model = Course
@@ -22,7 +25,8 @@ class CourseListSerializer(serializers.ModelSerializer):
             "id", "title", "slug", "description", "thumbnail_url", "price",
             "status", "created_by_name", "created_by_avatar",
             "assigned_instructor_name", "assigned_instructor_avatar",
-            "category", "chapter_count", "lesson_count", "student_count", "created_at",
+            "category", "chapter_count", "lesson_count", "student_count",
+            "is_enrolled", "is_owned", "created_at",
         ]
 
     def get_created_by_avatar(self, obj):
@@ -57,7 +61,22 @@ class CourseListSerializer(serializers.ModelSerializer):
         if hasattr(obj, '_student_count'):
             return obj._student_count
         from apps.enrollments.models import Enrollment
-        return Enrollment.objects.filter(course_id=obj.id, status=Enrollment.Status.ACTIVE).count()
+        return Enrollment.objects.filter(
+            course_id=obj.id,
+            status__in=[Enrollment.Status.ACTIVE, Enrollment.Status.COMPLETED],
+        ).count()
+
+    def get_is_enrolled(self, obj):
+        enrolled_ids = (self.context or {}).get("enrolled_ids")
+        if enrolled_ids is not None:
+            return obj.id in enrolled_ids
+        return False
+
+    def get_is_owned(self, obj):
+        owned_ids = (self.context or {}).get("owned_ids")
+        if owned_ids is not None:
+            return obj.id in owned_ids
+        return False
 
 
 class CourseDetailSerializer(serializers.ModelSerializer):

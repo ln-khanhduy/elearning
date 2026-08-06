@@ -46,8 +46,28 @@ class CourseListAPIView(APIView):
         total = courses.count()
         start = (page - 1) * page_size
         end = start + page_size
-        page_courses = courses[start:end]
-        serializer = CourseListSerializer(page_courses, many=True)
+        page_courses = list(courses[start:end])
+
+        # Phương án A: đánh dấu khóa đã mua / thuộc sở hữu cho user đang đăng nhập.
+        # Không gọi API từng khóa (tránh N+1) - truy vấn 1 lần theo tập course_id hiện trang.
+        context = {}
+        if request.user.is_authenticated:
+            from apps.enrollments.models import Enrollment
+            course_ids = [c.id for c in page_courses]
+            enrolled_ids = set(
+                Enrollment.objects.filter(
+                    student_id=request.user.id,
+                    course_id__in=course_ids,
+                    status__in=[Enrollment.Status.ACTIVE, Enrollment.Status.COMPLETED],
+                ).values_list("course_id", flat=True)
+            )
+            owned_ids = {
+                c.id for c in page_courses
+                if c.created_by_id == request.user.id or c.assigned_instructor_id == request.user.id
+            }
+            context = {"enrolled_ids": enrolled_ids, "owned_ids": owned_ids}
+
+        serializer = CourseListSerializer(page_courses, many=True, context=context)
         return success_response({
             "items": serializer.data,
             "total": total,
@@ -291,7 +311,10 @@ class InstructorCourseStudentsAPIView(BasePermissionAPIView):
         course = course_service.get_course_detail(course_id)
         if not course_permission_service.can_view_course(course, request.user):
             return error_response("Bạn không có quyền xem khóa học này.", http_status=status.HTTP_403_FORBIDDEN)
-        enrollments = Enrollment.objects.filter(course_id=course_id, status=Enrollment.Status.ACTIVE).select_related('student', 'progress')
+        enrollments = Enrollment.objects.filter(
+            course_id=course_id,
+            status__in=[Enrollment.Status.ACTIVE, Enrollment.Status.COMPLETED],
+        ).select_related('student', 'progress')
         students_data = []
         for enrollment in enrollments:
             progress_obj = getattr(enrollment, 'progress', None)
@@ -305,6 +328,36 @@ class InstructorCourseStudentsAPIView(BasePermissionAPIView):
                 "progress": progress_value,
             })
         return success_response(students_data)
+
+
+class InstructorCourseQuizResultsAPIView(BasePermissionAPIView):
+    """GET /api/courses/instructor/{course_id}/quiz-results/ - Kết quả các lần làm bài kiểm tra của học viên."""
+    required_permission = "instructor.course.view_own"
+
+    def get(self, request, course_id):
+        from apps.quizzes.models import QuizAttempt
+        course = course_service.get_course_detail(course_id)
+        if not course_permission_service.can_view_course(course, request.user):
+            return error_response("Bạn không có quyền.", http_status=status.HTTP_403_FORBIDDEN)
+        attempts = QuizAttempt.objects.filter(
+            quiz__lesson__chapter__course_id=course_id,
+            status__in=["GRADED", "SUBMITTED"],
+        ).select_related("student", "quiz", "quiz__lesson").order_by("-submitted_at")
+        data = [
+            {
+                "id": a.id,
+                "student_name": a.student.get_full_name(),
+                "student_email": a.student.email,
+                "quiz_title": a.quiz.title,
+                "lesson_title": a.quiz.lesson.title,
+                "score": float(a.score),
+                "passing_score": float(a.quiz.passing_score),
+                "status": a.status,
+                "submitted_at": a.submitted_at.isoformat() if a.submitted_at else None,
+            }
+            for a in attempts
+        ]
+        return success_response(data)
 
 
 class InstructorCourseAnalyticsAPIView(BasePermissionAPIView):

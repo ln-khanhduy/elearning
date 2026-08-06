@@ -5,7 +5,7 @@ export const sidebarItems = [
 
   { type: "group", label: "Quản lý học tập" },
   { type: "item", label: "Khóa học", path: "/courses", icon: "bi-mortarboard" },
-  { type: "item", label: "Trung tâm học tập", path: "/my-learning", icon: "bi-play-circle" },
+  //{ type: "item", label: "Trung tâm học tập", path: "/my-learning", icon: "bi-play-circle" },
   { type: "item", label: "Khóa học của tôi", path: "/my-courses", icon: "bi-journal-bookmark", requiredPermissions: ["student.my_course.view"] },
   { type: "item", label: "Yêu thích", path: "/my-wishlist", icon: "bi-heart", requiredPermissions: ["student.wishlist.view"] },
   { type: "item", label: "Giỏ hàng", path: "/cart", icon: "bi-cart3", requiredPermissions: ["student.cart.view"] },
@@ -32,7 +32,7 @@ export const sidebarItems = [
   { type: "item", label: "Hoàn tiền", path: "/finance/refunds", icon: "bi-arrow-counterclockwise", requiredPermissions: getRoutePermissions("/finance/refunds") },
 
   { type: "group", label: "Super Admin" },
-  { type: "item", label: "Role & Permission", path: "/super-admin/roles", icon: "bi-shield-lock", requiredPermissions: getRoutePermissions("/super-admin/roles") },
+  //{ type: "item", label: "Role & Permission", path: "/super-admin/roles", icon: "bi-shield-lock", requiredPermissions: getRoutePermissions("/super-admin/roles") },
   { type: "item", label: "Nhật ký hoạt động", path: "/super-admin/activity-logs", icon: "bi-clock-history", requiredPermissions: getRoutePermissions("/super-admin/activity-logs") },
   { type: "item", label: "Cấu hình hệ thống", path: "/super-admin/settings", icon: "bi-sliders", requiredPermissions: getRoutePermissions("/super-admin/settings") },
 

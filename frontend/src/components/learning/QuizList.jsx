@@ -56,6 +56,15 @@ function clearQuizState(courseId, lessonId) {
   } catch {}
 }
 
+// Hàm dừng bộ đếm giờ khi nộp bài / hết thời gian
+function stopQuizTimer(timerRef, setTimeRemaining) {
+  if (timerRef.current) {
+    clearInterval(timerRef.current);
+    timerRef.current = null;
+  }
+  setTimeRemaining(null);
+}
+
 function QuizList({ quizzes, lessonId }) {
   const { courseId } = useParams();
   const [activeQuizId, setActiveQuizId] = useState(null);
@@ -125,6 +134,8 @@ function QuizList({ quizzes, lessonId }) {
       const res = await submitQuizApi(courseId, quiz.id, formattedAnswers);
       if (res?.success && res?.data) {
         setResults((prev) => ({ ...prev, [quiz.id]: res.data }));
+        // Dừng đếm giờ ngay sau khi nộp bài thành công
+        stopQuizTimer(timerRef, setTimeRemaining);
         if (res.data.status === "SUBMITTED") {
           toast.success("Đã gửi bài tự luận thành công. Vui lòng chờ giảng viên chấm điểm.");
         } else {
@@ -299,6 +310,8 @@ function QuizList({ quizzes, lessonId }) {
       const res = await submitQuizApi(courseId, quiz.id, formattedAnswers);
       if (res?.success && res?.data) {
         setResults((prev) => ({ ...prev, [quiz.id]: res.data }));
+        // Dừng đếm giờ sau khi nộp bài thành công
+        stopQuizTimer(timerRef, setTimeRemaining);
 
         // ESSAY quiz: không hiển thị điểm ngay, chờ giảng viên chấm
         if (res.data.status === "SUBMITTED") {
