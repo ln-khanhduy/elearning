@@ -8,6 +8,8 @@ import {
   publishAdminCourseApi,
   getCategoriesApi,
   getCurriculumApi,
+  getCoursePlansApi,
+  getAssignedInstructorApi,
 } from "../../api/courseAPI";
 import {
   createChapterApi,
@@ -38,13 +40,11 @@ export function useCourseBuilder({ mode = "create" }) {
   // Course data
   const [course, setCourse] = useState(null);
   const [categories, setCategories] = useState([]);
+  // (R2) Không còn trường price — giá nằm trong CourseAccessPlan (StepPricing quản lý riêng)
   const [formData, setFormData] = useState({
     title: "",
     description: "",
-    price: "",
     category: "",
-    is_free: false,
-    discount_price: "",
     preview_video_url: "",
   });
   const [thumbnail, setThumbnail] = useState(null);
@@ -53,6 +53,12 @@ export function useCourseBuilder({ mode = "create" }) {
 
   // Curriculum
   const [curriculum, setCurriculum] = useState([]);
+
+  // Course access plans (StepPricing) — quản lý ở đây để StepReview/StepPublish kiểm tra được
+  const [plans, setPlans] = useState([]);
+
+  // Giảng viên được phân công (Bước 4) — dùng để kiểm tra trước khi xuất bản ở Bước 5
+  const [assignedInstructor, setAssignedInstructor] = useState(null);
 
   // Drawer state
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -113,10 +119,7 @@ export function useCourseBuilder({ mode = "create" }) {
       setFormData({
         title: data.title || "",
         description: data.description || "",
-        price: data.price ?? "",
         category: data.category?.id ?? data.category ?? "",
-        is_free: data.price == 0,
-        discount_price: data.discount_price ?? "",
         preview_video_url: data.preview_video_url || "",
       });
       setThumbnailPreview(data.thumbnail_url || "");
@@ -127,6 +130,30 @@ export function useCourseBuilder({ mode = "create" }) {
         setCurriculum(Array.isArray(curData) ? curData : []);
       } catch {
         setCurriculum([]);
+      }
+
+      try {
+        const plansRes = await getCoursePlansApi(courseIdFromParams);
+        const plansData = plansRes?.data ?? plansRes ?? [];
+        setPlans(Array.isArray(plansData) ? plansData : []);
+      } catch {
+        setPlans([]);
+      }
+
+      try {
+        const instructorRes = await getAssignedInstructorApi(courseIdFromParams);
+        const instructorData = instructorRes?.data || instructorRes;
+        if (instructorData?.assigned_instructor_id) {
+          setAssignedInstructor({
+            id: instructorData.assigned_instructor_id,
+            name: instructorData.assigned_instructor_name,
+            avatar: instructorData.assigned_instructor_avatar,
+          });
+        } else {
+          setAssignedInstructor(null);
+        }
+      } catch {
+        setAssignedInstructor(null);
       }
     } catch {
       toast.error("Không thể tải thông tin khóa học.");
@@ -177,7 +204,6 @@ export function useCourseBuilder({ mode = "create" }) {
         const form = new FormData();
         form.append("title", formData.title?.trim() || "");
         form.append("description", formData.description?.trim() || "");
-        form.append("price", formData.price || 0);
         if (formData.category) form.append("category", formData.category);
         if (formData.preview_video_url?.trim())
           form.append("preview_video_url", formData.preview_video_url.trim());
@@ -195,12 +221,9 @@ export function useCourseBuilder({ mode = "create" }) {
       const form = new FormData();
       form.append("title", formData.title?.trim() || "");
       form.append("description", formData.description?.trim() || "");
-      form.append("price", formData.price || 0);
       if (formData.category) form.append("category", formData.category);
       if (formData.preview_video_url)
         form.append("preview_video_url", formData.preview_video_url.trim());
-      if (formData.discount_price)
-        form.append("discount_price", formData.discount_price);
       if (thumbnail) form.append("thumbnail", thumbnail);
 
       const result = await updateAdminCourseApi(courseIdFromParams, form);
@@ -455,6 +478,12 @@ export function useCourseBuilder({ mode = "create" }) {
     if (step >= 1 && step <= 5) setCurrentStep(step);
   }, []);
 
+  // ===== ASSIGN INSTRUCTOR (BƯỚC 4) =====
+
+  const handleAssignedChange = useCallback((instructor) => {
+    setAssignedInstructor(instructor);
+  }, []);
+
   // ===== CREATE COURSE =====
 
   const handleCreateCourse = useCallback(async () => {
@@ -464,7 +493,6 @@ export function useCourseBuilder({ mode = "create" }) {
       const form = new FormData();
       form.append("title", formData.title.trim());
       form.append("description", formData.description.trim());
-      form.append("price", formData.price || 0);
       if (formData.category) form.append("category", formData.category);
       if (formData.preview_video_url?.trim())
         form.append("preview_video_url", formData.preview_video_url.trim());
@@ -487,6 +515,11 @@ export function useCourseBuilder({ mode = "create" }) {
 
   const handlePublish = useCallback(async () => {
     if (!isEdit) return;
+    // Kiểm tra đã phân công giảng viên trước khi xuất bản
+    if (!assignedInstructor?.id) {
+      toast.error("Vui lòng phân công giảng viên phụ trách trước khi xuất bản khóa học.");
+      return;
+    }
     setPublishing(true);
     try {
       await saveDraft();
@@ -502,7 +535,7 @@ export function useCourseBuilder({ mode = "create" }) {
     } finally {
       setPublishing(false);
     }
-  }, [isEdit, courseIdFromParams, saveDraft, course, navigate]);
+  }, [isEdit, courseIdFromParams, saveDraft, course, navigate, assignedInstructor]);
 
   // ===== IMPORT QUESTION CALLBACK =====
 
@@ -542,6 +575,9 @@ export function useCourseBuilder({ mode = "create" }) {
     thumbnailPreview,
     errors,
     curriculum,
+    plans,
+    setPlans,
+    assignedInstructor,
     drawerOpen,
     drawerType,
     editingItem,
@@ -578,6 +614,7 @@ export function useCourseBuilder({ mode = "create" }) {
     handleNext,
     handlePrevious,
     handleGoToStep,
+    handleAssignedChange,
     handleCreateCourse,
     handlePublish,
     saveDraft,

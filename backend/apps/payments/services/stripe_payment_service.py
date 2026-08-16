@@ -6,10 +6,12 @@ import stripe
 from django.conf import settings
 from django.db import transaction as db_transaction
 
-from apps.courses.repositories import course_repository
 from apps.payments.repositories import payment_repository
 from apps.payments.services import payment_service
 from apps.payments.models import PaymentTransaction
+
+# Giá tối thiểu của khóa học
+MIN_PAYMENT_AMOUNT = Decimal("50000")
 
 logger = logging.getLogger(__name__)
 
@@ -18,25 +20,27 @@ class InvalidWebhookSignatureError(ValueError):
     """Webhook signature không hợp lệ — Stripe không nên retry event này."""
 
 
-def create_checkout_session(user, course, coupon_code=None):
+def create_checkout_session(user, course, access_plan=None, coupon_code=None):
     """
-    Tạo Stripe Checkout Session.
-    - Validate course
-    - Nếu có coupon_code: re-validate toàn bộ trong transaction có khóa dòng (select_for_update),
-      server tự tính tổng tiền từ giá khóa học, tính số tiền giảm.
+    (R2) Tạo Stripe Checkout Session.
+    - access_plan: gói truy cập đã chọn (bắt buộc khi mua khóa có gói).
+    - Validate course + gói.
+    - Nếu có coupon_code: re-validate toàn bộ, server tự tính tổng tiền từ giá gói.
     - Tạo PaymentTransaction PENDING với gross_amount = số tiền thực thu sau giảm.
     - Tạo Stripe Session với unit_amount = số tiền thực thu.
-    - Lưu provider_transaction_id = session.id
     """
     from apps.promotions.services import coupon_service
 
-    # Validate
-    is_valid, error = payment_service.validate_course_for_payment(user, course)
+    if access_plan is None:
+        raise ValueError("Vui lòng chọn gói truy cập.")
+
+    # Validate khóa + gói
+    is_valid, error = payment_service.validate_course_for_payment(user, course, access_plan)
     if not is_valid:
         raise ValueError(error)
 
     discount_amount = Decimal("0")
-    final_amount = Decimal(str(course.price))
+    final_amount = Decimal(str(access_plan.price))
 
     if coupon_code:
         with db_transaction.atomic():
@@ -52,9 +56,12 @@ def create_checkout_session(user, course, coupon_code=None):
             discount_amount = coupon_service.calculate_discount_amount(coupon, server_total)
             final_amount = server_total - discount_amount
 
-    # Tạo PENDING transaction với số tiền thực thu (sau giảm)
+    if final_amount < MIN_PAYMENT_AMOUNT:
+        raise ValueError(f"Số tiền thanh toán tối thiểu là {MIN_PAYMENT_AMOUNT:,.0f}₫.")
+
+    # Tạo PENDING transaction với số tiền thực thu (sau giảm), kèm gói đã chọn
     transaction = payment_service.create_pending_transaction(
-        user, course, "STRIPE", payable_amount=final_amount
+        user, course, "STRIPE", access_plan=access_plan, payable_amount=final_amount
     )
 
     # Cấu hình Stripe
@@ -103,7 +110,7 @@ def create_checkout_session(user, course, coupon_code=None):
     }
 
 
-def create_cart_checkout_session(user, course_ids, coupon_code=None):
+def create_cart_checkout_session(user, cart_items, coupon_code=None):
     """
     Tạo Stripe Checkout Session cho nhiều khóa học (thanh toán giỏ hàng).
     - 1 Stripe Session với nhiều line_items -> tổng tiền đúng bằng tổng giỏ hàng (sau giảm).
@@ -116,17 +123,19 @@ def create_cart_checkout_session(user, course_ids, coupon_code=None):
     """
     from apps.promotions.services import coupon_service
 
-    courses = list(course_repository.get_cartable_by_ids(course_ids))
-    if not courses:
+    if not cart_items:
         raise ValueError("Không có khóa học hợp lệ để thanh toán.")
 
-    # Validate từng khóa (đã publish, có phí, chưa enroll)
-    for course in courses:
-        is_valid, error = payment_service.validate_course_for_payment(user, course)
+    # Lấy (course, access_plan) từ giỏ hàng — gói bắt buộc đã chọn khi thêm vào giỏ
+    course_plans = [(item.course, item.access_plan) for item in cart_items]
+
+    # Validate từng khóa + gói (đã publish, gói active, chưa enroll còn hạn)
+    for course, access_plan in course_plans:
+        is_valid, error = payment_service.validate_course_for_payment(user, course, access_plan)
         if not is_valid:
             raise ValueError(f"{course.title}: {error}")
 
-    course_ids_int = [c.id for c in courses]
+    course_ids_int = [course.id for course, _ in course_plans]
     server_total = coupon_service.get_cart_total_from_server(user, course_ids_int)
 
     discount_amount = Decimal("0")
@@ -147,14 +156,16 @@ def create_cart_checkout_session(user, course_ids, coupon_code=None):
 
     if final_amount <= 0:
         raise ValueError("Tổng tiền thanh toán không hợp lệ.")
+    if final_amount < MIN_PAYMENT_AMOUNT:
+        raise ValueError(f"Tổng tiền thanh toán tối thiểu là {MIN_PAYMENT_AMOUNT:,.0f}₫.")
 
-    # Phân bổ giảm giá theo tỷ lệ cho từng khóa (tổng unit_amount = final_amount)
+    # Phân bổ giảm giá theo tỷ lệ cho từng khóa (theo giá GÓI đã chọn — tổng unit_amount = final_amount)
     per_course_amounts = {}
     allocated = Decimal("0")
-    for idx, course in enumerate(courses):
-        course_price = Decimal(str(course.price))
+    for idx, (course, access_plan) in enumerate(course_plans):
+        course_price = Decimal(str(access_plan.price))
         if discount_amount > 0:
-            if idx == len(courses) - 1:
+            if idx == len(course_plans) - 1:
                 course_final = final_amount - allocated
             else:
                 course_discount = (
@@ -164,13 +175,15 @@ def create_cart_checkout_session(user, course_ids, coupon_code=None):
                 allocated += course_final
         else:
             course_final = course_price
+        if course_final < MIN_PAYMENT_AMOUNT:
+            raise ValueError(f'Khóa học "{course.title}" có giá {course_final:,.0f}₫, thấp hơn mức tối thiểu {MIN_PAYMENT_AMOUNT:,.0f}₫.')
         per_course_amounts[course.id] = course_final
 
-    # Tạo PENDING transaction cho từng khóa
+    # Tạo PENDING transaction cho từng CartItem (kèm gói)
     transactions = []
-    for course in courses:
+    for course, access_plan in course_plans:
         tx = payment_service.create_pending_transaction(
-            user, course, "STRIPE", payable_amount=per_course_amounts[course.id]
+            user, course, "STRIPE", access_plan=access_plan, payable_amount=per_course_amounts[course.id]
         )
         transactions.append(tx)
 
@@ -179,7 +192,7 @@ def create_cart_checkout_session(user, course_ids, coupon_code=None):
     frontend_url = settings.FRONTEND_URL
 
     line_items = []
-    for course in courses:
+    for course, _access_plan in course_plans:
         line_items.append({
             "price_data": {
                 "currency": "vnd",
@@ -394,27 +407,58 @@ def verify_session(session_id):
 
 def transfer_to_instructor(destination_account_id, amount_vnd, metadata=None):
     """
-    Chuyển tiền từ Stripe balance của platform sang Connected Account của giảng viên.
-    - destination_account_id: Stripe Connected Account ID (acct_...), tạm thời lưu trong bank_account_number của InstructorProfile
+    Chuyển tiền từ Stripe balance (USD) sang Connected Account của giảng viên.
+
+    Lưu ý: Stripe hiện KHÔNG hỗ trợ VND cho Transfer/Payout. Khi học viên thanh toán
+    khóa học bằng VND, Stripe tự quy đổi sang USD trong balance của platform.
+    Do đó khi chuyển tiền cho giảng viên, ta quy đổi net_amount (VND) sang USD
+    theo tỷ giá cấu hình (SystemConfig key `duty_usd_exchange_rate`, mặc định 25000)
+    rồi tạo Stripe Transfer bằng USD.
+
+    - destination_account_id: Stripe Connected Account ID (acct_...), lưu trong bank_account_number của InstructorProfile
     - amount_vnd: số tiền VND cần chuyển (Decimal/float/int)
     - metadata: dict tùy chọn để truy vết
     Trả về Stripe Transfer object; nếu balance không đủ hoặc account không hợp lệ sẽ raise ValueError.
     """
+    from decimal import ROUND_DOWN
+
+    from apps.system.repositories.system_config_repository import get_decimal
+
     stripe.api_key = settings.STRIPE_SECRET_KEY
-    amount = int(amount_vnd)
-    if amount <= 0:
+
+    amount_vnd_decimal = Decimal(str(amount_vnd))
+    if amount_vnd_decimal <= 0:
         raise ValueError("Số tiền thanh toán phải lớn hơn 0.")
+
+    # Tỷ giá VND -> USD (cấu hình trong SystemConfig, mặc định 25.000đ/USD)
+    rate = get_decimal("duty_usd_exchange_rate", Decimal("25000"))
+    if rate <= 0:
+        raise ValueError("Tỷ giá quy đổi USD chưa được cấu hình hợp lệ.")
+
+    usd_amount = (amount_vnd_decimal / rate).quantize(Decimal("0.01"), rounding=ROUND_DOWN)
+    usd_cents = int(usd_amount * 100)
+    if usd_cents <= 0:
+        raise ValueError("Số tiền sau quy đổi quá nhỏ (dưới 0.01 USD).")
+
     try:
         return stripe.Transfer.create(
-            amount=amount, currency="vnd",
+            amount=usd_cents, currency="usd",
             destination=destination_account_id, metadata=metadata or {},
         )
-    except stripe.error.InsufficientFundsError:
-        raise ValueError("Số dư Stripe (VND) không đủ để thanh toán cho giảng viên.")
-    except stripe.error.InvalidRequestError as e:
-        raise ValueError(f"Không thể chuyển tiền cho giảng viên (Connected Account không hợp lệ): {getattr(e, 'user_message', '') or e}")
     except stripe.error.StripeError as e:
-        raise ValueError(f"Lỗi Stripe khi chuyển tiền: {getattr(e, 'user_message', '') or e}")
+        # Stripe SDK v15 không còn stripe.error.InsufficientFundsError.
+        # Lỗi thiếu số dư được báo qua StripeError với code="balance_insufficient".
+        code = getattr(e, "code", "") or ""
+        msg = getattr(e, "user_message", "") or str(e)
+        if code == "balance_insufficient":
+            raise ValueError("Số dư Stripe (USD) không đủ để thanh toán cho giảng viên.")
+        if code in (
+            "account_invalid",
+            "destination_account_invalid",
+            "no_connected_account",
+        ) or "destination" in code or "account" in code:
+            raise ValueError(f"Không thể chuyển tiền cho giảng viên (Connected Account không hợp lệ): {msg}")
+        raise ValueError(f"Lỗi Stripe khi chuyển tiền: {msg}")
 
 
 def refund_transaction(transaction):

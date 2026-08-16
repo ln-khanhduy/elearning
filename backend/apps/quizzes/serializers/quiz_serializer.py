@@ -27,7 +27,7 @@ class QuizSerializer(serializers.ModelSerializer):
         model = Quiz
         fields = [
             "id", "lesson", "title", "description", "time_limit_minutes",
-            "passing_score", "quiz_type", "status", "question_count",
+            "passing_score", "quiz_type", "question_count",
             "created_at", "updated_at",
         ]
         read_only_fields = ["id", "lesson", "created_at", "updated_at"]
@@ -44,17 +44,10 @@ class QuizCreateUpdateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Quiz
-        fields = ["title", "description", "time_limit_minutes", "passing_score", "quiz_type", "status"]
+        fields = ["title", "description", "time_limit_minutes", "passing_score", "quiz_type"]
 
     def validate_passing_score(self, value):
         """Kiểm tra passing_score >= 0."""
         if value < 0:
             raise serializers.ValidationError("Điểm đạt không được âm.")
-        return value
-
-    def validate_status(self, value):
-        """Kiểm tra status hợp lệ."""
-        allowed_statuses = ["IN_PROCESS", "ACTIVE", "INACTIVE"]
-        if value not in allowed_statuses:
-            raise serializers.ValidationError(f"Trạng thái không hợp lệ. Chấp nhận: {', '.join(allowed_statuses)}")
         return value

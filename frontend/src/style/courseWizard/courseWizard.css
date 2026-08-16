@@ -86,6 +86,19 @@
   color: #0d6efd;
 }
 
+.cw-published-warning {
+  background: #fef3c7;
+  border: 1px solid #f59e0b;
+  color: #92400e;
+  padding: 10px 12px;
+  font-size: 13px;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
 .cw-save-indicator {
   font-size: 11px;
   color: #6c757d;
@@ -1249,6 +1262,65 @@
 }
 
 /* ==================== PRICING ==================== */
+.cw-plans-table-wrap {
+  border: 1px solid #e9ecef;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.cw-plans-table-wrap .table {
+  margin-bottom: 0;
+}
+
+.cw-plans-table thead th {
+  background: #f8f9fc;
+  color: #495057;
+  font-weight: 600;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.cw-plans-table tbody td {
+  vertical-align: middle;
+}
+
+.cw-plans-save-btn {
+  background: var(--primary, #0f3d75);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 5px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.cw-plans-save-btn:hover:not(:disabled) {
+  opacity: 0.85;
+}
+
+.cw-plans-save-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.cw-plans-delete-btn {
+  background: transparent;
+  color: #dc3545;
+  border: 1px solid #f5c6cb;
+  border-radius: 6px;
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.cw-plans-delete-btn:hover {
+  background: #fce4ec;
+}
+
 .cw-pricing-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;

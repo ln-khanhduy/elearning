@@ -5,7 +5,9 @@ const request = async (callback) => {
     const res = await callback();
     return res.data;
   } catch (error) {
-    throw new Error(getErrorMessage(error));
+    const e = new Error(getErrorMessage(error));
+    e.cause = error;
+    throw e;
   }
 };
 
@@ -95,6 +97,29 @@ export const assignInstructorApi = async (courseId, instructorId) => {
 // Lấy giảng viên đang được gán cho khóa học
 export const getAssignedInstructorApi = async (courseId) => {
   return request(() => apiClient.get(`/api/courses/admin/${courseId}/assigned-instructor/`));
+};
+
+// ==================== COURSE ACCESS PLANS  ====================
+// BE: /api/courses/admin/{course_id}/plans/
+
+// Lấy danh sách gói truy cập của khóa học
+export const getCoursePlansApi = async (courseId) => {
+  return request(() => apiClient.get(`/api/courses/admin/${courseId}/plans/`));
+};
+
+// Thêm gói truy cập mới
+export const createCoursePlanApi = async (courseId, data) => {
+  return request(() => apiClient.post(`/api/courses/admin/${courseId}/plans/`, data));
+};
+
+// Cập nhật gói truy cập (tên, số ngày, giá, bật/tắt)
+export const updateCoursePlanApi = async (courseId, planId, data) => {
+  return request(() => apiClient.patch(`/api/courses/admin/${courseId}/plans/${planId}/`, data));
+};
+
+// Xóa gói truy cập
+export const deleteCoursePlanApi = async (courseId, planId) => {
+  return request(() => apiClient.delete(`/api/courses/admin/${courseId}/plans/${planId}/`));
 };
 
 // ==================== INSTRUCTOR COURSES ====================

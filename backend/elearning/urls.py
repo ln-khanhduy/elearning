@@ -52,6 +52,12 @@ urlpatterns = [
     path("api/promotions/", include("apps.promotions.urls")),
     path("api/cart/", include("apps.cart.urls")),
 
+    # Chat 
+    path("api/chat/", include("apps.chat.urls")),
+
+    # Duties (lịch trực + lương giảng viên R1)
+    path("api/duty/", include("apps.duties.urls")),
+
     # API Documentation (drf-spectacular)
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
     path("api/docs/", SpectacularSwaggerView.as_view(url_name="schema"), name="swagger-ui"),

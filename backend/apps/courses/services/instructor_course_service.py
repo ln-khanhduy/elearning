@@ -1,6 +1,6 @@
 """
 InstructorCourseService - Service cho các tính năng của instructor trong khóa học.
-Bao gồm: chấm bài tự luận, gửi thông báo, Q&A, báo cáo học tập.
+Bao gồm: chấm bài tự luận, gửi thông báo, báo cáo học tập.
 """
 
 from django.utils import timezone
@@ -8,19 +8,6 @@ from django.db.models import Avg
 from apps.quizzes.models import QuizAttemptAnswer, Question, QuizAttempt
 from apps.enrollments.models import Enrollment, CourseProgress
 from apps.notifications.models import Notification
-from apps.courses.models import CourseQuestion
-from apps.courses.repositories.qa_repository import (
-    get_questions_queryset,
-    filter_by_status,
-    filter_by_lesson,
-    order_by_newest,
-    paginate,
-    get_question_by_id,
-    create_answer,
-    update_question_status,
-    create_notification,
-    count_questions,
-)
 
 
 def get_essay_submissions(course_id):
@@ -117,86 +104,6 @@ def send_notification(course_id, title, body):
     if notifications:
         Notification.objects.bulk_create(notifications)
     return len(notifications)
-
-
-def get_questions(course_id, status=None, lesson_id=None, page=1, page_size=20):
-    """Lấy danh sách câu hỏi Q&A của khóa học, hỗ trợ lọc theo trạng thái,
-    bài học và phân trang.
-
-    Trả về dict chứa: questions, total, page, total_pages, has_next, has_previous.
-    """
-    qs = get_questions_queryset(course_id)
-    qs = filter_by_status(qs, status)
-    qs = filter_by_lesson(qs, lesson_id)
-    qs = order_by_newest(qs)
-    page_obj, paginator_result = paginate(qs, page, page_size)
-    return {
-        "questions": list(page_obj.object_list),
-        "total": paginator_result.count,
-        "page": page_obj.number,
-        "total_pages": paginator_result.num_pages,
-        "has_next": page_obj.has_next(),
-        "has_previous": page_obj.has_previous(),
-    }
-
-
-def get_question_detail(question_id):
-    """Lấy chi tiết một câu hỏi Q&A theo ID."""
-    return get_question_by_id(question_id)
-
-
-def create_question(course, student, data):
-    """Tạo mới một câu hỏi Q&A từ học viên cho khóa học.
-
-    Đồng thời gửi thông báo cho giảng viên được phân công của khóa học
-    (nếu có) về câu hỏi vừa được đặt. Lỗi thông báo sẽ bị bỏ qua.
-    """
-    from apps.notifications import services as notif_service
-    from apps.courses.repositories import qa_repository as qa_repo
-    qst = qa_repo.create_question(
-        course=course, student=student,
-        lesson=data.get('lesson'), title=data.get('title'), content=data.get('content'),
-    )
-    try:
-        if course.assigned_instructor:
-            student_name = student.get_full_name() or student.email
-            notif_service.notify_question_asked(course.assigned_instructor, student_name, course.title, data.get('title', ''))
-    except Exception:
-        pass
-    return qst
-
-
-def reply_question(question, author, content):
-    """Trả lời một câu hỏi Q&A.
-
-    - Xác định tác giả có phải giảng viên của khóa học hay không.
-    - Nếu giảng viên trả lời và câu hỏi đang ở trạng thái OPEN, cập nhật
-      trạng thái thành ANSWERED và gửi thông báo cho học viên hỏi.
-    """
-    is_instructor = (
-        hasattr(author, 'teaching_courses') and
-        author.teaching_courses.filter(id=question.course_id).exists()
-    )
-    answer = create_answer(question=question, author=author, content=content, is_instructor=is_instructor)
-    if is_instructor and question.status == CourseQuestion.Status.OPEN:
-        update_question_status(question, CourseQuestion.Status.ANSWERED)
-        create_notification(
-            recipient=question.student,
-            title="Câu hỏi của bạn đã được trả lời",
-            body=f"Giảng viên đã trả lời câu hỏi: {question.title}",
-            link=f"/learning/courses/{question.course_id}/qa/{question.id}/",
-        )
-    return answer
-
-
-def close_question(question):
-    """Đóng câu hỏi Q&A (chuyển trạng thái sang CLOSED)."""
-    update_question_status(question, CourseQuestion.Status.CLOSED)
-
-
-def get_question_count(course_id):
-    """Đếm số lượng câu hỏi Q&A của khóa học theo từng trạng thái."""
-    return count_questions(course_id)
 
 
 def get_learning_report(course_id):

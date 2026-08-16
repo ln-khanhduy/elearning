@@ -13,37 +13,18 @@ from apps.enrollments.models import Enrollment
 
 def calculate_fees(gross_amount, provider):
     """
-    Tính toán các khoản phí từ gross_amount.
-    - payment_fee: phí provider (%)
-    - tax_amount: 0 (chưa áp dụng)
-    - net_amount: gross - payment_fee - tax
-    - platform_fee: net * platform_fee_percent%
-    - instructor_share: net - platform_fee
+    Tính toán hoa hồng/giá trị từ gross_amount (theo cách tính lương mới).
+    - Giảng viên KHÔNG nhận hoa hồng từ khóa học: instructor_share_amount = 0.
+    - Toàn bộ tiền bán khóa chuyển về tài khoản web: platform_fee_amount = gross.
+    - Giữ nguyên cấu trúc trả về để tương thích model PaymentTransaction.
     """
-    gross = Decimal(str(gross_amount))
+    gross = Decimal(str(gross_amount)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
-    fee_percent = system_config_repository.get_decimal("payment_fee_percent")
-    payment_fee = (gross * fee_percent / Decimal("100")).quantize(
-        Decimal("0.01"), rounding=ROUND_HALF_UP
-    )
-
-    tax_percent = system_config_repository.get_decimal("tax_percent")
-    tax = (gross * tax_percent / Decimal("100")).quantize(
-        Decimal("0.01"), rounding=ROUND_HALF_UP
-    )
-
-    net = (gross - payment_fee - tax).quantize(
-        Decimal("0.01"), rounding=ROUND_HALF_UP
-    )
-
-    pf_percent = system_config_repository.get_decimal("platform_fee_percent")
-    platform_fee = (net * pf_percent / Decimal("100")).quantize(
-        Decimal("0.01"), rounding=ROUND_HALF_UP
-    )
-
-    instructor_share = (net - platform_fee).quantize(
-        Decimal("0.01"), rounding=ROUND_HALF_UP
-    )
+    payment_fee = Decimal("0.00")
+    tax = Decimal("0.00")
+    net = gross
+    platform_fee = gross
+    instructor_share = Decimal("0.00")
 
     return {
         "gross_amount": gross,
@@ -55,11 +36,16 @@ def calculate_fees(gross_amount, provider):
     }
 
 
-def create_pending_transaction(user, course, provider, payable_amount=None):
+def create_pending_transaction(user, course, provider, access_plan=None, payable_amount=None):
     """Tạo PaymentTransaction với status PENDING.
-    payable_amount: số tiền thực thu sau giảm giá coupon; mặc định = course.price.
+    - access_plan: gói truy cập đã chọn; payable_amount mặc định = access_plan.price.
+    - KHÔNG còn course.price (đã bỏ field).
     """
-    gross = Decimal(str(payable_amount)) if payable_amount is not None else Decimal(str(course.price))
+    if access_plan is not None:
+        gross = Decimal(str(payable_amount)) if payable_amount is not None else Decimal(str(access_plan.price))
+    else:
+        gross = Decimal(str(payable_amount)) if payable_amount is not None else Decimal("0")
+
     fees = calculate_fees(gross, provider)
 
     transaction = payment_repository.create({
@@ -67,6 +53,7 @@ def create_pending_transaction(user, course, provider, payable_amount=None):
         "course": course,
         "provider": provider,
         "provider_transaction_id": None,
+        "access_plan": access_plan,
         **fees,
         "status": PaymentTransaction.Status.PENDING,
     })
@@ -78,39 +65,54 @@ def mark_transaction_hold(transaction):
     Chuyển transaction từ PENDING -> HOLD.
     - paid_at = now
     - hold_time = now + payment_hold_days (từ SystemConfig)
+    - expires_at = paid_at + duration_days của gói đã mua
     """
     now = timezone.now()
     hold_days = int(system_config_repository.get_decimal("payment_hold_days", "7"))
     hold_time = now + timezone.timedelta(days=hold_days)
+
+    expires_at = None
+    if transaction.access_plan is not None:
+        expires_at = now + timezone.timedelta(days=transaction.access_plan.duration_days)
 
     return payment_repository.update(
         transaction,
         status=PaymentTransaction.Status.HOLD,
         paid_at=now,
         hold_time=hold_time,
+        expires_at=expires_at,
     )
+
+
+def compute_expires_at(transaction):
+    """
+    Tính expires_at = paid_at + duration_days (từ gói đã mua).
+    Không có gói → None (không giới hạn).
+    """
+    if not transaction or not transaction.access_plan or not transaction.paid_at:
+        return None
+    return transaction.paid_at + timezone.timedelta(days=transaction.access_plan.duration_days)
 
 
 def grant_course_access(transaction):
     """
-    Tạo Enrollment ACTIVE và CourseProgress cho transaction.
-    Idempotent: không tạo trùng nếu đã có.
+    Tạo ENROLLMENT MỚI (mỗi lần mua) + CourseProgress MỚI.
+    KHÔNG kế thừa tiến độ cũ. Chỉ sau khi transaction HOLD (paid_at có giá trị).
     """
     student = transaction.student
     course = transaction.course
 
-    defaults = {
+    expires_at = compute_expires_at(transaction)
+
+    enrollment = enrollment_repository.create({
+        "student": student,
+        "course": course,
         "status": Enrollment.Status.ACTIVE,
         "payment_transaction": transaction,
+        "access_plan": transaction.access_plan,
         "enrolled_at": timezone.now(),
-    }
-    enrollment, created = enrollment_repository.get_or_create_enrollment(student, course, defaults)
-
-    if not created and enrollment.status not in [Enrollment.Status.ACTIVE, Enrollment.Status.COMPLETED]:
-        enrollment.status = Enrollment.Status.ACTIVE
-        enrollment.payment_transaction = transaction
-        enrollment.enrolled_at = timezone.now()
-        enrollment.save()
+        "expires_at": expires_at,
+    })
 
     total_lessons = lesson_repository.count_by_course(course.id)
     progress_defaults = {
@@ -124,21 +126,27 @@ def grant_course_access(transaction):
     return enrollment
 
 
-def validate_course_for_payment(user, course):
+def validate_course_for_payment(user, course, access_plan=None):
     """
-    Kiểm tra course có thể thanh toán không.
-    Trả về tuple (is_valid, error_message).
+    Kiểm tra khóa + gói có thể thanh toán không.
+    - Khóa phải PUBLISHED.
+    - Gói (nếu có): thuộc khóa, is_active, giá > 0.
+    - Cho phép mua lại khi enrollment cũ hết hạn (EXPIRED / expires_at <= now).
+    - Chặn mua nếu đang có enrollment ACTIVE/COMPLETED CÒN HẠN.
     """
     if course.status != Course.Status.PUBLISHED:
         return False, "Khóa học chưa được công bố."
 
-    if course.price <= 0:
-        return False, "Khóa học miễn phí. Vui lòng sử dụng đăng ký miễn phí."
+    if access_plan is not None:
+        if access_plan.course_id != course.id:
+            return False, "Gói truy cập không thuộc khóa học này."
+        # Mọi gói đều hoạt động
+        if access_plan.price <= 0:
+            return False, "Giá gói không hợp lệ."
 
     existing = enrollment_repository.find_active_or_completed(user, course)
     if existing:
-        return False, "Bạn đã đăng ký khóa học này."
-
+        return False, "Bạn đã đăng ký khóa học này và còn thời hạn truy cập."
     return True, None
 
 

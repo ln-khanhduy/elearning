@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import { getCartApi, removeFromCartApi, clearCartApi } from "../../../api/cartAPI";
 import { createStripeCartCheckoutApi } from "../../../api/paymentAPI";
@@ -8,7 +8,6 @@ import ConfirmModal from "../../../components/common/ConfirmModal";
 
 // Trang giỏ hàng: hiển thị danh sách khóa học đã chọn, chọn mục và thanh toán 1 lần
 function CartPage() {
-  const navigate = useNavigate();
   const [cart, setCart] = useState(null);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
@@ -30,7 +29,7 @@ function CartPage() {
       if (cartData.items?.length > 0) {
         setSelectedIds(cartData.items.map(item => item.course_id));
       }
-    } catch (error) {
+    } catch {
       toast.error("Không thể tải giỏ hàng.");
     } finally {
       setLoading(false);
@@ -38,6 +37,8 @@ function CartPage() {
   }, []);
 
   useEffect(() => {
+    // loadCart gọi setState trong async callback — an toàn
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadCart();
   }, [loadCart]);
 
@@ -256,6 +257,9 @@ function CartPage() {
                     <Link to={`/courses/${item.course_id}`} className="text-decoration-none">
                       <h6 className="mb-1 text-dark">{item.course_title}</h6>
                     </Link>
+                    <small className="text-muted">
+                      Gói: {item.plan_name} · {item.plan_duration_days} ngày
+                    </small>
                     <div className="d-flex justify-content-between align-items-center mt-auto">
                       <span className="fw-bold text-primary">{formatPrice(item.price)}</span>
                       <button

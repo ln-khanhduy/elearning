@@ -11,7 +11,7 @@ PERMISSIONS = {
     "admin.admin.delete": "Xóa admin",
     "admin.admin.view": "Xem thông tin admin",
 
-    # ROLE & PERMISSION 
+    # ROLE & PERMISSION
     "admin.role.view": "Xem danh sách role",
     "admin.role.view_permissions": "Xem danh sách permission của role",
     "admin.role.manage": "Quản lý role (tạo/sửa/xóa/gán/thu hồi)",
@@ -72,6 +72,16 @@ PERMISSIONS = {
     # HỖ TRỢ (SUPPORT) 
     "support.request.create": "Gửi yêu cầu hỗ trợ",
     "support.request.process": "Xử lý yêu cầu hỗ trợ",
+
+    # CHAT (BÁO CÁO VI PHẠM) 
+    "chat.report.view": "Xem báo cáo vi phạm chat",
+    "chat.report.manage": "Xử lý báo cáo vi phạm chat",
+
+    # LỊCH TRỰC & LƯƠNG
+    "instructor.duty.manage": "Quản lý lịch trực giảng viên",
+    "instructor.duty.view": "Xem chấm công/lịch trực của giảng viên",
+    "instructor.payment.view": "Xem bảng lương giảng viên",
+    "instructor.payment.manage": "Tính/duyệt bảng lương giảng viên",
 }
 
 # PERMISSION DEPENDENCIES 
@@ -185,31 +195,18 @@ ROLE_PERMISSIONS = {
         "course.category.manage",
     ],
 
-    "INSTRUCTOR_MANAGER": [
+    "USER_MANAGER": [
+        "user.user.view",
+        "user.user.manage",
         "user.instructor.view",
         "user.instructor.manage",
         "support.request.create",
         "support.request.process",
-    ],
-
-    "USER_MANAGER": [
-        "user.user.view",
-        "user.user.manage",
-        "support.request.create",
-        "support.request.process",
-    ],
-
-    "FINANCE_ADMIN": [
-        "support.request.create",
-        "support.request.process",
-        "finance.finance.revenue_view",
-        "finance.finance.payout",
-        "finance.finance.discount_config",
-        "finance.finance.fee_config",
-        "finance.finance.report_export",
-        "finance.finance.refund",
-        "finance.coupon.view",
-        "finance.coupon.manage",
+        "chat.report.view",
+        "chat.report.manage",
+        "instructor.duty.manage",
+        "instructor.duty.view",
+        "instructor.payment.view",
     ],
 
     "INSTRUCTOR": [
@@ -219,6 +216,7 @@ ROLE_PERMISSIONS = {
         "student.my_course.view",
         "student.wallet.deposit",
         "support.request.create",
+        "instructor.duty.view",
     ],
 
     "STUDENT": [

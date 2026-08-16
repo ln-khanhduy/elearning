@@ -25,11 +25,14 @@ export const markLessonCompleteApi = async (courseId, lessonId) => {
 };
 
 // Nộp bài quiz và nhận kết quả chấm điểm
-export const submitQuizApi = async (courseId, quizId, answers) => {
+// startedAt: millisecond timestamp thời điểm bắt đầu làm bài (Date.now()),
+// dùng để backend kiểm tra giới hạn thời gian làm bài.
+export const submitQuizApi = async (courseId, quizId, answers, startedAt = null) => {
   return request(() =>
     apiClient.post(`/api/learning/courses/${courseId}/quizzes/submit/`, {
       quiz_id: quizId,
       answers,
+      started_at: startedAt,
     })
   );
 };

@@ -1,0 +1,185 @@
+/* ===== Chấm công & Lương ===== */
+.comp-page {
+  padding: 24px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.comp-page h4 {
+  font-weight: 700;
+  color: #1a1a2e;
+}
+
+.comp-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 18px 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+}
+
+.comp-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.comp-card-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #1a1a2e;
+}
+
+.comp-card-title i {
+  font-size: 18px;
+  color: var(--primary, #0f3d75);
+}
+
+.comp-card-title .badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: #eef2ff;
+  color: #0f3d75;
+}
+
+/* ===== Bộ lọc ===== */
+.comp-filters {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.comp-filter-select {
+  border: 1.5px solid #e5e7eb;
+  border-radius: 9px;
+  padding: 6px 30px 6px 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #1f2937;
+  background: #fff;
+  cursor: pointer;
+}
+
+.comp-filter-select:focus {
+  border-color: var(--primary, #0f3d75);
+  box-shadow: 0 0 0 3px rgba(15, 61, 117, 0.1);
+  outline: none;
+}
+
+/* Điều hướng tuần */
+.comp-week-nav {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 9px;
+  padding: 3px 4px;
+  background: #fff;
+}
+
+.comp-week-nav span {
+  font-size: 12px;
+  font-weight: 700;
+  color: #1f2937;
+  min-width: 140px;
+  text-align: center;
+}
+
+.comp-week-nav button {
+  border: none;
+  background: #f1f5f9;
+  color: #475569;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.comp-week-nav button:hover {
+  background: var(--primary, #0f3d75);
+  color: #fff;
+}
+
+/* Segmented control tuần / tháng */
+.comp-seg {
+  display: inline-flex;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 9px;
+  overflow: hidden;
+}
+
+.comp-seg button {
+  border: none;
+  background: #fff;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.comp-seg button.active {
+  background: var(--primary, #0f3d75);
+  color: #fff;
+}
+
+.comp-seg button + button {
+  border-left: 1px solid #e5e7eb;
+}
+
+/* Bảng có cuộn dọc + header dính */
+.comp-table-scroll {
+  max-height: 360px;
+  overflow-y: auto;
+  overflow-x: auto;
+  border: 1px solid #eef0f3;
+  border-radius: 10px;
+}
+
+.comp-table-scroll table {
+  margin-bottom: 0;
+}
+
+.comp-table-scroll thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: #f8fafc;
+  color: #475569;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.comp-table-scroll tbody td {
+  font-size: 13px;
+  vertical-align: middle;
+}
+
+.comp-money {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.comp-empty {
+  color: #94a3b8;
+  font-size: 13px;
+  padding: 12px 4px;
+  text-align: center;
+}

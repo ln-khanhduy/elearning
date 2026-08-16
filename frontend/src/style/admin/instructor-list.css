@@ -26,6 +26,34 @@
   color: #6c757d;
 }
 
+/* Header actions (VD: nút tạo tài khoản) */
+.inst-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.inst-btn-create {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  background: var(--primary, #0f3d75);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  white-space: nowrap;
+}
+
+.inst-btn-create:hover {
+  background: #0a2d55;
+}
+
 /* Toolbar */
 .inst-toolbar {
   display: flex;
@@ -363,6 +391,31 @@
   cursor: not-allowed;
 }
 
+.inst-btn-reset {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 10px;
+  background: #fff3cd;
+  color: #856404;
+  border: 1px solid #ffe69c;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.inst-btn-reset:hover:not(:disabled) {
+  background: #ffe8a1;
+}
+
+.inst-btn-reset:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 /* Table Footer */
 .inst-table-footer {
   display: flex;
@@ -603,6 +656,34 @@
 }
 
 .inst-modal-textarea:disabled {
+  background: #f8f9fa;
+  cursor: not-allowed;
+}
+
+.inst-modal-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #212529;
+  background: #fff;
+  outline: none;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+.inst-modal-input:focus {
+  border-color: #0f3d75;
+  box-shadow: 0 0 0 3px rgba(15, 61, 117, 0.1);
+}
+
+.inst-modal-input::placeholder {
+  color: #adb5bd;
+}
+
+.inst-modal-input:disabled {
   background: #f8f9fa;
   cursor: not-allowed;
 }

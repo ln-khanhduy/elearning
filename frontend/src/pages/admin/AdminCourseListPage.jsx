@@ -283,8 +283,8 @@ function AdminCourseListPage() {
                 </p>
                 <div className="course-card-meta">
                   <span>
-                    <i className="bi bi-currency-dollar me-1"></i>
-                    {Number(course.price).toLocaleString("vi-VN")}đ
+                    <i className="bi bi-box-seam me-1"></i>
+                    {(course.access_plans || []).length} gói truy cập
                   </span>
                   <span>
                     <i className="bi bi-person me-1"></i>

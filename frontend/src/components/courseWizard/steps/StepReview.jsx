@@ -1,52 +1,94 @@
 import { memo, useMemo } from "react";
 
-function StepReview({ formData, thumbnailPreview, curriculum }) {
+function StepReview({
+  formData,
+  thumbnailPreview,
+  curriculum,
+  plans,
+  course,
+  assignedInstructor,
+  onPublish,
+  onSaveDraft,
+  onGoToStep,
+  saving,
+  publishing,
+}) {
+  // Giá bán được quản lý qua các gói truy cập (CourseAccessPlan) ở bước 3
+  const validPlans = useMemo(
+    () =>
+      (plans || []).filter(
+        (p) =>
+          (p.name || "").trim().length > 0 &&
+          Number(p.duration_days) > 0 &&
+          Number(p.price) >= 50000
+      ),
+    [plans]
+  );
+
+  const hasInstructor = !!assignedInstructor?.id;
+
   const checklist = useMemo(() => {
     const items = [
       {
         label: "Tiêu đề khóa học",
         pass: !!formData.title?.trim(),
         hint: "Thiếu tiêu đề",
+        step: 1,
       },
       {
         label: "Mô tả khóa học",
         pass: !!formData.description?.trim(),
         hint: "Thiếu mô tả",
+        step: 1,
       },
       {
         label: "Danh mục",
         pass: !!formData.category,
         hint: "Chưa chọn danh mục",
+        step: 1,
       },
       {
         label: "Ảnh bìa",
         pass: !!thumbnailPreview,
         hint: "Thiếu ảnh bìa",
+        step: 1,
       },
       {
         label: "Nội dung khóa học",
         pass: curriculum.length > 0,
         hint: "Chưa có chương học nào",
+        step: 2,
       },
       {
         label: "Bài học",
         pass: curriculum.some((s) => (s.lessons?.length || 0) > 0),
         hint: "Cần ít nhất 1 bài học",
+        step: 2,
       },
       {
         label: "Giá bán",
-        pass: formData.price !== "" && formData.price !== undefined,
+        pass: validPlans.length > 0,
         hint: "Chưa thiết lập giá",
+        step: 3,
+      },
+      {
+        label: "Phân công giảng viên",
+        pass: hasInstructor,
+        hint: "Chưa phân công giảng viên",
+        step: 4,
       },
     ];
     return items;
-  }, [formData, thumbnailPreview, curriculum]);
+  }, [formData, thumbnailPreview, curriculum, validPlans, hasInstructor]);
 
   const totalLessons = curriculum.reduce((sum, s) => {
     const lessonCount = s.lessons?.length || 0;
     const quizCount = (s.lessons || []).reduce((qSum, l) => qSum + (l.quizzes?.length || 0), 0);
     return sum + lessonCount + quizCount;
   }, 0);
+
+  const allPassed = checklist.every((i) => i.pass);
+  const missingItems = checklist.filter((i) => !i.pass);
 
   return (
     <div className="cw-review-layout">
@@ -88,9 +130,17 @@ function StepReview({ formData, thumbnailPreview, curriculum }) {
             <div className="cw-review-meta-item">
               <i className="bi bi-currency-dollar"></i>
               <span>
-                {formData.price > 0
-                  ? Number(formData.price).toLocaleString("vi-VN") + "đ"
-                  : "Miễn phí"}
+                {validPlans.length > 0
+                  ? `${validPlans.length} gói truy cập`
+                  : "Chưa thiết lập giá"}
+              </span>
+            </div>
+            <div className="cw-review-meta-item">
+              <i className="bi bi-person-check"></i>
+              <span>
+                {hasInstructor
+                  ? assignedInstructor.name || "Đã phân công giảng viên"
+                  : "Chưa phân công giảng viên"}
               </span>
             </div>
           </div>
@@ -133,7 +183,7 @@ function StepReview({ formData, thumbnailPreview, curriculum }) {
         </div>
       </div>
 
-      {/* Checklist */}
+      {/* Checklist + Publish Actions */}
       <div className="cw-checklist">
         <div className="cw-checklist-title">
           <i className="bi bi-check2-square me-2"></i>
@@ -152,11 +202,20 @@ function StepReview({ formData, thumbnailPreview, curriculum }) {
               )}
             </span>
             <span>{item.pass ? item.label : item.hint}</span>
+            {!item.pass && (
+              <button
+                className="cw-btn cw-btn-sm cw-btn-outline"
+                style={{ marginLeft: "auto", padding: "2px 8px", fontSize: 11 }}
+                onClick={() => onGoToStep?.(item.step || 1)}
+              >
+                Đến bước {item.step || 1}
+              </button>
+            )}
           </div>
         ))}
 
         <div style={{ marginTop: 20 }}>
-          {checklist.every((i) => i.pass) ? (
+          {allPassed ? (
             <div
               style={{
                 padding: 12,
@@ -184,10 +243,80 @@ function StepReview({ formData, thumbnailPreview, curriculum }) {
               }}
             >
               <i className="bi bi-info-circle-fill me-1"></i>
-              Còn {checklist.filter((i) => !i.pass).length} mục cần hoàn thiện
+              Còn {missingItems.length} mục cần hoàn thiện
             </div>
           )}
         </div>
+
+        {/* Publish / Save Draft Actions */}
+        <div className="cw-publish-actions" style={{ marginTop: 24 }}>
+          <button
+            className="cw-btn cw-btn-secondary"
+            onClick={onSaveDraft}
+            disabled={saving}
+            style={{ maxWidth: 320, width: "100%" }}
+          >
+            <i className="bi bi-cloud-upload"></i>
+            {saving ? "Đang lưu..." : "Lưu nháp"}
+          </button>
+
+          <button
+            className="cw-btn cw-btn-success"
+            onClick={onPublish}
+            disabled={!allPassed || publishing}
+            style={{ maxWidth: 320, width: "100%" }}
+          >
+            {publishing ? (
+              <>
+                <span className="spinner-border spinner-border-sm"></span>
+                {course?.status === "PUBLISHED" ? "Đang cập nhật..." : "Đang xuất bản..."}
+              </>
+            ) : (
+              <>
+                <i className="bi bi-globe2"></i>
+                {course?.status === "PUBLISHED" ? "Xác nhận cập nhật khóa học" : "Xuất bản khóa học"}
+              </>
+            )}
+          </button>
+        </div>
+
+        {!allPassed && (
+          <div className="cw-publish-requirements">
+            <div className="cw-publish-requirements-title">
+              <i className="bi bi-exclamation-triangle me-1"></i>
+              Cần hoàn thiện trước khi xuất bản:
+            </div>
+            {missingItems.map((item, idx) => (
+              <div key={idx} className="cw-publish-requirement">
+                <i className="bi bi-x-circle-fill"></i>
+                <span>{item.label}</span>
+                <button
+                  className="cw-btn cw-btn-sm cw-btn-outline"
+                  style={{ marginLeft: "auto", padding: "2px 8px", fontSize: 11 }}
+                  onClick={() => onGoToStep?.(item.step || 1)}
+                >
+                  Đến bước {item.step || 1}
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {course?.status === "PUBLISHED" && (
+          <div
+            style={{
+              marginTop: 24,
+              padding: 16,
+              background: "#d1e7dd",
+              borderRadius: 12,
+              fontSize: 13,
+              color: "#0f5132",
+            }}
+          >
+            <i className="bi bi-check-circle-fill me-1"></i>
+            Khóa học đã được xuất bản. Cập nhật sẽ được áp dụng ngay lập tức.
+          </div>
+        )}
       </div>
     </div>
   );

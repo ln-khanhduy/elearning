@@ -10,8 +10,6 @@ from apps.users.repositories import user_repository
 ADMIN_ROLES = {
 "SUPERADMIN",
 "COURSE_ADMIN",
-"INSTRUCTOR_MANAGER",
-"FINANCE_ADMIN",
 "USER_MANAGER",
 }
 def _blacklist_user_tokens(user):

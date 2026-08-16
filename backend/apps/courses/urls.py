@@ -3,11 +3,20 @@ from apps.courses.views.views_wishlist import (
     WishlistListAPIView, WishlistAddAPIView, WishlistRemoveAPIView,
     WishlistCheckAPIView, WishlistCountAPIView,
 )
+from apps.courses.views.views_series import (
+    CourseSeriesListCreateAPIView,
+    CourseSeriesDetailAPIView,
+    CourseSeriesCreateVersionAPIView,
+    CourseSeriesPublishAndHideAPIView,
+)
 from apps.courses.views.views import (
     # Public
     CourseListAPIView, CourseDetailAPIView,
     CourseCurriculumAPIView, CourseCurriculumPreviewAPIView,
     CategoryListAPIView, CategoryCreateAPIView, CategoryUpdateAPIView, CategoryDeleteAPIView,
+
+    # (R2) Course Access Plan
+    CoursePlanListCreateAPIView, CoursePlanDetailAPIView,
 
     # Admin
     AdminCourseListAPIView, AdminCourseCreateAPIView, AdminCourseDetailAPIView,
@@ -19,13 +28,7 @@ from apps.courses.views.views import (
     InstructorCourseListAPIView, InstructorCourseDetailAPIView,
     InstructorCourseStudentsAPIView, InstructorCourseQuizResultsAPIView, InstructorCourseAnalyticsAPIView,
     InstructorCourseEssaySubmissionsAPIView, InstructorCourseGradeEssayAPIView,
-    InstructorCourseSendNotificationAPIView, InstructorCourseQAAPIView,
-    InstructorCourseQAReplyAPIView, InstructorCourseLearningReportAPIView,
-
-    # Student Q&A
-    StudentCourseQuestionListAPIView, StudentCourseQuestionCreateAPIView,
-    StudentCourseQuestionDetailAPIView, StudentCourseQuestionReplyAPIView,
-    StudentCourseQuestionCloseAPIView,
+    InstructorCourseSendNotificationAPIView, InstructorCourseLearningReportAPIView,
 )
 
 
@@ -35,6 +38,16 @@ urlpatterns = [
     path("<int:course_id>/", CourseDetailAPIView.as_view(), name="course-detail"),
     path("<int:course_id>/curriculum/", CourseCurriculumAPIView.as_view(), name="course-curriculum"),
     path("<int:course_id>/curriculum/preview/", CourseCurriculumPreviewAPIView.as_view(), name="course-curriculum-preview"),
+
+    # ==================== COURSE SERIES ====================
+    path("series/", CourseSeriesListCreateAPIView.as_view(), name="course-series-list-create"),
+    path("series/<int:series_id>/", CourseSeriesDetailAPIView.as_view(), name="course-series-detail"),
+    path("series/<int:series_id>/create-version/", CourseSeriesCreateVersionAPIView.as_view(), name="course-series-create-version"),
+    path("series/publish-and-hide/<int:course_id>/", CourseSeriesPublishAndHideAPIView.as_view(), name="course-series-publish-hide"),
+
+    # ==================== COURSE ACCESS PLAN ====================
+    path("admin/<int:course_id>/plans/", CoursePlanListCreateAPIView.as_view(), name="course-plan-list-create"),
+    path("admin/<int:course_id>/plans/<uuid:plan_id>/", CoursePlanDetailAPIView.as_view(), name="course-plan-detail"),
 
     # ==================== ADMIN ====================
     path("admin/", AdminCourseListAPIView.as_view(), name="admin-course-list"),
@@ -56,16 +69,7 @@ urlpatterns = [
     path("instructor/<int:course_id>/essay-submissions/", InstructorCourseEssaySubmissionsAPIView.as_view(), name="instructor-course-essay-submissions"),
     path("instructor/<int:course_id>/grade-essay/", InstructorCourseGradeEssayAPIView.as_view(), name="instructor-course-grade-essay"),
     path("instructor/<int:course_id>/send-notification/", InstructorCourseSendNotificationAPIView.as_view(), name="instructor-course-send-notification"),
-    path("instructor/<int:course_id>/qa/", InstructorCourseQAAPIView.as_view(), name="instructor-course-qa"),
-    path("instructor/<int:course_id>/qa/<int:question_id>/reply/", InstructorCourseQAReplyAPIView.as_view(), name="instructor-course-qa-reply"),
     path("instructor/<int:course_id>/learning-report/", InstructorCourseLearningReportAPIView.as_view(), name="instructor-course-learning-report"),
-
-    # ==================== STUDENT Q&A ====================
-    path("<int:course_id>/student/qa/", StudentCourseQuestionListAPIView.as_view(), name="student-course-qa-list"),
-    path("<int:course_id>/student/qa/create/", StudentCourseQuestionCreateAPIView.as_view(), name="student-course-qa-create"),
-    path("<int:course_id>/student/qa/<int:question_id>/", StudentCourseQuestionDetailAPIView.as_view(), name="student-course-qa-detail"),
-    path("<int:course_id>/student/qa/<int:question_id>/reply/", StudentCourseQuestionReplyAPIView.as_view(), name="student-course-qa-reply"),
-    path("<int:course_id>/student/qa/<int:question_id>/close/", StudentCourseQuestionCloseAPIView.as_view(), name="student-course-qa-close"),
 
     # ==================== CATEGORY ====================
     path("categories/", CategoryListAPIView.as_view(), name="category-list"),

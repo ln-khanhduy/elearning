@@ -11,6 +11,7 @@ function StepCurriculumBuilder({
   editingItem,
   editingSectionId,
   saving,
+  isPublished = false,
   onSelectLesson,
   onSelectQuiz,
   onCloseDrawer,
@@ -64,6 +65,7 @@ function StepCurriculumBuilder({
             onClose={onCloseDrawer}
             onSave={onSaveLesson}
             saving={saving}
+            isPublished={isPublished}
           />
         )}
 

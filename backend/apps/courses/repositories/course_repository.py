@@ -1,17 +1,25 @@
-from django.db.models import Count, Subquery, OuterRef, Q
+from django.utils import timezone
+from django.db.models import Count, Subquery, OuterRef, Q, Prefetch
 from rest_framework.exceptions import NotFound
-from apps.courses.models import Course
+from apps.courses.models import Course, CourseAccessPlan
 from apps.lessons.models import Chapter, Lesson
 from apps.enrollments.models import Enrollment
 from apps.common.cache_utils import invalidate_cache
 
 
 def _base_queryset():
-    """Base queryset với select_related cho các trường khóa ngoại thông dụng."""
+    """Base queryset với select_related + prefetch access_plans (tránh N+1)."""
     return Course.objects.select_related(
         "created_by", "assigned_instructor", "category"
+    ).prefetch_related(
+        # (R2) Prefetch gói kích hoạt — serializer dùng obj._active_access_plans
+        Prefetch(
+            "access_plans",
+            queryset=CourseAccessPlan.objects.all().order_by("duration_days"),
+            to_attr="_active_access_plans",
+        )
     ).only(
-        "id", "title", "slug", "description", "price", "status",
+        "id", "title", "slug", "description", "status",
         "thumbnail", "preview_video_url", "published_at",
         "created_at", "updated_at",
         "created_by__id", "created_by__email", "created_by__first_name", "created_by__last_name",
@@ -33,10 +41,20 @@ def _annotate_counts(qs):
         ),
         _student_count=Count(
             "enrollments",
-            filter=Q(enrollments__status__in=[
-                Enrollment.Status.ACTIVE,
-                Enrollment.Status.COMPLETED,
-            ]),
+            filter=Q(
+                enrollments__status__in=[
+                    Enrollment.Status.ACTIVE,
+                    Enrollment.Status.COMPLETED,
+                ],
+                # (R2) Chỉ đếm học viên CÒN HẠN truy cập (expires_at null hoặc > now)
+                enrollments__expires_at__isnull=True,
+            ) | Q(
+                enrollments__status__in=[
+                    Enrollment.Status.ACTIVE,
+                    Enrollment.Status.COMPLETED,
+                ],
+                enrollments__expires_at__gt=timezone.now(),
+            ),
             distinct=True,
         ),
     )
@@ -69,12 +87,13 @@ def get_by_id(course_id):
 
 
 def get_cartable_by_ids(course_ids):
-    """Lấy các khóa học đã xuất bản, có phí (>0) theo danh sách ID (dùng cho thanh toán giỏ hàng)."""
+    """(R2) Lấy các khóa học đã xuất bản còn gói kích hoạt theo danh sách ID (dùng cho thanh toán giỏ hàng)."""
     return Course.objects.filter(
         id__in=course_ids,
         status=Course.Status.PUBLISHED,
-        price__gt=0,
-    )
+        access_plans__duration_days__gt=0,
+        access_plans__price__gt=0,
+    ).distinct()
 
 
 def create(data):

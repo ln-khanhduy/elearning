@@ -5,15 +5,18 @@ const request = async (callback) => {
     const res = await callback();
     return res.data;
   } catch (error) {
-    throw new Error(getErrorMessage(error));
+    const e = new Error(getErrorMessage(error));
+    e.cause = error;
+    throw e;
   }
 };
 
 // ==================== STRIPE ====================
 
-// Tạo phiên thanh toán Stripe cho khóa học
-export const createStripeCheckoutApi = async (courseId, couponCode = "") => {
-  const payload = couponCode ? { coupon_code: couponCode } : {};
+// Tạo phiên thanh toán Stripe cho khóa học — bắt buộc chọn gói (plan_id)
+export const createStripeCheckoutApi = async (courseId, planId, couponCode = "") => {
+  const payload = { plan_id: planId };
+  if (couponCode) payload.coupon_code = couponCode;
   return request(() =>
     apiClient.post(`/api/payments/stripe/courses/${courseId}/checkout/`, payload)
   );
@@ -44,13 +47,6 @@ export const getTransactionDetailApi = async (transactionId) => {
   );
 };
 
-// ==================== INSTRUCTOR ====================
-
-// Lấy dữ liệu doanh thu của giảng viên
-export const getInstructorRevenueApi = async () => {
-  return request(() => apiClient.get("/api/payments/instructor/revenue/"));
-};
-
 // ==================== ADMIN ====================
 
 // Lấy danh sách giao dịch quản trị (có lọc theo trạng thái, nhà cung cấp, khóa học, học viên, ngày)
@@ -65,6 +61,17 @@ export const getAdminTransactionsApi = async (params = {}) => {
   const qs = query.toString();
   return request(() =>
     apiClient.get(`/api/payments/admin/transactions/${qs ? `?${qs}` : ""}`)
+  );
+};
+
+// Lấy báo cáo tài chính tổng hợp (KPI, theo tháng, trạng thái, top khóa học, 14 ngày gần nhất)
+export const getAdminFinanceReportApi = async (params = {}) => {
+  const query = new URLSearchParams();
+  if (params.date_from) query.append("date_from", params.date_from);
+  if (params.date_to) query.append("date_to", params.date_to);
+  const qs = query.toString();
+  return request(() =>
+    apiClient.get(`/api/payments/admin/reports/${qs ? `?${qs}` : ""}`)
   );
 };
 

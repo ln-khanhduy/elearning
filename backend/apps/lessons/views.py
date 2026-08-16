@@ -11,6 +11,7 @@ from apps.lessons.services import chapter_service
 from apps.lessons.serializers.lesson_serializer import LessonSerializer, LessonCreateUpdateSerializer, LessonReorderSerializer
 from apps.lessons.services import lesson_service
 from apps.lessons.repositories import lesson_repository
+from apps.enrollments.services.learning_service import can_access_lesson, can_access_course
 from apps.common.response_helpers import success_response, error_response
 
 
@@ -108,22 +109,66 @@ class ChapterReorderAPIView(BasePermissionAPIView):
 
 # ==================== LESSON ====================
 
+class BunnyInitUploadAPIView(BasePermissionAPIView):
+    """POST /api/lessons/bunny/init-upload/ - Khởi tạo upload video Bunny (tus)."""
+    required_permission = "course.lesson.manage"
+
+    def post(self, request):
+        from apps.common import bunny_service
+        try:
+            data = bunny_service.init_tus_upload(request.data.get("title") or "Bai hoc video")
+            return success_response(data, "OK", status.HTTP_201_CREATED)
+        except Exception as e:
+            return error_response(str(e), http_status=500)
+
+
 class ChapterLessonListAPIView(APIView):
-    """GET /api/chapters/{chapter_id}/lessons/ - Danh sách bài học của một chương (công khai)."""
+    """
+    GET /api/chapters/{chapter_id}/lessons/ - Danh sách bài học của một chương.
+
+    Công khai cấu trúc bài học, NHƯNG KHÔNG expose signed video URL cho user chưa có quyền.
+    - User chưa đăng nhập / chưa mua khóa học: video_url = None.
+    - User đã được authorization (enrolled/owner): video_url = signed URL runtime.
+    """
     permission_classes = [AllowAny]
 
     def get(self, request, chapter_id):
         lessons = lesson_service.get_lessons_by_chapter(chapter_id)
-        return success_response(LessonSerializer(lessons, many=True).data)
+        if not lessons:
+            return success_response([])
+        course = lessons[0].chapter.course
+        context = {}
+        if request.user and request.user.is_authenticated and can_access_course(request.user, course):
+            context["sign_video"] = True
+        else:
+            context["hide_video"] = True
+        return success_response(LessonSerializer(lessons, many=True, context=context).data)
 
 
 class LessonDetailAPIView(APIView):
-    """GET /api/lessons/{lesson_id}/ - Chi tiết bài học (công khai)."""
+    """
+    GET /api/lessons/{lesson_id}/ - Chi tiết bài học.
+
+    Thứ tự xử lý:
+    1. Authenticate user
+    2. Check user có quyền xem lesson
+    3. Check content_type == VIDEO
+    4. Extract Video ID từ lesson.video_url
+    5. Generate signed Bunny URL
+    6. Return response
+
+    KHÔNG generate/sign token trước khi authorization.
+    """
     permission_classes = [AllowAny]
 
     def get(self, request, lesson_id):
         lesson = lesson_service.get_lesson_detail(lesson_id)
-        return success_response(LessonSerializer(lesson).data)
+        context = {}
+        if request.user and request.user.is_authenticated and can_access_lesson(request.user, lesson):
+            context["sign_video"] = True
+        else:
+            context["hide_video"] = True
+        return success_response(LessonSerializer(lesson, context=context).data)
 
 
 class LessonCreateAPIView(BasePermissionAPIView):

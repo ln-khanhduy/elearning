@@ -50,6 +50,16 @@ class PaymentTransaction(models.Model):
     hold_time = models.DateTimeField(null=True, blank=True)
     # Thời điểm học viên thanh toán thành công (chuyển từ PENDING -> HOLD)
     paid_at = models.DateTimeField(null=True, blank=True)
+    # (R2) Gói truy cập đã mua cho khóa này
+    access_plan = models.ForeignKey(
+        'courses.CourseAccessPlan',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='payment_transactions',
+    )
+    # (R2) Thời điểm hết hạn truy cập (paid_at + duration_days của gói)
+    expires_at = models.DateTimeField(null=True, blank=True)
     # ===== Thông tin hoàn tiền (refund) - source of truth duy nhất =====
     # Thời điểm học viên yêu cầu hoàn tiền
     refund_requested_at = models.DateTimeField(null=True, blank=True)

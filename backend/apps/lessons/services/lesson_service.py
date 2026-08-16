@@ -4,7 +4,16 @@ from rest_framework.exceptions import PermissionDenied, ValidationError
 from apps.lessons.models import Lesson
 from apps.lessons.repositories import lesson_repository
 from apps.lessons.repositories import chapter_repository
+from apps.courses.models import Course
 from apps.courses.services import course_permission_service
+
+
+def _ensure_not_published(course):
+    """Khóa PUBLISHED không được thêm/xóa/sắp xếp nội dung."""
+    if course.status == Course.Status.PUBLISHED:
+        raise ValidationError(
+            {"detail": "Khóa đã public không được sửa nội dung. Hãy tạo phiên bản khóa mới."}
+        )
 
 
 def _generate_unique_slug(chapter_id, title, exclude_lesson_id=None):
@@ -54,6 +63,8 @@ def create_lesson(chapter_id, user, data):
     if not course_permission_service.can_manage_course(chapter.course, user):
         raise PermissionDenied("Bạn không có quyền thao tác với khóa học này.")
 
+    _ensure_not_published(chapter.course)
+
     order = data.get("order")
     if order is None:
         last = lesson_repository.get_by_chapter(chapter_id).order_by("-order").first()
@@ -77,8 +88,9 @@ def update_lesson(lesson_id, user, data):
     - Tự sinh lại slug duy nhất nếu tiêu đề được thay đổi.
     """
     lesson = lesson_repository.get_by_id(lesson_id)
+    course = lesson.chapter.course
 
-    if not course_permission_service.can_manage_course(lesson.chapter.course, user):
+    if not course_permission_service.can_manage_course(course, user):
         raise PermissionDenied("Bạn không có quyền thao tác với khóa học này.")
 
     # Xử lý các trường integer bị gửi dưới dạng chuỗi rỗng từ FormData
@@ -87,6 +99,15 @@ def update_lesson(lesson_id, user, data):
         if key in ("order",) and (value == "" or value is None):
             continue  # Bỏ qua order rỗng
         cleaned_data[key] = value
+
+    # Khóa PUBLISHED chỉ được phép sửa video/material (ngoại lệ video hỏng)
+    if course.status == Course.Status.PUBLISHED:
+        allowed_fields = {"video_url", "material_file", "material_url"}
+        forbidden = [k for k in cleaned_data if k not in allowed_fields]
+        if forbidden:
+            raise ValidationError(
+                {"detail": "Khóa đã public chỉ được phép thay video/material hỏng. Không thể sửa nội dung khác."}
+            )
 
     new_order = cleaned_data.get("order")
     if new_order is not None and new_order != lesson.order and lesson_repository.exists_order(lesson.chapter_id, new_order):
@@ -115,6 +136,8 @@ def delete_lesson(lesson_id, user):
     if not course_permission_service.can_manage_course(lesson.chapter.course, user):
         raise PermissionDenied("Bạn không có quyền thao tác với khóa học này.")
 
+    _ensure_not_published(lesson.chapter.course)
+
     lesson_repository.delete(lesson_id)
 
 
@@ -129,6 +152,8 @@ def reorder_lessons(chapter_id, user, lessons_data):
 
     if not course_permission_service.can_manage_course(chapter.course, user):
         raise PermissionDenied("Bạn không có quyền thao tác với khóa học này.")
+
+    _ensure_not_published(chapter.course)
 
     ids = [item["id"] for item in lessons_data]
     orders = [item["order"] for item in lessons_data]

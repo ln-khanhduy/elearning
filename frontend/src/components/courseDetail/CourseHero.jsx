@@ -1,4 +1,3 @@
-import React from "react";
 import { formatPrice } from "../../utils/formatPrice";
 import "../../style/courseDetail/course-hero.css";
 import CourseRating from "./CourseRating";
@@ -14,7 +13,7 @@ function CourseHero({ course }) {
 
   // Giải nén dữ liệu khóa học
   const { title, description, thumbnail_url, preview_video_url, assigned_instructor_name, assigned_instructor_avatar,
-    average_rating, review_count, student_count, price, category_name } = course;
+    average_rating, review_count, student_count, min_price, category_name } = course;
 
   return (
     <section className="course-hero">
@@ -42,8 +41,8 @@ function CourseHero({ course }) {
 
           {/* Hiển thị giá khóa học trên mobile */}
           <div className="course-hero-price-mobile">
-            {price !== null && price !== undefined && (
-              <span className="price-current">{formatPrice(price)}</span>
+            {min_price !== null && min_price !== undefined && (
+              <span className="price-current">{formatPrice(min_price)}</span>
             )}
           </div>
         </div>

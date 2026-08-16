@@ -206,7 +206,7 @@ TỔNG QUAN:
 
         # Gửi cho tất cả admin
         admins = User.objects.filter(
-            Q(role__code='SUPERADMIN') | Q(role__code='COURSE_ADMIN') | Q(role__code='FINANCE_ADMIN')
+            Q(role__code='SUPERADMIN') | Q(role__code='COURSE_ADMIN')
         )
 
         sent = 0

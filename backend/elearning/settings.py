@@ -71,7 +71,8 @@ INSTALLED_APPS = [
     'apps.support',
     'apps.promotions',
     'apps.cart',
-    
+    'apps.duties',
+    'apps.chat',
 ]
 AUTH_USER_MODEL = 'users.User'
 
@@ -200,8 +201,24 @@ CELERY_BEAT_SCHEDULE = {
             'expires': 3600,  # Task hết hạn sau 1 giờ nếu không chạy được
         },
     },
+    # (R2) Quét hết hạn enrollment + gửi thông báo sắp hết hạn — chạy mỗi ngày lúc 03:00
+    'run-enrollment-expiry-daily': {
+        'task': 'apps.common.tasks.run_enrollment_expiry_task',
+        'schedule': crontab(hour=3, minute=0),
+        'options': {
+            'expires': 3600,
+        },
+    },
+    # (R1) Tổng hợp lương giảng viên tháng trước — chạy ngày 1 mỗi tháng lúc 00:30
+    'compute-instructor-payroll-monthly': {
+        'task': 'apps.common.tasks.compute_instructor_payroll_task',
+        'schedule': crontab(hour=0, minute=30, day_of_month=1),
+        'options': {
+            'expires': 3600,
+        },
+    },
 }
-# Lưu ý: CELERY_BEAT_SCHEDULE chạy lúc 02:00 theo Asia/Ho_Chi_Minh.
+# Lưu ý: CELERY_BEAT_SCHEDULE chạy lúc 02:00/03:00 theo Asia/Ho_Chi_Minh.
 # Đảm bảo Celery beat được chạy bằng lệnh `celery -A elearning beat -l info`.
 
 # Static files (CSS, JavaScript, Images)
@@ -270,6 +287,13 @@ SIMPLE_JWT = {
     'ALGORITHM': 'HS256',
     'USER_ID_FIELD': 'id',
     'USER_ID_CLAIM': 'user_id',
+}
+
+# Bunny Stream configuration
+BUNNY_CONFIG = {
+    'LIBRARY_ID': os.getenv('BUNNY_LIBRARY_ID'),
+    'API_KEY': os.getenv('BUNNY_API_KEY'),
+    'TOKEN_KEY': os.getenv('BUNNY_TOKEN_KEY'),
 }
 
 # Cloudinary configuration

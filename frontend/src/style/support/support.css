@@ -324,6 +324,171 @@
   padding: 24px 0;
 }
 
+/* ===== ADMIN REQUESTS (Xử lý yêu cầu) ===== */
+
+/* Bộ lọc */
+.support-filter {
+  margin-bottom: 16px;
+  max-width: 260px;
+}
+
+.support-filter .support-select {
+  width: 100%;
+}
+
+/* Danh sách yêu cầu */
+.support-list-item {
+  background: var(--card, #ffffff);
+  border: 1px solid #e9ecef;
+  border-radius: var(--card-radius, 10px);
+  padding: var(--card-padding, 18px);
+  margin-bottom: 14px;
+  transition: box-shadow 0.2s, border-color 0.2s;
+}
+
+.support-list-item:hover {
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+  border-color: #dce0e6;
+}
+
+.support-list-item-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.support-list-item-top h6 {
+  margin: 0 0 6px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--course-text, #1a1a2e);
+}
+
+.support-list-item-top p {
+  margin: 0 0 8px;
+  font-size: 13px;
+  color: #495057;
+  line-height: 1.55;
+}
+
+.support-list-meta {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  font-size: 12px;
+  color: #6c757d;
+}
+
+.support-list-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.support-list-meta i {
+  font-size: 13px;
+}
+
+/* Badge trạng thái (cuối dòng) */
+.support-list-item .badge-warning-bg,
+.support-list-item .badge-info-bg,
+.support-list-item .badge-success-bg,
+.support-list-item .badge-danger-bg,
+.support-list-item .badge-secondary-bg {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.badge-warning-bg {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.badge-info-bg {
+  background: #cfe2ff;
+  color: #084298;
+}
+
+.badge-success-bg {
+  background: #d1e7dd;
+  color: #0f5132;
+}
+
+.badge-danger-bg {
+  background: #f8d7da;
+  color: #842029;
+}
+
+.badge-secondary-bg {
+  background: #e9ecef;
+  color: #495057;
+}
+
+/* Phản hồi đã có */
+.support-resolution {
+  background: #f8f9fa;
+  border-left: 3px solid var(--primary, #0f3d75);
+  border-radius: 6px;
+  padding: 10px 12px;
+  font-size: 13px;
+  color: #495057;
+  margin-top: 10px;
+}
+
+.support-resolution strong {
+  color: #212529;
+}
+
+/* Form xử lý */
+.support-process-form {
+  background: #f8f9fc;
+  border: 1px solid #e8ecf1;
+  border-radius: 8px;
+  padding: 14px;
+  margin-top: 12px;
+}
+
+.support-process-form h6 {
+  margin: 0 0 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--course-text, #1a1a2e);
+}
+
+.support-process-form .support-select,
+.support-process-form .support-textarea {
+  background: #fff;
+}
+
+.support-process-form .support-textarea {
+  min-height: 80px;
+}
+
+.support-form-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+/* Nút nhỏ */
+.support-btn-sm {
+  padding: 7px 14px;
+  font-size: 13px;
+  border-radius: 6px;
+}
+
+.support-btn-outline-primary.support-btn-sm {
+  margin-top: 10px;
+}
+
 /* ===== RESPONSIVE ===== */
 
 /* Mobile (max-width: 480px) */

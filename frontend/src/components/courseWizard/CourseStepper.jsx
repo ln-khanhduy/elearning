@@ -4,8 +4,8 @@ const STEPS = [
   { label: "Thông tin", icon: "bi-info-circle" },
   { label: "Nội dung", icon: "bi-collection" },
   { label: "Giá bán", icon: "bi-currency-dollar" },
+  { label: "Phân công", icon: "bi-person-check" },
   { label: "Xem lại", icon: "bi-eye" },
-  { label: "Xuất bản", icon: "bi-rocket-takeoff" },
 ];
 
 function CourseStepper({ currentStep, onStepClick }) {

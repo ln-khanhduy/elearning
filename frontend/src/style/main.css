@@ -18,7 +18,7 @@
 @import url('./instructor/apply.css');
 @import url('./student/my-courses.css');
 @import url('./instructor/courses.css');
-
+@import url('./instructor/compensation.css');
 /* Admin */
 /* Courses */
 @import url('./courses/courses-page.css');
@@ -40,6 +40,7 @@
 
 /* Admin */
 @import url('./admin/courses.css');
+@import url('./admin/instructor-payments.css');
 @import url('./admin/dashboard.css');
 @import url('./admin/instructor-applications.css');
 @import url('./admin/instructor-list.css');
@@ -178,4 +179,10 @@ a {
   border-color: var(--primary);
   color: var(--primary);
   background: rgba(15, 61, 117, 0.04);
+}
+
+/* ===== Bảng có scroll dọc (dùng chung) ===== */
+.table-scroll-y {
+  max-height: 400px;
+  overflow-y: auto;
 }

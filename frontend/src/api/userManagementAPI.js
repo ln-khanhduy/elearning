@@ -5,7 +5,9 @@ const request = async (callback) => {
     const res = await callback();
     return res.data;
   } catch (error) {
-    throw new Error(getErrorMessage(error));
+    const e = new Error(getErrorMessage(error));
+    e.cause = error;
+    throw e;
   }
 };
 
@@ -26,4 +28,14 @@ export const toggleUserActiveApi = async (id, reason) => {
   const payload = {};
   if (reason) payload.reason = reason;
   return request(() => apiClient.patch(`/api/admin/users/${id}/toggle-active/`, payload));
+};
+
+// Tạo tài khoản mới (chỉ SUPERADMIN): full_name, email, password, role_code, phone
+export const createUserApi = async (data) => {
+  return request(() => apiClient.post("/api/admin/users/create/", data));
+};
+
+// Đặt lại mật khẩu người dùng (chỉ SUPERADMIN)
+export const resetUserPasswordApi = async (id, newPassword) => {
+  return request(() => apiClient.patch(`/api/admin/users/${id}/reset-password/`, { new_password: newPassword }));
 };

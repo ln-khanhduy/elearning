@@ -1,5 +1,4 @@
 from apps.cart.models import Cart, CartItem
-from apps.enrollments.models import Enrollment
 
 
 def get_user_cart(user):
@@ -9,16 +8,26 @@ def get_user_cart(user):
 
 
 def get_cart_with_items(user):
-    """Lấy giỏ hàng kèm danh sách items."""
+    """Lấy giỏ hàng kèm danh sách items (kèm course + gói)."""
     cart = get_user_cart(user)
-    items = CartItem.objects.filter(cart=cart).select_related("course")
+    items = CartItem.objects.filter(cart=cart).select_related("course", "access_plan")
     return cart, items
 
 
-def add_to_cart(user, course):
-    """Thêm khóa học vào giỏ hàng. Trả về (item, created)."""
+def add_to_cart(user, course, access_plan):
+    """(R2) Thêm khóa học + GÓI vào giỏ hàng. Trả về (item, created).
+    Gói (access_plan) bắt buộc — chọn gói trước khi thêm vào giỏ.
+    """
     cart = get_user_cart(user)
-    item, created = CartItem.objects.get_or_create(cart=cart, course=course)
+    item, created = CartItem.objects.get_or_create(
+        cart=cart,
+        course=course,
+        defaults={"access_plan": access_plan},
+    )
+    # Nếu item đã tồn tại, cập nhật gói mới nhất được chọn
+    if not created and item.access_plan_id != access_plan.id:
+        item.access_plan = access_plan
+        item.save(update_fields=["access_plan", "updated_at"])
     return item, created
 
 
@@ -36,9 +45,9 @@ def clear_cart(user):
 
 
 def get_cart_total(user):
-    """Tính tổng tiền giỏ hàng."""
+    """(R2) Tính tổng tiền giỏ hàng theo GÓI đã chọn (Course.price đã bỏ)."""
     cart, items = get_cart_with_items(user)
-    total = sum(item.course.price for item in items if item.course)
+    total = sum(item.access_plan.price for item in items if item.access_plan)
     return total
 
 

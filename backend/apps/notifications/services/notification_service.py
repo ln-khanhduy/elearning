@@ -237,11 +237,3 @@ def notify_review_replied(student, instructor_name, course_title):
         notification_type=Notification.Type.COURSE, channel=Notification.Channel.IN_APP,
     )
 
-
-def notify_question_asked(instructor, student_name, course_title, question_title):
-    """#23: Gửi thông báo cho giảng viên khi học viên đặt câu hỏi mới trong khóa học."""
-    return _create(
-        recipient=instructor, title="Câu hỏi mới từ học viên",
-        body=f'{student_name} đã đặt câu hỏi trong khóa học "{course_title}": {question_title}',
-        notification_type=Notification.Type.COURSE, channel=Notification.Channel.IN_APP,
-    )

@@ -41,18 +41,6 @@ export const sendCourseNotificationApi = async (courseId, title, body) => {
   );
 };
 
-// Lấy danh sách câu hỏi Q&A của khóa học
-export const getCourseQAApi = async (courseId) => {
-  return request(() => apiClient.get(`/api/courses/instructor/${courseId}/qa/`));
-};
-
-// Trả lời một câu hỏi trong phần Q&A của khóa học
-export const replyCourseQAApi = async (courseId, questionId, content) => {
-  return request(() =>
-    apiClient.post(`/api/courses/instructor/${courseId}/qa/${questionId}/reply/`, { content })
-  );
-};
-
 // Lấy danh sách bài tự luận học viên đã nộp
 export const getEssaySubmissionsApi = async (courseId) => {
   return request(() => apiClient.get(`/api/courses/instructor/${courseId}/essay-submissions/`));

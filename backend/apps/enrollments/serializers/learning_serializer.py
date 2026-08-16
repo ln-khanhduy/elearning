@@ -2,7 +2,6 @@ from rest_framework import serializers
 from apps.enrollments.models import LessonProgress, CourseProgress
 from apps.lessons.models import Chapter, Lesson
 from apps.quizzes.models import Quiz, Question, QuestionOption
-from apps.lessons.models import Lesson as LessonModel
 
 
 class LessonProgressSerializer(serializers.ModelSerializer):
@@ -78,8 +77,8 @@ class ChapterLearningSerializer(serializers.ModelSerializer):
         fields = ["id", "title", "description", "order", "lessons"]
 
     def get_lessons(self, obj):
-        """Lấy danh sách bài học, chỉ lấy PUBLISHED."""
-        lessons = obj.lessons.filter(status=LessonModel.Status.PUBLISHED).order_by("order", "id")
+        """Lấy danh sách bài học."""
+        lessons = obj.lessons.all().order_by("order", "id")
         return LessonLearningSerializer(lessons, many=True).data
 
 
@@ -101,3 +100,11 @@ class QuizSubmitSerializer(serializers.Serializer):
         required=True,
         allow_empty=False,
     )
+    # Thời điểm bắt đầu làm bài (millisecond timestamp) - dùng để kiểm tra giới hạn thời gian.
+    # Optional để tương thích ngược với client cũ.
+    started_at = serializers.IntegerField(required=False, allow_null=True)
+
+    def validate_started_at(self, value):
+        if value is not None and value <= 0:
+            raise serializers.ValidationError("Thời điểm bắt đầu làm bài không hợp lệ.")
+        return value

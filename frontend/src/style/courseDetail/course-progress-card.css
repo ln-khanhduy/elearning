@@ -8,6 +8,95 @@
   font-size: 13px;
 }
 
+/* Plans - compact selectable cards */
+.progress-card-plans {
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--course-border-light);
+}
+
+.progress-card-plans-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--course-text);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.progress-card-plan-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.progress-card-plan {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px;
+  border: 1.5px solid var(--course-border, #e2e8f0);
+  border-radius: 10px;
+  background: #fff;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+}
+
+.progress-card-plan:hover {
+  border-color: var(--course-primary, #0f3d75);
+  background: rgba(15, 61, 117, 0.03);
+}
+
+.progress-card-plan.active {
+  border-color: var(--course-primary, #0f3d75);
+  background: rgba(15, 61, 117, 0.06);
+  box-shadow: 0 0 0 3px rgba(15, 61, 117, 0.08);
+}
+
+.progress-card-plan-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.progress-card-plan-radio {
+  accent-color: var(--course-primary, #0f3d75);
+  width: 15px;
+  height: 15px;
+  cursor: pointer;
+}
+
+.progress-card-plan-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--course-text);
+}
+
+.progress-card-plan-price {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--course-primary, #0f3d75);
+  white-space: nowrap;
+}
+
+.progress-card-plan-duration {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--course-text-muted, #64748b);
+}
+
+.progress-card-plan-duration i {
+  font-size: 13px;
+  color: var(--course-primary, #0f3d75);
+}
+
 /* Price - compact */
 .progress-card-price {
   text-align: center;

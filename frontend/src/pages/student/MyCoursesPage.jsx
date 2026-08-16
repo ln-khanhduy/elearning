@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { getMyCoursesApi } from "../../api/enrollmentAPI";
-import ConfirmModal from "../../components/common/ConfirmModal";
 
 // Trang khóa học của tôi: hiển thị danh sách khóa học đã đăng ký, lọc, tìm kiếm và phân trang
 function MyCoursesPage() {
@@ -22,7 +21,7 @@ function MyCoursesPage() {
       setLoading(true);
       const res = await getMyCoursesApi();
       setEnrollments(res?.data || res || []);
-    } catch (err) {
+    } catch {
       toast.error("Không thể tải danh sách khóa học.");
     } finally {
       setLoading(false);
@@ -47,6 +46,62 @@ function MyCoursesPage() {
     return "#dc3545";
   };
 
+  // Biến thành ngày (bỏ giờ/phút) để so sánh theo ngày
+  const startOfDay = useCallback((d) => {
+    const x = new Date(d);
+    x.setHours(0, 0, 0, 0);
+    return x.getTime();
+  }, []);
+
+  // (Fix) Nếu expires_at lưu trong DB không hợp lý (cùng ngày hoặc trước enrolled_at)
+  // do dữ liệu cũ/sai, tính lại = enrolled_at + duration_days của gói.
+  // Hàm trả về Date hợp lệ hoặc null.
+  const getCorrectedExpiry = useCallback(
+    (enr) => {
+      const val = enr.expires_at;
+      if (!val) return null;
+
+      const expiresDate = new Date(val);
+      if (isNaN(expiresDate.getTime())) return null;
+
+      const enrolledAt = enr.enrolled_at ? new Date(enr.enrolled_at) : null;
+      const days = Number(enr.access_plan?.duration_days || 0);
+
+      // expires_at phải ít nhất là ngày kế tiếp sau enrolled_at khi có gói thời hạn.
+      if (enrolledAt && !isNaN(enrolledAt.getTime()) && days > 0) {
+        const minExpiry = new Date(enrolledAt);
+        minExpiry.setDate(minExpiry.getDate() + days);
+        if (startOfDay(expiresDate) <= startOfDay(enrolledAt)) {
+          return minExpiry;
+        }
+      }
+
+      return expiresDate;
+    },
+    [startOfDay]
+  );
+
+  // Hết hạn khi status = EXPIRED, hoặc ngày hết hạn (đã hiệu chỉnh) <= hôm nay
+  const isExpired = useCallback(
+    (enr) => {
+      if (enr.status === "EXPIRED") return true;
+      const expiry = getCorrectedExpiry(enr);
+      if (!expiry) return !!enr.is_expired;
+      return startOfDay(expiry) <= startOfDay(new Date());
+    },
+    [getCorrectedExpiry, startOfDay]
+  );
+
+  // Định dạng thời hạn — luôn dùng ngày hết hạn đã hiệu chỉnh
+  const formatExpiry = useCallback(
+    (enr) => {
+      const expiry = getCorrectedExpiry(enr);
+      if (!expiry) return null;
+      return expiry.toLocaleDateString("vi-VN");
+    },
+    [getCorrectedExpiry]
+  );
+
   // Lọc danh sách khóa học theo tìm kiếm, trạng thái và sắp xếp
   const filteredEnrollments = useMemo(() => {
     let result = [...enrollments];
@@ -68,6 +123,8 @@ function MyCoursesPage() {
       result = result.filter((enr) => getProgressPercent(enr) >= 100);
     } else if (statusFilter === "not-started") {
       result = result.filter((enr) => getProgressPercent(enr) === 0);
+    } else if (statusFilter === "expired") {
+      result = result.filter((enr) => isExpired(enr));
     }
 
     // Sort
@@ -82,7 +139,7 @@ function MyCoursesPage() {
     }
 
     return result;
-  }, [enrollments, searchQuery, statusFilter, sortBy]);
+  }, [enrollments, searchQuery, statusFilter, sortBy, isExpired]);
 
   // Pagination
   const totalPages = Math.ceil(filteredEnrollments.length / pageSize);
@@ -93,6 +150,7 @@ function MyCoursesPage() {
 
   // Reset page on filter change
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setCurrentPage(1);
   }, [searchQuery, statusFilter, sortBy]);
 
@@ -150,6 +208,7 @@ function MyCoursesPage() {
               { key: "in-progress", label: "Đang học" },
               { key: "completed", label: "Đã hoàn thành" },
               { key: "not-started", label: "Chưa bắt đầu" },
+              { key: "expired", label: "Đã hết hạn" },
             ].map((tab) => (
               <button
                 key={tab.key}
@@ -204,6 +263,11 @@ function MyCoursesPage() {
                       <i className="bi bi-play-circle"></i>
                     </div>
                   )}
+                  {isExpired(enr) && (
+                    <div className="my-course-expired-badge">
+                      <i className="bi bi-clock-history me-1"></i>Đã hết hạn
+                    </div>
+                  )}
                   {getProgressPercent(enr) > 0 && (
                     <div className="my-course-progress-bar">
                       <div
@@ -219,6 +283,16 @@ function MyCoursesPage() {
                 <div className="my-course-body">
                   <h3>{enr.course_title || "Khóa học"}</h3>
                   <p className="text-muted small">{enr.instructor_name || ""}</p>
+                  {enr.access_plan && (
+                    <small className="text-muted d-block">
+                      Gói: {enr.access_plan.duration_days} ngày
+                    </small>
+                  )}
+                  {enr.expires_at && (
+                    <small className={`d-block ${isExpired(enr) ? "text-danger" : "text-muted"}`}>
+                      Hết hạn: {formatExpiry(enr)}
+                    </small>
+                  )}
                   <div className="my-course-meta">
                     <small className="text-muted">
                       <i className="bi bi-check-circle me-1"></i>

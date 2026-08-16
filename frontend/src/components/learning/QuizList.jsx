@@ -76,6 +76,9 @@ function QuizList({ quizzes, lessonId }) {
   const timerRef = useRef(null);
   const courseIdRef = useRef(courseId);
   courseIdRef.current = courseId;
+  // Ref để forceSubmit/handleSubmit luôn đọc giá trị quizStartedAt mới nhất (tránh stale closure)
+  const quizStartedAtRef = useRef(quizStartedAt);
+  quizStartedAtRef.current = quizStartedAt;
 
   // Khôi phục state từ sessionStorage khi component mount
   useEffect(() => {
@@ -131,7 +134,7 @@ function QuizList({ quizzes, lessonId }) {
         };
       });
 
-      const res = await submitQuizApi(courseId, quiz.id, formattedAnswers);
+      const res = await submitQuizApi(courseId, quiz.id, formattedAnswers, quizStartedAtRef.current);
       if (res?.success && res?.data) {
         setResults((prev) => ({ ...prev, [quiz.id]: res.data }));
         // Dừng đếm giờ ngay sau khi nộp bài thành công
@@ -307,7 +310,7 @@ function QuizList({ quizzes, lessonId }) {
         };
       });
 
-      const res = await submitQuizApi(courseId, quiz.id, formattedAnswers);
+      const res = await submitQuizApi(courseId, quiz.id, formattedAnswers, quizStartedAtRef.current);
       if (res?.success && res?.data) {
         setResults((prev) => ({ ...prev, [quiz.id]: res.data }));
         // Dừng đếm giờ sau khi nộp bài thành công

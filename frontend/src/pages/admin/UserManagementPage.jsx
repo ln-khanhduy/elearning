@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { toast } from "react-toastify";
-import { getUsersApi, toggleUserActiveApi } from "../../api/userManagementAPI";
+import { getUsersApi, toggleUserActiveApi, createUserApi, resetUserPasswordApi } from "../../api/userManagementAPI";
+import { useUser } from "../../context/UserContext";
 
 // Trang quản lý người dùng: hiển thị, tìm kiếm, lọc, khóa/mở khóa tài khoản người dùng
 function UserManagementPage() {
@@ -14,9 +15,19 @@ function UserManagementPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
   const [pageSize] = useState(10);
+  const { user: currentUser } = useUser();
+  const roleCode = typeof currentUser?.role === "string" ? currentUser.role : currentUser?.role?.code;
+  const isSuperAdmin = roleCode === "SUPERADMIN";
+  const currentUserId = currentUser?.id;
   const [processingId, setProcessingId] = useState(null);
   const [confirmModal, setConfirmModal] = useState(null); // { id, full_name, is_active }
   const [lockReason, setLockReason] = useState("");
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [createForm, setCreateForm] = useState({ full_name: "", email: "", phone: "", password: "", role_code: "STUDENT" });
+  const [creating, setCreating] = useState(false);
+  const [resetTarget, setResetTarget] = useState(null); // user cần đặt lại mật khẩu
+  const [resetPassword, setResetPassword] = useState("");
+  const [resetting, setResetting] = useState(false);
   const mountedRef = useRef(true);
 
   useEffect(() => {
@@ -53,11 +64,13 @@ function UserManagementPage() {
   }, [search, roleFilter, statusFilter, page, pageSize]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchUsers();
   }, [fetchUsers]);
 
   // Reset về trang 1 khi thay đổi search hoặc filter
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setPage(1);
   }, [search, roleFilter, statusFilter]);
 
@@ -113,10 +126,6 @@ function UserManagementPage() {
         return "Quản trị khóa học";
       case "USER_MANAGER":
         return "Quản lý người dùng";
-      case "INSTRUCTOR_MANAGER":
-        return "Quản lý giảng viên";
-      case "FINANCE_ADMIN":
-        return "Quản trị tài chính";
       default:
         return role || "—";
     }
@@ -145,6 +154,67 @@ function UserManagementPage() {
     if (processingId) return;
     setConfirmModal(null);
     setLockReason("");
+  };
+
+  const handleResetPassword = async () => {
+    if (!isSuperAdmin || !resetTarget) return;
+    if (!resetPassword.trim()) {
+      toast.error("Vui lòng nhập mật khẩu mới.");
+      return;
+    }
+    setResetting(true);
+    try {
+      const res = await resetUserPasswordApi(resetTarget.id, resetPassword);
+      const data = res.data || res;
+      toast.success(data.message || "Đặt lại mật khẩu thành công.");
+      setResetTarget(null);
+      setResetPassword("");
+    } catch (err) {
+      toast.error(err.message || "Có lỗi xảy ra.");
+    } finally {
+      setResetting(false);
+    }
+  };
+
+  const handleCreateUser = async () => {
+    if (!isSuperAdmin) return;
+    const { full_name, email, password, role_code, phone } = createForm;
+    if (!full_name.trim()) {
+      toast.error("Vui lòng nhập họ tên.");
+      return;
+    }
+    if (!email.trim()) {
+      toast.error("Vui lòng nhập email.");
+      return;
+    }
+    if (!password) {
+      toast.error("Vui lòng nhập mật khẩu.");
+      return;
+    }
+    if (!role_code) {
+      toast.error("Vui lòng chọn vai trò.");
+      return;
+    }
+    setCreating(true);
+    try {
+      const res = await createUserApi({
+        full_name: full_name.trim(),
+        email: email.trim().toLowerCase(),
+        phone: phone.trim(),
+        password,
+        role_code,
+      });
+      const data = res.data || res;
+      toast.success(data.message || "Tạo tài khoản thành công.");
+      setShowCreateModal(false);
+      setCreateForm({ full_name: "", email: "", phone: "", password: "", role_code: "STUDENT" });
+      setPage(1);
+      fetchUsers();
+    } catch (err) {
+      toast.error(err.message || "Có lỗi xảy ra.");
+    } finally {
+      setCreating(false);
+    }
   };
 
   const renderPagination = () => {
@@ -235,6 +305,13 @@ function UserManagementPage() {
         <div>
           <h2>Quản lý người dùng</h2>
           <p>Quản lý tài khoản học viên và giảng viên trong hệ thống.</p>
+        </div>
+        <div className="inst-header-actions">
+          {isSuperAdmin && (
+            <button className="inst-btn-create" onClick={() => setShowCreateModal(true)}>
+              <i className="bi bi-person-plus me-1"></i> Tạo tài khoản
+            </button>
+          )}
         </div>
       </div>
 
@@ -373,6 +450,16 @@ function UserManagementPage() {
                     <td className="inst-date-cell">{user.last_login ? formatDate(user.last_login) : "—"}</td>
                     <td>
                       <div className="inst-actions">
+                        {isSuperAdmin && user.id !== currentUserId && (
+                          <button
+                            className="inst-btn-reset"
+                            onClick={() => { setResetPassword(""); setResetTarget(user); }}
+                            disabled={processingId === user.id}
+                            title="Đặt lại mật khẩu"
+                          >
+                            <i className="bi bi-key me-1"></i> Đặt lại MK
+                          </button>
+                        )}
                         {user.is_active ? (
                           <button
                             className="inst-btn-lock"
@@ -416,6 +503,153 @@ function UserManagementPage() {
             {renderPagination()}
           </div>
         </>
+      )}
+
+      {/* Reset Password Modal - chỉ SUPERADMIN */}
+      {isSuperAdmin && resetTarget && (
+        <div className="inst-modal-overlay" onClick={() => { if (!resetting) setResetTarget(null); }}>
+          <div className="inst-modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="inst-modal-header">
+              <h3 className="inst-modal-title">Đặt lại mật khẩu</h3>
+              <button
+                className="inst-modal-close"
+                onClick={() => { if (!resetting) setResetTarget(null); }}
+                disabled={resetting}
+              >
+                <i className="bi bi-x-lg"></i>
+              </button>
+            </div>
+            <div className="inst-modal-body">
+              <p>
+                Đặt lại mật khẩu cho tài khoản{" "}
+                <strong>"{resetTarget.full_name}"</strong> ({resetTarget.email}).
+              </p>
+              <div className="inst-modal-field">
+                <label className="inst-modal-label">
+                  Mật khẩu mới <span className="text-danger">*</span>
+                </label>
+                <input
+                  type="password"
+                  className="inst-modal-input"
+                  placeholder="Nhập mật khẩu mới"
+                  value={resetPassword}
+                  onChange={(e) => setResetPassword(e.target.value)}
+                  disabled={resetting}
+                />
+              </div>
+            </div>
+            <div className="inst-modal-footer">
+              <button
+                className="inst-btn-cancel"
+                onClick={() => setResetTarget(null)}
+                disabled={resetting}
+              >
+                Hủy
+              </button>
+              <button
+                className="inst-btn-confirm btn-primary"
+                onClick={handleResetPassword}
+                disabled={resetting || !resetPassword.trim()}
+              >
+                {resetting ? "Đang xử lý..." : "Xác nhận đặt lại"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Create Account Modal - chỉ SUPERADMIN */}
+      {isSuperAdmin && showCreateModal && (
+        <div className="inst-modal-overlay" onClick={() => { if (!creating) setShowCreateModal(false); }}>
+          <div className="inst-modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="inst-modal-header">
+              <h3 className="inst-modal-title">Tạo tài khoản mới</h3>
+              <button
+                className="inst-modal-close"
+                onClick={() => { if (!creating) setShowCreateModal(false); }}
+                disabled={creating}
+              >
+                <i className="bi bi-x-lg"></i>
+              </button>
+            </div>
+            <div className="inst-modal-body">
+              <div className="inst-modal-field">
+                <label className="inst-modal-label">Họ tên <span className="text-danger">*</span></label>
+                <input
+                  type="text"
+                  className="inst-modal-input"
+                  placeholder="Nhập họ tên đầy đủ"
+                  value={createForm.full_name}
+                  onChange={(e) => setCreateForm({ ...createForm, full_name: e.target.value })}
+                  disabled={creating}
+                />
+              </div>
+              <div className="inst-modal-field">
+                <label className="inst-modal-label">Email <span className="text-danger">*</span></label>
+                <input
+                  type="email"
+                  className="inst-modal-input"
+                  placeholder="example@email.com"
+                  value={createForm.email}
+                  onChange={(e) => setCreateForm({ ...createForm, email: e.target.value })}
+                  disabled={creating}
+                />
+              </div>
+              <div className="inst-modal-field">
+                <label className="inst-modal-label">Số điện thoại</label>
+                <input
+                  type="text"
+                  className="inst-modal-input"
+                  placeholder="Nhập số điện thoại (không bắt buộc)"
+                  value={createForm.phone}
+                  onChange={(e) => setCreateForm({ ...createForm, phone: e.target.value })}
+                  disabled={creating}
+                />
+              </div>
+              <div className="inst-modal-field">
+                <label className="inst-modal-label">Vai trò <span className="text-danger">*</span></label>
+                <select
+                  className="inst-modal-input"
+                  value={createForm.role_code}
+                  onChange={(e) => setCreateForm({ ...createForm, role_code: e.target.value })}
+                  disabled={creating}
+                >
+                  <option value="STUDENT">Học viên</option>
+                  <option value="INSTRUCTOR">Giảng viên</option>
+                  <option value="COURSE_ADMIN">Quản trị khóa học</option>
+                  <option value="USER_MANAGER">Quản lý người dùng</option>
+                </select>
+              </div>
+              <div className="inst-modal-field">
+                <label className="inst-modal-label">Mật khẩu <span className="text-danger">*</span></label>
+                <input
+                  type="password"
+                  className="inst-modal-input"
+                  placeholder="Nhập mật khẩu"
+                  value={createForm.password}
+                  onChange={(e) => setCreateForm({ ...createForm, password: e.target.value })}
+                  disabled={creating}
+                />
+              </div>
+            </div>
+            <div className="inst-modal-footer">
+              <button
+                className="inst-btn-cancel"
+                onClick={() => setShowCreateModal(false)}
+                disabled={creating}
+              >
+                Hủy
+              </button>
+              <button
+                className="inst-btn-confirm btn-primary"
+                onClick={handleCreateUser}
+                disabled={creating}
+              >
+                {creating ? "Đang tạo..." : "Tạo tài khoản"}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Confirm Lock Modal - yêu cầu nhập lý do */}

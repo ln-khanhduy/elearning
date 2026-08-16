@@ -15,7 +15,7 @@ function WishlistPage() {
       setLoading(true);
       const data = await getWishlistApi();
       setItems(data?.data?.items || []);
-    } catch (error) {
+    } catch {
       toast.error("Không thể tải danh sách yêu thích.");
     } finally {
       setLoading(false);
@@ -23,6 +23,7 @@ function WishlistPage() {
   }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadWishlist();
   }, [loadWishlist]);
 
@@ -30,18 +31,22 @@ function WishlistPage() {
   const handleRemove = async (courseId) => {
     try {
       await removeFromWishlistApi(courseId);
-      toast.success("Đã xóa khỏi danh sách yêu thích.");
       loadWishlist();
     } catch (error) {
       toast.error(error.message);
     }
   };
 
-  // Thêm khóa học từ danh sách yêu thích vào giỏ hàng
-  const handleAddToCart = async (courseId) => {
+  // Thêm khóa học từ danh sách yêu thích vào giỏ hàng (dùng gói mặc định đầu tiên)
+  const handleAddToCart = async (item) => {
+    const defaultPlan = item.access_plans?.[0];
+    if (!defaultPlan) {
+      toast.info("Khóa học chưa có gói truy cập.");
+      return;
+    }
     try {
-      await addToCartApi(courseId);
-      toast.success("Đã thêm vào giỏ hàng.");
+      await addToCartApi(item.course_id, defaultPlan.id);
+      window.dispatchEvent(new Event("cart-change"));
     } catch (error) {
       toast.error(error.message);
     }
@@ -118,10 +123,10 @@ function WishlistPage() {
                     </p>
                   )}
                   <div className="mt-auto d-flex justify-content-between align-items-center">
-                    <span className="fw-bold text-primary">{formatPrice(item.price)}</span>
+                    <span className="fw-bold text-primary">{formatPrice(item.min_price)}</span>
                     <button
                       className="btn btn-sm btn-outline-primary"
-                      onClick={() => handleAddToCart(item.course_id)}
+                      onClick={() => handleAddToCart(item)}
                     >
                       <i className="bi bi-cart-plus me-1"></i>Thêm vào giỏ
                     </button>

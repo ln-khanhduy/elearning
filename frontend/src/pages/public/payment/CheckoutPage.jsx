@@ -1,31 +1,36 @@
-import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useState, useMemo } from "react";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useCourseDetail } from "../../../hooks/courseDetail/useCourseDetail";
 import { createStripeCheckoutApi } from "../../../api/paymentAPI";
 import { validateCouponApi } from "../../../api/promotionAPI";
 import "../../../style/payment/payment.css";
 
-// Trang thanh toán khóa học: hiển thị tóm tắt khóa học và tạo phiên thanh toán Stripe
 function CheckoutPage() {
   const { courseId } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { course, loading, error } = useCourseDetail(courseId);
   const [processing, setProcessing] = useState(false);
   const [couponCode, setCouponCode] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [couponError, setCouponError] = useState("");
   const [discountInfo, setDiscountInfo] = useState(null);
+  const [selectedPlan, setSelectedPlan] = useState(null);
 
-  // Nếu khóa học miễn phí thì chuyển hướng về trang khóa học
-  useEffect(() => {
-    if (course && (!course.price || Number(course.price) <= 0)) {
-      toast.info("Khóa học miễn phí. Vui lòng sử dụng đăng ký miễn phí.");
-      navigate(`/courses/${courseId}`, { replace: true });
-    }
-  }, [course, courseId, navigate]);
+  const plans = useMemo(() => course?.access_plans || [], [course?.access_plans]);
 
-  // Định dạng giá tiền theo chuẩn Việt Nam
+  // Ưu tiên gói đã chọn từ trang khóa (plan_id qua URL), nếu không có mới mặc định gói đầu tiên
+  if (plans.length > 0 && !selectedPlan) {
+    const planIdFromUrl = searchParams.get("plan_id");
+    const presetPlan = planIdFromUrl
+      ? plans.find((p) => String(p.id) === String(planIdFromUrl))
+      : null;
+    setSelectedPlan(presetPlan || plans[0]);
+  }
+
+  const planPrice = selectedPlan ? Number(selectedPlan.price) : 0;
+
   const formatPrice = (val) => {
     if (!val && val !== 0) return null;
     return Number(val).toLocaleString("vi-VN") + "₫";
@@ -33,12 +38,13 @@ function CheckoutPage() {
 
   const handleApplyCoupon = async () => {
     if (!couponCode.trim()) return setCouponError("Vui lòng nhập mã giảm giá.");
+    if (!selectedPlan) return setCouponError("Vui lòng chọn gói truy cập.");
     try {
-      const res = await validateCouponApi(couponCode.trim(), [Number(courseId)], Number(course.price));
+      const res = await validateCouponApi(couponCode.trim(), [Number(courseId)], Number(planPrice));
       const data = res?.data;
       if (!res?.success && !data) throw new Error(res?.message || "Mã giảm giá không hợp lệ.");
       setAppliedCoupon({ code: couponCode.trim(), id: data?.id });
-      const total = Number(course.price);
+      const total = Number(planPrice);
       const dVal = Number(data?.discount_value || 0);
       const dAmt = data?.discount_type === "PERCENTAGE" ? Math.floor((total * dVal) / 100) : Math.min(dVal, total);
       setDiscountInfo({ discount_amount: dAmt, final_total: total - dAmt });
@@ -58,13 +64,19 @@ function CheckoutPage() {
     setCouponError("");
   };
 
-  // Tạo phiên thanh toán Stripe và chuyển hướng đến trang thanh toán
-  const handlePayment = async () => {
-    if (!course) return;
-    setProcessing(true);
+  const handleSelectPlan = (plan) => {
+    setSelectedPlan(plan);
+    setAppliedCoupon(null);
+    setDiscountInfo(null);
+    setCouponCode("");
+    setCouponError("");
+  };
 
+  const handlePayment = async () => {
+    if (!course || !selectedPlan) return;
+    setProcessing(true);
     try {
-      const result = await createStripeCheckoutApi(courseId, appliedCoupon?.code || "");
+      const result = await createStripeCheckoutApi(courseId, selectedPlan.id, appliedCoupon?.code || "");
       const checkoutUrl = result?.data?.checkout_url;
       if (checkoutUrl) {
         window.location.href = checkoutUrl;
@@ -78,7 +90,6 @@ function CheckoutPage() {
     }
   };
 
-  // Loading state
   if (loading) {
     return (
       <div className="checkout-page">
@@ -94,7 +105,6 @@ function CheckoutPage() {
     );
   }
 
-  // Error state
   if (error || !course) {
     return (
       <div className="checkout-page">
@@ -102,10 +112,7 @@ function CheckoutPage() {
           <div className="payment-empty">
             <i className="bi bi-exclamation-triangle"></i>
             <p>{error || "Không tìm thấy khóa học."}</p>
-            <button
-              className="btn btn-primary mt-3"
-              onClick={() => navigate("/courses")}
-            >
+            <button className="btn btn-primary mt-3" onClick={() => navigate("/courses")}>
               Quay lại danh sách khóa học
             </button>
           </div>
@@ -114,24 +121,48 @@ function CheckoutPage() {
     );
   }
 
-  const hasDiscount =
-    course.original_price && Number(course.original_price) > Number(course.price);
+  const finalPrice = discountInfo ? discountInfo.final_total : planPrice;
 
   return (
     <div className="checkout-page">
       <div className="checkout-container">
         <div className="checkout-header">
           <h1>Thanh toán khóa học</h1>
-          <p>Vui lòng chọn phương thức thanh toán phù hợp</p>
         </div>
 
         <div className="checkout-content">
-          {/* Left: Payment Methods */}
           <div>
+            {/* Chọn gói truy cập */}
+            {plans.length > 0 && (
+              <div className="checkout-plans mb-3">
+                <h3 className="mb-2">Chọn gói truy cập</h3>
+                {plans.map((p) => (
+                  <label
+                    key={p.id}
+                    className={`checkout-plan-option d-flex align-items-center justify-content-between border rounded p-2 mb-2 ${selectedPlan?.id === p.id ? "border-primary" : ""}`}
+                    style={{ cursor: "pointer" }}
+                  >
+                    <div className="d-flex align-items-center">
+                      <input
+                        type="radio"
+                        name="plan"
+                        checked={selectedPlan?.id === p.id}
+                        onChange={() => handleSelectPlan(p)}
+                        className="me-2"
+                      />
+                      <span>
+                        {p.name}
+                        <small className="text-muted d-block">Thời gian truy cập: {p.duration_days} ngày</small>
+                      </span>
+                    </div>
+                    <span className="fw-bold">{formatPrice(p.price)}</span>
+                  </label>
+                ))}
+              </div>
+            )}
+
             <div className="payment-methods">
               <h3>Phương thức thanh toán</h3>
-
-              {/* Stripe */}
               <div className="payment-method-option selected">
                 <div className="payment-method-icon stripe">
                   <i className="bi bi-credit-card"></i>
@@ -144,9 +175,8 @@ function CheckoutPage() {
                 </div>
               </div>
 
-              {/* Coupon */}
               {!appliedCoupon ? (
-                <div className="d-flex gap-2 mb-2">
+                <div className="checkout-coupon-apply">
                   <input
                     type="text"
                     className="form-control"
@@ -157,10 +187,11 @@ function CheckoutPage() {
                   />
                   <button
                     type="button"
-                    className="btn btn-outline-primary"
+                    className="checkout-coupon-btn"
                     onClick={handleApplyCoupon}
                     disabled={processing}
                   >
+                    <i className="bi bi-ticket-perforated"></i>
                     Áp dụng
                   </button>
                 </div>
@@ -194,24 +225,20 @@ function CheckoutPage() {
                 </div>
               )}
 
-              {/* Pay Button */}
               <button
                 className="checkout-btn"
                 onClick={handlePayment}
-                disabled={processing}
+                disabled={processing || plans.length === 0}
               >
                 {processing ? (
                   <>
-                    <span
-                      className="spinner-border spinner-border-sm"
-                      role="status"
-                    ></span>
+                    <span className="spinner-border spinner-border-sm" role="status"></span>
                     Đang xử lý...
                   </>
                 ) : (
                   <>
                     <i className="bi bi-lock-fill"></i>
-                    Thanh toán {discountInfo ? formatPrice(discountInfo.final_total) : formatPrice(course.price)}
+                    Thanh toán {formatPrice(finalPrice)}
                   </>
                 )}
               </button>
@@ -238,19 +265,21 @@ function CheckoutPage() {
             <div className="checkout-course-info">
               <h2>{course.title}</h2>
               <p className="checkout-course-instructor">
-                <i className="bi bi-person"></i>{" "}
-                {course.instructor_name || "Giảng viên"}
+                <i className="bi bi-person"></i> {course.instructor_name || "Giảng viên"}
               </p>
-              <div>
-                <span className="checkout-course-price">
-                  {formatPrice(course.price)}
-                </span>
-                {hasDiscount && (
-                  <span className="checkout-course-price-original">
-                    {formatPrice(course.original_price)}
-                  </span>
-                )}
-              </div>
+              {selectedPlan && (
+                <div className="checkout-plan-summary">
+                  <span className="checkout-course-price">{formatPrice(planPrice)}</span>
+                  <small className="text-muted d-block">
+                    Gói {selectedPlan.name} · {selectedPlan.duration_days} ngày
+                  </small>
+                </div>
+              )}
+              {discountInfo && (
+                <small className="text-danger d-block mt-1">
+                  Tổng thanh toán: {formatPrice(discountInfo.final_total)}
+                </small>
+              )}
             </div>
           </div>
         </div>

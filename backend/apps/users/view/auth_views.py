@@ -57,6 +57,7 @@ class RegisterSendOTPView(APIView):
         serializer = RegisterSendOTPSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
+        _check_rate_limit(f"otp_register:{data['email']}")
         register_service.send_register_otp(data["full_name"], data["email"], data["password"])
         return Response({"detail": "Đã gửi mã OTP đăng ký đến email."}, status=status.HTTP_200_OK)
 
@@ -236,6 +237,7 @@ class ForgotPasswordView(APIView):
         serializer = ForgotPasswordSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         try:
+            _check_rate_limit(f"otp_forgot:{serializer.validated_data['email']}")
             password_reset_service.send_reset_otp(serializer.validated_data["email"])
         except ValidationError as e:
             message = e.detail[0] if isinstance(e.detail, list) else str(e.detail)
@@ -298,6 +300,7 @@ class RegisterResendOTPView(APIView):
         serializer = RegisterResendOTPSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         try:
+            _check_rate_limit(f"otp_resend:{serializer.validated_data['email']}")
             register_service.resend_register_otp(serializer.validated_data["email"])
         except ValidationError as e:
             message = e.detail[0] if isinstance(e.detail, list) else str(e.detail)

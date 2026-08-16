@@ -59,5 +59,4 @@ def get_total_lessons_for_course(course_id):
     """Đếm tổng số lesson PUBLISHED của một course."""
     return Lesson.objects.filter(
         chapter__course_id=course_id,
-        status=Lesson.Status.PUBLISHED,
     ).count()

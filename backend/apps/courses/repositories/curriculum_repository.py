@@ -15,8 +15,7 @@ def get_public_chapters(course_id):
     return Chapter.objects.filter(course_id=course_id).prefetch_related(
         Prefetch(
             "lessons",
-            queryset=Lesson.objects.filter(status=Lesson.Status.PUBLISHED)
-            .order_by("order", "id")
+            queryset=Lesson.objects.order_by("order", "id")
             .prefetch_related(
                 Prefetch(
                     "quizzes",

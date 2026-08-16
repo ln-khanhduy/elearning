@@ -23,7 +23,6 @@ export const ROUTE_PERMISSIONS = {
   "/finance/transactions": ["finance.finance.revenue_view"],
   "/finance/revenue": ["finance.finance.revenue_view"],
   "/finance/reports": ["finance.finance.revenue_view"],
-  "/finance/payouts": ["finance.finance.payout"],
   "/finance/refunds": ["finance.finance.refund"],
   "/admin/coupons": ["finance.coupon.view"],
   "/super-admin/roles": ["admin.role.view"],
@@ -40,6 +39,12 @@ export const getRoutePermissions = (path) => ROUTE_PERMISSIONS[path] || null;
 /** Các quyền đặc biệt SUPERADMIN có thể bypass */
 const SUPERADMIN_ROLE_CODE = "SUPERADMIN";
 
+/** Các role được phép dùng tính năng học viên (mua khóa, học tập, chứng chỉ...) */
+export const STUDENT_ROLES = ["STUDENT", "SUPERADMIN"];
+
+/** Các role được phép dùng tính năng giảng viên tự quản (khóa học giảng dạy, lịch trực, lương...) */
+export const INSTRUCTOR_ROLES = ["INSTRUCTOR", "SUPERADMIN"];
+
 /**
  * Lấy mã vai trò của user.
  * Role có thể là string "STUDENT" hoặc object { code: "STUDENT" }.
@@ -50,6 +55,12 @@ export const getRoleCode = (user) => {
   if (typeof user.role === "object" && user.role?.code) return user.role.code;
   return null;
 };
+
+/** Kiểm tra user thuộc nhóm role học viên */
+export const hasStudentRole = (user) => STUDENT_ROLES.includes(getRoleCode(user));
+
+/** Kiểm tra user thuộc nhóm role giảng viên */
+export const hasInstructorRole = (user) => INSTRUCTOR_ROLES.includes(getRoleCode(user));
 
 /**
  * Kiểm tra user có một quyền cụ thể hay không.

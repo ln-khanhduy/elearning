@@ -7,10 +7,6 @@ class Quiz(models.Model):
     Bài kiểm tra - thuộc về một bài học.
     Mỗi bài học có thể có nhiều quiz.
     """
-    class Status(models.TextChoices):
-        IN_PROCESS = 'IN_PROCESS', 'In Process'
-        ACTIVE = 'ACTIVE', 'Active'
-
     lesson = models.ForeignKey('lessons.Lesson', on_delete=models.CASCADE, related_name='quizzes')
     title = models.CharField(max_length=100)
     description = models.TextField(null=True, blank=True)
@@ -21,7 +17,6 @@ class Quiz(models.Model):
     # Loại bài tập: Trắc nghiệm, Tự luận, Điền khuyết
     quiz_type = models.CharField(max_length=20, choices=[('MCQ', 'Trắc nghiệm'), ('ESSAY', 'Tự luận'), ('FILL_BLANK', 'Điền khuyết')], default='MCQ')
     # Trạng thái quiz
-    status = models.CharField(max_length=20, choices=Status.choices, default=Status.IN_PROCESS)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

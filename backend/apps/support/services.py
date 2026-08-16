@@ -50,11 +50,11 @@ def create_request(user, data):
         # Find admins who can process this request type
         admin_roles = []
         if request_type == "REFUND":
-            admin_roles = ["FINANCE_ADMIN", "SUPERADMIN"]
+            admin_roles = ["SUPERADMIN"]
         elif request_type == "TECHNICAL":
             admin_roles = ["SUPERADMIN"]
         elif request_type == "COMPLAINT":
-            admin_roles = ["USER_MANAGER", "INSTRUCTOR_MANAGER", "SUPERADMIN"]
+            admin_roles = ["USER_MANAGER", "SUPERADMIN"]
         elif request_type == "OTHER":
             admin_roles = ["SUPERADMIN"]
         if admin_roles:
@@ -118,8 +118,8 @@ def _can_process(user, request_type):
 
     - SUPERADMIN: xử lý được tất cả loại yêu cầu.
     - TECHNICAL/OTHER: chỉ SUPERADMIN.
-    - REFUND: FINANCE_ADMIN hoặc SUPERADMIN.
-    - COMPLAINT: USER_MANAGER, INSTRUCTOR_MANAGER hoặc SUPERADMIN.
+    - REFUND: chỉ SUPERADMIN.
+    - COMPLAINT: USER_MANAGER hoặc SUPERADMIN.
     """
     if not user or not user.is_authenticated:
         return False
@@ -129,9 +129,9 @@ def _can_process(user, request_type):
     if request_type == "TECHNICAL":
         return role_code in ["SUPERADMIN"]
     if request_type == "REFUND":
-        return role_code in ["FINANCE_ADMIN", "SUPERADMIN"]
+        return role_code in ["SUPERADMIN"]
     if request_type == "COMPLAINT":
-        return role_code in ["USER_MANAGER", "INSTRUCTOR_MANAGER", "SUPERADMIN"]
+        return role_code in ["USER_MANAGER", "SUPERADMIN"]
     if request_type == "OTHER":
         return role_code in ["SUPERADMIN"]
     return False

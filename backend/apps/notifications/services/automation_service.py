@@ -235,7 +235,7 @@ def _send_inactivity_notification(student, course_title, days, title, body, is_e
 # 4. CẢNH BÁO GIẢM GIÁ CHO WISHLIST (PRICE DROP ALERT)
 # =============================================================================
 
-def notify_wishlist_price_drop(course, old_price, new_price):
+def notify_wishlist_price_drop(course, old_price, new_price, plan_name=None):
     """
     Khi giá khóa học giảm, gửi notification cho tất cả học viên 
     đã thêm khóa học vào wishlist.
@@ -253,10 +253,12 @@ def notify_wishlist_price_drop(course, old_price, new_price):
     new_price_vnd = f"{int(new_price):,}đ"
     discount_pct = round((1 - float(new_price) / float(old_price)) * 100)
 
-    title = f'📉 Giá khóa học đã giảm {discount_pct}%!'
-    body = (f'Khóa học "{course.title}" đã giảm giá từ {old_price_vnd} '
-            f'xuống còn {new_price_vnd} (giảm {discount_pct}%). '
-            f'Đây là cơ hội tốt để sở hữu khóa học!')
+    # (R2) Thêm tên gói vào thông báo nếu có
+    title = f'📉 Giá đã giảm {discount_pct}%!' + (f' - {plan_name}' if plan_name else '')
+    body = (f'Khóa học "{course.title}"' + (f' - gói "{plan_name}"' if plan_name else '')
+            + f' đã giảm giá từ {old_price_vnd} '
+            + f'xuống còn {new_price_vnd} (giảm {discount_pct}%). '
+            + 'Đây là cơ hội tốt để sở hữu khóa học!')
 
     for item in wishlist_items:
         try:

@@ -18,7 +18,7 @@ def create_quiz(lesson_id, user, validated_data):
     """Tạo mới một bài kiểm tra cho bài học.
 
     - Kiểm tra quyền quản lý khóa học của user, nếu không có quyền sẽ báo lỗi PermissionDenied.
-    - Trạng thái mặc định là IN_PROCESS, loại bài kiểm tra mặc định là MCQ.
+    - Loại bài kiểm tra mặc định là MCQ.
     """
     lesson = lesson_repository.get_by_id(lesson_id)
 
@@ -26,7 +26,6 @@ def create_quiz(lesson_id, user, validated_data):
         raise PermissionDenied("Bạn không có quyền thao tác với khóa học này.")
 
     validated_data["lesson"] = lesson
-    validated_data.setdefault("status", "IN_PROCESS")
     validated_data.setdefault("quiz_type", "MCQ")
     return quiz_repository.create(validated_data)
 

@@ -1,0 +1,249 @@
+.pay-page {
+  padding: 24px;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+.pay-page h4 {
+  font-weight: 700;
+  color: #1a1a2e;
+}
+
+/* ===== Toolbar ===== */
+.pay-toolbar {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 18px 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+}
+
+/* ===== Bảng ===== */
+.pay-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 18px 20px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+}
+
+.pay-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.pay-card-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #1a1a2e;
+}
+
+.pay-card-title i {
+  color: var(--primary, #0f3d75);
+}
+
+.pay-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.pay-table-scroll {
+  max-height: 460px;
+  overflow-y: auto;
+  overflow-x: auto;
+  border: 1px solid #eef0f3;
+  border-radius: 10px;
+}
+
+.pay-table-scroll table {
+  margin-bottom: 0;
+}
+
+.pay-table-scroll thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: #f8fafc;
+  color: #475569;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.pay-table-scroll tbody td {
+  font-size: 13px;
+  vertical-align: middle;
+}
+
+.pay-money {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.pay-input-sm {
+  width: 110px;
+}
+
+/* ===== Buttons ===== */
+.pay-page .btn {
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 7px 14px;
+  transition: all 0.18s;
+}
+
+.pay-page .btn-sm {
+  padding: 6px 12px;
+  font-size: 12px;
+  border-radius: 7px;
+}
+
+.pay-page .btn-primary {
+  background: var(--primary, #0f3d75);
+  border-color: var(--primary, #0f3d75);
+  color: #fff;
+}
+.pay-page .btn-primary:hover:not(:disabled) {
+  background: #0a2d55;
+  border-color: #0a2d55;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(15, 61, 117, 0.25);
+}
+
+.pay-page .btn-outline-primary {
+  background: #fff;
+  border: 1.5px solid var(--primary, #0f3d75);
+  color: var(--primary, #0f3d75);
+}
+.pay-page .btn-outline-primary:hover:not(:disabled) {
+  background: var(--primary, #0f3d75);
+  color: #fff;
+}
+
+.pay-page .btn-success {
+  background: #16a34a;
+  border-color: #16a34a;
+  color: #fff;
+}
+.pay-page .btn-success:hover:not(:disabled) {
+  background: #12853c;
+  border-color: #12853c;
+}
+
+.pay-page .btn-outline-secondary {
+  background: #fff;
+  border: 1.5px solid #d1d5db;
+  color: #6b7280;
+}
+.pay-page .btn-outline-secondary:hover:not(:disabled) {
+  border-color: #9ca3af;
+  background: #f3f4f6;
+  color: #374151;
+}
+
+/* Nút lưu khấu trừ (✓) — vuông nhỏ gọn */
+.pay-page .btn-check {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: 8px;
+}
+
+/* ===== Nút & form tạo cột động ===== */
+.pay-add-column {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: 1.5px dashed var(--primary, #0f3d75);
+  border-radius: 8px;
+  background: #f0f4ff;
+  color: var(--primary, #0f3d75);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.18s;
+}
+.pay-add-column:hover {
+  background: var(--primary, #0f3d75);
+  color: #fff;
+}
+
+.pay-column-form {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 6px;
+  background: #fafbfc;
+}
+
+/* ===== Khoản phí phát sinh động ===== */
+.pay-deduction-cell {
+  min-width: 200px;
+}
+
+.pay-item-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 0;
+  font-size: 12px;
+  border-bottom: 1px dashed #eef0f3;
+}
+
+.pay-item-row:last-child {
+  border-bottom: none;
+}
+
+.pay-item-name {
+  flex: 1;
+  color: #374151;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pay-item-amount {
+  color: #dc2626;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.pay-item-add {
+  margin-top: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* Cột Thao tác — nút đầy đủ chiều rộng, căn trái */
+.pay-page .pay-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 130px;
+}
+.pay-page .pay-actions .btn {
+  width: 100%;
+  justify-content: center;
+}

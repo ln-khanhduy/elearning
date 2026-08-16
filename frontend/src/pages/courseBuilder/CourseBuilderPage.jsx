@@ -9,8 +9,8 @@ import ConfirmModal from "../../components/common/ConfirmModal";
 import StepCourseInformation from "../../components/courseWizard/steps/StepCourseInformation";
 import StepCurriculumBuilder from "../../components/courseWizard/steps/StepCurriculumBuilder";
 import StepPricing from "../../components/courseWizard/steps/StepPricing";
+import StepAssignInstructor from "../../components/courseWizard/steps/StepAssignInstructor";
 import StepReview from "../../components/courseWizard/steps/StepReview";
-import StepPublish from "../../components/courseWizard/steps/StepPublish";
 
 import { useCourseBuilder } from "../../hooks/courseBuilder/useCourseBuilder";
 
@@ -18,50 +18,12 @@ import "../../style/courseWizard/courseWizard.css";
 
 function CourseBuilderPage({ mode = "create" }) {
   const navigate = useNavigate();
-  const {
-    isEdit,
-    currentStep,
-    loading,
-    saving,
-    publishing,
-    lastSavedAt,
-    course,
-    categories,
-    formData,
-    thumbnailPreview,
-    errors,
-    curriculum,
-    drawerOpen,
-    drawerType,
-    editingItem,
-    editingSectionId,
-    selectedItem,
-    importQuizId,
-    confirmModal,
-    setImportQuizId,
-    handleFieldChange,
-    handleThumbnailChange,
-    handleAddSection,
-    handleEditSection,
-    handleDeleteSection,
-    handleAddLesson,
-    handleSaveLesson,
-    handleDeleteLesson,
-    handleSelectLesson,
-    handleCloseDrawer,
-    handleImportQuestions,
-    handleImportSuccess,
-    handleSaveQuiz,
-    handleAddQuiz,
-    handleSelectQuiz,
-    handleDeleteQuiz,
-    handleNext,
-    handlePrevious,
-    handleGoToStep,
-    handleCreateCourse,
-    handlePublish,
-    saveDraft,
-  } = useCourseBuilder({ mode });
+  const {isEdit,currentStep,loading,saving,publishing,lastSavedAt,course,categories,formData,
+    thumbnailPreview,errors,curriculum,plans,setPlans,assignedInstructor,courseId,drawerOpen,drawerType,editingItem,editingSectionId,selectedItem,importQuizId,
+    confirmModal,setImportQuizId,handleFieldChange,handleThumbnailChange,handleAddSection,handleEditSection,handleDeleteSection,
+    handleAddLesson,handleSaveLesson,handleDeleteLesson,handleSelectLesson,handleCloseDrawer,
+    handleImportQuestions,handleImportSuccess,handleSaveQuiz,handleAddQuiz,handleSelectQuiz,handleDeleteQuiz,handleNext,handlePrevious,
+    handleGoToStep,handleAssignedChange,handleCreateCourse,handlePublish,saveDraft,} = useCourseBuilder({ mode });
 
   if (loading) {
     return (
@@ -140,6 +102,7 @@ function CourseBuilderPage({ mode = "create" }) {
             editingItem={editingItem}
             editingSectionId={editingSectionId}
             saving={saving}
+            isPublished={course?.status === "PUBLISHED"}
             onSelectLesson={handleSelectLesson}
             onSelectQuiz={handleSelectQuiz}
             onCloseDrawer={handleCloseDrawer}
@@ -158,32 +121,34 @@ function CourseBuilderPage({ mode = "create" }) {
 
         {currentStep === 3 && (
           <StepPricing
-            formData={formData}
-            errors={errors}
-            onFieldChange={handleFieldChange}
+            courseId={course?.id}
+            isEdit={isEdit}
+            plans={plans}
+            onPlansChange={setPlans}
           />
         )}
 
         {currentStep === 4 && (
-          <StepReview
-            formData={formData}
-            thumbnailPreview={thumbnailPreview}
-            curriculum={curriculum}
+          <StepAssignInstructor
+            courseId={courseId}
+            assignedInstructor={assignedInstructor}
+            onAssignedChange={handleAssignedChange}
           />
         )}
 
         {currentStep === 5 && (
-          <StepPublish
+          <StepReview
             formData={formData}
             thumbnailPreview={thumbnailPreview}
             curriculum={curriculum}
+            plans={plans}
             course={course}
+            assignedInstructor={assignedInstructor}
             onSaveDraft={saveDraft}
             onPublish={handlePublish}
             onGoToStep={handleGoToStep}
             saving={saving}
             publishing={publishing}
-            isEdit={isEdit}
           />
         )}
       </div>

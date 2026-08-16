@@ -9,7 +9,6 @@ import StudentProgressTab from "../../components/instructorCourseDetail/StudentP
 import QuizResultsTab from "../../components/instructorCourseDetail/QuizResultsTab";
 import EssayGradingTab from "../../components/instructorCourseDetail/EssayGradingTab";
 import SendNotificationTab from "../../components/instructorCourseDetail/SendNotificationTab";
-import QATab from "../../components/instructorCourseDetail/QATab";
 import LearningReportTab from "../../components/instructorCourseDetail/LearningReportTab";
 
 const TAB_COMPONENTS = {
@@ -19,7 +18,6 @@ const TAB_COMPONENTS = {
   "quiz-results": QuizResultsTab,
   essay: EssayGradingTab,
   notification: SendNotificationTab,
-  qa: QATab,
   report: LearningReportTab,
 };
 

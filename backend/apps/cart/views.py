@@ -19,7 +19,8 @@ class CartAddItemAPIView(BasePermissionAPIView):
     required_permission = "student.cart.manage"
 
     def post(self, request, course_id):
-        result = cart_service.add_item(request.user, course_id)
+        plan_id = request.data.get("plan_id")
+        result = cart_service.add_item(request.user, course_id, plan_id=plan_id)
         if not result["success"]:
             return error_response(result["message"])
         return success_response(None, result["message"])

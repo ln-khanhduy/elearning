@@ -64,25 +64,27 @@ def build_public_curriculum(course_id: int) -> dict:
     return course_data
 
 
-def build_full_curriculum(course_id: int) -> dict:
+def build_full_curriculum(course_id: int, sign_video: bool = False) -> dict:
     """
     Xây dựng dữ liệu chương trình giảng dạy đầy đủ cho khóa học (bao gồm tất cả bài học và chi tiết bài kiểm tra).
     Được sử dụng bởi quản trị viên/giảng viên khóa học.
     Được tối ưu: sử dụng prefetch_related để tránh các truy vấn N+1.
+
+    - sign_video=True (user đã được authorization): trả SIGNED video URL runtime.
+    - sign_video=False (mặc định): trả URL KHÔNG token (an toàn cho editor).
     """
     course = get_course_detail(course_id)
     course_data = CourseDetailSerializer(course).data
 
-    # Repository: Chapters -> Lessons -> Quizzes -> Questions -> Options
-    # This reduces queries from O(N*M*K) to just 5 queries total.
     chapters = curriculum_repository.get_full_chapters(course_id)
 
+    context = {"sign_video": True} if sign_video else {}
     chapters_data = []
     for chapter in chapters:
         chapter_data = ChapterSerializer(chapter).data
         lessons_data = []
         for lesson in chapter.lessons.all():
-            lesson_data = LessonSerializer(lesson).data
+            lesson_data = LessonSerializer(lesson, context=context).data
             quizzes_data = []
             for quiz in lesson.quizzes.all():
                 quiz_data = QuizSerializer(quiz).data

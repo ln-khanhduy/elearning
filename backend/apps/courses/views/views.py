@@ -12,16 +12,13 @@ from apps.courses.services import course_assignment_service
 from apps.courses.services import course_permission_service
 from apps.courses.services import curriculum_service
 from apps.courses.services import instructor_course_service
+from apps.courses.services import plan_service
 from apps.courses.serializers.course_serializer import (
     CourseListSerializer, CourseDetailSerializer,
     CourseCreateUpdateSerializer, CourseAssignInstructorSerializer,
+    CourseAccessPlanSerializer,
 )
 from apps.courses.serializers.category_tag_serializer import CategorySerializer
-from apps.courses.serializers.qa_serializer import (
-    CourseQuestionListSerializer, CourseQuestionDetailSerializer,
-    CourseQuestionCreateSerializer, CourseAnswerCreateSerializer,
-    CourseAnswerSerializer,
-)
 from apps.courses.models import Category
 from apps.common.response_helpers import success_response, error_response
 
@@ -53,12 +50,18 @@ class CourseListAPIView(APIView):
         context = {}
         if request.user.is_authenticated:
             from apps.enrollments.models import Enrollment
+            from django.db.models import Q
+            from django.utils import timezone as _tz
+
             course_ids = [c.id for c in page_courses]
+            # (R2) Chỉ đánh dấu is_enrolled khi enrollment CÒN HẠN (expires_at null hoặc > now).
             enrolled_ids = set(
                 Enrollment.objects.filter(
                     student_id=request.user.id,
                     course_id__in=course_ids,
                     status__in=[Enrollment.Status.ACTIVE, Enrollment.Status.COMPLETED],
+                ).filter(
+                    Q(expires_at__isnull=True) | Q(expires_at__gt=_tz.now())
                 ).values_list("course_id", flat=True)
             )
             owned_ids = {
@@ -87,6 +90,56 @@ class CourseDetailAPIView(APIView):
         if course.status != "PUBLISHED":
             return error_response("Không tìm thấy khóa học.", http_status=404)
         return success_response(CourseDetailSerializer(course).data)
+
+
+# ==================== COURSE ACCESS PLAN API ====================
+
+
+class CoursePlanListCreateAPIView(BasePermissionAPIView):
+    """
+    GET  /api/admin/courses/{course_id}/plans/    - Danh sách gói của khóa
+    POST /api/admin/courses/{course_id}/plans/    - Thêm gói
+    Yêu cầu quyền: course.course.manage
+    """
+    required_permission = "course.course.manage"
+
+    def get(self, request, course_id):
+        plans = plan_service.list_plans(course_id)
+        return success_response(CourseAccessPlanSerializer(plans, many=True).data)
+
+    def post(self, request, course_id):
+        try:
+            plan = plan_service.create_plan(request.user, course_id, request.data)
+        except Exception as e:
+            return error_response(str(e), http_status=status.HTTP_400_BAD_REQUEST)
+        return success_response(
+            CourseAccessPlanSerializer(plan).data,
+            "Thêm gói truy cập thành công.",
+            status.HTTP_201_CREATED,
+        )
+
+
+class CoursePlanDetailAPIView(BasePermissionAPIView):
+    """
+    PATCH  /api/admin/courses/{course_id}/plans/{plan_id}/    - Cập nhật gói
+    DELETE /api/admin/courses/{course_id}/plans/{plan_id}/    - Xóa gói
+    Yêu cầu quyền: course.course.manage
+    """
+    required_permission = "course.course.manage"
+
+    def patch(self, request, course_id, plan_id):
+        try:
+            plan = plan_service.update_plan(request.user, course_id, plan_id, request.data)
+        except Exception as e:
+            return error_response(str(e), http_status=status.HTTP_400_BAD_REQUEST)
+        return success_response(CourseAccessPlanSerializer(plan).data, "Cập nhật gói truy cập thành công.")
+
+    def delete(self, request, course_id, plan_id):
+        try:
+            plan_service.delete_plan(request.user, course_id, plan_id)
+        except Exception as e:
+            return error_response(str(e), http_status=status.HTTP_400_BAD_REQUEST)
+        return success_response(None, "Xóa gói truy cập thành công.")
 
 
 # ==================== ADMIN COURSE API ====================
@@ -402,7 +455,9 @@ class CourseCurriculumPreviewAPIView(APIView):
         course = course_service.get_course_detail(course_id)
         if not course_permission_service.can_view_course(course, request.user):
             return error_response("Bạn không có quyền xem nội dung khóa học này.", http_status=status.HTTP_403_FORBIDDEN)
-        course_data = curriculum_service.build_full_curriculum(course_id)
+        from apps.enrollments.services.learning_service import can_access_course
+        sign_video = can_access_course(request.user, course)
+        course_data = curriculum_service.build_full_curriculum(course_id, sign_video=sign_video)
         return success_response(course_data)
 
 
@@ -511,131 +566,6 @@ class InstructorCourseSendNotificationAPIView(BasePermissionAPIView):
             return error_response("Vui lòng nhập tiêu đề và nội dung.", http_status=status.HTTP_400_BAD_REQUEST)
         sent_count = instructor_course_service.send_notification(course_id, title, body)
         return success_response({"sent_count": sent_count}, f"Đã gửi thông báo tới {sent_count} học viên.")
-
-
-# ==================== INSTRUCTOR Q&A ====================
-
-
-class InstructorCourseQAAPIView(APIView):
-    """GET /api/instructor/courses/{course_id}/qa/ - Danh sách câu hỏi Q&A của khóa học (giảng viên xem)."""
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request, course_id):
-        course = course_service.get_course_detail(course_id)
-        if not course_permission_service.can_view_course(course, request.user):
-            return error_response("Bạn không có quyền.", http_status=status.HTTP_403_FORBIDDEN)
-        result = instructor_course_service.get_questions(
-            course_id, status=request.GET.get("status"), lesson_id=request.GET.get("lesson_id"),
-            page=int(request.GET.get("page", 1)), page_size=int(request.GET.get("page_size", 20)),
-        )
-        serializer = CourseQuestionListSerializer(result.get("questions", []), many=True)
-        return success_response({
-            "questions": serializer.data, "total": result.get("total", 0),
-            "page": result.get("page", 1), "total_pages": result.get("total_pages", 1),
-            "has_next": result.get("has_next", False), "has_previous": result.get("has_previous", False),
-        })
-
-
-class InstructorCourseQAReplyAPIView(BasePermissionAPIView):
-    """POST /api/instructor/courses/{course_id}/qa/{question_id}/reply/ - Giảng viên trả lời câu hỏi của học viên."""
-    required_permission = "instructor.course.teaching"
-
-    def post(self, request, course_id, question_id):
-        course = course_service.get_course_detail(course_id)
-        if not course_permission_service.can_view_course(course, request.user):
-            return error_response("Bạn không có quyền.", http_status=status.HTTP_403_FORBIDDEN)
-        question = instructor_course_service.get_question_detail(question_id)
-        if not question or question.course_id != course_id:
-            return error_response("Không tìm thấy câu hỏi.", http_status=status.HTTP_404_NOT_FOUND)
-        serializer = CourseAnswerCreateSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        answer = instructor_course_service.reply_question(question, request.user, serializer.validated_data['content'])
-        return success_response(CourseAnswerSerializer(answer).data, "Đã trả lời câu hỏi.")
-
-
-# ==================== STUDENT Q&A ====================
-
-
-class StudentCourseQuestionListAPIView(APIView):
-    """GET /api/student/courses/{course_id}/qa/ - Danh sách câu hỏi Q&A của khóa học (học viên xem)."""
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request, course_id):
-        course = course_service.get_course_detail(course_id)
-        if not course_permission_service.can_view_course(course, request.user):
-            return error_response("Bạn không có quyền.", http_status=status.HTTP_403_FORBIDDEN)
-        result = instructor_course_service.get_questions(
-            course_id, status=request.GET.get("status"), lesson_id=request.GET.get("lesson_id"),
-            page=int(request.GET.get("page", 1)), page_size=int(request.GET.get("page_size", 20)),
-        )
-        serializer = CourseQuestionListSerializer(result.get("questions", []), many=True)
-        return success_response({
-            "questions": serializer.data, "total": result.get("total", 0),
-            "page": result.get("page", 1), "total_pages": result.get("total_pages", 1),
-            "has_next": result.get("has_next", False), "has_previous": result.get("has_previous", False),
-        })
-
-
-class StudentCourseQuestionCreateAPIView(APIView):
-    """POST /api/student/courses/{course_id}/qa/ - Học viên đặt câu hỏi mới trong khóa học."""
-    permission_classes = [IsAuthenticated]
-
-    def post(self, request, course_id):
-        course = course_service.get_course_detail(course_id)
-        if not course_permission_service.can_view_course(course, request.user):
-            return error_response("Bạn không có quyền.", http_status=status.HTTP_403_FORBIDDEN)
-        serializer = CourseQuestionCreateSerializer(data={**request.data, "course": course_id})
-        serializer.is_valid(raise_exception=True)
-        question = instructor_course_service.create_question(course, request.user, serializer.validated_data)
-        return success_response(CourseQuestionDetailSerializer(question).data, "Đã đặt câu hỏi thành công.", http_status=status.HTTP_201_CREATED)
-
-
-class StudentCourseQuestionDetailAPIView(APIView):
-    """GET /api/student/courses/{course_id}/qa/{question_id}/ - Chi tiết câu hỏi + các câu trả lời."""
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request, course_id, question_id):
-        course = course_service.get_course_detail(course_id)
-        if not course_permission_service.can_view_course(course, request.user):
-            return error_response("Bạn không có quyền.", http_status=status.HTTP_403_FORBIDDEN)
-        question = instructor_course_service.get_question_detail(question_id)
-        if not question or question.course_id != course_id:
-            return error_response("Không tìm thấy câu hỏi.", http_status=status.HTTP_404_NOT_FOUND)
-        return success_response(CourseQuestionDetailSerializer(question).data)
-
-
-class StudentCourseQuestionReplyAPIView(APIView):
-    """POST /api/student/courses/{course_id}/qa/{question_id}/reply/ - Học viên trả lời câu hỏi Q&A."""
-    permission_classes = [IsAuthenticated]
-
-    def post(self, request, course_id, question_id):
-        course = course_service.get_course_detail(course_id)
-        if not course_permission_service.can_view_course(course, request.user):
-            return error_response("Bạn không có quyền.", http_status=status.HTTP_403_FORBIDDEN)
-        question = instructor_course_service.get_question_detail(question_id)
-        if not question or question.course_id != course_id:
-            return error_response("Không tìm thấy câu hỏi.", http_status=status.HTTP_404_NOT_FOUND)
-        serializer = CourseAnswerCreateSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        answer = instructor_course_service.reply_question(question, request.user, serializer.validated_data['content'])
-        return success_response(CourseAnswerSerializer(answer).data, "Đã trả lời câu hỏi.")
-
-
-class StudentCourseQuestionCloseAPIView(APIView):
-    """POST /api/student/courses/{course_id}/qa/{question_id}/close/ - Chủ câu hỏi đóng câu hỏi Q&A."""
-    permission_classes = [IsAuthenticated]
-
-    def post(self, request, course_id, question_id):
-        course = course_service.get_course_detail(course_id)
-        if not course_permission_service.can_view_course(course, request.user):
-            return error_response("Bạn không có quyền.", http_status=status.HTTP_403_FORBIDDEN)
-        question = instructor_course_service.get_question_detail(question_id)
-        if not question or question.course_id != course_id:
-            return error_response("Không tìm thấy câu hỏi.", http_status=status.HTTP_404_NOT_FOUND)
-        if question.student_id != request.user.id:
-            return error_response("Bạn không có quyền đóng câu hỏi này.", http_status=status.HTTP_403_FORBIDDEN)
-        instructor_course_service.close_question(question)
-        return success_response(None, "Đã đóng câu hỏi.")
 
 
 # ==================== INSTRUCTOR LEARNING REPORT ====================

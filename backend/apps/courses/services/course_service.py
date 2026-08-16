@@ -6,6 +6,18 @@ from apps.courses.repositories import course_repository
 from apps.courses.services.course_permission_service import can_manage_course, can_publish_course
 
 
+def _generate_slug(course, title):
+    """Sinh slug duy nhất (tránh trùng khóa cũ) - thêm hậu tố -v2, -v3... nếu cần."""
+    from django.utils.text import slugify as _slugify
+    base = _slugify(title)
+    slug = base
+    counter = 2
+    while Course.objects.filter(slug=slug).exclude(pk=course.pk).exists():
+        slug = f"{base}-v{counter}"
+        counter += 1
+    return slug
+
+
 def search_courses(keyword=None, status_value=None, category_id=None, instructor_id=None):
     """Tìm kiếm khóa học theo từ khóa, trạng thái, danh mục và giảng viên."""
     return course_repository.search(keyword, status_value, category_id, instructor_id)
@@ -39,17 +51,18 @@ def create_course(user, validated_data):
 def update_course(course_id, user, validated_data):
     """Cập nhật thông tin khóa học.
 
-    - Kiểm tra quyền quản lý khóa học của user, nếu không có quyền sẽ báo lỗi PermissionDenied.
+    - Kiểm tra quyền quản lý khóa học của user, nếu không có quyền sẽ báo lỗi PermissionDenied. Khóa PUBLISHED → KHÔNG được sửa nội dung (đã chốt Q1). Khóa HIDDEN được sửa (Q2).
     - Cập nhật các trường trong validated_data.
-    - Tự sinh lại slug từ tiêu đề nếu tiêu đề được thay đổi.
     """
     course = course_repository.get_by_id(course_id)
     if not can_manage_course(course, user):
         raise PermissionDenied("Bạn không có quyền sửa khóa học này.")
+    if course.status == Course.Status.PUBLISHED:
+        raise ValidationError({"status": "Khóa đã public không được sửa nội dung. Hãy tạo phiên bản khóa mới."})
     for key, value in validated_data.items():
         setattr(course, key, value)
     if "title" in validated_data:
-        course.slug = slugify(validated_data["title"])
+        course.slug = _generate_slug(course, validated_data["title"])
     course.save()
     return course
 
@@ -73,6 +86,8 @@ def publish_course(course_id, user):
 
     - Kiểm tra quyền xuất bản khóa học của user, nếu không có quyền sẽ báo lỗi PermissionDenied.
     - Chỉ khóa học ở trạng thái DRAFT hoặc HIDDEN mới được xuất bản, ngược lại báo lỗi ValidationError.
+    - Bắt buộc khóa có ≥ 1 gói kích hoạt (is_active=True) với duration_days > 0 và price > 0.
+    - Bắt buộc đã phân công giảng viên phụ trách (assigned_instructor) trước khi public.
     - Thiết lập thời gian xuất bản published_at là thời điểm hiện tại.
     """
     course = course_repository.get_by_id(course_id)
@@ -80,6 +95,20 @@ def publish_course(course_id, user):
         raise PermissionDenied("Bạn không có quyền public khóa học này.")
     if course.status not in [Course.Status.DRAFT, Course.Status.HIDDEN]:
         raise ValidationError({"status": "Chỉ khóa học ở trạng thái DRAFT hoặc HIDDEN mới được public."})
+
+    # Ràng buộc publish: bắt buộc đã phân công giảng viên phụ trách.
+    if not course.assigned_instructor_id:
+        raise ValidationError({
+            "assigned_instructor": "Khóa học phải được phân công giảng viên phụ trách trước khi public."
+        })
+
+    # Ràng buộc publish: bắt buộc có ≥ 1 gói hợp lệ (mọi gói đều hoạt động).
+    valid_plans = course.access_plans.filter(duration_days__gt=0, price__gt=0)
+    if not valid_plans.exists():
+        raise ValidationError({
+            "access_plans": "Khóa học phải có ít nhất 1 gói truy cập hợp lệ (thời gian > 0 ngày, giá > 0) trước khi public."
+        })
+
     course.status = Course.Status.PUBLISHED
     course.published_at = timezone.now()
     course.save(update_fields=["status", "published_at", "updated_at"])

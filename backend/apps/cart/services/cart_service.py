@@ -9,21 +9,26 @@ from apps.lessons.repositories import lesson_repository
 
 
 def get_cart(user):
-    """Lấy thông tin giỏ hàng kèm tổng tiền."""
+    """Lấy thông tin giỏ hàng kèm tổng tiền (theo GÓI đã chọn)."""
     cart, items = cart_repository.get_cart_with_items(user)
     cart_data = []
     total = Decimal("0")
 
     for item in items:
-        if not item.course:
+        if not item.course or not item.access_plan:
             continue
-        price = item.course.price
+        # (R2) Giá = giá GÓI đã chọn (Course.price đã bỏ)
+        price = item.access_plan.price
         cart_data.append({
             "id": item.id,
             "course_id": item.course.id,
             "course_title": item.course.title,
             "course_slug": item.course.slug,
             "thumbnail_url": item.course.thumbnail.url if item.course.thumbnail else None,
+            # (R2) thông tin gói
+            "plan_id": item.access_plan.id,
+            "plan_name": item.access_plan.name,
+            "plan_duration_days": item.access_plan.duration_days,
             "price": price,
             "added_at": item.added_at,
         })
@@ -36,21 +41,35 @@ def get_cart(user):
     }
 
 
-def add_item(user, course_id):
-    """Thêm khóa học vào giỏ hàng."""
+def add_item(user, course_id, plan_id=None):
+    """Thêm khóa học + GÓI (plan) vào giỏ hàng.
+    Bắt buộc chọn gói TRƯỚC KHI thêm (theo yêu cầu).
+    """
+    from apps.courses.models import CourseAccessPlan
+
     course = course_repository.get_by_id(course_id)
 
-    # Kiểm tra khóa học đã publish
     if course.status != "PUBLISHED":
         return {"success": False, "message": "Khóa học chưa được công bố."}
 
-    # Kiểm tra đã mua chưa
+    #bắt buộc chọn gói
+    if not plan_id:
+        return {"success": False, "message": "Vui lòng chọn gói truy cập trước khi thêm vào giỏ."}
+
+    try:
+        access_plan = CourseAccessPlan.objects.get(
+            id=plan_id, course_id=course_id
+        )
+    except CourseAccessPlan.DoesNotExist:
+        return {"success": False, "message": "Gói truy cập không hợp lệ."}
+
+    # Kiểm tra đã mua (còn hạn) chưa
     existing = enrollment_repository.find_active_or_completed(user, course)
     if existing:
-        return {"success": False, "message": "Bạn đã sở hữu khóa học này."}
+        return {"success": False, "message": "Bạn đã sở hữu khóa học này và còn thời hạn truy cập."}
 
-    # Kiểm tra đã có trong giỏ chưa
-    item, created = cart_repository.add_to_cart(user, course)
+    # Kiểm tra đã có trong giỏ chưa (nếu có -> cập nhật gói mới)
+    item, created = cart_repository.add_to_cart(user, course, access_plan)
     if not created:
         return {"success": False, "message": "Khóa học đã có trong giỏ hàng."}
 

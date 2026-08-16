@@ -6,6 +6,7 @@ from apps.payments.views import (
     StripeVerifyAPIView,
     TransactionDetailAPIView,
     AdminTransactionListAPIView,
+    AdminFinanceReportAPIView,
     AdminPayoutListAPIView,
     AdminInstructorPayoutAPIView,
     InstructorRevenueAPIView,
@@ -23,6 +24,7 @@ urlpatterns = [
 
     # Admin
     path("admin/transactions/", AdminTransactionListAPIView.as_view(), name="admin-transactions"),
+    path("admin/reports/", AdminFinanceReportAPIView.as_view(), name="admin-finance-report"),
     path("admin/payouts/", AdminPayoutListAPIView.as_view(), name="admin-payout-list"),
     path("admin/payouts/instructor/<uuid:instructor_id>/pay/", AdminInstructorPayoutAPIView.as_view(), name="admin-instructor-payout"),
 

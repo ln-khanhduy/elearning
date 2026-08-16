@@ -159,22 +159,22 @@ def apply_coupon_to_cart(code, user, cart_total, course_ids=None):
 
 def get_cart_total_from_server(user, course_ids):
     """
-    Tính tổng tiền từ server dựa trên khóa học thực tế.
+    (R2) Tính tổng tiền từ server dựa trên GIỎ HÀNG thực tế (giá GÓI đã chọn).
     Không tin giá trị client gửi lên để tránh gian lận.
     """
-    from apps.courses.models import Course
+    from apps.cart.models import Cart, CartItem
 
-    ids = _normalize_course_ids(course_ids) or set()
-    if not ids:
+    cart = Cart.objects.filter(student=user).first()
+    if not cart:
         return Decimal("0")
 
-    courses = Course.objects.filter(
-        id__in=ids,
-        status=Course.Status.PUBLISHED,
-        price__gt=0,
-    )
-    total = sum((Decimal(str(c.price)) for c in courses), Decimal("0"))
-    return total
+    items = CartItem.objects.filter(
+        cart=cart,
+        course_id__in=_normalize_course_ids(course_ids) or [],
+        access_plan__isnull=False,
+    ).select_related("access_plan")
+
+    return sum((Decimal(str(item.access_plan.price)) for item in items), Decimal("0"))
 
 
 def lock_coupon_by_code(code):

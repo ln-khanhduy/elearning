@@ -4,13 +4,20 @@
   border-radius: 10px;
   border: 1px solid #e9ecef;
   padding: 24px;
-  max-width: 600px;
+  max-width: 1100px;
+}
+
+.sys-config-group {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
 }
 
 .sys-config-title {
-  margin: 0 0 16px;
+  margin: 0 0 4px;
   font-weight: 600;
   font-size: 1rem;
+  grid-column: 1 / -1;
 }
 
 .sys-config-field {
@@ -32,6 +39,7 @@
 }
 
 .sys-config-input {
+  width: 100%;
   max-width: 150px;
   height: 40px;
 }
@@ -60,6 +68,15 @@
 
 .sys-config-save-btn {
   width: 100%;
+  margin-top: 12px;
   outline: none;
   border: none;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (max-width: 768px) {
+  .sys-config-group {
+    grid-template-columns: 1fr;
+  }
 }

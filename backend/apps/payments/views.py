@@ -1,3 +1,4 @@
+from collections import OrderedDict
 from decimal import Decimal
 
 from django.utils import timezone
@@ -22,8 +23,8 @@ from apps.courses.models import Course
 
 
 def _is_finance_admin(user):
-    """Kiểm tra user có role FINANCE_ADMIN hoặc SUPERADMIN không."""
-    return user.role and user.role.code in ["FINANCE_ADMIN", "SUPERADMIN"]
+    """Kiểm tra user có role SUPERADMIN không."""
+    return user.role and user.role.code == "SUPERADMIN"
 
 # ==================== STRIPE ====================
 
@@ -31,11 +32,14 @@ class StripeCheckoutAPIView(BasePermissionAPIView):
     """
     POST /api/payments/stripe/courses/{course_id}/checkout/
     Tạo Stripe Checkout Session.
+    Body: { "plan_id": "...", "coupon_code": "..." }
     Yêu cầu quyền mua khóa học: student.course.buy
     """
     required_permission = "student.course.buy"
 
     def post(self, request, course_id):
+        from apps.courses.models import CourseAccessPlan
+
         try:
             course = Course.objects.get(id=course_id, status=Course.Status.PUBLISHED)
         except Course.DoesNotExist:
@@ -44,14 +48,28 @@ class StripeCheckoutAPIView(BasePermissionAPIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        if course.price <= 0:
+        plan_id = request.data.get("plan_id")
+        if not plan_id:
             return Response(
-                {"success": False, "message": "Khóa học miễn phí. Vui lòng sử dụng đăng ký miễn phí."},
+                {"success": False, "message": "Vui lòng chọn gói truy cập (plan_id)."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
         try:
-            result = stripe_payment_service.create_checkout_session(request.user, course, coupon_code=request.data.get("coupon_code"))
+            access_plan = CourseAccessPlan.objects.select_related("course").get(
+                id=plan_id, course_id=course_id
+            )
+        except CourseAccessPlan.DoesNotExist:
+            return Response(
+                {"success": False, "message": "Gói truy cập không hợp lệ."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            result = stripe_payment_service.create_checkout_session(
+                request.user, course, access_plan=access_plan,
+                coupon_code=request.data.get("coupon_code"),
+            )
             return Response({
                 "success": True,
                 "message": "Tạo phiên thanh toán Stripe thành công.",
@@ -74,6 +92,8 @@ class StripeCartCheckoutAPIView(BasePermissionAPIView):
     required_permission = "student.course.buy"
 
     def post(self, request):
+        from apps.cart.models import Cart, CartItem
+
         course_ids = request.data.get("course_ids") or []
         coupon_code = request.data.get("coupon_code") or ""
         if not course_ids:
@@ -82,9 +102,28 @@ class StripeCartCheckoutAPIView(BasePermissionAPIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        cart = Cart.objects.filter(student=request.user).first()
+        if not cart:
+            return Response(
+                {"success": False, "message": "Giỏ hàng trống."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        #Lấy CartItem kèm gói đã chọn (bắt buộc)
+        cart_items = list(CartItem.objects.filter(
+            cart=cart,
+            course_id__in=course_ids,
+            access_plan__isnull=False,
+        ).select_related("course", "access_plan"))
+        if not cart_items:
+            return Response(
+                {"success": False, "message": "Không có khóa học hợp lệ trong giỏ (thiếu gói truy cập)."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         try:
             result = stripe_payment_service.create_cart_checkout_session(
-                request.user, course_ids, coupon_code=coupon_code
+                request.user, cart_items, coupon_code=coupon_code
             )
             return Response({
                 "success": True,
@@ -194,9 +233,7 @@ class TransactionDetailAPIView(APIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        is_admin = _is_finance_admin(request.user) or (
-            request.user.role and request.user.role.code == "SUPERADMIN"
-        )
+        is_admin = _is_finance_admin(request.user)
         if transaction.student_id != request.user.id and not is_admin:
             return Response(
                 {"success": False, "message": "Bạn không có quyền xem giao dịch này."},
@@ -233,6 +270,202 @@ class AdminTransactionListAPIView(BasePermissionAPIView):
             "success": True,
             "data": serializer.data,
         }, status=status.HTTP_200_OK)
+
+
+# ==================== FINANCE REPORT ====================
+
+
+class AdminFinanceReportAPIView(BasePermissionAPIView):
+    """
+    GET /api/payments/admin/reports/
+    Báo cáo tài chính tổng hợp cho Finance Admin.
+    Query params: date_from (YYYY-MM-DD), date_to (YYYY-MM-DD)
+    """
+    required_permission = "finance.finance.revenue_view"
+
+    def get(self, request):
+        date_from = request.query_params.get("date_from")
+        date_to = request.query_params.get("date_to")
+
+        qs = PaymentTransaction.objects.select_related(
+            "student", "course", "course__assigned_instructor"
+        ).all().order_by("-created_at")
+
+        if date_from:
+            qs = qs.filter(created_at__date__gte=date_from)
+        if date_to:
+            qs = qs.filter(created_at__date__lte=date_to)
+
+        transactions = list(qs)
+
+        # ===== SUMMARY =====
+        summary = {
+            "gross": Decimal("0.00"),
+            "net": Decimal("0.00"),
+            "platform_fee": Decimal("0.00"),
+            "instructor_share": Decimal("0.00"),
+            "instructor_paid": Decimal("0.00"),
+            "tax_amount": Decimal("0.00"),
+            "count": len(transactions),
+            "refunded_count": 0,
+            "refunded_amount": Decimal("0.00"),
+            "student_count": 0,
+            "course_count": 0,
+        }
+        student_ids = set()
+        course_ids = set()
+        for t in transactions:
+            summary["gross"] += t.gross_amount or 0
+            summary["net"] += t.net_amount or 0
+            summary["platform_fee"] += t.platform_fee_amount or 0
+            summary["instructor_share"] += t.instructor_share_amount or 0
+            summary["tax_amount"] += t.tax_amount or 0
+            if t.student_id:
+                student_ids.add(t.student_id)
+            if t.course_id:
+                course_ids.add(t.course_id)
+            if t.status in (PaymentTransaction.Status.REFUNDED, PaymentTransaction.Status.REFUND_APPROVED):
+                summary["refunded_count"] += 1
+                summary["refunded_amount"] += t.gross_amount or 0
+        summary["student_count"] = len(student_ids)
+        summary["course_count"] = len(course_ids)
+
+        # ===== INSTRUCTOR PAYMENTS (chi trả giảng viên thực tế) =====
+        # PaymentTransaction.instructor_share_amount LUÔN = 0 (khóa học thu phí nền tảng).
+        # Khoản thực chi giảng viên nằm ở bảng InstructorPayment (bảng lương tháng).
+        # Phân bổ theo THÁNG LƯƠNG (`month` YYYY-MM) thay vì `updated_at`,
+        # để mỗi tháng lọc đúng khoản lương của tháng đó (không bị dồn hết vào ngày duyệt).
+        from apps.duties.models import InstructorPayment
+
+        ip_qs = InstructorPayment.objects.filter(
+            status__in=[InstructorPayment.Status.APPROVED, InstructorPayment.Status.PAID]
+        )
+        # Quy đổi khoảng ngày sang tháng (YYYY-MM) — chấp nhận bảng lương có tháng giao với khoảng lọc
+        month_from = str(date_from)[:7] if date_from else None
+        month_to = str(date_to)[:7] if date_to else None
+        if month_from:
+            ip_qs = ip_qs.filter(month__gte=month_from)
+        if month_to:
+            ip_qs = ip_qs.filter(month__lte=month_to)
+
+        instructor_paid_total = Decimal("0.00")
+        instructor_paid_by_month = {}
+        for ip in ip_qs:
+            amount = ip.net_amount if ip.net_amount is not None else Decimal("0.00")
+            instructor_paid_total += amount
+            m_key = ip.month or ""
+            if m_key:
+                instructor_paid_by_month[m_key] = instructor_paid_by_month.get(m_key, Decimal("0.00")) + amount
+        summary["instructor_paid"] = instructor_paid_total
+
+        # ===== MONTHLY =====
+        monthly_map = OrderedDict()
+        for t in transactions:
+            month = t.created_at.strftime("%Y-%m") if t.created_at else ""
+            if not month:
+                continue
+            m = monthly_map.setdefault(month, {
+                "month": month, "gross": Decimal("0.00"), "net": Decimal("0.00"),
+                "platform_fee": Decimal("0.00"), "instructor_share": Decimal("0.00"),
+                "instructor_paid": Decimal("0.00"), "count": 0,
+            })
+            m["gross"] += t.gross_amount or 0
+            m["net"] += t.net_amount or 0
+            m["platform_fee"] += t.platform_fee_amount or 0
+            m["instructor_share"] += t.instructor_share_amount or 0
+            m["count"] += 1
+        # Đảm bảo mọi tháng có lương giảng viên (nhưng không có giao dịch bán khóa) vẫn xuất hiện
+        for month, amount in instructor_paid_by_month.items():
+            monthly_map.setdefault(month, {
+                "month": month, "gross": Decimal("0.00"), "net": Decimal("0.00"),
+                "platform_fee": Decimal("0.00"), "instructor_share": Decimal("0.00"),
+                "instructor_paid": Decimal("0.00"), "count": 0,
+            })
+        # Gán chi trả giảng viên thực tế theo tháng (chỉ 1 lần, không cộng dồn theo số giao dịch)
+        for m in monthly_map.values():
+            month = m["month"]
+            m["instructor_paid"] = instructor_paid_by_month.get(month, Decimal("0.00"))
+        monthly = list(reversed(list(monthly_map.values())))
+
+        # ===== STATUS STATS =====
+        status_map = OrderedDict()
+        for t in transactions:
+            key = t.status or "UNKNOWN"
+            if key not in status_map:
+                status_map[key] = {"status": key, "count": 0, "gross": Decimal("0.00")}
+            status_map[key]["count"] += 1
+            status_map[key]["gross"] += t.gross_amount or 0
+        status_stats = list(status_map.values())
+
+        # ===== TOP COURSES =====
+        course_map = OrderedDict()
+        for t in transactions:
+            if not t.course_id:
+                continue
+            key = str(t.course_id)
+            c = course_map.setdefault(key, {
+                "course_id": t.course_id,
+                "course_title": t.course.title if t.course else "Không xác định",
+                "gross": Decimal("0.00"),
+                "platform_fee": Decimal("0.00"),
+                "instructor_share": Decimal("0.00"),
+                "count": 0,
+            })
+            c["gross"] += t.gross_amount or 0
+            c["platform_fee"] += t.platform_fee_amount or 0
+            c["instructor_share"] += t.instructor_share_amount or 0
+            c["count"] += 1
+        top_courses = sorted(
+            course_map.values(), key=lambda x: x["gross"], reverse=True
+        )[:5]
+
+        # ===== DAILY (theo khoảng lọc, tối đa 14 ngày cuối) =====
+        # Nếu có date_from/date_to → lấy 14 ngày cuối trong khoảng này.
+        # Không có filter → 14 ngày gần nhất tính từ hôm nay.
+        from datetime import date as _date
+
+        today = timezone.now().date()
+        if date_to:
+            try:
+                end_day = _date.fromisoformat(str(date_to))
+            except ValueError:
+                end_day = today
+        else:
+            end_day = today
+
+        if date_from:
+            try:
+                start_day = max(_date.fromisoformat(str(date_from)), end_day - timezone.timedelta(days=13))
+            except ValueError:
+                start_day = end_day - timezone.timedelta(days=13)
+        else:
+            start_day = end_day - timezone.timedelta(days=13)
+
+        daily_map = OrderedDict()
+        d = start_day
+        while d <= end_day:
+            daily_map[d.isoformat()] = {
+                "date": d.isoformat(), "gross": Decimal("0.00"), "count": 0,
+            }
+            d += timezone.timedelta(days=1)
+
+        for t in transactions:
+            if not t.created_at:
+                continue
+            day = t.created_at.date().isoformat()
+            if day in daily_map:
+                daily_map[day]["gross"] += t.gross_amount or 0
+                daily_map[day]["count"] += 1
+        daily = list(daily_map.values())
+
+        data = {
+            "summary": summary,
+            "monthly": monthly,
+            "status_stats": status_stats,
+            "top_courses": top_courses,
+            "daily": daily,
+        }
+        return success_response(data)
 
 
 # ==================== PAYOUT ====================

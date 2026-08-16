@@ -291,9 +291,7 @@ function ProfilePage() {
     const roleMap = {
       SUPERADMIN: "SUPER ADMIN",
       COURSE_ADMIN: "QUẢN TRỊ KHÓA HỌC",
-      INSTRUCTOR_MANAGER: "QUẢN TRỊ GIẢNG VIÊN",
       USER_MANAGER: "QUẢN TRỊ NGƯỜI DÙNG",
-      FINANCE_ADMIN: "QUẢN TRỊ TÀI CHÍNH",
       INSTRUCTOR: "GIẢNG VIÊN",
       STUDENT: "HỌC VIÊN",
     };

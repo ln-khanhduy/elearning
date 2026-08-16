@@ -9,41 +9,23 @@ const request = async (callback) => {
   }
 };
 
-// ==================== LESSONS ====================
-// BE: /api/lessons/chapters/{chapter_id}/lessons/
+export const getLessonsApi = async (chapterId) =>
+  request(() => apiClient.get(`/api/lessons/chapters/${chapterId}/lessons/`));
 
-// Lấy danh sách bài học của một chương
-export const getLessonsApi = async (chapterId) => {
-  return request(() => apiClient.get(`/api/lessons/chapters/${chapterId}/lessons/`));
-};
+export const getLessonDetailApi = async (lessonId) =>
+  request(() => apiClient.get(`/api/lessons/lessons/${lessonId}/`));
 
-// Lấy chi tiết một bài học
-export const getLessonDetailApi = async (lessonId) => {
-  return request(() => apiClient.get(`/api/lessons/lessons/${lessonId}/`));
-};
+export const initBunnyUploadApi = async (title) =>
+  request(() => apiClient.post("/api/lessons/bunny/init-upload/", { title }));
 
-// Tạo mới một bài học trong chương
-export const createLessonApi = async (chapterId, data) => {
-  return request(() =>
-    apiClient.post(`/api/lessons/chapters/${chapterId}/lessons/create/`, data)
-  );
-};
+export const createLessonApi = async (chapterId, data) =>
+  request(() => apiClient.post(`/api/lessons/chapters/${chapterId}/lessons/create/`, data));
 
-// Cập nhật thông tin bài học
-export const updateLessonApi = async (lessonId, data) => {
-  return request(() =>
-    apiClient.patch(`/api/lessons/lessons/${lessonId}/update/`, data)
-  );
-};
+export const updateLessonApi = async (lessonId, data) =>
+  request(() => apiClient.patch(`/api/lessons/lessons/${lessonId}/update/`, data));
 
-// Xóa bài học
-export const deleteLessonApi = async (lessonId) => {
-  return request(() => apiClient.delete(`/api/lessons/lessons/${lessonId}/delete/`));
-};
+export const deleteLessonApi = async (lessonId) =>
+  request(() => apiClient.delete(`/api/lessons/lessons/${lessonId}/delete/`));
 
-// Sắp xếp lại thứ tự các bài học trong chương
-export const reorderLessonsApi = async (chapterId, lessons) => {
-  return request(() =>
-    apiClient.patch(`/api/lessons/chapters/${chapterId}/lessons/reorder/`, { lessons })
-  );
-};
+export const reorderLessonsApi = async (chapterId, lessons) =>
+  request(() => apiClient.patch(`/api/lessons/chapters/${chapterId}/lessons/reorder/`, { lessons }));

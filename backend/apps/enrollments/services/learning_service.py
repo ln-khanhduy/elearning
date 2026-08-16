@@ -14,6 +14,7 @@ from apps.quizzes.repositories import quiz_repository
 from apps.certificates.repositories import certificate_repository
 from apps.certificates.services import certificate_image_service
 from apps.notifications import services as notif_service
+from apps.common.bunny_service import generate_bunny_embed_url
 
 
 def _is_admin(user):
@@ -26,11 +27,15 @@ def get_enrollment_or_404(user, course_id):
     Kiểm tra user có quyền truy cập khóa học không.
     - Người tạo khóa học, instructor (được phân công), SUPERADMIN, COURSE_ADMIN:
       luôn được truy cập, không cần enrollment.
-    - Các user khác cần enrollment ACTIVE/COMPLETED.
+    - Các user khác cần enrollment ACTIVE/COMPLETED CÒN HẠN (expires_at > now).
+    - Hết hạn/EXPIRED → coi như chưa enroll → PermissionDenied.
     """
     course = course_repository.get_by_id(course_id)
     enrollment = enrollment_repository.get_active_by_user_and_course(user.id, course_id)
     if enrollment:
+        if enrollment_repository.is_expired(enrollment):
+            enrollment_repository.mark_expired(enrollment)
+            raise PermissionDenied("Khóa học đã hết hạn. Vui lòng mua lại để tiếp tục học.")
         return enrollment
     if course and (
         course.assigned_instructor_id == user.id
@@ -83,6 +88,31 @@ def _can_access_all(user, course):
     )
 
 
+def can_access_course(user, course):
+    """
+    Kiểm tra user có quyền xem nội dung (video) của khóa học không.
+
+    - Owner / instructor được phân công / SUPERADMIN / COURSE_ADMIN: luôn được.
+    - Các user khác: cần enrollment ACTIVE/COMPLETED còn hạn.
+    - User chưa đăng nhập: không được xem video.
+    """
+    if not user or not user.is_authenticated:
+        return False
+    if _can_access_all(user, course):
+        return True
+    enrollment = enrollment_repository.get_active_by_user_and_course(user.id, course.id)
+    if enrollment and not enrollment_repository.is_expired(enrollment):
+        return True
+    return False
+
+
+def can_access_lesson(user, lesson):
+    """Kiểm tra user có quyền xem video của một bài học không."""
+    if not user or not user.is_authenticated or not lesson:
+        return False
+    return can_access_course(user, lesson.chapter.course)
+
+
 def get_learning_curriculum(user, course_id):
     """Lấy toàn bộ curriculum cho learning page."""
     course = course_repository.get_by_id(course_id)
@@ -110,18 +140,21 @@ def get_learning_curriculum(user, course_id):
         if is_owner or is_enrolled:
             lessons = chapter.lessons.all().order_by("order", "id")
         else:
-            lessons = chapter.lessons.filter(status=Lesson.Status.PUBLISHED).order_by("order", "id")
+            lessons = chapter.lessons.all().order_by("order", "id")
 
         lessons_data = []
         for lesson in lessons:
             is_completed = lesson.id in completed_lesson_ids
             is_locked = not is_enrolled and not is_owner
             quizzes_data = _build_quiz_data(lesson, user, enrollment)
+            video_url = None
+            if not is_locked and lesson.content_type == Lesson.ContentType.VIDEO and lesson.video_url:
+                video_url = generate_bunny_embed_url(lesson.video_url)
 
             lessons_data.append({
                 "id": lesson.id, "slug": lesson.slug, "title": lesson.title,
                 "description": lesson.description, "content_type": lesson.content_type,
-                "video_url": lesson.video_url if not is_locked else None,
+                "video_url": video_url,
                 "material_url": lesson.material_file.url if lesson.material_file and not is_locked else None,
                 "order": lesson.order, "is_locked": is_locked,
                 "completed": is_completed, "is_completed": is_completed, "isCompleted": is_completed,
@@ -284,16 +317,37 @@ def complete_course(user, course_id):
 
 
 def _generate_certificate_code(user_id, course_id):
+    """Tạo mã chứng chỉ duy nhất dựa trên user_id, course_id, ngày tháng và random."""
     today = timezone.now().strftime("%y%m%d")
     random_part = uuid.uuid4().hex[:6].upper()
     return f"CERT-{course_id}-{user_id}-{today}-{random_part}"
 
 
-def submit_quiz(user, course_id, quiz_id, answers):
-    """Nộp bài quiz và chấm điểm tự động."""
+def submit_quiz(user, course_id, quiz_id, answers, started_at=None):
+    """Nộp bài quiz - chặn khi hết hạn và kiểm tra giới hạn thời gian làm bài."""
+    get_enrollment_or_404(user, course_id)
     quiz = quiz_repository.get_quiz_by_course(quiz_id, course_id)
     if not quiz:
         raise NotFound("Không tìm thấy bài kiểm tra.")
+
+    # Kiểm tra giới hạn thời gian làm bài (time_limit_minutes)
+    if quiz.time_limit_minutes and int(quiz.time_limit_minutes) > 0:
+        if started_at is None:
+            raise ValidationError("Thiếu thông tin thời điểm bắt đầu làm bài.")
+        # started_at là millisecond timestamp (Date.now() phía frontend)
+        try:
+            started_at_ms = int(started_at)
+        except (TypeError, ValueError):
+            raise ValidationError("Thời điểm bắt đầu làm bài không hợp lệ.")
+        elapsed_seconds = (timezone.now().timestamp() * 1000 - started_at_ms) / 1000
+        limit_seconds = int(quiz.time_limit_minutes) * 60
+        # Cho phép sai lệch đồng hồ tối đa 60 giây:
+        # - 15 giây cho phép lệch thời gian client-server
+        # - Phần còn lại cho phép frontend auto-submit ngay khi timer hết giờ
+        #   (nếu tab bị treo/ẩn, interval có thể bị trễ vài chục giây).
+        # Nếu nộp trễ quá 60 giây → từ chối (chống gian lận).
+        if elapsed_seconds > limit_seconds + 60:
+            raise ValidationError("Đã hết thời gian làm bài. Bài làm của bạn không được chấp nhận.")
 
     if quiz_repository.has_essay_questions(quiz):
         if quiz_repository.has_existing_attempt(quiz, user):

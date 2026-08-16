@@ -20,17 +20,13 @@ from apps.users.models import User, InstructorProfile
 from apps.users.repositories import user_repository
 from apps.users.repositories import instructor_repository
 from apps.users.utils.cookies import REFRESH_COOKIE_NAME
-from apps.users.services import google_oauth_service
 from apps.users.serializers.user_serializer import InstructorCertificateSerializer
-from apps.users.serializers.auth_serializer import UserSerializer
 
 
 ROLE_HIERARCHY = {
     "SUPERADMIN": 0,
     "COURSE_ADMIN": 1,
-    "INSTRUCTOR_MANAGER": 1,
     "USER_MANAGER": 1,
-    "FINANCE_ADMIN": 1,
     "INSTRUCTOR": 2,
     "STUDENT": 2,
 }
@@ -151,8 +147,21 @@ def update_profile(user, validated_data):
         setattr(user, attr, value)
     user.save()
 
-    if profile_data and hasattr(user, 'instructor_profile'):
-        instructor_profile = user.instructor_profile
+    if profile_data:
+        instructor_profile = getattr(user, 'instructor_profile', None)
+        if instructor_profile is None:
+            # Giảng viên chưa có hồ sơ (VD: tạo trực tiếp qua script seed, không qua luồng duyệt)
+            # -> tự tạo hồ sơ để lưu được thông tin ngân hàng/hồ sơ giảng viên.
+            instructor_profile = InstructorProfile.objects.create(
+                user=user,
+                name=user.get_full_name() or user.email,
+                email=user.email,
+                bio=profile_data.get("bio") or "",
+                portfolio_link=profile_data.get("portfolio_link"),
+                cv_file=profile_data.get("cv_file"),
+                status=InstructorProfile.Status.APPROVED,
+                is_terms_accepted=True,
+            )
         for attr, value in profile_data.items():
             setattr(instructor_profile, attr, value)
         instructor_profile.save(update_fields=list(profile_data.keys()))

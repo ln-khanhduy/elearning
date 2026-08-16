@@ -4,7 +4,7 @@ import logoSrc from "../../img/logo.png";
 import { logoutApi } from "../../api/authAPI";
 import { useUser } from "../../context/UserContext";
 import NotificationBell from "../notification/NotificationBell";
-import { hasPermission } from "../../utils/permissions";
+import { hasPermission, hasStudentRole, hasInstructorRole, getRoleCode } from "../../utils/permissions";
 
 function Header({ onToggleSidebar }) {
   const [openMenu, setOpenMenu] = useState(false);
@@ -17,10 +17,15 @@ function Header({ onToggleSidebar }) {
   const searchTimeoutRef = useRef(null);
   const mobileSearchInputRef = useRef(null);
 
-  // Chỉ hiển thị icon + gọi API khi user có quyền tương ứng
-  const canViewWishlist = hasPermission(user, "student.wishlist.view");
-  const canViewCart = hasPermission(user, "student.cart.view");
-  const canViewMyCourses = hasPermission(user, "student.my_course.view");
+  const roleCode = getRoleCode(user);
+  const isSuperAdmin = roleCode === "SUPERADMIN";
+
+  // Chỉ hiển thị icon + gọi API khi user thuộc role học viên VÀ có quyền tương ứng.
+  // Instructor không dùng tính năng học viên (mua khóa, giỏ hàng, yêu thích, khóa học của tôi).
+  const canViewWishlist = hasStudentRole(user) && hasPermission(user, "student.wishlist.view");
+  const canViewCart = hasStudentRole(user) && hasPermission(user, "student.cart.view");
+  const canViewMyCourses = hasStudentRole(user) && hasPermission(user, "student.my_course.view");
+  const isInstructor = hasInstructorRole(user) && !isSuperAdmin;
 
   const refreshWishlistCount = useCallback(() => {
     import("../../api/wishlistAPI").then(({ getWishlistCountApi }) => {
@@ -115,6 +120,9 @@ function Header({ onToggleSidebar }) {
             {isAuthenticated && canViewMyCourses && (
               <NavLink to="/my-courses" className={({ isActive }) => isActive ? "active" : ""}>Khóa học của tôi</NavLink>
             )}
+            {isAuthenticated && isInstructor && (
+              <NavLink to="/instructor/courses" className={({ isActive }) => isActive ? "active" : ""}>Khóa học giảng dạy</NavLink>
+            )}
             {isAuthenticated && (
               <NavLink to="/profile" className={({ isActive }) => isActive ? "active" : ""}>Hồ sơ</NavLink>
             )}
@@ -170,14 +178,26 @@ function Header({ onToggleSidebar }) {
                 </button>
                 {openMenu && (
                   <div className="user-dropdown">
-                    {user?.role === "SUPERADMIN" && (
+                    {isSuperAdmin && (
                       <Link to="/dashboard" className="user-dropdown-item" onClick={() => setOpenMenu(false)}>
                         <i className="bi bi-grid me-2"></i>Dashboard
                       </Link>
                     )}
-                    <Link to="/my-learning" className="user-dropdown-item" onClick={() => setOpenMenu(false)}>
-                      <i className="bi bi-play-circle me-2"></i>Tiếp tục học
-                    </Link>
+                    {canViewMyCourses && (
+                      <Link to="/my-learning" className="user-dropdown-item" onClick={() => setOpenMenu(false)}>
+                        <i className="bi bi-play-circle me-2"></i>Tiếp tục học
+                      </Link>
+                    )}
+                    {isInstructor && (
+                      <Link to="/instructor/courses" className="user-dropdown-item" onClick={() => setOpenMenu(false)}>
+                        <i className="bi bi-journal-bookmark me-2"></i>Khóa học giảng dạy
+                      </Link>
+                    )}
+                    {canViewMyCourses && (
+                      <Link to="/my-certificates" className="user-dropdown-item" onClick={() => setOpenMenu(false)}>
+                        <i className="bi bi-award me-2"></i>Chứng chỉ của tôi
+                      </Link>
+                    )}
                     <Link to="/profile" className="user-dropdown-item" onClick={() => setOpenMenu(false)}>
                       <i className="bi bi-person-circle me-2"></i>Hồ sơ
                     </Link>

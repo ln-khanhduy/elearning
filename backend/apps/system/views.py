@@ -12,6 +12,8 @@ from apps.system.serializers.admin_user_serializer import (
     AdminUserListSerializer,
     AdminUserToggleActiveSerializer,
     AdminUserChangeRoleSerializer,
+    AdminUserCreateSerializer,
+    AdminUserResetPasswordSerializer,
 )
 from apps.users.repositories import user_repository
 
@@ -71,6 +73,35 @@ class AdminUserListAPIView(BasePermissionAPIView):
             "page_size": result["page_size"],
             "total_pages": result["total_pages"],
         })
+
+
+class AdminUserCreateAPIView(BasePermissionAPIView):
+    """POST /api/admin/users/create/ - Tạo tài khoản mới (chỉ SUPERADMIN)."""
+    required_permission = "user.user.manage"
+
+    def post(self, request):
+        if not admin_user_service.can_create_user(request.user):
+            return error_response("Chỉ Super Admin mới được tạo tài khoản.", http_status=status.HTTP_403_FORBIDDEN)
+        serializer = AdminUserCreateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        try:
+            user = admin_user_service.create_user(
+                requesting_user=request.user,
+                full_name=serializer.validated_data["full_name"],
+                email=serializer.validated_data["email"],
+                password=serializer.validated_data["password"],
+                role_code=serializer.validated_data["role_code"],
+                phone=serializer.validated_data.get("phone", ""),
+            )
+            admin_log_service.log(
+                admin=request.user,
+                action_type='USER_CREATE',
+                detail=f"{request.user.email} đã tạo tài khoản {user.email}",
+                target_id=str(user.id), target_type='User',
+            )
+            return success_response(AdminUserListSerializer(user).data, "Tạo tài khoản thành công.", status.HTTP_201_CREATED)
+        except Exception as e:
+            return error_response(str(e.detail) if hasattr(e, "detail") else str(e), http_status=status.HTTP_400_BAD_REQUEST)
 
 
 class AdminUserDetailAPIView(BasePermissionAPIView):
@@ -193,6 +224,31 @@ class SystemConfigUpdateAPIView(BasePermissionAPIView):
                 detail=f"{request.user.email} đã cập nhật cấu hình hệ thống",
             )
             return success_response(results, "Cập nhật cấu hình thành công.")
+        except Exception as e:
+            return error_response(str(e.detail) if hasattr(e, "detail") else str(e), http_status=status.HTTP_400_BAD_REQUEST)
+
+
+class AdminUserResetPasswordAPIView(BasePermissionAPIView):
+    """PATCH /api/admin/users/{user_id}/reset-password/ - Đặt lại mật khẩu (chỉ SUPERADMIN)."""
+    required_permission = "user.user.manage"
+
+    def patch(self, request, user_id):
+        target_user = user_repository.get_user_by_id(user_id)
+        if not admin_user_service.can_reset_password(request.user, target_user):
+            return error_response("Bạn không có quyền đặt lại mật khẩu cho người dùng này.", http_status=status.HTTP_403_FORBIDDEN)
+        serializer = AdminUserResetPasswordSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        try:
+            user = admin_user_service.reset_password(
+                request.user, target_user, serializer.validated_data["new_password"]
+            )
+            admin_log_service.log(
+                admin=request.user,
+                action_type='USER_PASSWORD_RESET',
+                detail=f"{request.user.email} đã đặt lại mật khẩu cho {user.email}",
+                target_id=str(user.id), target_type='User',
+            )
+            return success_response(AdminUserListSerializer(user).data, "Đặt lại mật khẩu thành công.")
         except Exception as e:
             return error_response(str(e.detail) if hasattr(e, "detail") else str(e), http_status=status.HTTP_400_BAD_REQUEST)
 

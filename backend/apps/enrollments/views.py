@@ -86,6 +86,7 @@ class SubmitQuizAPIView(APIView):
             request.user, course_id,
             serializer.validated_data["quiz_id"],
             serializer.validated_data["answers"],
+            started_at=serializer.validated_data.get("started_at"),
         )
         return success_response(result, "Nộp bài kiểm tra thành công.")
 

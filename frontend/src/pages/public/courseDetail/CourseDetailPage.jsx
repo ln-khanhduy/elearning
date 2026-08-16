@@ -1,15 +1,13 @@
-import React, { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useUser } from "../../../context/UserContext";
 import { useCourseDetail } from "../../../hooks/courseDetail/useCourseDetail";
 import { useCourseProgress } from "../../../hooks/courseDetail/useCourseProgress";
 import { useReviews } from "../../../hooks/courseDetail/useReviews";
-import { enrollFreeCourseApi } from "../../../api/paymentAPI";
 import CourseHero from "../../../components/courseDetail/CourseHero";
 import CourseProgressCard from "../../../components/courseDetail/CourseProgressCard";
 import CourseContentList from "../../../components/courseDetail/CourseContentList";
-import InstructorCard from "../../../components/courseDetail/InstructorCard";
 import CourseTabs, { TabPanel } from "../../../components/courseDetail/CourseTabs";
 import ReviewStats from "../../../components/courseDetail/ReviewStats";
 import ReviewForm from "../../../components/courseDetail/ReviewForm";
@@ -48,7 +46,6 @@ function CourseDetailPage() {
   const {
     reviews,
     stats,
-    loading: reviewsLoading,
     userReview,
     fetchReviews,
     fetchStats,
@@ -59,6 +56,7 @@ function CourseDetailPage() {
   } = useReviews(courseId);
 
   const [showReviewForm, setShowReviewForm] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState(null);
 
   // Fetch reviews/stats on mount
   useEffect(() => {
@@ -78,26 +76,15 @@ function CourseDetailPage() {
 
     if (!course) return;
 
-    // Khóa học miễn phí -> gọi API enroll-free
-    if (!course.price || Number(course.price) <= 0) {
-      try {
-        const result = await enrollFreeCourseApi(courseId);
-        toast.success(result?.message || "Đăng ký khóa học thành công!");
-        const redirectUrl = result?.data?.redirect_url;
-        if (redirectUrl) {
-          navigate(redirectUrl, { replace: true });
-        } else {
-          navigate(`/courses/${courseId}/learn`, { replace: true });
-        }
-      } catch (err) {
-        toast.error(err.message || "Đăng ký thất bại. Vui lòng thử lại.");
-      }
+    // Khóa học có phí -> chuyển đến trang thanh toán (đã chọn gói)
+    if (selectedPlan) {
+      navigate(`/courses/${courseId}/checkout?plan_id=${selectedPlan.id}`);
       return;
     }
 
-    // Khóa học có phí -> chuyển đến trang thanh toán
-    navigate(`/courses/${courseId}/checkout`);
-  }, [isAuthenticated, navigate, courseId, course]);
+    // Chưa chọn gói -> nhắc chọn
+    toast.info("Vui lòng chọn gói truy cập trước.");
+  }, [isAuthenticated, navigate, courseId, course, selectedPlan]);
 
 
   const handleStartLearning = useCallback(() => {
@@ -284,16 +271,6 @@ function CourseDetailPage() {
                   )}
                 </div>
               </TabPanel>
-
-              <TabPanel label="Hỏi & Đáp">
-                <div className="text-center py-5">
-                  <i className="bi bi-chat-dots" style={{ fontSize: "3rem", color: "var(--muted, #6c757d)" }}></i>
-                  <p className="mt-3 mb-3 text-muted">Đặt câu hỏi cho giảng viên về khóa học này</p>
-                  <button className="qa-create-btn" onClick={() => navigate(`/courses/${courseId}/qa`)}>
-                    <i className="bi bi-plus-lg me-1"></i> Đặt câu hỏi
-                  </button>
-                </div>
-              </TabPanel>
             </CourseTabs>
           </div>
 
@@ -306,23 +283,16 @@ function CourseDetailPage() {
                 progressPercent={progressPercent}
                 completedCount={completedCount}
                 totalLessons={totalLessons}
-                price={course.price}
+                plans={course.access_plans || []}
+                selectedPlan={selectedPlan}
+                onSelectPlan={setSelectedPlan}
+                price={course.min_price}
                 originalPrice={course.original_price}
                 onEnroll={handleEnroll}
                 onStartLearning={handleStartLearning}
                 onContinueLearning={handleContinueLearning}
                 loading={progressLoading}
               />
-
-              {isAuthenticated && (
-                <button
-                  className="btn btn-primary w-100 mt-2"
-                  onClick={() => navigate(`/courses/${courseId}/qa`)}
-                  style={{ height: "var(--btn-height, 40px)", borderRadius: "var(--card-radius, 10px)", fontSize: "var(--font-size-body, 14px)" }}
-                >
-                  <i className="bi bi-chat-dots me-1"></i> Hỏi & Đáp
-                </button>
-              )}
             </div>
           </div>
         </div>

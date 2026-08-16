@@ -1,5 +1,8 @@
+from django.db import models
+from django.utils import timezone
 from rest_framework.exceptions import NotFound
 from apps.enrollments.models import Enrollment, LessonProgress, CourseProgress
+
 
 def get_by_user(user_id):
     """Lấy danh sách enrollment của một user (kèm course)."""
@@ -17,11 +20,18 @@ def get_by_id(enrollment_id):
 
 
 def get_active_by_user_and_course(user_id, course_id):
-    """Kiểm tra user đã đăng ký khóa học chưa (ACTIVE hoặc COMPLETED)."""
+    """
+    (R2) Kiểm tra user đã đăng ký khóa học và CÒN HẠN chưa.
+    - Chỉ trả về enrollment ACTIVE/COMPLETED còn hạn (expires_at > now hoặc expires_at null).
+    - Hết hạn/EXPIRED → coi như chưa enroll (trả None).
+    """
+    now = timezone.now()
     return Enrollment.objects.filter(
         student_id=user_id, course_id=course_id,
-        status__in=[Enrollment.Status.ACTIVE, Enrollment.Status.COMPLETED]
-    ).first()
+        status__in=[Enrollment.Status.ACTIVE, Enrollment.Status.COMPLETED],
+    ).filter(
+        models.Q(expires_at__isnull=True) | models.Q(expires_at__gt=now)
+    ).order_by("-created_at").first()
 
 
 def create(data):
@@ -40,26 +50,51 @@ def get_or_create_for_instructor(user, course_id):
 
 
 def get_or_create_enrollment(student, course, defaults=None):
-    """Tìm hoặc tạo enrollment (dùng trong payment)."""
-    return Enrollment.objects.get_or_create(
-        student=student,
-        course=course,
-        defaults=defaults or {},
-    )
+    """
+    (R2) Tạo ENROLLMENT MỚI mỗi lần mua (không dùng get_or_create vì đã bỏ
+    unique (student, course)). Hàm này giữ tên cũ cho tương thích service hiện tại.
+    """
+    return Enrollment.objects.create(**(defaults or {}) | {"student": student, "course": course})
 
 
 def find_active_or_completed(student, course):
-    """Kiểm tra user đã enroll course chưa (ACTIVE hoặc COMPLETED)."""
+    """
+    (R2) Kiểm tra user đã enroll course chưa và CÒN HẠN.
+    - EXPIRED hoặc expires_at <= now → trả None (cho phép mua lại).
+    """
+    now = timezone.now()
     return Enrollment.objects.filter(
         student=student,
         course=course,
-        status__in=[Enrollment.Status.ACTIVE, Enrollment.Status.COMPLETED]
-    ).first()
+        status__in=[Enrollment.Status.ACTIVE, Enrollment.Status.COMPLETED],
+    ).filter(
+        models.Q(expires_at__isnull=True) | models.Q(expires_at__gt=now)
+    ).order_by("-created_at").first()
+
+
+def is_expired(enrollment):
+    """
+    (R2) Kiểm tra enrollment đã hết hạn chưa.
+    - Nếu expires_at null (không giới hạn) → chưa hết hạn.
+    - Nếu expires_at <= now → hết hạn.
+    """
+    if not enrollment:
+        return False
+    if enrollment.expires_at is None:
+        return False
+    return enrollment.expires_at <= timezone.now()
+
+
+def mark_expired(enrollment):
+    """(R2) Chuyển enrollment sang trạng thái EXPIRED."""
+    if enrollment.status != Enrollment.Status.EXPIRED:
+        enrollment.status = Enrollment.Status.EXPIRED
+        enrollment.save(update_fields=["status", "updated_at"])
+    return enrollment
 
 
 def mark_completed(enrollment):
     """Đánh dấu enrollment là COMPLETED."""
-    from django.utils import timezone
     enrollment.status = "COMPLETED"
     enrollment.save()
     return enrollment

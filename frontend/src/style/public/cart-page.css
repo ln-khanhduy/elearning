@@ -70,7 +70,7 @@
   align-items: center;
   gap: 4px;
   padding: 8px 18px;
-  background: #0f3d75;
+  background:var(--primary);
   color: #fff;
   border: none;
   border-radius: 8px;
@@ -83,7 +83,8 @@
 }
 
 .cart-page .btn-primary:hover {
-  background: #0a2d55;
+  background: var(--primary);
+  color:black;
 }
 
 .cart-page .btn-primary:disabled {

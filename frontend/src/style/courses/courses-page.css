@@ -463,6 +463,15 @@
   color: var(--primary);
 }
 
+.course-card-cart-btn.active {
+  color: var(--primary, #0f3d75);
+  background: #fff;
+}
+
+.course-card-cart-btn.active i {
+  animation: heartPop 0.3s ease;
+}
+
 /* Body */
 .course-card-body {
   padding: 14px 16px 16px;

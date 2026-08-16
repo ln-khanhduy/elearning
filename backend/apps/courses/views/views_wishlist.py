@@ -17,13 +17,26 @@ class WishlistListAPIView(BasePermissionAPIView):
             course = item.course
             if not course:
                 continue
+            # (R2) Course.price đã bỏ — hiển thị các gói kích hoạt + giá từ (min price)
+            plans = course.access_plans.all().order_by("duration_days")
+            plan_list = [
+                {
+                    "id": p.id,
+                    "name": p.name,
+                    "duration_days": p.duration_days,
+                    "price": float(p.price),
+                }
+                for p in plans
+            ]
+            min_price = min((p["price"] for p in plan_list), default=None)
             wishlist_data.append({
                 "id": item.id,
                 "course_id": course.id,
                 "course_title": course.title,
                 "course_slug": course.slug,
                 "thumbnail_url": course.thumbnail.url if course.thumbnail else None,
-                "price": course.price,
+                "access_plans": plan_list,
+                "min_price": min_price,
                 "instructor_name": course.assigned_instructor.get_full_name() if course.assigned_instructor else None,
                 "created_at": item.created_at,
             })

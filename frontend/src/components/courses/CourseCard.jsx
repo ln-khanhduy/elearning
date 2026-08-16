@@ -1,10 +1,9 @@
 import { Link } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { toast } from "react-toastify";
 import { addToWishlistApi, removeFromWishlistApi } from "../../api/wishlistAPI";
-import { addToCartApi, removeFromCartApi } from "../../api/cartAPI";
+import { addToCartApi, getCartApi } from "../../api/cartAPI";
 import { useUser } from "../../context/UserContext";
-import {formatPrice} from "../../utils/formatPrice";
 
 /**
  * Card hiển thị thông tin khóa học
@@ -19,10 +18,10 @@ function CourseCard({ course }) {
     assigned_instructor_avatar,
     category_name,
     level,
-    price,
     rating,
     student_count,
     duration,
+    access_plans: initialPlans,
     is_wishlisted: initialWishlisted,
     is_enrolled: initialEnrolled,
     is_owned: initialOwned,
@@ -31,6 +30,33 @@ function CourseCard({ course }) {
   const [wishlisted, setWishlisted] = useState(!!initialWishlisted);
   const [wishlistLoading, setWishlistLoading] = useState(false);
   const [cartLoading, setCartLoading] = useState(false);
+  const [inCart, setInCart] = useState(false);
+  const plans = Array.isArray(initialPlans) ? initialPlans : [];
+  const defaultPlan = plans[0];
+
+  // Kiểm tra khóa học đã có trong giỏ hàng chưa
+  const checkInCart = useCallback(async () => {
+    try {
+      const res = await getCartApi();
+      const cartData = res?.data || res || { items: [] };
+      const items = cartData.items || [];
+      setInCart(items.some((item) => String(item.course_id) === String(id)));
+    } catch {
+      setInCart(false);
+    }
+  }, [id]);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    checkInCart();
+  }, [checkInCart]);
+
+  // Cập nhật lại trạng thái giỏ hàng khi có thay đổi từ nơi khác
+  useEffect(() => {
+    const handler = () => checkInCart();
+    window.addEventListener("cart-change", handler);
+    return () => window.removeEventListener("cart-change", handler);
+  }, [checkInCart]);
 
   // Khóa học đã mua hoặc thuộc sở hữu người dùng
   const purchased = !!initialEnrolled || !!initialOwned;
@@ -65,7 +91,6 @@ function CourseCard({ course }) {
       if (wishlisted) {
         await removeFromWishlistApi(id);
         setWishlisted(false);
-        toast.success("Đã xóa khỏi danh sách yêu thích.");
       } else {
         await addToWishlistApi(id);
         setWishlisted(true);
@@ -82,7 +107,7 @@ function CourseCard({ course }) {
         });
       }
       window.dispatchEvent(new Event("wishlist-change"));
-    } catch (err) {
+    } catch {
       toast.error("Không thể thao tác. Vui lòng thử lại.");
     } finally {
       setWishlistLoading(false);
@@ -96,21 +121,16 @@ function CourseCard({ course }) {
       toast.info("Vui lòng đăng nhập để sử dụng tính năng này.");
       return;
     }
+    // Thêm trực tiếp bằng gói mặc định (gói đầu tiên) — không chuyển trang nữa
     if (cartLoading) return;
+    if (!defaultPlan) {
+      toast.info("Khóa học chưa có gói truy cập.");
+      return;
+    }
     setCartLoading(true);
     try {
-      await addToCartApi(id);
+      await addToCartApi(id, defaultPlan.id);
       window.dispatchEvent(new Event("cart-change"));
-      toast.success("Đã thêm vào giỏ hàng.", {
-        action: {
-          text: "Hoàn tác",
-          onClick: () => {
-            removeFromCartApi(id).then(() => {
-              window.dispatchEvent(new Event("cart-change"));
-            }).catch(() => {});
-          },
-        },
-      });
     } catch (err) {
       toast.error(err.message || "Không thể thêm vào giỏ hàng.");
     } finally {
@@ -161,12 +181,12 @@ function CourseCard({ course }) {
           </button>
           {/* Cart button */}
           <button
-            className="course-card-cart-btn"
+            className={`course-card-cart-btn ${inCart ? "active" : ""}`}
             onClick={handleAddToCart}
             disabled={cartLoading}
-            title="Thêm vào giỏ hàng"
+            title={inCart ? "Đã có trong giỏ hàng" : defaultPlan ? `Thêm vào giỏ (${defaultPlan.name})` : "Khóa học chưa có gói"}
           >
-            <i className={`bi ${cartLoading ? "bi-arrow-repeat spin" : "bi-cart-plus"}`}></i>
+            <i className={`bi ${cartLoading ? "bi-arrow-repeat spin" : inCart ? "bi-cart-check-fill" : "bi-cart-plus"}`}></i>
           </button>
         </div>
       </Link>
@@ -225,14 +245,14 @@ function CourseCard({ course }) {
 
         {/* Footer */}
         <div className="course-card-footer">
-          <span
+          {/* <span
             className={`course-card-price ${
               Number(price) === 0 ? "free" : ""
             }`}
             
           >
             {purchased ? "Đã sở hữu" : (formatPrice(price) || "Liên hệ")}
-          </span>
+          </span> */}
           {purchased ? (
             <Link to={`/courses/${id}/learn`} className="course-card-btn course-card-btn--enrolled">
               <i className="bi bi-play-circle"></i> Học ngay

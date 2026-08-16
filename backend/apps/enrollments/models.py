@@ -5,11 +5,13 @@ from django.db import models
 class Enrollment(models.Model):
     """
     Đăng ký khóa học - ghi nhận học viên đã mua/đăng ký khóa học.
-    Mỗi học viên có thể đăng ký nhiều khóa học.
+    (R2) Mỗi lần mua tạo Enrollment mới; bỏ unique (student, course);
+    hết hạn -> status EXPIRED.
     """
     class Status(models.TextChoices):
         ACTIVE = 'ACTIVE', 'Active'
         COMPLETED = 'COMPLETED', 'Completed'
+        EXPIRED = 'EXPIRED', 'Expired'  # hết hạn truy cập
 
     # Học viên (User) đã đăng ký khóa học
     student = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='enrollments')
@@ -17,8 +19,18 @@ class Enrollment(models.Model):
     course = models.ForeignKey('courses.Course', on_delete=models.CASCADE, related_name='enrollments')
     # Giao dịch thanh toán tương ứng với đăng ký này (một đăng ký có thể không có payment nếu là free)
     payment_transaction = models.ForeignKey('payments.PaymentTransaction', on_delete=models.SET_NULL, null=True, blank=True, related_name='enrollments')
-    # Trạng thái đăng ký: ACTIVE - đang học, COMPLETED - đã hoàn thành
+    # Trạng thái đăng ký: ACTIVE - đang học, COMPLETED - đã hoàn thành, EXPIRED - hết hạn
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.ACTIVE)
+    #Thời điểm hết hạn truy cập (paid_at + duration_days của gói)
+    expires_at = models.DateTimeField(null=True, blank=True)
+    #Gói đã mua cho enrollment này
+    access_plan = models.ForeignKey(
+        'courses.CourseAccessPlan',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='enrollments',
+    )
     # Thời điểm học viên chính thức đăng ký và được cấp quyền truy cập khóa học (sau khi thanh toán thành công)
     enrolled_at = models.DateTimeField(null=True, blank=True)
     # Thời điểm tạo bản ghi
@@ -28,10 +40,10 @@ class Enrollment(models.Model):
 
     class Meta:
         db_table = 'enrollment'
-        unique_together = ('student', 'course')  # Mỗi học viên chỉ đăng ký 1 lần
         indexes = [
             models.Index(fields=['student', 'status']),  # Lọc đăng ký của học viên theo trạng thái
             models.Index(fields=['course', 'status']),   # Lọc học viên của khóa học theo trạng thái
+            models.Index(fields=['student', 'expires_at']),
         ]
 
     def __str__(self):

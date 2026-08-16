@@ -5,7 +5,9 @@ const request = async (callback) => {
     const res = await callback();
     return res.data;
   } catch (error) {
-    throw new Error(getErrorMessage(error));
+    const e = new Error(getErrorMessage(error));
+    e.cause = error;
+    throw e;
   }
 };
 
@@ -17,9 +19,9 @@ export const getCartApi = async () => {
   return request(() => apiClient.get("/api/cart/"));
 };
 
-// Thêm khóa học vào giỏ hàng
-export const addToCartApi = async (courseId) => {
-  return request(() => apiClient.post(`/api/cart/add/${courseId}/`));
+// Thêm khóa học + gói đã chọn vào giỏ hàng (bắt buộc plan_id — chọn gói trước khi thêm)
+export const addToCartApi = async (courseId, planId) => {
+  return request(() => apiClient.post(`/api/cart/add/${courseId}/`, { plan_id: planId }));
 };
 
 // Xóa khóa học khỏi giỏ hàng

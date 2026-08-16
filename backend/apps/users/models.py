@@ -8,7 +8,7 @@ class Role(models.Model):
     """
     Vai trò người dùng - phân quyền chi tiết theo từng module.
     Mỗi user có 1 role duy nhất.
-    VD: SUPERADMIN, COURSE_ADMIN, INSTRUCTOR_MANAGER, USER_MANAGER, FINANCE_ADMIN, INSTRUCTOR, STUDENT
+    VD: SUPERADMIN, COURSE_ADMIN, USER_MANAGER, INSTRUCTOR, STUDENT
     """
     code = models.CharField(max_length=50, unique=True)  # Mã role (VD: "SUPERADMIN")
     name = models.CharField(max_length=100)               # Tên hiển thị (VD: "Super Admin")

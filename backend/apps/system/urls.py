@@ -3,8 +3,10 @@ from django.urls import path
 from apps.system.views import (
     AdminDashboardView,
     AdminUserListAPIView,
+    AdminUserCreateAPIView,
     AdminUserDetailAPIView,
     AdminUserToggleActiveAPIView,
+    AdminUserResetPasswordAPIView,
     AdminUserChangeRoleAPIView,
     RoleListAPIView,
     RoleCreateAPIView,
@@ -25,8 +27,10 @@ urlpatterns = [
 
     # Users
     path("users/", AdminUserListAPIView.as_view(), name="admin-user-list"),
+    path("users/create/", AdminUserCreateAPIView.as_view(), name="admin-user-create"),
     path("users/<uuid:user_id>/", AdminUserDetailAPIView.as_view(), name="admin-user-detail"),
     path("users/<uuid:user_id>/toggle-active/", AdminUserToggleActiveAPIView.as_view(), name="admin-user-toggle-active"),
+    path("users/<uuid:user_id>/reset-password/", AdminUserResetPasswordAPIView.as_view(), name="admin-user-reset-password"),
     path("users/<uuid:user_id>/change-role/", AdminUserChangeRoleAPIView.as_view(), name="admin-user-change-role"),
 
     # Roles

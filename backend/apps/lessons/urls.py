@@ -4,10 +4,13 @@ from apps.lessons.views import (
     ChapterDeleteAPIView, ChapterReorderAPIView,
     ChapterLessonListAPIView, LessonDetailAPIView, LessonCreateAPIView,
     LessonUpdateAPIView, LessonDeleteAPIView, LessonReorderAPIView,
+    BunnyInitUploadAPIView,
 )
 
 
 urlpatterns = [
+    path("bunny/init-upload/", BunnyInitUploadAPIView.as_view(), name="lesson-bunny-init"),
+
     # Chapter
     path("courses/<int:course_id>/chapters/", CourseChapterListAPIView.as_view(), name="course-chapter-list"),
     path("courses/<int:course_id>/chapters/create/", ChapterCreateAPIView.as_view(), name="chapter-create"),

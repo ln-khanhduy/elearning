@@ -41,6 +41,7 @@ function AdminCategoryPage() {
   };
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true);
     loadCategories().finally(() => setLoading(false));
   }, []);
@@ -171,7 +172,6 @@ function AdminCategoryPage() {
           <table className="admin-table">
             <thead>
               <tr>
-                <th>ID</th>
                 <th>Tên danh mục</th>
                 <th>Slug</th>
                 <th>Thao tác</th>
@@ -180,7 +180,6 @@ function AdminCategoryPage() {
             <tbody>
               {categories.map((cat) => (
                 <tr key={cat.id}>
-                  <td>{cat.id}</td>
                   <td>{cat.name}</td>
                   <td><code>{cat.slug}</code></td>
                   <td>

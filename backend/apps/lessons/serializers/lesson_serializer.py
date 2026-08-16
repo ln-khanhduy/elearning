@@ -1,12 +1,19 @@
 import re
 from rest_framework import serializers
 from apps.lessons.models import Lesson
+from apps.common.bunny_service import generate_bunny_embed_url, normalize_bunny_video_url
 
 
-def validate_youtube_url(value):
-    """Kiểm tra URL YouTube hợp lệ và trích xuất Video ID."""
+def validate_video_url(value):
+    """Kiểm tra URL video hợp lệ — hỗ trợ Bunny Stream (iframe.mediadelivery.net) và YouTube."""
     if not value:
         return value
+    value = str(value).strip()
+    # Bunny Stream: https://iframe.mediadelivery.net/embed/{library_id}/{video_id}
+    if "iframe.mediadelivery.net" in value:
+        # Luôn chuẩn hóa về URL KHÔNG token để không lưu signed URL vào database.
+        return normalize_bunny_video_url(value)
+    # YouTube
     youtube_regex = (
         r'(https?://)?(www\.)?'
         r'(youtube\.com/watch\?v=|youtu\.be/|youtube\.com/embed/)'
@@ -14,7 +21,7 @@ def validate_youtube_url(value):
     )
     match = re.match(youtube_regex, value)
     if not match:
-        raise serializers.ValidationError("URL YouTube không hợp lệ.")
+        raise serializers.ValidationError("URL video không hợp lệ.")
     return value
 
 
@@ -30,12 +37,28 @@ class LessonSerializer(serializers.ModelSerializer):
         fields = [
             "id", "chapter", "slug", "title", "description", "content_type",
             "video_url", "material_url", "order",
-            "status", "created_at", "updated_at",
+            "created_at", "updated_at",
         ]
 
     def get_video_url(self, obj):
-        """Lấy URL video của bài học."""
-        return obj.video_url
+        """
+        Lấy URL video của bài học.
+
+        - content_type != VIDEO → không trả URL.
+        - context['hide_video']=True (user chưa có quyền) → ẩn URL.
+        - context['sign_video']=True (user đã được authorization) → trả signed URL runtime.
+        - Mặc định → trả URL đã chuẩn hóa KHÔNG token (an toàn để hiển thị/editor).
+        """
+        if obj.content_type != Lesson.ContentType.VIDEO:
+            return None
+        if self.context.get("hide_video"):
+            return None
+        video_url = obj.video_url
+        if not video_url:
+            return None
+        if self.context.get("sign_video"):
+            return generate_bunny_embed_url(video_url)
+        return normalize_bunny_video_url(video_url)
 
     def get_material_url(self, obj):
         """Lấy URL đầy đủ của tài liệu bài học, trả về None nếu không có."""
@@ -52,7 +75,7 @@ class LessonPreviewSerializer(serializers.ModelSerializer):
         model = Lesson
         fields = [
             "id", "slug", "title", "description", "content_type",
-            "order", "status",
+            "order",
         ]
 
 
@@ -67,7 +90,7 @@ class LessonCreateUpdateSerializer(serializers.ModelSerializer):
         model = Lesson
         fields = [
             "title", "description", "content_type", "video_url",
-            "material_file", "order", "status",
+            "material_file", "order",
         ]
 
     def validate_title(self, value):
@@ -89,8 +112,10 @@ class LessonCreateUpdateSerializer(serializers.ModelSerializer):
         return value
 
     def validate_video_url(self, value):
-        """Kiểm tra URL YouTube hợp lệ nếu content_type là VIDEO."""
-        return validate_youtube_url(value)
+        """Kiểm tra URL video hợp lệ (Bunny Stream / YouTube)."""
+        value = validate_video_url(value)
+        # Luôn lưu URL KHÔNG token xuống database.
+        return normalize_bunny_video_url(value)
 
     def validate(self, attrs):
         """Validate phụ thuộc content_type."""
