@@ -61,13 +61,14 @@ def get_font(size, bold=False):
     return ImageFont.load_default()
 
 
-WIDTH = 1600
-HEIGHT = 1100
+# ===== Kích thước chuẩn hiển thị web (fit màn hình, chữ to rõ) =====
+WIDTH = 1200
+HEIGHT = 830
 
-# ===== Bảng màu cao cấp =====
+# ===== Bảng màu trắng sáng, sang trọng =====
 NAVY = "#0f3d75"
 GOLD = "#c9a24b"
-GOLD_LIGHT = "#f5d78e"
+GOLD_LIGHT = "#f0d78c"
 MUTED = "#8a8578"
 TEXT_COLOR = "#2b2b33"
 
@@ -81,10 +82,10 @@ def _lerp(a, b, t):
 
 
 def _make_gradient_background():
-    """Tạo nền gradient từ cream xuống champagne nhạt."""
+    """Tạo nền gradient trắng sạch → trắng ngà rất nhạt (không vàng)."""
     gradient = Image.new("RGB", (1, HEIGHT))
-    top = (253, 251, 247)
-    bottom = (246, 241, 232)
+    top = (255, 255, 255)
+    bottom = (250, 250, 252)
     for y in range(HEIGHT):
         t = y / HEIGHT
         gradient.putpixel((0, y), (
@@ -96,22 +97,22 @@ def _make_gradient_background():
 
 
 def _draw_watermarks(draw):
-    """Vẽ các vòng tròn mờ tạo chiều sâu cho nền."""
-    wm_color = (235, 228, 210)
-    draw.ellipse([-250, -320, 650, 580], outline=wm_color, width=2)
-    draw.ellipse([1000, 550, 1900, 1450], outline=wm_color, width=2)
-    draw.ellipse([-180, 650, 380, 1210], outline=wm_color, width=2)
+    """Vẽ các vòng tròn mờ tạo chiều sâu tinh tế cho nền."""
+    wm_color = (243, 244, 248)
+    draw.ellipse([-200, -260, 500, 440], outline=wm_color, width=2)
+    draw.ellipse([760, 420, 1450, 1110], outline=wm_color, width=2)
+    draw.ellipse([-140, 490, 300, 930], outline=wm_color, width=2)
 
 
 def _draw_frame(draw):
     """Vẽ khung viền kép với kim cương vàng ở 4 góc."""
-    # Outer frame - navy đậm
-    draw.rectangle([16, 16, WIDTH - 16, HEIGHT - 16], outline=NAVY, width=8)
+    # Outer frame - navy
+    draw.rectangle([14, 14, WIDTH - 14, HEIGHT - 14], outline=NAVY, width=7)
     # Inner frame - gold
-    draw.rectangle([38, 38, WIDTH - 38, HEIGHT - 38], outline=GOLD, width=3)
-    # Kim cương trang trí ở 4 góc
-    r = 22
-    for cx, cy in [(38, 38), (WIDTH - 38, 38), (38, HEIGHT - 38), (WIDTH - 38, HEIGHT - 38)]:
+    draw.rectangle([32, 32, WIDTH - 32, HEIGHT - 32], outline=GOLD, width=3)
+    # Kim cương 4 góc
+    r = 18
+    for cx, cy in [(32, 32), (WIDTH - 32, 32), (32, HEIGHT - 32), (WIDTH - 32, HEIGHT - 32)]:
         draw.polygon(
             [(cx, cy - r), (cx + r, cy), (cx, cy + r), (cx - r, cy)],
             fill=GOLD,
@@ -149,53 +150,51 @@ def _star_points(cx, cy, outer_r, inner_r):
     return points
 
 
-def _draw_badge(draw, cx, cy, radius=48):
+def _draw_badge(draw, cx, cy, radius=40):
     """Vẽ huy hiệu tròn vàng ở đầu chứng chỉ."""
-    # Vòng ngoài màu vàng
     draw.ellipse(
         [cx - radius, cy - radius, cx + radius, cy + radius],
         fill=GOLD_LIGHT,
         outline=GOLD,
-        width=5,
+        width=4,
     )
-    # Vòng trong mảnh
     draw.ellipse(
-        [cx - radius + 10, cy - radius + 10, cx + radius - 10, cy + radius - 10],
+        [cx - radius + 8, cy - radius + 8, cx + radius - 8, cy + radius - 8],
         outline=GOLD,
         width=2,
     )
-    # Ngôi sao ở giữa
-    draw.polygon(_star_points(cx, cy, 24, 10), fill=NAVY)
+    draw.polygon(_star_points(cx, cy, 20, 8), fill=NAVY)
 
 
-def _draw_seal(draw, cx, cy, radius=88):
+def _draw_seal(draw, cx, cy, radius=55):
     """Vẽ con dấu vàng ở giữa dưới chứng chỉ."""
-    # Vòng chính màu vàng
+    # Vòng chính
     draw.ellipse(
         [cx - radius, cy - radius, cx + radius, cy + radius],
-        fill=(245, 215, 142),
+        fill=(240, 215, 142),
         outline=GOLD,
-        width=7,
+        width=5,
     )
-    # Vòng trong mảnh
+    # Vòng trong
+    inset = 12
     draw.ellipse(
-        [cx - radius + 16, cy - radius + 16, cx + radius - 16, cy + radius - 16],
+        [cx - radius + inset, cy - radius + inset, cx + radius - inset, cy + radius - inset],
         outline=GOLD,
-        width=3,
+        width=2,
     )
-    # Ngôi sao
-    draw.polygon(_star_points(cx, cy - 12, 22, 9), fill=NAVY)
-    # Text bên trong
-    font_lbl = get_font(16, bold=True)
-    _draw_centered_text(draw, cx, cy + 18, "FUTURE LMS", font_lbl, NAVY, spacing=1)
-    _draw_centered_text(draw, cx, cy + 40, "E-LEARNING", font_lbl, NAVY, spacing=1)
+    # Ngôi sao - chính giữa phía trên
+    draw.polygon(_star_points(cx, cy - 18, 12, 5), fill=NAVY)
+    # Text - bỏ letter-spacing để căn giữa chính xác với tâm vòng tròn
+    font_lbl = get_font(11, bold=True)
+    _draw_centered_text(draw, cx, cy + 8, "FUTURE LMS", font_lbl, NAVY)
+    _draw_centered_text(draw, cx, cy + 23, "E-LEARNING", font_lbl, NAVY)
 
 
 def _fit_font(draw, text, font, max_width):
     """Giảm dần cỡ font nếu text vượt quá max_width."""
     current = font
     size = font.size
-    while size > 18 and draw.textlength(text, font=current) > max_width:
+    while size > 16 and draw.textlength(text, font=current) > max_width:
         size -= 4
         current = get_font(size, bold=True)
     return current
@@ -222,31 +221,31 @@ def generate(certificate):
     img = _make_gradient_background()
     draw = ImageDraw.Draw(img)
 
-    # Fonts
-    font_brand = get_font(32, bold=True)
-    font_title = get_font(68, bold=True)
-    font_name = get_font(62, bold=True)
-    font_course = get_font(42, bold=True)
-    font_body = get_font(30)
-    font_info = get_font(26)
-    font_footer = get_font(18)
-    font_small = get_font(17)
+    # Fonts - cỡ vừa phải, cân đối trên khung 1200x830
+    font_brand = get_font(26, bold=True)
+    font_title = get_font(48, bold=True)
+    font_name = get_font(46, bold=True)
+    font_course = get_font(32, bold=True)
+    font_body = get_font(23)
+    font_info = get_font(22)
+    font_footer = get_font(15)
+    font_small = get_font(15)
 
     # === Background trang trí ===
     _draw_watermarks(draw)
     _draw_frame(draw)
 
     # === Header: huy hiệu + tên web ===
-    _draw_badge(draw, WIDTH // 2, 125)
-    _draw_centered_text(draw, WIDTH // 2, 195, "FUTURE LMS", font_brand, GOLD, spacing=12)
+    _draw_badge(draw, WIDTH // 2, 95)
+    _draw_centered_text(draw, WIDTH // 2, 150, "FUTURE LMS", font_brand, GOLD, spacing=9)
 
     # === Tiêu đề chính ===
-    _draw_centered_text(draw, WIDTH // 2, 260, "CERTIFICATE", font_title, NAVY, spacing=6)
-    _draw_centered_text(draw, WIDTH // 2, 345, "OF COMPLETION", font_title, NAVY, spacing=6)
+    _draw_centered_text(draw, WIDTH // 2, 195, "CERTIFICATE", font_title, NAVY, spacing=5)
+    _draw_centered_text(draw, WIDTH // 2, 258, "OF COMPLETION", font_title, NAVY, spacing=5)
 
-    # === Đường gạch trang trí dưới tiêu đề ===
-    line_y = 440
-    center_lw = 130
+    # === Đường gạch trang trí ===
+    line_y = 330
+    center_lw = 100
     draw.line(
         [(WIDTH // 2 - center_lw, line_y), (WIDTH // 2 + center_lw, line_y)],
         fill=GOLD,
@@ -255,69 +254,66 @@ def generate(certificate):
     for dx in (-center_lw, 0, center_lw):
         draw.polygon(
             [
-                (WIDTH // 2 + dx, line_y - 7),
-                (WIDTH // 2 + dx + 7, line_y),
-                (WIDTH // 2 + dx, line_y + 7),
-                (WIDTH // 2 + dx - 7, line_y),
+                (WIDTH // 2 + dx, line_y - 6),
+                (WIDTH // 2 + dx + 6, line_y),
+                (WIDTH // 2 + dx, line_y + 6),
+                (WIDTH // 2 + dx - 6, line_y),
             ],
             fill=GOLD,
         )
 
     # === Chữ xác nhận ===
-    _draw_centered_text(draw, WIDTH // 2, 490, "THIS IS TO CERTIFY THAT", font_body, MUTED, spacing=4)
+    _draw_centered_text(draw, WIDTH // 2, 370, "THIS IS TO CERTIFY THAT", font_body, MUTED, spacing=3)
 
     # === Tên học viên ===
-    font_name_actual = _fit_font(draw, student_name, font_name, WIDTH - 300)
-    if font_name_actual is not font_name:
-        # Căn lại vị trí nếu giảm font
-        pass
-    _draw_centered_text(draw, WIDTH // 2, 548, student_name, font_name_actual, NAVY)
+    font_name_actual = _fit_font(draw, student_name, font_name, WIDTH - 240)
+    _draw_centered_text(draw, WIDTH // 2, 412, student_name, font_name_actual, NAVY)
 
     # === Chữ đã hoàn thành ===
-    _draw_centered_text(draw, WIDTH // 2, 652, "HAS SUCCESSFULLY COMPLETED THE COURSE", font_body, MUTED, spacing=3)
+    _draw_centered_text(draw, WIDTH // 2, 490, "HAS SUCCESSFULLY COMPLETED THE COURSE", font_body, MUTED, spacing=3)
 
     # === Tên khóa học trong khung bo tròn ===
-    course_font = _fit_font(draw, course_name, font_course, WIDTH - 440)
+    course_font = _fit_font(draw, course_name, font_course, WIDTH - 360)
     course_w = draw.textlength(course_name, font=course_font)
-    box_pad_x = 52
-    box_pad_y = 20
+    box_pad_x = 40
+    box_pad_y = 14
     box_x1 = WIDTH // 2 - course_w / 2 - box_pad_x
     box_x2 = WIDTH // 2 + course_w / 2 + box_pad_x
-    box_y1 = 704
+    box_y1 = 525
     cbox = draw.textbbox((0, 0), course_name, font=course_font)
     text_h = cbox[3] - cbox[1]
     box_y2 = box_y1 + text_h + 2 * box_pad_y
-    draw.rounded_rectangle([box_x1, box_y1, box_x2, box_y2], radius=18, outline=GOLD, width=3)
+    draw.rounded_rectangle([box_x1, box_y1, box_x2, box_y2], radius=14, outline=GOLD, width=3)
     _draw_centered_text(draw, WIDTH // 2, box_y1 + box_pad_y - cbox[1], course_name, course_font, NAVY)
 
     # === Hàng dưới: chữ ký | con dấu | ngày cấp ===
-    bottom_y = 900
+    bottom_y = 655
 
     # Chữ ký (bên trái)
-    sig_y = bottom_y + 32
-    draw.line([(220, sig_y), (520, sig_y)], fill=TEXT_COLOR, width=3)
-    _draw_centered_text(draw, 370, sig_y + 14, "Authorized Signature", font_small, MUTED)
-    _draw_centered_text(draw, 370, sig_y + 38, "FUTURE LMS", font_small, NAVY)
+    sig_y = bottom_y + 24
+    draw.line([(150, sig_y), (380, sig_y)], fill=TEXT_COLOR, width=3)
+    _draw_centered_text(draw, 265, sig_y + 10, "Authorized Signature", font_small, MUTED)
+    _draw_centered_text(draw, 265, sig_y + 30, "FUTURE LMS", font_small, NAVY)
 
     # Con dấu (chính giữa)
-    _draw_seal(draw, WIDTH // 2, bottom_y + 28)
+    _draw_seal(draw, WIDTH // 2, bottom_y + 22)
 
     # Ngày cấp (bên phải)
-    _draw_centered_text(draw, 1230, bottom_y + 8, "DATE OF ISSUE", font_small, GOLD, spacing=3)
-    _draw_centered_text(draw, 1230, bottom_y + 40, issued_at, font_info, NAVY)
+    _draw_centered_text(draw, 940, bottom_y + 6, "DATE OF ISSUE", font_small, GOLD, spacing=2)
+    _draw_centered_text(draw, 940, bottom_y + 32, issued_at, font_info, NAVY)
 
     # === Footer ===
     _draw_centered_text(
         draw,
         WIDTH // 2,
-        HEIGHT - 82,
+        HEIGHT - 48,
         "This certificate is issued by Future LMS - E-Learning Platform",
         font_footer,
         MUTED,
     )
 
     # === Mã chứng chỉ — góc dưới bên trái ===
-    draw.text((70, HEIGHT - 58), f"Certificate No: {cert_code}", fill=MUTED, font=font_small)
+    draw.text((50, HEIGHT - 46), f"Certificate No: {cert_code}", fill=MUTED, font=font_small)
 
     # === Lưu vào buffer ===
     buffer = BytesIO()
