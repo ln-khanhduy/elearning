@@ -62,7 +62,7 @@ def auto_complete_course(enrollment, course_progress):
         cert_code = f"CERT-{course.id}-{enrollment.student_id}-{today}-{random_part}"
         cert = certificate_repository.create(
             user=enrollment.student,
-            course=course,
+            course_id=course.id,
             enrollment=enrollment,
             certificate_code=cert_code,
         )
