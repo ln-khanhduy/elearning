@@ -51,7 +51,7 @@ def get_rooms_for_user(user):
     - INSTRUCTOR / COURSE_ADMIN: khóa được phân công hoặc tạo.
     - STUDENT: khóa đã mua (enrollment ACTIVE/COMPLETED) còn hạn học.
     """
-    # 1) Xác định danh sách course user được quyền truy cập
+    # Xác định danh sách course user được quyền truy cập
     if _can_see_all_rooms(user):
         course_ids = repo.get_published_course_ids()
     else:
@@ -66,13 +66,13 @@ def get_rooms_for_user(user):
 
     courses = repo.get_courses_by_ids_ids_only(course_ids)
 
-    # 2) Đảm bảo phòng tồn tại cho từng khóa (create nếu chưa có)
+    # Đảm bảo phòng tồn tại cho từng khóa (create nếu chưa có)
     room_map = {}
     for course in courses:
         room = repo.get_or_create_room(course)
         room_map[room.course_id] = room
 
-    # 3) Trả về danh sách phòng đã đảm bảo tồn tại
+    # Trả về danh sách phòng đã đảm bảo tồn tại
     room_ids = [r.id for r in room_map.values()]
     return repo.get_rooms_by_ids(room_ids)
 

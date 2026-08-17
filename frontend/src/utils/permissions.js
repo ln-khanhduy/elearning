@@ -40,7 +40,7 @@ export const getRoutePermissions = (path) => ROUTE_PERMISSIONS[path] || null;
 const SUPERADMIN_ROLE_CODE = "SUPERADMIN";
 
 /** Các role được phép dùng tính năng học viên (mua khóa, học tập, chứng chỉ...) */
-export const STUDENT_ROLES = ["STUDENT", "SUPERADMIN"];
+export const STUDENT_ROLES = ["STUDENT", "SUPERADMIN","INSTRUCTOR"];
 
 /** Các role được phép dùng tính năng giảng viên tự quản (khóa học giảng dạy, lịch trực, lương...) */
 export const INSTRUCTOR_ROLES = ["INSTRUCTOR", "SUPERADMIN"];
