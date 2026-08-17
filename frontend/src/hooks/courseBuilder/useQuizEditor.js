@@ -32,6 +32,12 @@ export function useQuizEditor({
   setDrawerType,
   setDrawerOpen,
 }) {
+  const showErrorToast = (error, fallbackMsg) => {
+    const msg = error?.message || fallbackMsg || "";
+    if (!msg || msg.includes("Khóa đã public")) return;
+    toast.error(msg);
+  };
+
   /** Lưu quiz (tạo mới hoặc cập nhật) kèm Question tự luận/điền khuyết */
   const handleSaveQuiz = useCallback(
     async (quizData) => {
@@ -148,7 +154,7 @@ export function useQuizEditor({
         }
         toast.success("Đã lưu bài tập.");
       } catch (error) {
-        toast.error(error.message || "Không thể lưu bài tập.");
+        showErrorToast(error, "Không thể lưu bài tập.");
       } finally {
         setSaving(false);
       }
@@ -247,7 +253,7 @@ export function useQuizEditor({
             }
             toast.success("Đã xóa bài tập.");
           } catch (error) {
-            toast.error(error.message || "Không thể xóa bài tập.");
+            showErrorToast(error, "Không thể xóa bài tập.");
           }
         },
         onCancel: () => setConfirmModal((prev) => ({ ...prev, show: false })),

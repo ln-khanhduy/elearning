@@ -58,6 +58,7 @@ class LessonLearningSerializer(serializers.ModelSerializer):
     """Serializer cho bài học trong learning - bao gồm quizzes."""
     quizzes = QuizLearningSerializer(many=True, read_only=True)
     completed = serializers.BooleanField(read_only=True, default=False)
+    material_url = serializers.SerializerMethodField()
 
     class Meta:
         model = Lesson
@@ -66,6 +67,10 @@ class LessonLearningSerializer(serializers.ModelSerializer):
             "video_url", "material_url", "order",
             "quizzes", "completed",
         ]
+
+    def get_material_url(self, obj):
+        """Lấy URL đầy đủ của tài liệu bài học, trả về None nếu không có."""
+        return obj.material_file.url if obj.material_file else None
 
 
 class ChapterLearningSerializer(serializers.ModelSerializer):

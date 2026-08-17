@@ -21,6 +21,7 @@ from apps.courses.serializers.course_serializer import (
 from apps.courses.serializers.category_tag_serializer import CategorySerializer
 from apps.courses.models import Category
 from apps.common.response_helpers import success_response, error_response
+from apps.common.bunny_service import generate_bunny_embed_url
 
 
 # ==================== PUBLIC COURSE API ====================
@@ -329,6 +330,25 @@ class AdminCourseAssignedInstructorAPIView(APIView):
             "assigned_instructor_avatar": course.assigned_instructor.avatar_url if course.assigned_instructor and hasattr(course.assigned_instructor, 'avatar_url') else None,
         }
         return success_response(data)
+
+
+class PreviewVideoSignedAPIView(APIView):
+    """
+    GET /api/courses/admin/preview-video/signed/
+    Tra ve signed embed URL cho video gioi thieu (trailer) de nut "Xem" trong admin mo duoc.
+    Query param: url = preview_video_url (dang luu trong DB, khong token).
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        video_url = request.GET.get("url") or ""
+        if not video_url:
+            return error_response("Thieu tham so url.", http_status=400)
+        # Neu khong phai Bunny -> tra nguyen URL
+        if "mediadelivery.net" not in video_url:
+            return success_response({"signed_url": video_url})
+        signed = generate_bunny_embed_url(video_url)
+        return success_response({"signed_url": signed or video_url})
 
 
 # ==================== INSTRUCTOR COURSE API ====================

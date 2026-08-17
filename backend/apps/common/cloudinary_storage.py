@@ -137,12 +137,9 @@ class SmartMediaCloudinaryStorage(Storage):
                 # File cũ không có extension → detect bằng API
                 resource_type = self._detect_resource_type(clean_name)
 
-            # Với image: cloudinary_url() thêm extension tự động → dùng clean_name (không ext)
-            # Với raw: cloudinary_url() không thêm extension → dùng name gốc để có ext
-            if resource_type == 'raw' and ext in self.RAW_EXTENSIONS:
-                url_name = name.replace('\\', '/')
-            else:
-                url_name = clean_name
+            # Cloudinary public_id được upload KHÔNG có extension (xem _save):
+            # luôn dùng clean_name (không ext) để khớp public_id thật trên Cloudinary.
+            url_name = clean_name
 
             url_result, _ = self._cloudinary.utils.cloudinary_url(
                 url_name,
@@ -150,10 +147,6 @@ class SmartMediaCloudinaryStorage(Storage):
                 type='upload',
                 secure=True,
             )
-
-            # Raw URL không có extension → append để browser nhận dạng
-            if resource_type == 'raw' and ext in self.RAW_EXTENSIONS:
-                url_result = url_result.rstrip('/') + ext
 
             return url_result
         except Exception:
@@ -176,13 +169,8 @@ class SmartMediaCloudinaryStorage(Storage):
             return
         try:
             resource_type = self._get_resource_type(name)
-            root, ext = os.path.splitext(name.replace('\\', '/'))
-            if ext.lower() in self.IMAGE_EXTENSIONS:
-                clean_name = root
-            elif ext.lower() in self.RAW_EXTENSIONS:
-                clean_name = name.replace('\\', '/')
-            else:
-                clean_name = name.replace('\\', '/')
+            root, _ = os.path.splitext(name.replace('\\', '/'))
+            clean_name = root
             self._cloudinary_uploader.destroy(
                 clean_name,
                 resource_type=resource_type,
@@ -196,13 +184,8 @@ class SmartMediaCloudinaryStorage(Storage):
             return False
         try:
             resource_type = self._get_resource_type(name)
-            root, ext = os.path.splitext(name.replace('\\', '/'))
-            if ext.lower() in self.IMAGE_EXTENSIONS:
-                clean_name = root
-            elif ext.lower() in self.RAW_EXTENSIONS:
-                clean_name = name.replace('\\', '/')
-            else:
-                clean_name = name.replace('\\', '/')
+            root, _ = os.path.splitext(name.replace('\\', '/'))
+            clean_name = root
             result = self._cloudinary_api.resource(
                 clean_name,
                 resource_type=resource_type,

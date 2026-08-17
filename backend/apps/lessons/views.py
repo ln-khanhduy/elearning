@@ -1,3 +1,5 @@
+import os
+from django.http import HttpResponse
 from rest_framework.permissions import AllowAny
 from rest_framework import status
 from rest_framework.views import APIView
@@ -108,6 +110,42 @@ class ChapterReorderAPIView(BasePermissionAPIView):
 
 
 # ==================== LESSON ====================
+
+
+
+class LessonMaterialDownloadAPIView(APIView):
+    """
+    GET /api/lessons/lessons/{lesson_id}/download-material/ - Tải tài liệu bài học ve may.
+
+    - Kiem tra user co quyen truy cap bai hoc (enrolled/owner/admin).
+    - Tra file voi Content-Disposition: attachment -> trinh duyet tai ve may.
+    - Ten file giu nguyen ten file goc khi tao bai hoc (lay tu material_file.name).
+    """
+    permission_classes = [AllowAny]
+
+    def get(self, request, lesson_id):
+        lesson = lesson_service.get_lesson_detail(lesson_id)
+        if not can_access_lesson(request.user, lesson):
+            return error_response("Ban khong co quyen tai tai lieu nay.", http_status=403)
+        if not lesson.material_file:
+            return error_response("Bai hoc khong co tai lieu dinh kem.", http_status=404)
+
+        # Ten file goc khi tao bai hoc - khong lay ten khoa/bai
+        filename = os.path.basename(lesson.material_file.name)
+
+        file_url = lesson.material_file.url
+
+        import urllib.request
+        try:
+            with urllib.request.urlopen(file_url, timeout=30) as resp:
+                content = resp.read()
+        except Exception as e:
+            return error_response("Khong the tai tai lieu: " + str(e), http_status=502)
+
+        response = HttpResponse(content, content_type="application/octet-stream")
+        response["Content-Disposition"] = 'attachment; filename="' + filename + '"; filename*=UTF-8' + "''" + filename
+        return response
+
 
 class BunnyInitUploadAPIView(BasePermissionAPIView):
     """POST /api/lessons/bunny/init-upload/ - Khởi tạo upload video Bunny (tus)."""

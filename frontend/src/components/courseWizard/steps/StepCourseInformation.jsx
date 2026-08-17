@@ -250,14 +250,6 @@ function StepCourseInformation({
                 <span>Trailer đã sẵn sàng (Bunny Stream)</span>
               </div>
               <div className="cw-file-preview-actions">
-                <a
-                  href={formData.preview_video_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="cw-btn cw-btn-outline cw-btn-sm"
-                >
-                  Xem
-                </a>
                 <button
                   type="button"
                   className="cw-btn cw-btn-danger cw-btn-sm"

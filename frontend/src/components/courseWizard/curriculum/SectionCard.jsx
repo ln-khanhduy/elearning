@@ -4,6 +4,7 @@ function SectionCard({
   section,
   index,
   selectedItem,
+  isPublished = false,
   onSelectLesson,
   onSelectQuiz,
   onEditSection,
@@ -110,6 +111,7 @@ function SectionCard({
             className="cw-section-action-btn"
             title="Sửa chương"
             onClick={handleStartEdit}
+            disabled={isPublished}
           >
             <i className="bi bi-pencil"></i>
           </button>
@@ -117,6 +119,7 @@ function SectionCard({
             className="cw-section-action-btn danger"
             title="Xóa chương"
             onClick={() => onDeleteSection?.(section.id)}
+            disabled={isPublished}
           >
             <i className="bi bi-trash"></i>
           </button>
@@ -138,7 +141,7 @@ function SectionCard({
                       ? "selected"
                       : ""
                   }`}
-                  draggable
+                  draggable={!isPublished}
                   onDragStart={(e) => {
                     e.dataTransfer.setData("text/plain", `lesson:${lesson.id}:${section.id}`);
                   }}
@@ -168,6 +171,7 @@ function SectionCard({
                             openDropdownLessonId === lesson.id ? null : lesson.id
                           );
                         }}
+                        disabled={isPublished}
                       >
                         <i className="bi bi-patch-question"></i>
                         Bài tập
@@ -198,6 +202,7 @@ function SectionCard({
                         e.stopPropagation();
                         onDeleteLesson?.(lesson.id, section.id);
                       }}
+                      disabled={isPublished}
                     >
                       <i className="bi bi-x"></i>
                     </button>
@@ -254,6 +259,7 @@ function SectionCard({
             <button
               className="cw-add-item-btn cw-add-item-btn-sm"
               onClick={() => onAddLesson?.(section.id)}
+              disabled={isPublished}
             >
               <i className="bi bi-plus-lg"></i>
               Thêm bài học

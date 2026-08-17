@@ -4,7 +4,7 @@ from apps.lessons.views import (
     ChapterDeleteAPIView, ChapterReorderAPIView,
     ChapterLessonListAPIView, LessonDetailAPIView, LessonCreateAPIView,
     LessonUpdateAPIView, LessonDeleteAPIView, LessonReorderAPIView,
-    BunnyInitUploadAPIView,
+    LessonMaterialDownloadAPIView, BunnyInitUploadAPIView,
 )
 
 
@@ -25,4 +25,5 @@ urlpatterns = [
     path("lessons/<int:lesson_id>/", LessonDetailAPIView.as_view(), name="lesson-detail"),
     path("lessons/<int:lesson_id>/update/", LessonUpdateAPIView.as_view(), name="lesson-update"),
     path("lessons/<int:lesson_id>/delete/", LessonDeleteAPIView.as_view(), name="lesson-delete"),
+    path("lessons/<int:lesson_id>/download-material/", LessonMaterialDownloadAPIView.as_view(), name="lesson-download-material"),
 ]

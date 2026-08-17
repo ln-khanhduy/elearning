@@ -25,6 +25,12 @@ import { useQuizEditor } from "./useQuizEditor";
 
 export function useCourseBuilder({ mode = "create" }) {
   const navigate = useNavigate();
+
+  const showErrorToast = (error, fallbackMsg) => {
+    const msg = error?.message || fallbackMsg || "";
+    if (!msg || msg.includes("Khóa đã public")) return;
+    toast.error(msg);
+  };
   const { courseId: courseIdFromParams } = useParams();
   const isEdit = mode === "edit" && !!courseIdFromParams;
 
@@ -280,7 +286,7 @@ export function useCourseBuilder({ mode = "create" }) {
       setCurriculum((prev) => [...prev, newChapter]);
       toast.success("Đã thêm chương mới.");
     } catch (error) {
-      toast.error(error.message || "Không thể thêm chương.");
+      showErrorToast(error, "Không thể thêm chương.");
     }
   }, [isEdit, courseIdFromParams, curriculum]);
 
@@ -293,7 +299,7 @@ export function useCourseBuilder({ mode = "create" }) {
       );
       toast.success("Đã cập nhật chương.");
     } catch (error) {
-      toast.error(error.message || "Không thể cập nhật chương.");
+      showErrorToast(error, "Không thể cập nhật chương.");
     }
   }, []);
 
@@ -311,7 +317,7 @@ export function useCourseBuilder({ mode = "create" }) {
           setCurriculum((prev) => prev.filter((s) => s.id !== sectionId));
           toast.success("Đã xóa chương.");
         } catch (error) {
-          toast.error(error.message || "Không thể xóa chương.");
+          showErrorToast(error, "Không thể xóa chương.");
         }
       },
       onCancel: () => setConfirmModal((prev) => ({ ...prev, show: false })),
@@ -332,7 +338,7 @@ export function useCourseBuilder({ mode = "create" }) {
         const res = await createLessonApi(sectionId, { title: "Bài học mới" });
         newLesson.id = res?.data?.id || res?.id || newLesson.id;
       } catch (error) {
-        toast.error(error.message || "Không thể thêm bài học.");
+        showErrorToast(error, "Không thể thêm bài học.");
         return;
       }
     }
@@ -373,10 +379,11 @@ export function useCourseBuilder({ mode = "create" }) {
         let payload = lessonData;
         if (lessonData.material_file instanceof File) {
           const fd = new FormData();
-          fd.append("title", lessonData.title || "");
-          fd.append("description", lessonData.description || "");
-          fd.append("content_type", lessonData.content_type || "VIDEO");
-          fd.append("video_url", lessonData.video_url || "");
+          // Chỉ append các trường thực sự được gửi từ component (tránh gửi trường rỗng
+          // khi khóa đã PUBLIC — backend chỉ cho phép video_url/material_file/material_url)
+          ["title", "description", "content_type", "video_url"].forEach((key) => {
+            if (lessonData[key] !== undefined) fd.append(key, lessonData[key]);
+          });
           fd.append("material_file", lessonData.material_file);
           payload = fd;
         }
@@ -414,7 +421,7 @@ export function useCourseBuilder({ mode = "create" }) {
         }
         toast.success("Đã lưu bài học.");
       } catch (error) {
-        toast.error(error.message || "Không thể lưu bài học.");
+        showErrorToast(error, "Không thể lưu bài học.");
       } finally {
         setSaving(false);
       }
@@ -450,7 +457,7 @@ export function useCourseBuilder({ mode = "create" }) {
             }
             toast.success("Đã xóa bài học.");
           } catch (error) {
-            toast.error(error.message || "Không thể xóa bài học.");
+            showErrorToast(error, "Không thể xóa bài học.");
           }
         },
         onCancel: () => setConfirmModal((prev) => ({ ...prev, show: false })),

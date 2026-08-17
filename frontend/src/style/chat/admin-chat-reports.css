@@ -1,0 +1,379 @@
+/* ============================================================
+   ADMIN CHAT REPORTS - Báo cáo vi phạm chat
+   Hiện đại, đồng bộ admin. Không dùng gradient.
+   ============================================================ */
+
+.acr-page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 8px 4px 40px;
+}
+
+/* ==================== HEADER ==================== */
+.acr-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.acr-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 22px;
+  font-weight: 700;
+  color: #1a1a2e;
+  margin: 20px 0 4px;
+}
+
+.acr-title::before {
+  content: "";
+  width: 4px;
+  height: 22px;
+  border-radius: 2px;
+  background: #ef4444;
+}
+
+.acr-subtitle {
+  font-size: 13px;
+  color: #6c757d;
+  margin: 0 0 4px;
+}
+
+/* ==================== FILTER ==================== */
+.acr-filter {
+  width: 200px;
+  height: 38px;
+  border-radius: 10px;
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  padding: 0 12px;
+  font-size: 13px;
+  color: #1a1a2e;
+  outline: none;
+  cursor: pointer;
+  transition: border 0.15s, box-shadow 0.15s;
+}
+
+.acr-filter:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+/* ==================== TABLE ==================== */
+.acr-table-wrap {
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+  overflow-x: auto;
+}
+
+.acr-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 13px;
+  min-width: 980px;
+}
+
+.acr-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+.acr-table th {
+  text-align: left;
+  padding: 12px 16px;
+  background: #f8f9fc;
+  border-bottom: 1px solid #e2e8f0;
+  font-weight: 600;
+  color: #475467;
+  white-space: nowrap;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.acr-table td {
+  padding: 14px 16px;
+  border-bottom: 1px solid #f1f3f5;
+  vertical-align: middle;
+  color: #212529;
+}
+
+.acr-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.acr-table tbody tr:hover td {
+  background: #f9fafb;
+}
+
+.acr-user {
+  font-weight: 600;
+  color: #1a1a2e;
+}
+
+.acr-content {
+  max-width: 220px;
+  white-space: normal;
+  word-break: break-word;
+  color: #475467;
+}
+
+.acr-reason {
+  max-width: 180px;
+  white-space: normal;
+  word-break: break-word;
+  color: #b91c1c;
+}
+
+/* ==================== BADGES ==================== */
+.acr-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.acr-badge--pending {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fde68a;
+}
+
+.acr-badge--reviewed {
+  background: #eef3fa;
+  color: #0f3d75;
+  border: 1px solid #c7d7f0;
+}
+
+.acr-badge--resolved {
+  background: #dcfce7;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+}
+
+.acr-action-taken {
+  font-size: 11px;
+  color: #6c757d;
+  margin-top: 2px;
+}
+
+/* ==================== ACTIONS ==================== */
+.acr-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 120px;
+}
+
+.acr-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.acr-btn--verify {
+  background: #fff;
+  border: 1px solid #3b82f6;
+  color: #2563eb;
+}
+
+.acr-btn--verify:hover:not(:disabled) {
+  background: #eff6ff;
+}
+
+.acr-btn--danger {
+  background: #fff;
+  border: 1px solid #fca5a5;
+  color: #dc2626;
+}
+
+.acr-btn--danger:hover:not(:disabled) {
+  background: #fef2f2;
+}
+
+.acr-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* ==================== EMPTY ==================== */
+.acr-empty {
+  text-align: center;
+  padding: 48px 16px;
+  color: #6c757d;
+}
+
+.acr-empty i {
+  font-size: 48px;
+  display: block;
+  margin-bottom: 10px;
+  color: #9aa4b2;
+}
+
+/* ==================== MODAL (ghichú xử lý) ==================== */
+.acr-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  padding: 16px;
+}
+
+.acr-modal {
+  background: #fff;
+  border-radius: 14px;
+  width: 100%;
+  max-width: 440px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+  animation: acrIn 0.18s ease;
+}
+
+@keyframes acrIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.acr-modal-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 20px;
+  border-bottom: 1px solid #e2e8f0;
+  font-weight: 600;
+  font-size: 15px;
+  color: #dc2626;
+}
+
+.acr-modal-close {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: #6b7280;
+  font-size: 18px;
+  cursor: pointer;
+  line-height: 1;
+  padding: 4px;
+  border-radius: 6px;
+}
+
+.acr-modal-close:hover:not(:disabled) {
+  background: #f1f5f9;
+  color: #1f2937;
+}
+
+.acr-modal-body {
+  padding: 18px 20px;
+}
+
+.acr-modal-hint {
+  margin: 0 0 10px;
+  font-size: 13px;
+  color: #475569;
+}
+
+.acr-modal-textarea {
+  width: 100%;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 13px;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 90px;
+  transition: border 0.15s, box-shadow 0.15s;
+}
+
+.acr-modal-textarea:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.acr-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 14px 20px;
+  border-top: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+.acr-modal-cancel {
+  height: 38px;
+  padding: 0 16px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  color: #334155;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.acr-modal-cancel:hover:not(:disabled) {
+  background: #f1f5f9;
+}
+
+.acr-modal-submit {
+  height: 38px;
+  padding: 0 16px;
+  border-radius: 8px;
+  border: none;
+  background: #dc2626;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.acr-modal-submit:hover:not(:disabled) {
+  background: #b91c1c;
+}
+
+.acr-modal-submit:disabled,
+.acr-modal-cancel:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ==================== RESPONSIVE ==================== */
+@media (max-width: 768px) {
+  .acr-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .acr-filter {
+    width: 100%;
+  }
+}

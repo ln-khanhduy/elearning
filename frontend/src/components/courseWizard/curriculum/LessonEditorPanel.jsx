@@ -7,6 +7,7 @@ function LessonEditorPanel({ lesson, sectionId, onClose, onSave, saving, isPubli
   const [form, setForm] = useState({ title: "", description: "", content_type: "VIDEO", video_url: "" });
   const [materialFile, setMaterialFile] = useState(null);
   const [materialPreview, setMaterialPreview] = useState("");
+  const [materialRemoved, setMaterialRemoved] = useState(false);
   const [videoFile, setVideoFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -25,6 +26,7 @@ function LessonEditorPanel({ lesson, sectionId, onClose, onSave, saving, isPubli
       });
       setMaterialFile(null);
       setMaterialPreview(lesson.material_url || "");
+      setMaterialRemoved(false);
       setVideoFile(null);
       setDirty(false);
     }
@@ -44,6 +46,7 @@ function LessonEditorPanel({ lesson, sectionId, onClose, onSave, saving, isPubli
     if (file) {
       setMaterialFile(file);
       setMaterialPreview(URL.createObjectURL(file));
+      setMaterialRemoved(false);
       setDirty(true);
     }
   }, []);
@@ -51,6 +54,7 @@ function LessonEditorPanel({ lesson, sectionId, onClose, onSave, saving, isPubli
   const handleRemoveFile = useCallback(() => {
     setMaterialFile(null);
     setMaterialPreview("");
+    setMaterialRemoved(true);
     if (fileInputRef.current) fileInputRef.current.value = "";
     setDirty(true);
   }, []);
@@ -101,12 +105,12 @@ function LessonEditorPanel({ lesson, sectionId, onClose, onSave, saving, isPubli
         },
         onError: (err) => {
           setUploading(false);
-          toast.error(err?.message || "Upload video thất bại.");
+          if (err?.message) toast.error(err.message);
         },
       });
       upload.start();
     } catch (err) {
-      toast.error(err.message || "Upload video thất bại.");
+      if (err?.message) toast.error(err.message);
       setUploading(false);
       setUploadProgress(0);
     }
@@ -117,15 +121,17 @@ function LessonEditorPanel({ lesson, sectionId, onClose, onSave, saving, isPubli
     const payload = { id: lesson?.id, section_id: sectionId };
     if (isPublished) {
       payload.video_url = form.video_url;
-      if (materialFile) payload.material_file = materialFile;
-      else payload.material_url = ""; // cho phép xóa material nếu không chọn file mới
     } else {
       Object.assign(payload, form);
-      if (materialFile) payload.material_file = materialFile;
+    }
+    if (materialFile) {
+      payload.material_file = materialFile;
+    } else if (materialRemoved) {
+      payload.material_url = "";
     }
     onSave?.(payload);
     setDirty(false);
-  }, [form, materialFile, lesson, sectionId, onSave, isPublished]);
+  }, [form, materialFile, materialRemoved, lesson, sectionId, onSave, isPublished]);
 
   const handleKeyDown = useCallback((e) => {
     if ((e.ctrlKey || e.metaKey) && e.key === "s") { e.preventDefault(); handleSave(); }
@@ -201,7 +207,6 @@ function LessonEditorPanel({ lesson, sectionId, onClose, onSave, saving, isPubli
               <div className="cw-file-preview">
                 <div className="cw-file-preview-info"><i className="bi bi-check-circle-fill text-success"></i><span>Video đã sẵn sàng (Bunny Stream)</span></div>
                 <div className="cw-file-preview-actions">
-                  <a href={form.video_url} target="_blank" rel="noopener noreferrer" className="cw-btn cw-btn-outline cw-btn-sm">Xem</a>
                   <button type="button" className="cw-btn cw-btn-danger cw-btn-sm" onClick={() => setForm((p) => ({ ...p, video_url: "" }))}>Xóa</button>
                 </div>
               </div>
@@ -209,9 +214,8 @@ function LessonEditorPanel({ lesson, sectionId, onClose, onSave, saving, isPubli
           </div>
         )}
 
-        {form.content_type === "DOCUMENT" && (
-          <div className="cw-form-group">
-            <label className="cw-form-label"><span className="cw-form-label-text">Tài liệu đính kèm <span className="text-danger">*</span></span></label>
+        <div className="cw-form-group">
+          <label className="cw-form-label"><span className="cw-form-label-text">Tài liệu đính kèm {form.content_type === "DOCUMENT" ? <span className="text-danger">*</span> : <span className="cw-form-label-hint"> (tùy chọn)</span>}</span></label>
             {materialPreview ? (
               <div className="cw-file-preview">
                 <div className="cw-file-preview-info"><i className="bi bi-file-earmark-text"></i><span>{materialFile ? materialFile.name : "Tài liệu đã tải lên"}</span></div>
@@ -229,8 +233,7 @@ function LessonEditorPanel({ lesson, sectionId, onClose, onSave, saving, isPubli
                 <input ref={fileInputRef} type="file" accept=".pdf,.doc,.docx,.ppt,.pptx,.txt,.rar" style={{ display: "none" }} onChange={handleFileChange} />
               </div>
             )}
-          </div>
-        )}
+        </div>
       </div>
 
       <div className="cw-editor-panel-footer">

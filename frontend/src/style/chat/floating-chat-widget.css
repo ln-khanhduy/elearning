@@ -288,3 +288,146 @@
   opacity: 0.5;
   cursor: not-allowed;
 }
+/* ===== Report violation modal ===== */
+.fcw-report-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  padding: 16px;
+}
+
+.fcw-report-modal {
+  background: #fff;
+  border-radius: 14px;
+  width: 100%;
+  max-width: 440px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+  animation: fcwReportIn 0.18s ease;
+}
+
+@keyframes fcwReportIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.fcw-report-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 20px;
+  border-bottom: 1px solid #e2e8f0;
+  font-weight: 600;
+  color: #dc2626;
+  font-size: 15px;
+}
+
+.fcw-report-header i {
+  font-size: 16px;
+}
+
+.fcw-report-close {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: #6b7280;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 4px;
+  line-height: 1;
+  border-radius: 6px;
+}
+
+.fcw-report-close:hover:not(:disabled) {
+  background: #f1f5f9;
+  color: #1f2937;
+}
+
+.fcw-report-body {
+  padding: 18px 20px;
+}
+
+.fcw-report-hint {
+  margin: 0 0 10px;
+  font-size: 13px;
+  color: #475569;
+}
+
+.fcw-report-textarea {
+  width: 100%;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 13px;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 90px;
+  transition: border 0.15s, box-shadow 0.15s;
+}
+
+.fcw-report-textarea:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.fcw-report-count {
+  text-align: right;
+  font-size: 11px;
+  color: #94a3b8;
+  margin-top: 4px;
+}
+
+.fcw-report-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 14px 20px;
+  border-top: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+.fcw-report-cancel {
+  height: 38px;
+  padding: 0 16px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  color: #334155;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.fcw-report-cancel:hover:not(:disabled) {
+  background: #f1f5f9;
+}
+
+.fcw-report-submit {
+  height: 38px;
+  padding: 0 16px;
+  border-radius: 8px;
+  border: none;
+  background: #dc2626;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.fcw-report-submit:hover:not(:disabled) {
+  background: #b91c1c;
+}
+
+.fcw-report-submit:disabled,
+.fcw-report-cancel:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

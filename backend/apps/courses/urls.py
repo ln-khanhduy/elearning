@@ -23,6 +23,7 @@ from apps.courses.views.views import (
     AdminCourseUpdateAPIView, AdminCourseDeleteAPIView,
     AdminCoursePublishAPIView, AdminCourseHideAPIView,
     AdminCourseAssignInstructorAPIView, AdminCourseAssignedInstructorAPIView,
+    PreviewVideoSignedAPIView,
 
     # Instructor
     InstructorCourseListAPIView, InstructorCourseDetailAPIView,
@@ -59,6 +60,7 @@ urlpatterns = [
     path("admin/<int:course_id>/hide/", AdminCourseHideAPIView.as_view(), name="admin-course-hide"),
     path("admin/<int:course_id>/assign-instructor/", AdminCourseAssignInstructorAPIView.as_view(), name="admin-course-assign-instructor"),
     path("admin/<int:course_id>/assigned-instructor/", AdminCourseAssignedInstructorAPIView.as_view(), name="admin-course-assigned-instructor"),
+    path("admin/preview-video/signed/", PreviewVideoSignedAPIView.as_view(), name="admin-preview-video-signed"),
 
     # ==================== INSTRUCTOR ====================
     path("instructor/", InstructorCourseListAPIView.as_view(), name="instructor-course-list"),

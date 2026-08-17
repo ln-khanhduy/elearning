@@ -85,12 +85,14 @@ class LessonCreateUpdateSerializer(serializers.ModelSerializer):
 
     title = serializers.CharField(min_length=3, max_length=100, trim_whitespace=True)
     order = serializers.IntegerField(required=False, allow_null=True)
+    # Trường ảo cho phép client gửi material_url="" để xóa file tài liệu hiện có
+    material_url = serializers.CharField(required=False, allow_blank=True, write_only=True)
 
     class Meta:
         model = Lesson
         fields = [
             "title", "description", "content_type", "video_url",
-            "material_file", "order",
+            "material_file", "material_url", "order",
         ]
 
     def validate_title(self, value):

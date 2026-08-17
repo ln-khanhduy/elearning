@@ -57,8 +57,6 @@ def update_course(course_id, user, validated_data):
     course = course_repository.get_by_id(course_id)
     if not can_manage_course(course, user):
         raise PermissionDenied("Bạn không có quyền sửa khóa học này.")
-    if course.status == Course.Status.PUBLISHED:
-        raise ValidationError({"status": "Khóa đã public không được sửa nội dung. Hãy tạo phiên bản khóa mới."})
     for key, value in validated_data.items():
         setattr(course, key, value)
     if "title" in validated_data:

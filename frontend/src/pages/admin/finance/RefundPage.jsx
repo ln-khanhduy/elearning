@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { toast } from "react-toastify";
 import { getFinanceRefundsApi, processFinanceRefundApi } from "../../../api/supportAPI";
 import { formatDate } from "../../../utils/formatDate";
@@ -14,16 +14,6 @@ const REQUEST_STATUS_LABELS = {
   RESOLVED: "Đã hoàn tiền",
   REJECTED: "Từ chối",
 };
-
-const TX_STATUS_LABELS = {
-  HOLD: "Đang giữ",
-  PAID: "Đã thanh toán",
-  REFUND_REQUESTED: "Yêu cầu hoàn tiền",
-  REFUND_APPROVED: "Đã duyệt hoàn tiền",
-  REFUND_REJECTED: "Từ chối hoàn tiền",
-  REFUNDED: "Đã hoàn tiền",
-};
-
 
 // Số ngày từ thời điểm thanh toán đến thời điểm gửi đơn yêu cầu hoàn tiền
 const getDaysSincePaid = (paidAt, requestCreatedAt) => {
@@ -54,6 +44,7 @@ function FinanceRefundPage() {
     }
   }, []);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { loadRefunds(); }, [loadRefunds]);
 
   const openModal = (request, action) => {
@@ -92,17 +83,30 @@ function FinanceRefundPage() {
     <div className="container-center py-4">
       <div className="finance-refund-container">
         <h3 className="finance-refund-title">Duyệt hoàn tiền</h3>
+        <p className="finance-refund-subtitle">
+          Xem và xử lý các yêu cầu hoàn tiền của học viên.
+        </p>
 
         <div className="payout-summary-row">
-          <div className="payout-summary-card">
-            <div className="payout-summary-label">Yêu cầu chờ duyệt</div>
-            <div className="payout-summary-value">{pendingCount}</div>
+            <div className="payout-summary-card">
+              <div className="finance-refund-summary-icon finance-refund-summary-icon--pending">
+                <i className="bi bi-hourglass-split"></i>
+              </div>
+              <div>
+                <div className="payout-summary-label">Yêu cầu chờ duyệt</div>
+                <div className="payout-summary-value">{pendingCount}</div>
+              </div>
+            </div>
+            <div className="payout-summary-card">
+              <div className="finance-refund-summary-icon finance-refund-summary-icon--amount">
+                <i className="bi bi-arrow-counterclockwise"></i>
+              </div>
+              <div>
+                <div className="payout-summary-label">Tổng tiền chờ hoàn</div>
+                <div className="payout-summary-value" style={{ color: "#ef4444" }}>{formatPrice(totalRefundAmount)}</div>
+              </div>
+            </div>
           </div>
-          <div className="payout-summary-card">
-            <div className="payout-summary-label">Tổng tiền chờ hoàn</div>
-            <div className="payout-summary-value" style={{ color: "#ef4444" }}>{formatPrice(totalRefundAmount)}</div>
-          </div>
-        </div>
 
         {loading ? (
           <div className="text-center py-5"><div className="spinner-border text-primary" role="status"></div></div>
@@ -120,8 +124,6 @@ function FinanceRefundPage() {
                   <th>Khóa học</th>
                   <th>Số tiền</th>
                   <th>Ngày thanh toán</th>
-                  <th>Số ngày đến khi gửi đơn</th>
-                  <th>Trạng thái GD</th>
                   <th>Lý do</th>
                   <th>Ngày gửi</th>
                   <th>Trạng thái</th>
@@ -142,23 +144,18 @@ function FinanceRefundPage() {
                       {r.transaction_paid_at && (
                         <small className="text-muted">Tạo: {formatDate(r.transaction_created_at)}</small>
                       )}
+                      {r.transaction_paid_at && (
+                        <div className="mt-1">
+                          <span className={getDaysSincePaid(r.transaction_paid_at, r.created_at) > 7 ? "text-danger fw-semibold" : "text-success"}>
+                            {getDaysSincePaid(r.transaction_paid_at, r.created_at)} ngày
+                          </span>
+                        </div>
+                      )}
                     </td>
-                    <td>
-                      {r.transaction_paid_at ? (
-                        <span className={getDaysSincePaid(r.transaction_paid_at, r.created_at) > 7 ? "text-danger fw-semibold" : "text-success"}>
-                          {getDaysSincePaid(r.transaction_paid_at, r.created_at)} ngày
-                        </span>
-                      ) : "—"}
-                    </td>
-                    <td>
-                      <span className="status-badge hold">
-                        {TX_STATUS_LABELS[r.transaction_status] || r.transaction_status || "—"}
-                      </span>
-                    </td>
-                    <td style={{ maxWidth: 220 }}>{r.description}</td>
+                    <td className="finance-refund-desc">{r.description}</td>
                     <td>{formatDate(r.created_at)}</td>
                     <td>
-                      <span className="status-badge pending">
+                      <span className={`status-badge ${String(r.status || "").toLowerCase()}`}>
                         {REQUEST_STATUS_LABELS[r.status] || r.status}
                       </span>
                     </td>

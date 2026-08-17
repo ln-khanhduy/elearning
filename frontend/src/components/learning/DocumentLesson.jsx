@@ -1,11 +1,28 @@
-import React from "react";
+import { useState } from "react";
+import { toast } from "react-toastify";
+import { downloadAndSaveLessonMaterial } from "../../api/lessonAPI";
 
 /**
  * DocumentLesson - Hiển thị bài học dạng tài liệu.
- * Hiển thị nội dung mô tả và link tải tài liệu.
+ * Tài liệu đính kèm được tải VỀ MÁY qua API (giữ tên file gốc), không mở tab mới.
  */
 function DocumentLesson({ lesson }) {
+  const [downloading, setDownloading] = useState(false);
+
   if (!lesson) return null;
+
+  const handleDownloadMaterial = async () => {
+    if (downloading || !lesson.id) return;
+    setDownloading(true);
+    try {
+      await downloadAndSaveLessonMaterial(lesson.id);
+      toast.success("Đang tải tài liệu về máy...");
+    } catch (err) {
+      toast.error(err.message || "Không thể tải tài liệu.");
+    } finally {
+      setDownloading(false);
+    }
+  };
 
   return (
     <div className="document-lesson">
@@ -21,15 +38,22 @@ function DocumentLesson({ lesson }) {
 
       {lesson.material_url && (
         <div className="document-lesson-download">
-          <a
-            href={lesson.material_url}
-            target="_blank"
-            rel="noopener noreferrer"
+          <button
+            type="button"
+            onClick={handleDownloadMaterial}
+            disabled={downloading}
             className="document-lesson-btn"
           >
-            <i className="bi bi-download"></i>
-            Tải tài liệu
-          </a>
+            {downloading ? (
+              <>
+                <span className="spinner-border spinner-border-sm me-1"></span> Đang tải...
+              </>
+            ) : (
+              <>
+                <i className="bi bi-download"></i> Tải tài liệu về máy
+              </>
+            )}
+          </button>
         </div>
       )}
 

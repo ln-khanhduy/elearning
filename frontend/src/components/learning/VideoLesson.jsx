@@ -1,11 +1,29 @@
-import React from "react";
+import { useState } from "react";
+import { toast } from "react-toastify";
+import { downloadAndSaveLessonMaterial } from "../../api/lessonAPI";
 
 /**
  * VideoLesson - Hiển thị bài học dạng video.
  * Hỗ trợ: Bunny Stream (iframe.mediadelivery.net), YouTube embed và URL video khác.
+ * Tài liệu đính kèm được tải VỀ MÁY qua API (giữ tên file gốc), không mở tab mới.
  */
 function VideoLesson({ lesson }) {
+  const [downloading, setDownloading] = useState(false);
+
   if (!lesson) return null;
+
+  const handleDownloadMaterial = async () => {
+    if (downloading || !lesson.id) return;
+    setDownloading(true);
+    try {
+      await downloadAndSaveLessonMaterial(lesson.id);
+      toast.success("Đang tải tài liệu về máy...");
+    } catch (err) {
+      toast.error(err.message || "Không thể tải tài liệu.");
+    } finally {
+      setDownloading(false);
+    }
+  };
 
   const getYouTubeEmbedUrl = (url) => {
     if (!url) return null;
@@ -64,9 +82,22 @@ function VideoLesson({ lesson }) {
             <span>Tài liệu đính kèm</span>
           </div>
           <div className="document-lesson-download">
-            <a href={lesson.material_url} target="_blank" rel="noopener noreferrer" className="document-lesson-btn">
-              <i className="bi bi-download"></i> Tải tài liệu
-            </a>
+            <button
+              type="button"
+              onClick={handleDownloadMaterial}
+              disabled={downloading}
+              className="document-lesson-btn"
+            >
+              {downloading ? (
+                <>
+                  <span className="spinner-border spinner-border-sm me-1"></span> Đang tải...
+                </>
+              ) : (
+                <>
+                  <i className="bi bi-download"></i> Tải tài liệu về máy
+                </>
+              )}
+            </button>
           </div>
         </div>
       )}

@@ -8,14 +8,6 @@ from apps.courses.models import Course
 from apps.courses.services import course_permission_service
 
 
-def _ensure_not_published(course):
-    """Khóa PUBLISHED không được thêm/xóa/sắp xếp nội dung."""
-    if course.status == Course.Status.PUBLISHED:
-        raise ValidationError(
-            {"detail": "Khóa đã public không được sửa nội dung. Hãy tạo phiên bản khóa mới."}
-        )
-
-
 def _generate_unique_slug(chapter_id, title, exclude_lesson_id=None):
     """Sinh slug duy nhất cho bài học trong một chương.
 
@@ -63,7 +55,6 @@ def create_lesson(chapter_id, user, data):
     if not course_permission_service.can_manage_course(chapter.course, user):
         raise PermissionDenied("Bạn không có quyền thao tác với khóa học này.")
 
-    _ensure_not_published(chapter.course)
 
     order = data.get("order")
     if order is None:
@@ -109,6 +100,16 @@ def update_lesson(lesson_id, user, data):
                 {"detail": "Khóa đã public chỉ được phép thay video/material hỏng. Không thể sửa nội dung khác."}
             )
 
+    # Xử lý xóa tài liệu đính kèm: client gửi material_url="" hoặc material_file="" để xóa file
+    if "material_url" in cleaned_data:
+        if cleaned_data["material_url"] == "":
+            lesson.material_file = None
+        cleaned_data.pop("material_url", None)
+
+    if "material_file" in cleaned_data and cleaned_data["material_file"] in ("", None):
+        lesson.material_file = None
+        cleaned_data.pop("material_file", None)
+
     new_order = cleaned_data.get("order")
     if new_order is not None and new_order != lesson.order and lesson_repository.exists_order(lesson.chapter_id, new_order):
         raise ValidationError({"order": "Thứ tự bài học đã tồn tại trong chương này."})
@@ -136,7 +137,6 @@ def delete_lesson(lesson_id, user):
     if not course_permission_service.can_manage_course(lesson.chapter.course, user):
         raise PermissionDenied("Bạn không có quyền thao tác với khóa học này.")
 
-    _ensure_not_published(lesson.chapter.course)
 
     lesson_repository.delete(lesson_id)
 
@@ -152,8 +152,6 @@ def reorder_lessons(chapter_id, user, lessons_data):
 
     if not course_permission_service.can_manage_course(chapter.course, user):
         raise PermissionDenied("Bạn không có quyền thao tác với khóa học này.")
-
-    _ensure_not_published(chapter.course)
 
     ids = [item["id"] for item in lessons_data]
     orders = [item["order"] for item in lessons_data]

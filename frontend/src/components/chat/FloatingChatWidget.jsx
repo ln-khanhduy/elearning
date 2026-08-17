@@ -27,6 +27,9 @@ function FloatingChatWidget() {
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
   const [onlineUsers, setOnlineUsers] = useState({});
+  const [reportTarget, setReportTarget] = useState(null);
+  const [reportReason, setReportReason] = useState("");
+  const [reporting, setReporting] = useState(false);
   const scrollRef = useRef(null);
 
   // ===== Load danh sách phòng chat =====
@@ -126,20 +129,37 @@ function FloatingChatWidget() {
     }
   }, [input, activeRoom, wsSend]);
 
-  // ===== Báo cáo vi phạm =====
-  const handleReport = useCallback(
-    async (msg) => {
-      const reason = window.prompt("Lý do báo cáo tin nhắn này:");
-      if (!reason) return;
-      try {
-        await reportChatMessageApi(msg.id, reason);
-        window.alert("Đã gửi báo cáo vi phạm.");
-      } catch (e) {
-        window.alert(e.message || "Không thể báo cáo.");
-      }
-    },
-    []
-  );
+  // ===== Báo cáo vi phạm (modal React — không dùng window.prompt/alert) =====
+  const openReport = useCallback((msg) => {
+    setReportTarget(msg);
+    setReportReason("");
+  }, []);
+
+  const closeReport = useCallback(() => {
+    if (reporting) return;
+    setReportTarget(null);
+    setReportReason("");
+  }, [reporting]);
+
+  const submitReport = useCallback(async () => {
+    if (!reportTarget) return;
+    const reason = reportReason.trim();
+    if (!reason) {
+      toast.warning("Vui lòng nhập lý do báo cáo.");
+      return;
+    }
+    setReporting(true);
+    try {
+      await reportChatMessageApi(reportTarget.id, reason);
+      toast.success("Đã gửi báo cáo vi phạm.");
+      setReportTarget(null);
+      setReportReason("");
+    } catch (e) {
+      toast.error(e.message || "Không thể báo cáo.");
+    } finally {
+      setReporting(false);
+    }
+  }, [reportTarget, reportReason]);
 
   const handleToggle = useCallback(() => {
     setOpen((prev) => {
@@ -224,7 +244,7 @@ function FloatingChatWidget() {
                               <button
                                 className="fcw-report-btn"
                                 title="Báo cáo vi phạm"
-                                onClick={() => handleReport(msg)}
+                                onClick={() => openReport(msg)}
                               >
                                 <i className="bi bi-flag"></i>
                               </button>
@@ -281,6 +301,69 @@ function FloatingChatWidget() {
                 </div>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Modal báo cáo vi phạm */}
+      {reportTarget && (
+        <div className="fcw-report-overlay" onClick={closeReport}>
+          <div className="fcw-report-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="fcw-report-header">
+              <i className="bi bi-flag-fill"></i>
+              <span>Báo cáo tin nhắn vi phạm</span>
+              <button
+                type="button"
+                className="fcw-report-close"
+                onClick={closeReport}
+                disabled={reporting}
+                aria-label="Đóng"
+              >
+                <i className="bi bi-x-lg"></i>
+              </button>
+            </div>
+            <div className="fcw-report-body">
+              <p className="fcw-report-hint">
+                Vui lòng cho biết lý do tin nhắn này vi phạm:
+              </p>
+              <textarea
+                className="fcw-report-textarea"
+                rows={4}
+                maxLength={500}
+                placeholder="VD: Spam, lừa đảo, ngôn từ thù địch..."
+                value={reportReason}
+                onChange={(e) => setReportReason(e.target.value)}
+                autoFocus
+              />
+              <div className="fcw-report-count">{reportReason.length}/500</div>
+            </div>
+            <div className="fcw-report-footer">
+              <button
+                type="button"
+                className="fcw-report-cancel"
+                onClick={closeReport}
+                disabled={reporting}
+              >
+                Hủy
+              </button>
+              <button
+                type="button"
+                className="fcw-report-submit"
+                onClick={submitReport}
+                disabled={reporting || !reportReason.trim()}
+              >
+                {reporting ? (
+                  <>
+                    <span className="spinner-border spinner-border-sm me-1"></span>
+                    Đang gửi...
+                  </>
+                ) : (
+                  <>
+                    <i className="bi bi-send me-1"></i> Gửi báo cáo
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       )}

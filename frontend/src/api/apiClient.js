@@ -12,11 +12,22 @@ const getCookie = (name) => {
   return cookieValue ? decodeURIComponent(cookieValue.split("=")[1]) : null;
 };
 
+/** Lỗi backend cần chặn hiển thị toast (khóa đã public) */
+const SUPPRESSED_ERROR_PATTERNS = ["Khóa đã public"];
+
+export const isSuppressedError = (msg) => {
+  const text = String(msg || "");
+  return SUPPRESSED_ERROR_PATTERNS.some((pat) => text.includes(pat));
+};
+
 export const getErrorMessage = (error) => {
   const data = error.response?.data;
 
   if (!data) return "Có lỗi xảy ra. Vui lòng thử lại.";
-  if (typeof data === "string") return data;
+  if (typeof data === "string") {
+    if (isSuppressedError(data)) return "";
+    return data;
+  }
   
   // Ưu tiên lấy message từ detail/error/message
   if (data.detail) {
@@ -24,24 +35,36 @@ export const getErrorMessage = (error) => {
     // Nếu bị DRF ErrorDetail serialize kèm metadata, parse lấy text
     if (msg.includes("string='")) {
       const match = msg.match(/string='([^']+)'/);
-      if (match) return match[1];
+      if (match) {
+        if (isSuppressedError(match[1])) return "";
+        return match[1];
+      }
     }
+    if (isSuppressedError(msg)) return "";
     return msg;
   }
   if (data.error) {
     const msg = String(data.error);
     if (msg.includes("string='")) {
       const match = msg.match(/string='([^']+)'/);
-      if (match) return match[1];
+      if (match) {
+        if (isSuppressedError(match[1])) return "";
+        return match[1];
+      }
     }
+    if (isSuppressedError(msg)) return "";
     return msg;
   }
   if (data.message) {
     const msg = String(data.message);
     if (msg.includes("string='")) {
       const match = msg.match(/string='([^']+)'/);
-      if (match) return match[1];
+      if (match) {
+        if (isSuppressedError(match[1])) return "";
+        return match[1];
+      }
     }
+    if (isSuppressedError(msg)) return "";
     return msg;
   }
 
@@ -106,6 +129,26 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => response,
   async (error) => {
+    // Chặn toàn cục lỗi "Khóa đã public..." — thay bằng chuỗi rỗng
+    // để KHÔNG component nào (kể cả đọc error.response.data.detail trực tiếp)
+    // hiển thị toast này được.
+    const respData = error.response?.data;
+    if (respData) {
+      if (typeof respData === "string" && isSuppressedError(respData)) {
+        error.response.data = "";
+      } else if (typeof respData === "object") {
+        if (respData.detail && isSuppressedError(String(respData.detail))) {
+          respData.detail = "";
+        }
+        if (respData.error && isSuppressedError(String(respData.error))) {
+          respData.error = "";
+        }
+        if (respData.message && isSuppressedError(String(respData.message))) {
+          respData.message = "";
+        }
+      }
+    }
+
     const originalRequest = error.config;
 
     const url = originalRequest?.url || "";

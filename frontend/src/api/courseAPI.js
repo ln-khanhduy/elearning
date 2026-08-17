@@ -99,6 +99,12 @@ export const getAssignedInstructorApi = async (courseId) => {
   return request(() => apiClient.get(`/api/courses/admin/${courseId}/assigned-instructor/`));
 };
 
+// Lấy signed URL video giới thiệu (trailer) để nút "Xem" trong admin hiển thị được
+export const getPreviewVideoSignedApi = async (videoUrl) => {
+  const query = new URLSearchParams({ url: videoUrl || "" });
+  return request(() => apiClient.get(`/api/courses/admin/preview-video/signed/?${query.toString()}`));
+};
+
 // ==================== COURSE ACCESS PLANS  ====================
 // BE: /api/courses/admin/{course_id}/plans/
 

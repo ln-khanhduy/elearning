@@ -33,6 +33,7 @@ function StepCurriculumBuilder({
       <CurriculumSidebar
         curriculum={curriculum}
         selectedItem={selectedItem}
+        isPublished={isPublished}
         onSelectLesson={onSelectLesson}
         onSelectQuiz={onSelectQuiz}
         onEditSection={onEditSection}
