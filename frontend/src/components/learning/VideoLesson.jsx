@@ -5,7 +5,7 @@ import { downloadAndSaveLessonMaterial } from "../../api/lessonAPI";
 /**
  * VideoLesson - Hiển thị bài học dạng video.
  * Hỗ trợ: Bunny Stream (iframe.mediadelivery.net), YouTube embed và URL video khác.
- * Tài liệu đính kèm được tải VỀ MÁY qua API (giữ tên file gốc), không mở tab mới.
+ * Tài liệu đính kèm được tải VỀ MÁY qua API (giữ tên file gốc).
  */
 function VideoLesson({ lesson }) {
   const [downloading, setDownloading] = useState(false);
@@ -16,7 +16,7 @@ function VideoLesson({ lesson }) {
     if (downloading || !lesson.id) return;
     setDownloading(true);
     try {
-      await downloadAndSaveLessonMaterial(lesson.id);
+      await downloadAndSaveLessonMaterial(lesson.id, lesson.material_url);
       toast.success("Đang tải tài liệu về máy...");
     } catch (err) {
       toast.error(err.message || "Không thể tải tài liệu.");

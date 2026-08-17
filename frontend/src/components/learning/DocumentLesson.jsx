@@ -15,7 +15,7 @@ function DocumentLesson({ lesson }) {
     if (downloading || !lesson.id) return;
     setDownloading(true);
     try {
-      await downloadAndSaveLessonMaterial(lesson.id);
+      await downloadAndSaveLessonMaterial(lesson.id, lesson.material_url);
       toast.success("Đang tải tài liệu về máy...");
     } catch (err) {
       toast.error(err.message || "Không thể tải tài liệu.");

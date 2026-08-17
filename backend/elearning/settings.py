@@ -341,6 +341,13 @@ CORS_ALLOWED_ORIGIN_REGEXES = [
 ]
 
 CORS_ALLOW_CREDENTIALS = True
+# Expose các header cần thiết để trình duyệt (frontend Vercel -> backend Render)
+# đọc được khi cross-origin, đặc biệt Content-Disposition để biết tên file tải về.
+CORS_EXPOSE_HEADERS = [
+    'Content-Disposition',
+    'Content-Length',
+    'Content-Type',
+]
 CSRF_COOKIE_SECURE = not DEBUG
 
 # CSRF trusted origins

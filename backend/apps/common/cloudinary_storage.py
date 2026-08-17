@@ -69,9 +69,12 @@ class SmartMediaCloudinaryStorage(Storage):
         if ext in self.IMAGE_EXTENSIONS:
             resource_type = 'image'
 
-        # Strip extension - Cloudinary public_id không lưu extension
-        root, _ = os.path.splitext(public_id_with_ext)
-        public_id = root
+        # Raw giữ extension trong public_id; image Cloudinary tự bỏ extension.
+        if resource_type == 'raw':
+            public_id = public_id_with_ext
+        else:
+            root, _ = os.path.splitext(public_id_with_ext)
+            public_id = root
 
         result = self._cloudinary_uploader.upload(
             content,
@@ -137,9 +140,13 @@ class SmartMediaCloudinaryStorage(Storage):
                 # File cũ không có extension → detect bằng API
                 resource_type = self._detect_resource_type(clean_name)
 
-            # Cloudinary public_id được upload KHÔNG có extension (xem _save):
-            # luôn dùng clean_name (không ext) để khớp public_id thật trên Cloudinary.
-            url_name = clean_name
+            # Cloudinary public_id thực tế:
+            # - Image: KHÔNG có extension (Cloudinary tự bỏ).
+            # - Raw: CÓ extension (giữ nguyên tên đã lưu trong DB).
+            if resource_type == 'raw':
+                url_name = name.replace('\\', '/')
+            else:
+                url_name = clean_name
 
             url_result, _ = self._cloudinary.utils.cloudinary_url(
                 url_name,
@@ -169,10 +176,13 @@ class SmartMediaCloudinaryStorage(Storage):
             return
         try:
             resource_type = self._get_resource_type(name)
-            root, _ = os.path.splitext(name.replace('\\', '/'))
-            clean_name = root
+            name_norm = name.replace('\\', '/')
+            if resource_type == 'raw':
+                public_id = name_norm
+            else:
+                public_id, _ = os.path.splitext(name_norm)
             self._cloudinary_uploader.destroy(
-                clean_name,
+                public_id,
                 resource_type=resource_type,
             )
         except Exception:
@@ -184,10 +194,13 @@ class SmartMediaCloudinaryStorage(Storage):
             return False
         try:
             resource_type = self._get_resource_type(name)
-            root, _ = os.path.splitext(name.replace('\\', '/'))
-            clean_name = root
+            name_norm = name.replace('\\', '/')
+            if resource_type == 'raw':
+                public_id = name_norm
+            else:
+                public_id, _ = os.path.splitext(name_norm)
             result = self._cloudinary_api.resource(
-                clean_name,
+                public_id,
                 resource_type=resource_type,
             )
             return result is not None

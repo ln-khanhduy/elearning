@@ -21,9 +21,12 @@ const downloadRequest = async (callback) => {
 /**
  * Tải tài liệu bài học về máy và kích hoạt download trên trình duyệt.
  * Dùng chung cho VideoLesson và DocumentLesson.
+ * @param {number} lessonId - ID bài học
+ * @param {string} [fallbackName] - URL material (material_url) dùng để suy tên file gốc
+ *                                  nếu backend cross-origin chưa expose Content-Disposition.
  */
-export const downloadAndSaveLessonMaterial = async (lessonId) => {
-  const { blob, filename } = await downloadLessonMaterialApi(lessonId);
+export const downloadAndSaveLessonMaterial = async (lessonId, fallbackName) => {
+  const { blob, filename } = await downloadLessonMaterialApi(lessonId, fallbackName);
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
@@ -31,7 +34,9 @@ export const downloadAndSaveLessonMaterial = async (lessonId) => {
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  // Không revoke ngay lập tức: trình duyệt bắt đầu download bất đồng bộ,
+  // revoke quá sớm có thể khiến file tải về bị 0 byte/rỗng.
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 };
 
 export const getLessonsApi = async (chapterId) =>
@@ -58,15 +63,22 @@ export const reorderLessonsApi = async (chapterId, lessons) =>
 /**
  * Tải tài liệu bài học về máy (attachment).
  * - Trả về { blob, filename } hoặc throw Error.
- * - filename lấy từ header Content-Disposition của backend (giữ nguyên tên file gốc).
+ * - filename ưu tiên lấy từ header Content-Disposition của backend (giữ tên file gốc).
+ * - Nếu header không đọc được (CORS chưa expose), fallback dựa trên material_url
+ *   để vẫn giữ đúng tên file gốc (Student_guide_M2.docx thay vì material_110).
  */
-export const downloadLessonMaterialApi = async (lessonId) => {
+export const downloadLessonMaterialApi = async (lessonId, fallbackName) => {
   try {
     const res = await apiClient.get(
       `/api/lessons/lessons/${lessonId}/download-material/`,
       { responseType: "blob" }
     );
     const blob = res.data;
+
+    // Kiểm tra file rỗng (0 byte) - tránh lưu file hỏng về máy
+    if (!blob || blob.size === 0) {
+      throw new Error("File tải về rỗng. Vui lòng thử lại sau.");
+    }
 
     // Parse filename từ header Content-Disposition
     let filename = `material_${lessonId}`;
@@ -81,6 +93,19 @@ export const downloadLessonMaterialApi = async (lessonId) => {
     } else {
       const asciiMatch = contentDisposition.match(/filename="?([^";]+)"?/i);
       if (asciiMatch?.[1]) filename = asciiMatch[1];
+    }
+
+    // Fallback: header không đọc được (cross-origin) -> suy tên file từ material_url
+    if (filename === `material_${lessonId}` && fallbackName) {
+      try {
+        const cleanUrl = fallbackName.split("?")[0]; // bỏ query params
+        const urlPath = decodeURIComponent(cleanUrl);
+        const baseName = urlPath.split("/").pop();
+        if (baseName) filename = baseName;
+      } catch {
+        const baseName = fallbackName.split("?")[0].split("/").pop();
+        if (baseName) filename = baseName;
+      }
     }
 
     return { blob, filename };
