@@ -6,10 +6,10 @@ export const sidebarItems = [
   { type: "group", label: "Quản lý học tập" },
   { type: "item", label: "Khóa học", path: "/courses", icon: "bi-mortarboard" },
   //{ type: "item", label: "Trung tâm học tập", path: "/my-learning", icon: "bi-play-circle" },
-  { type: "item", label: "Khóa học của tôi", path: "/my-courses", icon: "bi-journal-bookmark", requiredPermissions: ["student.my_course.view"], allowedRoles: STUDENT_ROLES },
+  { type: "item", label: "Khóa học đã mua", path: "/my-courses", icon: "bi-journal-bookmark", requiredPermissions: ["student.my_course.view"], allowedRoles: STUDENT_ROLES },
   { type: "item", label: "Yêu thích", path: "/my-wishlist", icon: "bi-heart", requiredPermissions: ["student.wishlist.view"], allowedRoles: STUDENT_ROLES },
   { type: "item", label: "Giỏ hàng", path: "/cart", icon: "bi-cart3", requiredPermissions: ["student.cart.view"], allowedRoles: STUDENT_ROLES },
-  { type: "item", label: "Chứng chỉ của tôi", path: "/my-certificates", icon: "bi-award", requiredPermissions: ["student.my_course.view"], allowedRoles: STUDENT_ROLES },
+  { type: "item", label: "Kho chứng chỉ", path: "/my-certificates", icon: "bi-award", requiredPermissions: ["student.my_course.view"], allowedRoles: STUDENT_ROLES },
 
   { type: "item", label: "Quản lý khóa học", path: "/admin/courses", icon: "bi-tools", requiredPermissions: ["course.course.manage"] },
   { type: "item", label: "Danh mục khóa học", path: "/admin/courses/categories", icon: "bi-folder", requiredPermissions: ["course.category.manage"] },
